@@ -1,0 +1,10 @@
+*.xlsx
+/.vscode
+bin/
+data/
+*.log*
+*.pdfd
+*.png*
+*.prof*
+*.csv*
+*.nvvp
