@@ -3,6 +3,8 @@
 
 #include <cuda.h>
 #include <cuda_runtime.h>
+#include "Dom.cuh"
+#include "param.h"
 
 namespace FALMLoc {
 static const int NONE   = 0;
@@ -244,6 +246,19 @@ void Field<T>::sync_d2h() {
         cudaMemcpy(_hh._arr, _hd._arr, sizeof(T) * _num, cudaMemcpyDeviceToHost);
         _hh._loc |= FALMLoc::HOST;
         _loc     |= FALMLoc::HOST;
+    }
+}
+
+}
+
+namespace FALMUtil {
+
+__global__ static void calc_norm2_kernel(FALM::FieldCp<double> &a, double *partial_sum, FALM::DomCp &dom) {
+    __shared__ double cache[n_threads];
+    unsigned int stride = get_global_size();
+    double temp_sum = 0;
+    for (unsigned int idx = get_global_idx(); idx < dom._inum; idx += stride) {
+
     }
 }
 
