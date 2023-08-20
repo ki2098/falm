@@ -6,7 +6,7 @@
 
 namespace FALMUtil {
 
-__host__ __device__ static inline void idx2ijk(unsigned int idx, unsigned int &i, unsigned int &j, unsigned int &k, dim3 &size) {
+__host__ __device__ static inline void d123(unsigned int idx, unsigned int &i, unsigned int &j, unsigned int &k, dim3 &size) {
     unsigned int slice = size.y * size.z;
     i   = idx / slice;
     idx = idx % slice;
@@ -14,7 +14,7 @@ __host__ __device__ static inline void idx2ijk(unsigned int idx, unsigned int &i
     k   = idx % size.z;
 }
 
-__host__ __device__ static inline unsigned int ijk2idx(unsigned int i, unsigned int j, unsigned int k, dim3 &size) {
+__host__ __device__ static inline unsigned int d321(unsigned int i, unsigned int j, unsigned int k, dim3 &size) {
     return i * size.y * size.z + j * size.z + k;
 }
 

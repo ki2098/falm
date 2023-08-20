@@ -3,14 +3,15 @@
 
 #include <cuda.h>
 #include <cuda_runtime.h>
+#include <cassert>
 #include "Dom.cuh"
 #include "param.h"
 
 namespace FALMLoc {
-static const int NONE   = 0;
-static const int HOST   = 1;
-static const int DEVICE = 2;
-static const int BOTH   = HOST | DEVICE;
+static const unsigned int NONE   = 0;
+static const unsigned int HOST   = 1;
+static const unsigned int DEVICE = 2;
+static const unsigned int BOTH   = HOST | DEVICE;
 }
 
 namespace FALM {
@@ -18,27 +19,27 @@ namespace FALM {
 template<class T>
 struct FieldCp {
     T  *_arr;
-    int _row;
-    int _col;
-    int _num;
-    int _loc;
-    int _lab;
-    FieldCp(dim3 &size, int col, int loc, int lab);
-    FieldCp(int row, int col, int loc, int lab);
+    unsigned int _row;
+    unsigned int _col;
+    unsigned int _num;
+    unsigned int _loc;
+    unsigned int _lab;
+    FieldCp(dim3 &size, unsigned int col, unsigned int loc, unsigned int lab);
+    FieldCp(unsigned int row, unsigned int col, unsigned int loc, unsigned int lab);
     FieldCp();
     ~FieldCp();
-    void init(dim3 &size, int col, int loc, int lab);
-    void init(int row, int col, int loc, int lab);
+    void init(dim3 &size, unsigned int col, unsigned int loc, unsigned int lab);
+    void init(unsigned int row, unsigned int col, unsigned int loc, unsigned int lab);
     void release();
-    __host__ __device__ T& operator()(int idx) {return _arr[idx];}
-    __host__ __device__ T& operator()(int row_idx, int col_idx) {return _arr[col_idx * _row + row_idx];}
+    __host__ __device__ T& operator()(unsigned int idx) {return _arr[idx];}
+    __host__ __device__ T& operator()(unsigned int row_idx, unsigned int col_idx) {return _arr[col_idx * _row + row_idx];}
 };
 
 template<class T>
 FieldCp<T>::FieldCp() : _row(0), _col(0), _num(0), _loc(FALMLoc::NONE), _lab(0), _arr(nullptr) {/* printf("Default constructor of FieldCp called\n"); */}
 
 template<class T>
-FieldCp<T>::FieldCp(dim3 &size, int col, int loc, int lab) : _row(size.x * size.y * size.z), _col(col), _num(size.x * size.y * size.z * col), _loc(loc), _lab(lab) {
+FieldCp<T>::FieldCp(dim3 &size, unsigned int col, unsigned int loc, unsigned int lab) : _row(size.x * size.y * size.z), _col(col), _num(size.x * size.y * size.z * col), _loc(loc), _lab(lab) {
     if (loc == FALMLoc::HOST) {
         _arr = (T*)malloc(sizeof(T) * _num);
         memset(_arr, 0, sizeof(T) * _num);
@@ -49,7 +50,7 @@ FieldCp<T>::FieldCp(dim3 &size, int col, int loc, int lab) : _row(size.x * size.
 }
 
 template<class T>
-FieldCp<T>::FieldCp(int row, int col, int loc, int lab) : _row(row), _col(col), _num(row * col), _loc(loc), _lab(lab) {
+FieldCp<T>::FieldCp(unsigned int row, unsigned int col, unsigned int loc, unsigned int lab) : _row(row), _col(col), _num(row * col), _loc(loc), _lab(lab) {
     if (loc == FALMLoc::HOST) {
         _arr = (T*)malloc(sizeof(T) * _num);
         memset(_arr, 0, sizeof(T) * _num);
@@ -60,7 +61,7 @@ FieldCp<T>::FieldCp(int row, int col, int loc, int lab) : _row(row), _col(col), 
 }
 
 template<class T>
-void FieldCp<T>::init(dim3 &size, int col, int loc, int lab) {
+void FieldCp<T>::init(dim3 &size, unsigned int col, unsigned int loc, unsigned int lab) {
     assert(_loc == FALMLoc::NONE);
     _row = size.x * size.y * size.z;
     _col = col;
@@ -79,7 +80,7 @@ void FieldCp<T>::init(dim3 &size, int col, int loc, int lab) {
 }
 
 template<class T>
-void FieldCp<T>::init(int row, int col, int loc, int lab) {
+void FieldCp<T>::init(unsigned int row, unsigned int col, unsigned int loc, unsigned int lab) {
     assert(_loc == FALMLoc::NONE);
     _row = row;
     _col = col;
@@ -253,13 +254,59 @@ void Field<T>::sync_d2h() {
 
 namespace FALMUtil {
 
-__global__ static void calc_norm2_kernel(FALM::FieldCp<double> &a, double *partial_sum, FALM::DomCp &dom) {
+__global__ static void fscala_norm2_kernel(FALM::FieldCp<double> &a, double *partial_sum, FALM::DomCp &dom) {
     __shared__ double cache[n_threads];
     unsigned int stride = get_global_size();
     double temp_sum = 0;
     for (unsigned int idx = get_global_idx(); idx < dom._inum; idx += stride) {
-
+        unsigned int ii, ij, ik;
+        FALMUtil::d123(idx, ii, ij, ik, dom._isz);
+        unsigned int oi, oj, ok;
+        oi = ii + dom._guide;
+        oj = ij + dom._guide;
+        ok = ik + dom._guide;
+        unsigned int odx = FALMUtil::d321(oi, oj, ok, dom._osz);
+        double value = a(odx);
+        temp_sum += value * value;
     }
+    cache[threadIdx.x] = temp_sum;
+    __syncthreads();
+
+    int length = n_threads;
+    while (length > 1) {
+        int cut = length / 2;
+        int reduce = length - cut;
+        if (threadIdx.x < cut) {
+            cache[threadIdx.x] += cache[threadIdx.x + reduce];
+        }
+        __syncthreads();
+        length = reduce;
+    }
+
+    if (threadIdx.x == 0) {
+        partial_sum[blockIdx.x] = cache[0];
+    }
+}
+
+static double fscala_norm2(FALM::Field<double> &a, FALM::Dom &dom) {
+    assert(a._col == 1);
+    double *partial_sum, *partial_sum_dev;
+    cudaMalloc(&partial_sum_dev, sizeof(double) * n_blocks);
+    partial_sum = (double*)malloc(sizeof(double) * n_blocks);
+
+    fscala_norm2_kernel<<<n_blocks, n_threads>>>(*(a._dd), partial_sum_dev, *(dom._d));
+
+    cudaMemcpy(partial_sum, partial_sum_dev, sizeof(double) * n_blocks, cudaMemcpyDeviceToHost);
+
+    double sum = partial_sum[0];
+    for (int i = 1; i < n_blocks; i ++) {
+        sum += partial_sum[i];
+    }
+
+    free(partial_sum);
+    cudaFree(partial_sum_dev);
+
+    return sqrt(sum);
 }
 
 }
