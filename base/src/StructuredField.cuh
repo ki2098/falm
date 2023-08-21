@@ -4,6 +4,7 @@
 #include <cuda.h>
 #include <cuda_runtime.h>
 #include <cassert>
+#include <mpi.h>
 #include "Dom.cuh"
 #include "param.h"
 
@@ -307,6 +308,109 @@ static double fscala_norm2(FALM::Field<double> &a, FALM::Dom &dom) {
     cudaFree(partial_sum_dev);
 
     return sqrt(sum);
+}
+
+__global__ static void fscala_sum_kernel(FALM::FieldCp<double> &a, double *partial_sum, FALM::DomCp &dom) {
+    __shared__ double cache[n_threads];
+    unsigned int stride = get_global_size();
+    double temp_sum = 0;
+    for (unsigned int idx = get_global_idx(); idx < dom._inum; idx += stride) {
+        unsigned int ii, ij, ik;
+        FALMUtil::d123(idx, ii, ij, ik, dom._isz);
+        unsigned int oi, oj, ok;
+        oi = ii + dom._guide;
+        oj = ij + dom._guide;
+        ok = ik + dom._guide;
+        unsigned int odx = FALMUtil::d321(oi, oj, ok, dom._osz);
+        double value = a(odx);
+        temp_sum += value;
+    }
+    cache[threadIdx.x] = temp_sum;
+    __syncthreads();
+
+    int length = n_threads;
+    while (length > 1) {
+        int cut = length / 2;
+        int reduce = length - cut;
+        if (threadIdx.x < cut) {
+            cache[threadIdx.x] += cache[threadIdx.x + reduce];
+        }
+        __syncthreads();
+        length = reduce;
+    }
+
+    if (threadIdx.x == 0) {
+        partial_sum[blockIdx.x] = cache[0];
+    }
+}
+
+static double fscala_sum(FALM::Field<double> &a, FALM::Dom &dom) {
+    assert(a._col == 1);
+    double *partial_sum, *partial_sum_dev;
+    cudaMalloc(&partial_sum_dev, sizeof(double) * n_blocks);
+    partial_sum = (double*)malloc(sizeof(double) * n_blocks);
+
+    fscala_sum_kernel<<<n_blocks, n_threads>>>(*(a._dd), partial_sum_dev, *(dom._d));
+
+    cudaMemcpy(partial_sum, partial_sum_dev, sizeof(double) * n_blocks, cudaMemcpyDeviceToHost);
+
+    double sum = partial_sum[0];
+    for (int i = 1; i < n_blocks; i ++) {
+        sum += partial_sum[i];
+    }
+
+    free(partial_sum);
+    cudaFree(partial_sum_dev);
+
+    return sum;
+}
+
+__global__ static void fscala_zero_avg_kernel(FALM::FieldCp<double> &a, FALM::DomCp &dom, double avg) {
+    unsigned int stride = FALMUtil::get_global_size();
+    for (unsigned int idx = FALMUtil::get_global_idx(); idx < dom._inum; idx + stride) {
+        unsigned int ii, ij, ik;
+        FALMUtil::d123(idx, ii, ij, ik, dom._isz);
+        unsigned int oi, oj, ok;
+        oi = ii + dom._guide;
+        oj = ij + dom._guide;
+        ok = ik + dom._guide;
+        unsigned int odx = FALMUtil::d321(oi, oj, ok, dom._osz);
+        a(odx) -= avg;
+    }
+}
+
+static void fscala_zero_avg(FALM::Field<double> &a, FALM::Dom &dom, FALM::Dom &global, int mpi_size, int mpi_rank) {
+    double sum = fscala_sum(a, dom);
+    if (mpi_size > 1) {
+        MPI_Allreduce(MPI_IN_PLACE, &sum, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+    }
+    double avg = sum / global._h._inum;
+    fscala_zero_avg_kernel<<<n_blocks, n_threads>>>(*(a._dd), *(dom._d), avg);
+}
+
+template<class T>
+static void field_cpy(FALM::Field<T> &dst, FALM::Field<T> &src, unsigned int loc) {
+    assert(dst._num == src._num);
+    if (loc & FALMLoc::HOST) {
+        assert(dst._loc & src._loc & FALMLoc::HOST);
+        memcpy(dst._hh._arr, src._hh._arr, sizeof(T) * dst._num);
+    }
+    if (loc & FALMLoc::DEVICE) {
+        assert(dst._loc & src._loc & FALMLoc::DEVICE);
+        cudaMemcpy(dst._hd._arr, src._hd._arr, sizeof(T) * dst._num, cudaMemcpyDeviceToDevice);
+    }
+}
+
+template<class T>
+static void field_clear(FALM::Field<T> &dst, unsigned int loc) {
+    if (loc & FALMLoc::HOST) {
+        assert(dst._loc & FALMLoc::HOST);
+        memset(dst._hh._arr, 0, sizeof(T) * dst._num);
+    }
+    if (loc & FALMLoc::DEVICE) {
+        assert(dst._loc & FALMLoc::DEVICE);
+        cudaMemset(dst._hd._arr, 0, sizeof(T) * dst._num);
+    }
 }
 
 }

@@ -140,22 +140,22 @@ static void poisson_sor(Field<double> &a, Field<double> &x, Field<double> &b, Fi
     unsigned int idx_start, idx_end;
     unsigned int i_start, i_end;
     int color;
-    double local_err, err;
+    double err;
     for (state.it = 0; state.it < maxit;) {
         color = 0;
         if (mpi_size > 1) {
             int buflen = osz.y * osz.z;
             if (mpi_rank == 0) {
-                MPI_Isend(&(a._hd._arr[FALMUtil::d321(osz.x-g-1,0,0,osz)]), buflen, MPI_DOUBLE, mpi_rank+1, 1, MPI_COMM_WORLD, &req[0]);
-                MPI_Irecv(&(a._hd._arr[FALMUtil::d321(osz.x-g  ,0,0,osz)]), buflen, MPI_DOUBLE, mpi_rank+1, 0, MPI_COMM_WORLD, &req[1]);
+                MPI_Isend(&(x._hd._arr[FALMUtil::d321(osz.x-g-1,0,0,osz)]), buflen, MPI_DOUBLE, mpi_rank+1, 1, MPI_COMM_WORLD, &req[0]);
+                MPI_Irecv(&(x._hd._arr[FALMUtil::d321(osz.x-g  ,0,0,osz)]), buflen, MPI_DOUBLE, mpi_rank+1, 0, MPI_COMM_WORLD, &req[1]);
             } else if (mpi_rank == mpi_size - 1) {
-                MPI_Isend(&(a._hd._arr[FALMUtil::d321(      g  ,0,0,osz)]), buflen, MPI_DOUBLE, mpi_rank-1, 0, MPI_COMM_WORLD, &req[0]);
-                MPI_Irecv(&(a._hd._arr[FALMUtil::d321(      g-1,0,0,osz)]), buflen, MPI_DOUBLE, mpi_rank-1, 1, MPI_COMM_WORLD, &req[1]);
+                MPI_Isend(&(x._hd._arr[FALMUtil::d321(      g  ,0,0,osz)]), buflen, MPI_DOUBLE, mpi_rank-1, 0, MPI_COMM_WORLD, &req[0]);
+                MPI_Irecv(&(x._hd._arr[FALMUtil::d321(      g-1,0,0,osz)]), buflen, MPI_DOUBLE, mpi_rank-1, 1, MPI_COMM_WORLD, &req[1]);
             } else {
-                MPI_Isend(&(a._hd._arr[FALMUtil::d321(osz.x-g-1,0,0,osz)]), buflen, MPI_DOUBLE, mpi_rank+1, 1, MPI_COMM_WORLD, &req[0]);
-                MPI_Irecv(&(a._hd._arr[FALMUtil::d321(osz.x-g  ,0,0,osz)]), buflen, MPI_DOUBLE, mpi_rank+1, 0, MPI_COMM_WORLD, &req[1]);
-                MPI_Isend(&(a._hd._arr[FALMUtil::d321(      g  ,0,0,osz)]), buflen, MPI_DOUBLE, mpi_rank-1, 0, MPI_COMM_WORLD, &req[2]);
-                MPI_Irecv(&(a._hd._arr[FALMUtil::d321(      g-1,0,0,osz)]), buflen, MPI_DOUBLE, mpi_rank-1, 1, MPI_COMM_WORLD, &req[3]);
+                MPI_Isend(&(x._hd._arr[FALMUtil::d321(osz.x-g-1,0,0,osz)]), buflen, MPI_DOUBLE, mpi_rank+1, 1, MPI_COMM_WORLD, &req[0]);
+                MPI_Irecv(&(x._hd._arr[FALMUtil::d321(osz.x-g  ,0,0,osz)]), buflen, MPI_DOUBLE, mpi_rank+1, 0, MPI_COMM_WORLD, &req[1]);
+                MPI_Isend(&(x._hd._arr[FALMUtil::d321(      g  ,0,0,osz)]), buflen, MPI_DOUBLE, mpi_rank-1, 0, MPI_COMM_WORLD, &req[2]);
+                MPI_Irecv(&(x._hd._arr[FALMUtil::d321(      g-1,0,0,osz)]), buflen, MPI_DOUBLE, mpi_rank-1, 1, MPI_COMM_WORLD, &req[3]);
             }
         }
         i_start   = (mpi_rank > 0)? 1 : 0;
@@ -190,16 +190,16 @@ static void poisson_sor(Field<double> &a, Field<double> &x, Field<double> &b, Fi
         if (mpi_size > 1) {
             int buflen = osz.y * osz.z;
             if (mpi_rank == 0) {
-                MPI_Isend(&(a._hd._arr[FALMUtil::d321(osz.x-g-1,0,0,osz)]), buflen, MPI_DOUBLE, mpi_rank+1, 1, MPI_COMM_WORLD, &req[0]);
-                MPI_Irecv(&(a._hd._arr[FALMUtil::d321(osz.x-g  ,0,0,osz)]), buflen, MPI_DOUBLE, mpi_rank+1, 0, MPI_COMM_WORLD, &req[1]);
+                MPI_Isend(&(x._hd._arr[FALMUtil::d321(osz.x-g-1,0,0,osz)]), buflen, MPI_DOUBLE, mpi_rank+1, 1, MPI_COMM_WORLD, &req[0]);
+                MPI_Irecv(&(x._hd._arr[FALMUtil::d321(osz.x-g  ,0,0,osz)]), buflen, MPI_DOUBLE, mpi_rank+1, 0, MPI_COMM_WORLD, &req[1]);
             } else if (mpi_rank == mpi_size - 1) {
-                MPI_Isend(&(a._hd._arr[FALMUtil::d321(      g  ,0,0,osz)]), buflen, MPI_DOUBLE, mpi_rank-1, 0, MPI_COMM_WORLD, &req[0]);
-                MPI_Irecv(&(a._hd._arr[FALMUtil::d321(      g-1,0,0,osz)]), buflen, MPI_DOUBLE, mpi_rank-1, 1, MPI_COMM_WORLD, &req[1]);
+                MPI_Isend(&(x._hd._arr[FALMUtil::d321(      g  ,0,0,osz)]), buflen, MPI_DOUBLE, mpi_rank-1, 0, MPI_COMM_WORLD, &req[0]);
+                MPI_Irecv(&(x._hd._arr[FALMUtil::d321(      g-1,0,0,osz)]), buflen, MPI_DOUBLE, mpi_rank-1, 1, MPI_COMM_WORLD, &req[1]);
             } else {
-                MPI_Isend(&(a._hd._arr[FALMUtil::d321(osz.x-g-1,0,0,osz)]), buflen, MPI_DOUBLE, mpi_rank+1, 1, MPI_COMM_WORLD, &req[0]);
-                MPI_Irecv(&(a._hd._arr[FALMUtil::d321(osz.x-g  ,0,0,osz)]), buflen, MPI_DOUBLE, mpi_rank+1, 0, MPI_COMM_WORLD, &req[1]);
-                MPI_Isend(&(a._hd._arr[FALMUtil::d321(      g  ,0,0,osz)]), buflen, MPI_DOUBLE, mpi_rank-1, 0, MPI_COMM_WORLD, &req[2]);
-                MPI_Irecv(&(a._hd._arr[FALMUtil::d321(      g-1,0,0,osz)]), buflen, MPI_DOUBLE, mpi_rank-1, 1, MPI_COMM_WORLD, &req[3]);
+                MPI_Isend(&(x._hd._arr[FALMUtil::d321(osz.x-g-1,0,0,osz)]), buflen, MPI_DOUBLE, mpi_rank+1, 1, MPI_COMM_WORLD, &req[0]);
+                MPI_Irecv(&(x._hd._arr[FALMUtil::d321(osz.x-g  ,0,0,osz)]), buflen, MPI_DOUBLE, mpi_rank+1, 0, MPI_COMM_WORLD, &req[1]);
+                MPI_Isend(&(x._hd._arr[FALMUtil::d321(      g  ,0,0,osz)]), buflen, MPI_DOUBLE, mpi_rank-1, 0, MPI_COMM_WORLD, &req[2]);
+                MPI_Irecv(&(x._hd._arr[FALMUtil::d321(      g-1,0,0,osz)]), buflen, MPI_DOUBLE, mpi_rank-1, 1, MPI_COMM_WORLD, &req[3]);
             }
         }
         i_start   = (mpi_rank > 0)? 1 : 0;
@@ -239,6 +239,70 @@ static void poisson_sor(Field<double> &a, Field<double> &x, Field<double> &b, Fi
         state.it ++;
     } while (state.it < maxit && state.re > ls_epsilon);
 }
+
+static void poisson_jacobi(Field<double> &a, Field<double> &x, Field<double> &xp, Field<double> &b, Field<double> &r, double omega, int maxit, Dom &dom, Dom& global, int mpi_size, int mpi_rank, MPI_Request *req, LS_State &state) {
+    dim3 &osz = dom._h._osz;
+    dim3 &isz = dom._h._isz;
+    unsigned int g = dom._h._guide;
+    unsigned int idx_start, idx_end;
+    unsigned int i_start, i_end;
+    double err;
+    for (state.it = 0; state.it < maxit;) {
+        FALMUtil::field_cpy(xp, x, FALMLoc::HOST);
+        if (mpi_size > 1) {
+            int buflen = osz.y * osz.z;
+            if (mpi_rank == 0) {
+                MPI_Isend(&(xp._hd._arr[FALMUtil::d321(osz.x-g-1,0,0,osz)]), buflen, MPI_DOUBLE, mpi_rank+1, 1, MPI_COMM_WORLD, &req[0]);
+                MPI_Irecv(&(xp._hd._arr[FALMUtil::d321(osz.x-g  ,0,0,osz)]), buflen, MPI_DOUBLE, mpi_rank+1, 0, MPI_COMM_WORLD, &req[1]);
+            } else if (mpi_rank == mpi_size - 1) {
+                MPI_Isend(&(xp._hd._arr[FALMUtil::d321(      g  ,0,0,osz)]), buflen, MPI_DOUBLE, mpi_rank-1, 0, MPI_COMM_WORLD, &req[0]);
+                MPI_Irecv(&(xp._hd._arr[FALMUtil::d321(      g-1,0,0,osz)]), buflen, MPI_DOUBLE, mpi_rank-1, 1, MPI_COMM_WORLD, &req[1]);
+            } else {
+                MPI_Isend(&(xp._hd._arr[FALMUtil::d321(osz.x-g-1,0,0,osz)]), buflen, MPI_DOUBLE, mpi_rank+1, 1, MPI_COMM_WORLD, &req[0]);
+                MPI_Irecv(&(xp._hd._arr[FALMUtil::d321(osz.x-g  ,0,0,osz)]), buflen, MPI_DOUBLE, mpi_rank+1, 0, MPI_COMM_WORLD, &req[1]);
+                MPI_Isend(&(xp._hd._arr[FALMUtil::d321(      g  ,0,0,osz)]), buflen, MPI_DOUBLE, mpi_rank-1, 0, MPI_COMM_WORLD, &req[2]);
+                MPI_Irecv(&(xp._hd._arr[FALMUtil::d321(      g-1,0,0,osz)]), buflen, MPI_DOUBLE, mpi_rank-1, 1, MPI_COMM_WORLD, &req[3]);
+            }
+        }
+        i_start   = (mpi_rank > 0)? 1 : 0;
+        i_end     = (mpi_rank == mpi_size - 1)? isz.x : isz.x-1;
+        idx_start = FALMUtil::d321(i_start,0,0,isz);
+        idx_end   = FALMUtil::d321(i_end  ,0,0,isz);
+        poisson_jacobi_kernel<<<n_blocks, n_threads>>>(*(a._dd), *(x._dd), *(xp._dd), *(b._dd), *(dom._d), idx_start, idx_end);
+        if (mpi_size > 1) {
+            if (mpi_rank == 0) {
+                MPI_Waitall(2, &req[0], MPI_STATUSES_IGNORE);
+                idx_start = FALMUtil::d321(isz.x-1,0,0,isz);
+                idx_end   = FALMUtil::d321(isz.x  ,0,0,isz);
+                poisson_jacobi_kernel<<<n_blocks, n_threads>>>(*(a._dd), *(x._dd), *(xp._dd), *(b._dd), *(dom._d), idx_start, idx_end);
+            } else if (mpi_rank == mpi_size - 1) {
+                MPI_Waitall(2, &req[0], MPI_STATUSES_IGNORE);
+                idx_start = FALMUtil::d321(0,0,0,isz);
+                idx_end   = FALMUtil::d321(1,0,0,isz);
+                poisson_jacobi_kernel<<<n_blocks, n_threads>>>(*(a._dd), *(x._dd), *(xp._dd), *(b._dd), *(dom._d), idx_start, idx_end);
+            } else {
+                MPI_Waitall(2, &req[0], MPI_STATUSES_IGNORE);
+                idx_start = FALMUtil::d321(isz.x-1,0,0,isz);
+                idx_end   = FALMUtil::d321(isz.x  ,0,0,isz);
+                poisson_jacobi_kernel<<<n_blocks, n_threads>>>(*(a._dd), *(x._dd), *(xp._dd), *(b._dd), *(dom._d), idx_start, idx_end);
+                MPI_Waitall(2, &req[2], MPI_STATUSES_IGNORE);
+                idx_start = FALMUtil::d321(0,0,0,isz);
+                idx_end   = FALMUtil::d321(1,0,0,isz);
+                poisson_jacobi_kernel<<<n_blocks, n_threads>>>(*(a._dd), *(x._dd), *(xp._dd), *(b._dd), *(dom._d), idx_start, idx_end);
+            }
+        }
+
+        res_kernel<<<n_blocks, n_threads>>>(*(a._dd), *(x._dd), *(b._dd), *(r._dd), *(dom._d));
+        err = FALMUtil::fscala_norm2(r, dom);
+        if (mpi_size > 1) {
+            MPI_Allreduce(MPI_IN_PLACE, &err, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+        }
+        state.re = sqrt(err) / dom._h._inum;
+        state.it ++;
+    } while (state.it < maxit && state.re > ls_epsilon);
+}
+
+
 
 }
 
