@@ -51,8 +51,174 @@ __global__ static void psvelocity_kernel(FieldCp<double> &u, FieldCp<double> &uu
         i = ii + guide;
         j = ij + guide;
         k = ik + guide;
+        unsigned int o00;
+        unsigned int o11, o12, o13, o14;
+        unsigned int o21, o22, o23, o24;
+        unsigned int o31, o32, o33, o34;
+        o00 = FALMUtil::d321(i  ,j  ,k  ,osz);
+        o11 = FALMUtil::d321(i-2,j  ,k  ,osz);
+        o12 = FALMUtil::d321(i-1,j  ,k  ,osz);
+        o13 = FALMUtil::d321(i+1,j  ,k  ,osz);
+        o14 = FALMUtil::d321(i+2,j  ,k  ,osz);
+        o21 = FALMUtil::d321(i  ,j-2,k  ,osz);
+        o22 = FALMUtil::d321(i  ,j-1,k  ,osz);
+        o23 = FALMUtil::d321(i  ,j+1,k  ,osz);
+        o24 = FALMUtil::d321(i  ,j+2,k  ,osz);
+        o31 = FALMUtil::d321(i  ,j  ,k-2,osz);
+        o32 = FALMUtil::d321(i  ,j  ,k-1,osz);
+        o33 = FALMUtil::d321(i  ,j  ,k+1,osz);
+        o34 = FALMUtil::d321(i  ,j  ,k+2,osz);
+        double abs1 = fabs(u(o00,0) * kx(o00,0));
+        double abs2 = fabs(u(o00,1) * kx(o00,1));
+        double abs3 = fabs(u(o00,2) * kx(o00,2));
+        double uu11 =  uu(o12,0);
+        double uu12 =  uu(o00,0);
+        double uu21 =  uu(o22,1);
+        double uu22 =  uu(o00,1);
+        double uu31 =  uu(o32,2);
+        double uu32 =  uu(o00,2);
+        double  n00 = nut(o00);
+        double  n11 = nut(o12);
+        double  n12 = nut(o13);
+        double  n21 = nut(o22);
+        double  n22 = nut(o23);
+        double  n31 = nut(o32);
+        double  n32 = nut(o33);
+        double  g10 =   g(o00,0);
+        double  g11 =   g(o12,0);
+        double  g12 =   g(o13,0);
+        double  g20 =   g(o00,1);
+        double  g21 =   g(o22,1);
+        double  g22 =   g(o23,1);
+        double  g30 =   g(o00,2);
+        double  g31 =   g(o32,2);
+        double  g32 =   g(o33,2);
+        double  j00 =  ja(o00);
+        unsigned int m;
+        double u00;
+        double u11, u12, u13, u14;
+        double u21, u22, u23, u24;
+        double u31, u32, u33, u34;
+        double adv, vis;
         
+        m = 0;
+        u00 = u(o00,m);
+        u11 = u(o11,m);
+        u12 = u(o12,m);
+        u13 = u(o13,m);
+        u14 = u(o14,m);
+        u21 = u(o21,m);
+        u22 = u(o22,m);
+        u23 = u(o23,m);
+        u24 = u(o24,m);
+        u31 = u(o31,m);
+        u32 = u(o32,m);
+        u33 = u(o33,m);
+        u34 = u(o34,m);
+        adv = upwind3(u00, u11, u12, u13, u14, u21, u22, u23, u24, u31, u32, u33, u34, abs1, abs2, abs3, uu11, uu12, uu21, uu22, uu31, uu32, j00);
+        vis = diffusion(u00, u12, u13, u22, u23, u32, u33, n00, n11, n12, n21, n22, n31, n32, g10, g11, g12, g20, g21, g22, g30, g31, g32, j00);
+        ua(o00,m) = u00 + dt * (- adv + vis + ff(o00,m));
+
+        m = 1;
+        u00 = u(o00,m);
+        u11 = u(o11,m);
+        u12 = u(o12,m);
+        u13 = u(o13,m);
+        u14 = u(o14,m);
+        u21 = u(o21,m);
+        u22 = u(o22,m);
+        u23 = u(o23,m);
+        u24 = u(o24,m);
+        u31 = u(o31,m);
+        u32 = u(o32,m);
+        u33 = u(o33,m);
+        u34 = u(o34,m);
+        adv = upwind3(u00, u11, u12, u13, u14, u21, u22, u23, u24, u31, u32, u33, u34, abs1, abs2, abs3, uu11, uu12, uu21, uu22, uu31, uu32, j00);
+        vis = diffusion(u00, u12, u13, u22, u23, u32, u33, n00, n11, n12, n21, n22, n31, n32, g10, g11, g12, g20, g21, g22, g30, g31, g32, j00);
+        ua(o00,m) = u00 + dt * (- adv + vis + ff(o00,m));
+
+        m = 2;
+        u00 = u(o00,m);
+        u11 = u(o11,m);
+        u12 = u(o12,m);
+        u13 = u(o13,m);
+        u14 = u(o14,m);
+        u21 = u(o21,m);
+        u22 = u(o22,m);
+        u23 = u(o23,m);
+        u24 = u(o24,m);
+        u31 = u(o31,m);
+        u32 = u(o32,m);
+        u33 = u(o33,m);
+        u34 = u(o34,m);
+        adv = upwind3(u00, u11, u12, u13, u14, u21, u22, u23, u24, u31, u32, u33, u34, abs1, abs2, abs3, uu11, uu12, uu21, uu22, uu31, uu32, j00);
+        vis = diffusion(u00, u12, u13, u22, u23, u32, u33, n00, n11, n12, n21, n22, n31, n32, g10, g11, g12, g20, g21, g22, g30, g31, g32, j00);
+        ua(o00,m) = u00 + dt * (- adv + vis + ff(o00,m));
     }
+}
+
+static void psvelocity(Field<double> &u, Field<double> &uu, Field<double> &ua, Field<double> &nut, Field<double> &kx, Field<double> &gm, Field<double> &ja, Field<double> &ff, Dom &dom, Dom &global, int mpi_size, int mpi_rank, MPI_Request *req) {
+    dim3 &osz = dom._h._osz;
+    dim3 &isz = dom._h._isz;
+    unsigned int g = dom._h._guide;
+    unsigned int idx_start, idx_end;
+    unsigned int i_start, i_end;
+    if (mpi_size > 1) {
+        unsigned int buflen = osz.y * osz.z;
+        unsigned int  dlen1 = dom._h._onum;
+        unsigned int  dlen2 = 2 * dlen1;
+        unsigned int  send0 = FALMUtil::d321(      g  ,0,0,osz);
+        unsigned int  send1 = FALMUtil::d321(      g+1,0,0,osz);
+        unsigned int  send2 = FALMUtil::d321(osz.x-g-2,0,0,osz);
+        unsigned int  send3 = FALMUtil::d321(osz.x-g-1,0,0,osz);
+        unsigned int  recv0 = FALMUtil::d321(      g-2,0,0,osz);
+        unsigned int  recv1 = FALMUtil::d321(      g-1,0,0,osz);
+        unsigned int  recv2 = FALMUtil::d321(osz.x-g  ,0,0,osz);
+        unsigned int  recv3 = FALMUtil::d321(osz.x-g+1,0,0,osz);
+        if (mpi_rank == 0) {
+            MPI_Isend(&(  u._hd._arr[send2      ]), buflen, MPI_DOUBLE, mpi_rank+1, 4, MPI_COMM_WORLD, &req[ 0]);
+            MPI_Isend(&(  u._hd._arr[send2+dlen1]), buflen, MPI_DOUBLE, mpi_rank+1, 5, MPI_COMM_WORLD, &req[ 1]);
+            MPI_Isend(&(  u._hd._arr[send2+dlen2]), buflen, MPI_DOUBLE, mpi_rank+1, 6, MPI_COMM_WORLD, &req[ 2]);
+            MPI_Isend(&(nut._hd._arr[send3      ]), buflen, MPI_DOUBLE, mpi_rank+1, 7, MPI_COMM_WORLD, &req[ 3]);
+            MPI_Irecv(&(  u._hd._arr[recv3      ]), buflen, MPI_DOUBLE, mpi_rank+1, 0, MPI_COMM_WORLD, &req[ 4]);
+            MPI_Irecv(&(  u._hd._arr[recv3+dlen1]), buflen, MPI_DOUBLE, mpi_rank+1, 1, MPI_COMM_WORLD, &req[ 5]);
+            MPI_Irecv(&(  u._hd._arr[recv3+dlen2]), buflen, MPI_DOUBLE, mpi_rank+1, 2, MPI_COMM_WORLD, &req[ 6]);
+            MPI_Irecv(&(nut._hd._arr[recv2      ]), buflen, MPI_DOUBLE, mpi_rank+1, 3, MPI_COMM_WORLD, &req[ 7]);
+        } else if (mpi_rank == mpi_size - 1) {
+            MPI_Isend(&(  u._hd._arr[send1      ]), buflen, MPI_DOUBLE, mpi_rank-1, 0, MPI_COMM_WORLD, &req[ 0]);
+            MPI_Isend(&(  u._hd._arr[send1+dlen1]), buflen, MPI_DOUBLE, mpi_rank-1, 1, MPI_COMM_WORLD, &req[ 1]);
+            MPI_Isend(&(  u._hd._arr[send1+dlen2]), buflen, MPI_DOUBLE, mpi_rank-1, 2, MPI_COMM_WORLD, &req[ 2]);
+            MPI_Isend(&(nut._hd._arr[send0      ]), buflen, MPI_DOUBLE, mpi_rank-1, 3, MPI_COMM_WORLD, &req[ 3]);
+            MPI_Irecv(&(  u._hd._arr[recv0      ]), buflen, MPI_DOUBLE, mpi_rank-1, 4, MPI_COMM_WORLD, &req[ 4]);
+            MPI_Irecv(&(  u._hd._arr[recv0+dlen1]), buflen, MPI_DOUBLE, mpi_rank-1, 5, MPI_COMM_WORLD, &req[ 5]);
+            MPI_Irecv(&(  u._hd._arr[recv0+dlen2]), buflen, MPI_DOUBLE, mpi_rank-1, 6, MPI_COMM_WORLD, &req[ 6]);
+            MPI_Irecv(&(nut._hd._arr[recv1      ]), buflen, MPI_DOUBLE, mpi_rank-1, 7, MPI_COMM_WORLD, &req[ 7]);
+        } else {
+            MPI_Isend(&(  u._hd._arr[send2      ]), buflen, MPI_DOUBLE, mpi_rank+1, 4, MPI_COMM_WORLD, &req[ 0]);
+            MPI_Isend(&(  u._hd._arr[send2+dlen1]), buflen, MPI_DOUBLE, mpi_rank+1, 5, MPI_COMM_WORLD, &req[ 1]);
+            MPI_Isend(&(  u._hd._arr[send2+dlen2]), buflen, MPI_DOUBLE, mpi_rank+1, 6, MPI_COMM_WORLD, &req[ 2]);
+            MPI_Isend(&(nut._hd._arr[send3      ]), buflen, MPI_DOUBLE, mpi_rank+1, 7, MPI_COMM_WORLD, &req[ 3]);
+            MPI_Isend(&(  u._hd._arr[send1      ]), buflen, MPI_DOUBLE, mpi_rank-1, 0, MPI_COMM_WORLD, &req[ 4]);
+            MPI_Isend(&(  u._hd._arr[send1+dlen1]), buflen, MPI_DOUBLE, mpi_rank-1, 1, MPI_COMM_WORLD, &req[ 5]);
+            MPI_Isend(&(  u._hd._arr[send1+dlen2]), buflen, MPI_DOUBLE, mpi_rank-1, 2, MPI_COMM_WORLD, &req[ 6]);
+            MPI_Isend(&(nut._hd._arr[send0      ]), buflen, MPI_DOUBLE, mpi_rank-1, 3, MPI_COMM_WORLD, &req[ 7]);
+
+            MPI_Irecv(&(  u._hd._arr[recv3      ]), buflen, MPI_DOUBLE, mpi_rank+1, 0, MPI_COMM_WORLD, &req[ 8]);
+            MPI_Irecv(&(  u._hd._arr[recv3+dlen1]), buflen, MPI_DOUBLE, mpi_rank+1, 1, MPI_COMM_WORLD, &req[ 9]);
+            MPI_Irecv(&(  u._hd._arr[recv3+dlen2]), buflen, MPI_DOUBLE, mpi_rank+1, 2, MPI_COMM_WORLD, &req[10]);
+            MPI_Irecv(&(nut._hd._arr[recv2      ]), buflen, MPI_DOUBLE, mpi_rank+1, 3, MPI_COMM_WORLD, &req[11]);
+            MPI_Irecv(&(  u._hd._arr[recv0      ]), buflen, MPI_DOUBLE, mpi_rank-1, 4, MPI_COMM_WORLD, &req[12]);
+            MPI_Irecv(&(  u._hd._arr[recv0+dlen1]), buflen, MPI_DOUBLE, mpi_rank-1, 5, MPI_COMM_WORLD, &req[13]);
+            MPI_Irecv(&(  u._hd._arr[recv0+dlen2]), buflen, MPI_DOUBLE, mpi_rank-1, 6, MPI_COMM_WORLD, &req[14]);
+            MPI_Irecv(&(nut._hd._arr[recv1      ]), buflen, MPI_DOUBLE, mpi_rank-1, 7, MPI_COMM_WORLD, &req[15]);
+        }
+    }
+
+    i_start   = (mpi_rank > 0)? 2 : 0;
+    i_end     = (mpi_rank == mpi_size - 1)? isz.x : isz.x-2;
+    idx_start = FALMUtil::d321(i_start,0,0,isz);
+    idx_end   = FALMUtil::d321(i_end  ,0,0,isz);
+    psvelocity_kernel<<<n_blocks, n_threads>>>(*(u._dd), *(uu._dd), *(ua._dd), *(nut._dd), *(kx._dd), *(gm._dd), *(ja._dd), *(ff._dd), *(dom._d), idx_start, idx_end);
 }
 
 }
