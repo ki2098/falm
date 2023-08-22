@@ -5,5 +5,7 @@ const int    n_blocks   = 8;
 const int    n_threads  = 64;
 const double sor_omega  = 1.2;
 const double ls_epsilon = 1e-3;
+const double re         = 2e5;
+const double ri         = 1 / re;
 
 #endif

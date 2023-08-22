@@ -19,7 +19,7 @@ struct LS_State {
 
 __global__ static void poisson_sor_kernel(FieldCp<double> &a, FieldCp<double> &x, FieldCp<double> &b, double omega, int color, DomCp &dom, unsigned int idx_start, unsigned int idx_end) {
     unsigned int stride = FALMUtil::get_global_size();
-    for (unsigned int idx = FALMUtil::get_global_idx() + idx_start; idx < idx_end; idx + stride) {
+    for (unsigned int idx = FALMUtil::get_global_idx() + idx_start; idx < idx_end; idx += stride) {
         unsigned int ii, ij, ik;
         FALMUtil::d123(idx, ii, ij, ik, dom._isz);
         unsigned int oi, oj, ok;
@@ -60,7 +60,7 @@ __global__ static void poisson_sor_kernel(FieldCp<double> &a, FieldCp<double> &x
 
 __global__ static void poisson_jacobi_kernel(FieldCp<double> &a, FieldCp<double> &xn, FieldCp<double> &xp, FieldCp<double> &b, DomCp &dom, unsigned int idx_start, unsigned int idx_end) {
     unsigned int stride = FALMUtil::get_global_size();
-    for (unsigned int idx = FALMUtil::get_global_idx() + idx_start; idx < idx_end; idx + stride) {
+    for (unsigned int idx = FALMUtil::get_global_idx() + idx_start; idx < idx_end; idx += stride) {
         unsigned int ii, ij, ik;
         FALMUtil::d123(idx, ii, ij, ik, dom._isz);
         unsigned int oi, oj, ok;
@@ -98,7 +98,7 @@ __global__ static void poisson_jacobi_kernel(FieldCp<double> &a, FieldCp<double>
 
 __global__ static void res_kernel(FieldCp<double> &a, FieldCp<double> &x, FieldCp<double> &b, FieldCp<double> &r, DomCp &dom) {
     unsigned int stride = FALMUtil::get_global_size();
-    for (unsigned int idx = FALMUtil::get_global_idx(); idx < dom._inum; idx + stride) {
+    for (unsigned int idx = FALMUtil::get_global_idx(); idx < dom._inum; idx += stride) {
         unsigned int ii, ij, ik;
         FALMUtil::d123(idx, ii, ij, ik, dom._isz);
         unsigned int oi, oj, ok;

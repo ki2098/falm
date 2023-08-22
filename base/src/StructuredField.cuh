@@ -367,7 +367,7 @@ static double fscala_sum(FALM::Field<double> &a, FALM::Dom &dom) {
 
 __global__ static void fscala_zero_avg_kernel(FALM::FieldCp<double> &a, FALM::DomCp &dom, double avg) {
     unsigned int stride = FALMUtil::get_global_size();
-    for (unsigned int idx = FALMUtil::get_global_idx(); idx < dom._inum; idx + stride) {
+    for (unsigned int idx = FALMUtil::get_global_idx(); idx < dom._inum; idx += stride) {
         unsigned int ii, ij, ik;
         FALMUtil::d123(idx, ii, ij, ik, dom._isz);
         unsigned int oi, oj, ok;
