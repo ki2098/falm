@@ -157,12 +157,13 @@ __global__ static void psvelocity_kernel(FieldCp<double> &u, FieldCp<double> &uu
     }
 }
 
-static void psvelocity(Field<double> &u, Field<double> &uu, Field<double> &ua, Field<double> &nut, Field<double> &kx, Field<double> &gm, Field<double> &ja, Field<double> &ff, Dom &dom, Dom &global, int mpi_size, int mpi_rank, MPI_Request *req) {
+static void psvelocity(Field<double> &u, Field<double> &uu, Field<double> &ua, Field<double> &nut, Field<double> &kx, Field<double> &gm, Field<double> &ja, Field<double> &ff, Dom &dom, Dom &global, int mpi_size, int mpi_rank, MPI_Request *req, double &kernel_time, double &comm_time) {
     dim3 &osz = dom._h._osz;
     dim3 &isz = dom._h._isz;
     unsigned int g = dom._h._guide;
     unsigned int idx_start, idx_end;
     unsigned int i_start, i_end;
+    double t0, t1, t2;
     if (mpi_size > 1) {
         unsigned int buflen = osz.y * osz.z;
         unsigned int  dlen1 = dom._h._onum;
@@ -218,7 +219,36 @@ static void psvelocity(Field<double> &u, Field<double> &uu, Field<double> &ua, F
     i_end     = (mpi_rank == mpi_size - 1)? isz.x : isz.x-2;
     idx_start = FALMUtil::d321(i_start,0,0,isz);
     idx_end   = FALMUtil::d321(i_end  ,0,0,isz);
+    t0 = MPI_Wtime();
     psvelocity_kernel<<<n_blocks, n_threads>>>(*(u._dd), *(uu._dd), *(ua._dd), *(nut._dd), *(kx._dd), *(gm._dd), *(ja._dd), *(ff._dd), *(dom._d), idx_start, idx_end);
+    t1 = MPI_Wtime();
+
+    if (mpi_size > 1) {
+        if (mpi_rank == 0) {
+            MPI_Waitall(4, &req[4], MPI_STATUSES_IGNORE);
+            t2 = MPI_Wtime();
+            idx_start = FALMUtil::d321(isz.x-2,0,0,isz);
+            idx_end   = FALMUtil::d321(isz.x  ,0,0,isz);
+            psvelocity_kernel<<<n_blocks, n_threads>>>(*(u._dd), *(uu._dd), *(ua._dd), *(nut._dd), *(kx._dd), *(gm._dd), *(ja._dd), *(ff._dd), *(dom._d), idx_start, idx_end);
+        } else if (mpi_rank == mpi_size - 1) {
+            MPI_Waitall(4, &req[4], MPI_STATUSES_IGNORE);
+            t2 = MPI_Wtime();
+            idx_start = FALMUtil::d321(      0,0,0,isz);
+            idx_end   = FALMUtil::d321(      2,0,0,isz);
+            psvelocity_kernel<<<n_blocks, n_threads>>>(*(u._dd), *(uu._dd), *(ua._dd), *(nut._dd), *(kx._dd), *(gm._dd), *(ja._dd), *(ff._dd), *(dom._d), idx_start, idx_end);
+        } else {
+            MPI_Waitall(8, &req[8], MPI_STATUSES_IGNORE);
+            t2 = MPI_Wtime();
+            idx_start = FALMUtil::d321(isz.x-2,0,0,isz);
+            idx_end   = FALMUtil::d321(isz.x  ,0,0,isz);
+            psvelocity_kernel<<<n_blocks, n_threads>>>(*(u._dd), *(uu._dd), *(ua._dd), *(nut._dd), *(kx._dd), *(gm._dd), *(ja._dd), *(ff._dd), *(dom._d), idx_start, idx_end);
+            idx_start = FALMUtil::d321(      0,0,0,isz);
+            idx_end   = FALMUtil::d321(      2,0,0,isz);
+            psvelocity_kernel<<<n_blocks, n_threads>>>(*(u._dd), *(uu._dd), *(ua._dd), *(nut._dd), *(kx._dd), *(gm._dd), *(ja._dd), *(ff._dd), *(dom._d), idx_start, idx_end);
+        }
+    }
+    kernel_time += (t1 - t0);
+    comm_time   += (t2 - t0);
 }
 
 }

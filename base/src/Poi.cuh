@@ -133,7 +133,7 @@ __global__ static void res_kernel(FieldCp<double> &a, FieldCp<double> &x, FieldC
     }
 }
 
-static void poisson_sor(Field<double> &a, Field<double> &x, Field<double> &b, Field<double> &r, double omega, int maxit, Dom &dom, Dom& global, int mpi_size, int mpi_rank, MPI_Request *req, LS_State &state) {
+static void poisson_sor(Field<double> &a, Field<double> &x, Field<double> &b, Field<double> &r, double omega, int maxit, Dom &dom, Dom& global, int mpi_size, int mpi_rank, MPI_Request *req, LS_State &state, double &kernel_time, double &comm_time) {
     dim3 &osz = dom._h._osz;
     dim3 &isz = dom._h._isz;
     unsigned int g = dom._h._guide;
@@ -141,6 +141,7 @@ static void poisson_sor(Field<double> &a, Field<double> &x, Field<double> &b, Fi
     unsigned int i_start, i_end;
     int color;
     double err;
+    double t0, t1, t2;
     for (state.it = 0; state.it < maxit;) {
         color = 0;
         if (mpi_size > 1) {
@@ -162,29 +163,35 @@ static void poisson_sor(Field<double> &a, Field<double> &x, Field<double> &b, Fi
         i_end     = (mpi_rank == mpi_size - 1)? isz.x : isz.x-1;
         idx_start = FALMUtil::d321(i_start,0,0,isz);
         idx_end   = FALMUtil::d321(i_end  ,0,0,isz);
+        t0 = MPI_Wtime();
         poisson_sor_kernel<<<n_blocks, n_threads>>>(*(a._dd), *(x._dd), *(b._dd), sor_omega, color, *(dom._d), idx_start, idx_end);
+        t1 = MPI_Wtime();
         if (mpi_size > 1) {
             if (mpi_rank == 0) {
                 MPI_Waitall(2, &req[0], MPI_STATUSES_IGNORE);
+                t2 = MPI_Wtime();
                 idx_start = FALMUtil::d321(isz.x-1,0,0,isz);
                 idx_end   = FALMUtil::d321(isz.x  ,0,0,isz);
                 poisson_sor_kernel<<<n_blocks, n_threads>>>(*(a._dd), *(x._dd), *(b._dd), sor_omega, color, *(dom._d), idx_start, idx_end);
             } else if (mpi_rank == mpi_size - 1) {
                 MPI_Waitall(2, &req[0], MPI_STATUSES_IGNORE);
+                t2 = MPI_Wtime();
                 idx_start = FALMUtil::d321(0,0,0,isz);
                 idx_end   = FALMUtil::d321(1,0,0,isz);
                 poisson_sor_kernel<<<n_blocks, n_threads>>>(*(a._dd), *(x._dd), *(b._dd), sor_omega, color, *(dom._d), idx_start, idx_end);
             } else {
-                MPI_Waitall(2, &req[0], MPI_STATUSES_IGNORE);
+                MPI_Waitall(4, &req[0], MPI_STATUSES_IGNORE);
+                t2 = MPI_Wtime();
                 idx_start = FALMUtil::d321(isz.x-1,0,0,isz);
                 idx_end   = FALMUtil::d321(isz.x  ,0,0,isz);
                 poisson_sor_kernel<<<n_blocks, n_threads>>>(*(a._dd), *(x._dd), *(b._dd), sor_omega, color, *(dom._d), idx_start, idx_end);
-                MPI_Waitall(2, &req[2], MPI_STATUSES_IGNORE);
                 idx_start = FALMUtil::d321(0,0,0,isz);
                 idx_end   = FALMUtil::d321(1,0,0,isz);
                 poisson_sor_kernel<<<n_blocks, n_threads>>>(*(a._dd), *(x._dd), *(b._dd), sor_omega, color, *(dom._d), idx_start, idx_end);
             }
         }
+        kernel_time += (t1 - t0);
+        comm_time   += (t2 - t0);
 
         color = 1;
         if (mpi_size > 1) {
@@ -206,29 +213,35 @@ static void poisson_sor(Field<double> &a, Field<double> &x, Field<double> &b, Fi
         i_end     = (mpi_rank == mpi_size - 1)? isz.x : isz.x-1;
         idx_start = FALMUtil::d321(i_start,0,0,isz);
         idx_end   = FALMUtil::d321(i_end  ,0,0,isz);
+        t0 = MPI_Wtime();
         poisson_sor_kernel<<<n_blocks, n_threads>>>(*(a._dd), *(x._dd), *(b._dd), sor_omega, color, *(dom._d), idx_start, idx_end);
+        t1 = MPI_Wtime();
         if (mpi_size > 1) {
             if (mpi_rank == 0) {
                 MPI_Waitall(2, &req[0], MPI_STATUSES_IGNORE);
+                t2 = MPI_Wtime();
                 idx_start = FALMUtil::d321(isz.x-1,0,0,isz);
                 idx_end   = FALMUtil::d321(isz.x  ,0,0,isz);
                 poisson_sor_kernel<<<n_blocks, n_threads>>>(*(a._dd), *(x._dd), *(b._dd), sor_omega, color, *(dom._d), idx_start, idx_end);
             } else if (mpi_rank == mpi_size - 1) {
                 MPI_Waitall(2, &req[0], MPI_STATUSES_IGNORE);
+                t2 = MPI_Wtime();
                 idx_start = FALMUtil::d321(0,0,0,isz);
                 idx_end   = FALMUtil::d321(1,0,0,isz);
                 poisson_sor_kernel<<<n_blocks, n_threads>>>(*(a._dd), *(x._dd), *(b._dd), sor_omega, color, *(dom._d), idx_start, idx_end);
             } else {
-                MPI_Waitall(2, &req[0], MPI_STATUSES_IGNORE);
+                MPI_Waitall(4, &req[0], MPI_STATUSES_IGNORE);
+                t2 = MPI_Wtime();
                 idx_start = FALMUtil::d321(isz.x-1,0,0,isz);
                 idx_end   = FALMUtil::d321(isz.x  ,0,0,isz);
                 poisson_sor_kernel<<<n_blocks, n_threads>>>(*(a._dd), *(x._dd), *(b._dd), sor_omega, color, *(dom._d), idx_start, idx_end);
-                MPI_Waitall(2, &req[2], MPI_STATUSES_IGNORE);
                 idx_start = FALMUtil::d321(0,0,0,isz);
                 idx_end   = FALMUtil::d321(1,0,0,isz);
                 poisson_sor_kernel<<<n_blocks, n_threads>>>(*(a._dd), *(x._dd), *(b._dd), sor_omega, color, *(dom._d), idx_start, idx_end);
             }
         }
+        kernel_time += (t1 - t0);
+        comm_time   += (t2 - t0);
 
         res_kernel<<<n_blocks, n_threads>>>(*(a._dd), *(x._dd), *(b._dd), *(r._dd), *(dom._d));
         err = FALMUtil::fscala_norm2(r, dom);
@@ -240,13 +253,14 @@ static void poisson_sor(Field<double> &a, Field<double> &x, Field<double> &b, Fi
     } while (state.it < maxit && state.re > ls_epsilon);
 }
 
-static void poisson_jacobi(Field<double> &a, Field<double> &x, Field<double> &xp, Field<double> &b, Field<double> &r, double omega, int maxit, Dom &dom, Dom& global, int mpi_size, int mpi_rank, MPI_Request *req, LS_State &state) {
+static void poisson_jacobi(Field<double> &a, Field<double> &x, Field<double> &xp, Field<double> &b, Field<double> &r, double omega, int maxit, Dom &dom, Dom& global, int mpi_size, int mpi_rank, MPI_Request *req, LS_State &state, double &kernel_time, double &comm_time) {
     dim3 &osz = dom._h._osz;
     dim3 &isz = dom._h._isz;
     unsigned int g = dom._h._guide;
     unsigned int idx_start, idx_end;
     unsigned int i_start, i_end;
     double err;
+    double t0, t1, t2;
     for (state.it = 0; state.it < maxit;) {
         FALMUtil::field_cpy(xp, x, FALMLoc::HOST);
         if (mpi_size > 1) {
@@ -268,29 +282,35 @@ static void poisson_jacobi(Field<double> &a, Field<double> &x, Field<double> &xp
         i_end     = (mpi_rank == mpi_size - 1)? isz.x : isz.x-1;
         idx_start = FALMUtil::d321(i_start,0,0,isz);
         idx_end   = FALMUtil::d321(i_end  ,0,0,isz);
+        t0 = MPI_Wtime();
         poisson_jacobi_kernel<<<n_blocks, n_threads>>>(*(a._dd), *(x._dd), *(xp._dd), *(b._dd), *(dom._d), idx_start, idx_end);
+        t1 = MPI_Wtime();
         if (mpi_size > 1) {
             if (mpi_rank == 0) {
                 MPI_Waitall(2, &req[0], MPI_STATUSES_IGNORE);
+                t2 = MPI_Wtime();
                 idx_start = FALMUtil::d321(isz.x-1,0,0,isz);
                 idx_end   = FALMUtil::d321(isz.x  ,0,0,isz);
                 poisson_jacobi_kernel<<<n_blocks, n_threads>>>(*(a._dd), *(x._dd), *(xp._dd), *(b._dd), *(dom._d), idx_start, idx_end);
             } else if (mpi_rank == mpi_size - 1) {
                 MPI_Waitall(2, &req[0], MPI_STATUSES_IGNORE);
+                t2 = MPI_Wtime();
                 idx_start = FALMUtil::d321(0,0,0,isz);
                 idx_end   = FALMUtil::d321(1,0,0,isz);
                 poisson_jacobi_kernel<<<n_blocks, n_threads>>>(*(a._dd), *(x._dd), *(xp._dd), *(b._dd), *(dom._d), idx_start, idx_end);
             } else {
-                MPI_Waitall(2, &req[0], MPI_STATUSES_IGNORE);
+                MPI_Waitall(4, &req[0], MPI_STATUSES_IGNORE);
+                t2 = MPI_Wtime();
                 idx_start = FALMUtil::d321(isz.x-1,0,0,isz);
                 idx_end   = FALMUtil::d321(isz.x  ,0,0,isz);
                 poisson_jacobi_kernel<<<n_blocks, n_threads>>>(*(a._dd), *(x._dd), *(xp._dd), *(b._dd), *(dom._d), idx_start, idx_end);
-                MPI_Waitall(2, &req[2], MPI_STATUSES_IGNORE);
                 idx_start = FALMUtil::d321(0,0,0,isz);
                 idx_end   = FALMUtil::d321(1,0,0,isz);
                 poisson_jacobi_kernel<<<n_blocks, n_threads>>>(*(a._dd), *(x._dd), *(xp._dd), *(b._dd), *(dom._d), idx_start, idx_end);
             }
         }
+        kernel_time += (t1 - t0);
+        comm_time   += (t2 - t0);
 
         res_kernel<<<n_blocks, n_threads>>>(*(a._dd), *(x._dd), *(b._dd), *(r._dd), *(dom._d));
         err = FALMUtil::fscala_norm2(r, dom);
