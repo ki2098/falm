@@ -8,13 +8,6 @@
 #include "Dom.cuh"
 #include "param.h"
 
-namespace FALMLoc {
-static const unsigned int NONE   = 0;
-static const unsigned int HOST   = 1;
-static const unsigned int DEVICE = 2;
-static const unsigned int BOTH   = HOST | DEVICE;
-}
-
 namespace FALM {
 
 template<class T>
@@ -255,18 +248,18 @@ void Field<T>::sync_d2h() {
 
 namespace FALMUtil {
 
-__global__ static void fscala_norm2_kernel(FALM::FieldCp<double> &a, double *partial_sum, FALM::DomCp &dom) {
+__global__ static void fscala_norm2_kernel(FALM::FieldCp<double> &a, double *partial_sum, FALM::DomCp &dom, FALM::DomCp &mapper) {
     __shared__ double cache[n_threads];
     unsigned int stride = get_global_size();
     double temp_sum = 0;
-    for (unsigned int idx = get_global_idx(); idx < dom._inum; idx += stride) {
+    for (unsigned int idx = get_global_idx(); idx < mapper._num; idx += stride) {
         unsigned int ii, ij, ik;
-        FALMUtil::d123(idx, ii, ij, ik, dom._isz);
+        FALMUtil::d123(idx, ii, ij, ik, mapper._size);
         unsigned int oi, oj, ok;
-        oi = ii + dom._guide;
-        oj = ij + dom._guide;
-        ok = ik + dom._guide;
-        unsigned int odx = FALMUtil::d321(oi, oj, ok, dom._osz);
+        oi = ii + mapper._offset.x;
+        oj = ij + mapper._offset.y;
+        ok = ik + mapper._offset.z;
+        unsigned int odx = FALMUtil::d321(oi, oj, ok, dom._size);
         double value = a(odx);
         temp_sum += value * value;
     }
@@ -289,13 +282,13 @@ __global__ static void fscala_norm2_kernel(FALM::FieldCp<double> &a, double *par
     }
 }
 
-static double fscala_norm2(FALM::Field<double> &a, FALM::Dom &dom) {
+static double fscala_norm2(FALM::Field<double> &a, FALM::Dom &dom, FALM::Dom &inner) {
     assert(a._col == 1);
     double *partial_sum, *partial_sum_dev;
     cudaMalloc(&partial_sum_dev, sizeof(double) * n_blocks);
     partial_sum = (double*)malloc(sizeof(double) * n_blocks);
 
-    fscala_norm2_kernel<<<n_blocks, n_threads>>>(*(a._dd), partial_sum_dev, *(dom._d));
+    fscala_norm2_kernel<<<n_blocks, n_threads>>>(*(a._dd), partial_sum_dev, *(dom._d), *(inner._d));
 
     cudaMemcpy(partial_sum, partial_sum_dev, sizeof(double) * n_blocks, cudaMemcpyDeviceToHost);
 
@@ -310,18 +303,18 @@ static double fscala_norm2(FALM::Field<double> &a, FALM::Dom &dom) {
     return sqrt(sum);
 }
 
-__global__ static void fscala_sum_kernel(FALM::FieldCp<double> &a, double *partial_sum, FALM::DomCp &dom) {
+__global__ static void fscala_sum_kernel(FALM::FieldCp<double> &a, double *partial_sum, FALM::DomCp &dom, FALM::DomCp &mapper) {
     __shared__ double cache[n_threads];
     unsigned int stride = get_global_size();
     double temp_sum = 0;
-    for (unsigned int idx = get_global_idx(); idx < dom._inum; idx += stride) {
+    for (unsigned int idx = get_global_idx(); idx < mapper._num; idx += stride) {
         unsigned int ii, ij, ik;
-        FALMUtil::d123(idx, ii, ij, ik, dom._isz);
+        FALMUtil::d123(idx, ii, ij, ik, mapper._size);
         unsigned int oi, oj, ok;
-        oi = ii + dom._guide;
-        oj = ij + dom._guide;
-        ok = ik + dom._guide;
-        unsigned int odx = FALMUtil::d321(oi, oj, ok, dom._osz);
+        oi = ii + mapper._size.x;
+        oj = ij + mapper._size.y;
+        ok = ik + mapper._size.z;
+        unsigned int odx = FALMUtil::d321(oi, oj, ok, dom._size);
         double value = a(odx);
         temp_sum += value;
     }
@@ -344,13 +337,13 @@ __global__ static void fscala_sum_kernel(FALM::FieldCp<double> &a, double *parti
     }
 }
 
-static double fscala_sum(FALM::Field<double> &a, FALM::Dom &dom) {
+static double fscala_sum(FALM::Field<double> &a, FALM::Dom &dom, FALM::Dom &inner) {
     assert(a._col == 1);
     double *partial_sum, *partial_sum_dev;
     cudaMalloc(&partial_sum_dev, sizeof(double) * n_blocks);
     partial_sum = (double*)malloc(sizeof(double) * n_blocks);
 
-    fscala_sum_kernel<<<n_blocks, n_threads>>>(*(a._dd), partial_sum_dev, *(dom._d));
+    fscala_sum_kernel<<<n_blocks, n_threads>>>(*(a._dd), partial_sum_dev, *(dom._d), *(inner._d));
 
     cudaMemcpy(partial_sum, partial_sum_dev, sizeof(double) * n_blocks, cudaMemcpyDeviceToHost);
 
@@ -365,27 +358,27 @@ static double fscala_sum(FALM::Field<double> &a, FALM::Dom &dom) {
     return sum;
 }
 
-__global__ static void fscala_zero_avg_kernel(FALM::FieldCp<double> &a, FALM::DomCp &dom, double avg) {
+__global__ static void fscala_zero_avg_kernel(FALM::FieldCp<double> &a, FALM::DomCp &dom, FALM::DomCp &mapper, double avg) {
     unsigned int stride = FALMUtil::get_global_size();
-    for (unsigned int idx = FALMUtil::get_global_idx(); idx < dom._inum; idx += stride) {
+    for (unsigned int idx = FALMUtil::get_global_idx(); idx < mapper._num; idx += stride) {
         unsigned int ii, ij, ik;
-        FALMUtil::d123(idx, ii, ij, ik, dom._isz);
+        FALMUtil::d123(idx, ii, ij, ik, mapper._size);
         unsigned int oi, oj, ok;
-        oi = ii + dom._guide;
-        oj = ij + dom._guide;
-        ok = ik + dom._guide;
-        unsigned int odx = FALMUtil::d321(oi, oj, ok, dom._osz);
+        oi = ii + mapper._size.x;
+        oj = ij + mapper._size.y;
+        ok = ik + mapper._size.z;
+        unsigned int odx = FALMUtil::d321(oi, oj, ok, dom._size);
         a(odx) -= avg;
     }
 }
 
-static void fscala_zero_avg(FALM::Field<double> &a, FALM::Dom &dom, FALM::Dom &global, int mpi_size, int mpi_rank) {
-    double sum = fscala_sum(a, dom);
+static void fscala_zero_avg(FALM::Field<double> &a, FALM::Dom &dom, FALM::Dom &global, FALM::Dom &inner, int mpi_size, int mpi_rank) {
+    double sum = fscala_sum(a, dom, inner);
     if (mpi_size > 1) {
         MPI_Allreduce(MPI_IN_PLACE, &sum, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
     }
-    double avg = sum / global._h._inum;
-    fscala_zero_avg_kernel<<<n_blocks, n_threads>>>(*(a._dd), *(dom._d), avg);
+    double avg = sum / inner._h._num;
+    fscala_zero_avg_kernel<<<n_blocks, n_threads>>>(*(a._dd), *(dom._d), *(inner._d), avg);
 }
 
 template<class T>

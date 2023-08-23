@@ -4,6 +4,13 @@
 #include <cuda.h>
 #include <cuda_runtime.h>
 
+namespace FALMLoc {
+static const unsigned int NONE   = 0;
+static const unsigned int HOST   = 1;
+static const unsigned int DEVICE = 2;
+static const unsigned int BOTH   = HOST | DEVICE;
+}
+
 namespace FALMUtil {
 
 __host__ __device__ static inline void d123(unsigned int idx, unsigned int &i, unsigned int &j, unsigned int &k, dim3 &size) {

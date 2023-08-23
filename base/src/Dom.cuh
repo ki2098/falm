@@ -7,30 +7,28 @@
 
 namespace FALM {
 
-struct DomCp {
-    dim3           _isz;
-    dim3           _osz;
-    dim3        _origin;
-    unsigned int _guide;
-    unsigned int  _inum;
-    unsigned int  _onum;
+const unsigned int guide = 2;
 
-    DomCp(dim3 &size, dim3 &origin, unsigned int guide);
+struct DomCp {
+    dim3 _size;
+    dim3 _offset;
+    unsigned int _num;
+
+    DomCp(dim3 &size, dim3 &origin);
 };
 
-DomCp::DomCp(dim3 &size, dim3 &origin, unsigned int guide) : _isz(size), _osz(size.x+2*guide, size.y+2*guide, size.z+2*guide), _origin(origin), _guide(guide) {
-    _inum = _isz.x * _isz.y * _isz.z;
-    _onum = _osz.x * _osz.y * _osz.z;
+DomCp::DomCp(dim3 &size, dim3 &offset) : _size(size), _offset(offset) {
+    _num = size.x * size.y * size.z;
 }
 
 struct Dom {
     DomCp  _h;
     DomCp *_d;
-    Dom(dim3 &size, dim3 &origin, unsigned int guide);
+    Dom(dim3 &size, dim3 &offset);
     ~Dom();
 };
 
-Dom::Dom(dim3 &size, dim3 &origin, unsigned int guide) : _h(size, origin, guide) {
+Dom::Dom(dim3 &size, dim3 &offset) : _h(size, offset) {
     cudaMalloc(&_d, sizeof(DomCp));
     cudaMemcpy( _d, &_h, sizeof(DomCp), cudaMemcpyHostToDevice);
 }
