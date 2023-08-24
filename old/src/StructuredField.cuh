@@ -248,7 +248,7 @@ void Field<T>::sync_d2h() {
 
 namespace FALMUtil {
 
-__global__ static void fscala_norm2_kernel(FALM::FieldCp<double> &a, double *partial_sum, FALM::DomCp &dom, FALM::DomCp &mapper) {
+__global__ static void fscala_norm2_kernel(FALM::FieldCp<double> &a, double *partial_sum, FALM::Dom dom, FALM::Dom mapper) {
     __shared__ double cache[n_threads];
     unsigned int stride = get_global_size();
     double temp_sum = 0;
@@ -282,13 +282,16 @@ __global__ static void fscala_norm2_kernel(FALM::FieldCp<double> &a, double *par
     }
 }
 
-static double fscala_norm2(FALM::Field<double> &a, FALM::Dom &dom, FALM::Dom &inner) {
+static double fscala_norm2(FALM::Field<double> &a, FALM::Dom &dom) {
     assert(a._col == 1);
+    dim3 &sz             = dom._size;
+    const unsigned int g = FALM::guide;
+    FALM::Dom inner(sz.x - 2 * g, sz.y - 2 * g, sz.z - 2 * g, g, g, g);
     double *partial_sum, *partial_sum_dev;
     cudaMalloc(&partial_sum_dev, sizeof(double) * n_blocks);
     partial_sum = (double*)malloc(sizeof(double) * n_blocks);
 
-    fscala_norm2_kernel<<<n_blocks, n_threads>>>(*(a._dd), partial_sum_dev, *(dom._d), *(inner._d));
+    fscala_norm2_kernel<<<n_blocks, n_threads>>>(*(a._dd), partial_sum_dev, dom, inner);
 
     cudaMemcpy(partial_sum, partial_sum_dev, sizeof(double) * n_blocks, cudaMemcpyDeviceToHost);
 
@@ -303,7 +306,7 @@ static double fscala_norm2(FALM::Field<double> &a, FALM::Dom &dom, FALM::Dom &in
     return sqrt(sum);
 }
 
-__global__ static void fscala_sum_kernel(FALM::FieldCp<double> &a, double *partial_sum, FALM::DomCp &dom, FALM::DomCp &mapper) {
+__global__ static void fscala_sum_kernel(FALM::FieldCp<double> &a, double *partial_sum, FALM::Dom dom, FALM::Dom mapper) {
     __shared__ double cache[n_threads];
     unsigned int stride = get_global_size();
     double temp_sum = 0;
@@ -337,13 +340,16 @@ __global__ static void fscala_sum_kernel(FALM::FieldCp<double> &a, double *parti
     }
 }
 
-static double fscala_sum(FALM::Field<double> &a, FALM::Dom &dom, FALM::Dom &inner) {
+static double fscala_sum(FALM::Field<double> &a, FALM::Dom &dom) {
     assert(a._col == 1);
+    dim3             &sz = dom._size;
+    const unsigned int g = FALM::guide;
+    FALM::Dom inner(sz.x - 2 * g, sz.y - 2 * g, sz.z - 2 * g, g, g, g);
     double *partial_sum, *partial_sum_dev;
     cudaMalloc(&partial_sum_dev, sizeof(double) * n_blocks);
     partial_sum = (double*)malloc(sizeof(double) * n_blocks);
 
-    fscala_sum_kernel<<<n_blocks, n_threads>>>(*(a._dd), partial_sum_dev, *(dom._d), *(inner._d));
+    fscala_sum_kernel<<<n_blocks, n_threads>>>(*(a._dd), partial_sum_dev, dom, inner);
 
     cudaMemcpy(partial_sum, partial_sum_dev, sizeof(double) * n_blocks, cudaMemcpyDeviceToHost);
 
@@ -358,7 +364,7 @@ static double fscala_sum(FALM::Field<double> &a, FALM::Dom &dom, FALM::Dom &inne
     return sum;
 }
 
-__global__ static void fscala_zero_avg_kernel(FALM::FieldCp<double> &a, FALM::DomCp &dom, FALM::DomCp &mapper, double avg) {
+__global__ static void fscala_zero_avg_kernel(FALM::FieldCp<double> &a, FALM::Dom dom, FALM::Dom mapper, double avg) {
     unsigned int stride = FALMUtil::get_global_size();
     for (unsigned int idx = FALMUtil::get_global_idx(); idx < mapper._num; idx += stride) {
         unsigned int ii, ij, ik;
@@ -372,13 +378,18 @@ __global__ static void fscala_zero_avg_kernel(FALM::FieldCp<double> &a, FALM::Do
     }
 }
 
-static void fscala_zero_avg(FALM::Field<double> &a, FALM::Dom &dom, FALM::Dom &global, FALM::Dom &inner, int mpi_size, int mpi_rank) {
-    double sum = fscala_sum(a, dom, inner);
+static void fscala_zero_avg(FALM::Field<double> &a, FALM::Dom &dom, FALM::Dom &global, int mpi_size, int mpi_rank) {
+    double sum = fscala_sum(a, dom);
     if (mpi_size > 1) {
         MPI_Allreduce(MPI_IN_PLACE, &sum, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
     }
-    double avg = sum / inner._h._num;
-    fscala_zero_avg_kernel<<<n_blocks, n_threads>>>(*(a._dd), *(dom._d), *(inner._d), avg);
+    dim3 &gsz = global._size;
+    const unsigned int g = FALM::guide;
+    unsigned int gnum = (gsz.x - 2 * g) * (gsz.y - 2 * g) * (gsz.z - 2 * g);
+    double avg = sum / gnum;
+    dim3 &sz = dom._size;
+    FALM::Dom inner(sz.x - 2 * g, sz.y - 2 * g, sz.z - 2 * g, g, g, g);
+    fscala_zero_avg_kernel<<<n_blocks, n_threads>>>(*(a._dd), dom, inner, avg);
 }
 
 template<class T>

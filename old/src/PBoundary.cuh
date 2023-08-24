@@ -9,7 +9,7 @@
 
 namespace FALM {
 
-__global__ static void pb_east_kernel(FieldCp<double> &p, DomCp &dom, DomCp &inner) {
+__global__ static void pb_east_kernel(FieldCp<double> &p, Dom dom, Dom inner) {
     unsigned int stride = FALMUtil::get_global_size();
     dim3 &osz =   dom._size;
     dim3 &isz = inner._size;
@@ -23,7 +23,7 @@ __global__ static void pb_east_kernel(FieldCp<double> &p, DomCp &dom, DomCp &inn
     }
 }
 
-__global__ static void pb_west_kernel(FieldCp<double> &p, DomCp &dom, DomCp &inner) {
+__global__ static void pb_west_kernel(FieldCp<double> &p, Dom dom, Dom inner) {
     unsigned int stride = FALMUtil::get_global_size();
     dim3 &osz =   dom._size;
     dim3 &isz = inner._size;
@@ -37,7 +37,7 @@ __global__ static void pb_west_kernel(FieldCp<double> &p, DomCp &dom, DomCp &inn
     }
 }
 
-__global__ static void pb_north_kernel(FieldCp<double> &p, DomCp &dom, DomCp &inner) {
+__global__ static void pb_north_kernel(FieldCp<double> &p, Dom dom, Dom inner) {
     unsigned int stride = FALMUtil::get_global_size();
     dim3 &osz =   dom._size;
     dim3 &isz = inner._size;
@@ -51,7 +51,7 @@ __global__ static void pb_north_kernel(FieldCp<double> &p, DomCp &dom, DomCp &in
     }
 }
 
-__global__ static void pb_south_kernel(FieldCp<double> &p, DomCp &dom, DomCp &inner) {
+__global__ static void pb_south_kernel(FieldCp<double> &p, Dom dom, Dom inner) {
     unsigned int stride = FALMUtil::get_global_size();
     dim3 &osz =   dom._size;
     dim3 &isz = inner._size;
@@ -65,7 +65,7 @@ __global__ static void pb_south_kernel(FieldCp<double> &p, DomCp &dom, DomCp &in
     }
 }
 
-__global__ static void pb_upper_kernel(FieldCp<double> &p, DomCp &dom, DomCp &inner) {
+__global__ static void pb_upper_kernel(FieldCp<double> &p, Dom dom, Dom inner) {
     unsigned int stride = FALMUtil::get_global_size();
     dim3 &osz =   dom._size;
     dim3 &isz = inner._size;
@@ -79,7 +79,7 @@ __global__ static void pb_upper_kernel(FieldCp<double> &p, DomCp &dom, DomCp &in
     }
 }
 
-__global__ static void pb_lower_kernel(FieldCp<double> &p, DomCp &dom, DomCp &inner) {
+__global__ static void pb_lower_kernel(FieldCp<double> &p, Dom dom, Dom inner) {
     unsigned int stride = FALMUtil::get_global_size();
     dim3 &osz =   dom._size;
     dim3 &isz = inner._size;
@@ -93,17 +93,19 @@ __global__ static void pb_lower_kernel(FieldCp<double> &p, DomCp &dom, DomCp &in
     }
 }
 
-static void pressure_boundary(Field<double> &p, Dom &dom, Dom &global, Dom &inner, int mpi_size, int mpi_rank) {
+static void pressure_boundary(Field<double> &p, Dom &dom, int mpi_size, int mpi_rank) {
+    Dom map;
     if (mpi_rank == 0) {
-        pb_west_kernel<<<n_blocks, n_threads>>>(*(p._dd), *(dom._d), *(inner._d));
+        
+        pb_west_kernel<<<n_blocks, n_threads>>>(*(p._dd), dom, inner);
     }
     if (mpi_rank == mpi_size - 1) {
-        pb_east_kernel<<<n_blocks, n_threads>>>(*(p._dd), *(dom._d), *(inner._d));
+        pb_east_kernel<<<n_blocks, n_threads>>>(*(p._dd), dom, inner);
     }
-    pb_north_kernel<<<n_blocks, n_threads>>>(*(p._dd), *(dom._d), *(inner._d));
-    pb_south_kernel<<<n_blocks, n_threads>>>(*(p._dd), *(dom._d), *(inner._d));
-    pb_upper_kernel<<<n_blocks, n_threads>>>(*(p._dd), *(dom._d), *(inner._d));
-    pb_lower_kernel<<<n_blocks, n_threads>>>(*(p._dd), *(dom._d), *(inner._d));
+    pb_north_kernel<<<n_blocks, n_threads>>>(*(p._dd), dom, inner);
+    pb_south_kernel<<<n_blocks, n_threads>>>(*(p._dd), dom, inner);
+    pb_upper_kernel<<<n_blocks, n_threads>>>(*(p._dd), dom, inner);
+    pb_lower_kernel<<<n_blocks, n_threads>>>(*(p._dd), dom, inner);
 }
 
 }

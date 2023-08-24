@@ -39,11 +39,11 @@ __device__ static double diffusion(double u00, double u11, double u12, double u2
     return vis;
 }
 
-__global__ static void psvelocity_kernel(FieldCp<double> &u, FieldCp<double> &uu, FieldCp<double> &ua, FieldCp<double> &nut, FieldCp<double> &kx, FieldCp<double> &g, FieldCp<double> &ja, FieldCp<double> &ff, DomCp &dom, DomCp &mapper, unsigned int idx_start, unsigned int idx_end) {
+__global__ static void psvelocity_kernel(FieldCp<double> &u, FieldCp<double> &uu, FieldCp<double> &ua, FieldCp<double> &nut, FieldCp<double> &kx, FieldCp<double> &g, FieldCp<double> &ja, FieldCp<double> &ff, Dom dom, Dom mapper, unsigned int loop_start, unsigned int loop_end) {
     unsigned int stride = FALMUtil::get_global_size();
     dim3 &isz =    dom._size;
     dim3 &osz = mapper._size;
-    for (unsigned int idx = FALMUtil::get_global_idx() + idx_start; idx < idx_end; idx += stride) {
+    for (unsigned int idx = FALMUtil::get_global_idx() + loop_start; idx < loop_end; idx += stride) {
         unsigned int ii, ij, ik;
         FALMUtil::d123(idx, ii, ij, ik, isz);
         unsigned int i, j, k;
@@ -156,25 +156,25 @@ __global__ static void psvelocity_kernel(FieldCp<double> &u, FieldCp<double> &uu
     }
 }
 
-static void psvelocity(Field<double> &u, Field<double> &uu, Field<double> &ua, Field<double> &nut, Field<double> &kx, Field<double> &gm, Field<double> &ja, Field<double> &ff, Dom &dom, Dom &global, Dom &inner, int mpi_size, int mpi_rank, MPI_Request *req, double &kernel_time, double &comm_time) {
-    dim3 &osz =   dom._h._size;
-    dim3 &isz = inner._h._size;
-    dim3 &ift = inner._h._offset;
-    unsigned int idx_start, idx_end;
-    unsigned int i_start, i_end;
+static void psvelocity(Field<double> &u, Field<double> &uu, Field<double> &ua, Field<double> &nut, Field<double> &kx, Field<double> &gm, Field<double> &ja, Field<double> &ff, Dom &dom, int mpi_size, int mpi_rank, MPI_Request *req, double &kernel_time, double &comm_time) {
+    dim3 &osz = dom._size;
+    const unsigned int g = guide;
+    Dom inner(osz.x - 2 * g, osz.y - 2 * g, osz.z - 2 * g, g, g, g);
+    dim3 &isz = inner._size;
+    unsigned int loop_start, loop_end;
     double t0, t1, t2;
     if (mpi_size > 1) {
         unsigned int buflen = osz.y * osz.z;
-        unsigned int  dlen1 = dom._h._num;
+        unsigned int  dlen1 = dom._num;
         unsigned int  dlen2 = 2 * dlen1;
-        unsigned int  send0 = FALMUtil::d321(      ift.x  ,0,0,osz);
-        unsigned int  send1 = FALMUtil::d321(      ift.x+1,0,0,osz);
-        unsigned int  send2 = FALMUtil::d321(isz.x+ift.x-2,0,0,osz);
-        unsigned int  send3 = FALMUtil::d321(isz.x+ift.x-1,0,0,osz);
-        unsigned int  recv0 = FALMUtil::d321(      ift.x-2,0,0,osz);
-        unsigned int  recv1 = FALMUtil::d321(      ift.x-1,0,0,osz);
-        unsigned int  recv2 = FALMUtil::d321(isz.x+ift.x  ,0,0,osz);
-        unsigned int  recv3 = FALMUtil::d321(isz.x+ift.x+1,0,0,osz);
+        unsigned int  send0 = FALMUtil::d321(      g  ,0,0,osz);
+        unsigned int  send1 = FALMUtil::d321(      g+1,0,0,osz);
+        unsigned int  send2 = FALMUtil::d321(osz.x-g-2,0,0,osz);
+        unsigned int  send3 = FALMUtil::d321(osz.x-g-1,0,0,osz);
+        unsigned int  recv0 = FALMUtil::d321(      g-2,0,0,osz);
+        unsigned int  recv1 = FALMUtil::d321(      g-1,0,0,osz);
+        unsigned int  recv2 = FALMUtil::d321(osz.x-g  ,0,0,osz);
+        unsigned int  recv3 = FALMUtil::d321(osz.x-g+1,0,0,osz);
         if (mpi_rank == 0) {
             MPI_Isend(&(  u._hd._arr[send2      ]), buflen, MPI_DOUBLE, mpi_rank+1, 4, MPI_COMM_WORLD, &req[ 0]);
             MPI_Isend(&(  u._hd._arr[send2+dlen1]), buflen, MPI_DOUBLE, mpi_rank+1, 5, MPI_COMM_WORLD, &req[ 1]);
@@ -214,47 +214,46 @@ static void psvelocity(Field<double> &u, Field<double> &uu, Field<double> &ua, F
         }
     }
 
-    i_start   = (mpi_rank > 0)? 2 : 0;
-    i_end     = (mpi_rank == mpi_size - 1)? isz.x : isz.x-2;
-    idx_start = FALMUtil::d321(i_start,0,0,isz);
-    idx_end   = FALMUtil::d321(i_end  ,0,0,isz);
+
+    loop_start = (mpi_rank == 0           )? FALMUtil::d321(    0,0,0,isz) : FALMUtil::d321(      2,0,0,isz);
+    loop_end   = (mpi_rank == mpi_size - 1)? FALMUtil::d321(isz.x,0,0,isz) : FALMUtil::d321(isz.x-2,0,0,isz);
     t0 = MPI_Wtime();
-    psvelocity_kernel<<<n_blocks, n_threads>>>(*(u._dd), *(uu._dd), *(ua._dd), *(nut._dd), *(kx._dd), *(gm._dd), *(ja._dd), *(ff._dd), *(dom._d), *(inner._d), idx_start, idx_end);
+    psvelocity_kernel<<<n_blocks, n_threads>>>(*(u._dd), *(uu._dd), *(ua._dd), *(nut._dd), *(kx._dd), *(gm._dd), *(ja._dd), *(ff._dd), dom, inner, loop_start, loop_end);
     t1 = MPI_Wtime();
 
     if (mpi_size > 1) {
         if (mpi_rank == 0) {
             MPI_Waitall(4, &req[4], MPI_STATUSES_IGNORE);
             t2 = MPI_Wtime();
-            idx_start = FALMUtil::d321(isz.x-2,0,0,isz);
-            idx_end   = FALMUtil::d321(isz.x  ,0,0,isz);
-            psvelocity_kernel<<<n_blocks, n_threads>>>(*(u._dd), *(uu._dd), *(ua._dd), *(nut._dd), *(kx._dd), *(gm._dd), *(ja._dd), *(ff._dd), *(dom._d), *(inner._d), idx_start, idx_end);
+            loop_start = FALMUtil::d321(isz.x-2,0,0,isz);
+            loop_end   = FALMUtil::d321(isz.x  ,0,0,isz);
+            psvelocity_kernel<<<n_blocks, n_threads>>>(*(u._dd), *(uu._dd), *(ua._dd), *(nut._dd), *(kx._dd), *(gm._dd), *(ja._dd), *(ff._dd), dom, inner, loop_start, loop_end);
         } else if (mpi_rank == mpi_size - 1) {
             MPI_Waitall(4, &req[4], MPI_STATUSES_IGNORE);
             t2 = MPI_Wtime();
-            idx_start = FALMUtil::d321(      0,0,0,isz);
-            idx_end   = FALMUtil::d321(      2,0,0,isz);
-            psvelocity_kernel<<<n_blocks, n_threads>>>(*(u._dd), *(uu._dd), *(ua._dd), *(nut._dd), *(kx._dd), *(gm._dd), *(ja._dd), *(ff._dd), *(dom._d), *(inner._d), idx_start, idx_end);
+            loop_start = FALMUtil::d321(      0,0,0,isz);
+            loop_end   = FALMUtil::d321(      2,0,0,isz);
+            psvelocity_kernel<<<n_blocks, n_threads>>>(*(u._dd), *(uu._dd), *(ua._dd), *(nut._dd), *(kx._dd), *(gm._dd), *(ja._dd), *(ff._dd), dom, inner, loop_start, loop_end);
         } else {
             MPI_Waitall(8, &req[8], MPI_STATUSES_IGNORE);
             t2 = MPI_Wtime();
-            idx_start = FALMUtil::d321(isz.x-2,0,0,isz);
-            idx_end   = FALMUtil::d321(isz.x  ,0,0,isz);
-            psvelocity_kernel<<<n_blocks, n_threads>>>(*(u._dd), *(uu._dd), *(ua._dd), *(nut._dd), *(kx._dd), *(gm._dd), *(ja._dd), *(ff._dd), *(dom._d), *(inner._d), idx_start, idx_end);
-            idx_start = FALMUtil::d321(      0,0,0,isz);
-            idx_end   = FALMUtil::d321(      2,0,0,isz);
-            psvelocity_kernel<<<n_blocks, n_threads>>>(*(u._dd), *(uu._dd), *(ua._dd), *(nut._dd), *(kx._dd), *(gm._dd), *(ja._dd), *(ff._dd), *(dom._d), *(inner._d), idx_start, idx_end);
+            loop_start = FALMUtil::d321(isz.x-2,0,0,isz);
+            loop_end   = FALMUtil::d321(isz.x  ,0,0,isz);
+            psvelocity_kernel<<<n_blocks, n_threads>>>(*(u._dd), *(uu._dd), *(ua._dd), *(nut._dd), *(kx._dd), *(gm._dd), *(ja._dd), *(ff._dd), dom, inner, loop_start, loop_end);
+            loop_start = FALMUtil::d321(      0,0,0,isz);
+            loop_end   = FALMUtil::d321(      2,0,0,isz);
+            psvelocity_kernel<<<n_blocks, n_threads>>>(*(u._dd), *(uu._dd), *(ua._dd), *(nut._dd), *(kx._dd), *(gm._dd), *(ja._dd), *(ff._dd), dom, inner, loop_start, loop_end);
         }
     }
     kernel_time += (t1 - t0);
     comm_time   += (t2 - t0);
 }
 
-__global__ static void interp_psvelocity_kernel_1(FieldCp<double> &u, FieldCp<double> &uc, FieldCp<double> &kx, FieldCp<double> &ja, DomCp &dom, DomCp &mapper, unsigned int idx_start, unsigned int idx_end) {
+__global__ static void interp_psvelocity_kernel_1(FieldCp<double> &u, FieldCp<double> &uc, FieldCp<double> &kx, FieldCp<double> &ja, Dom dom, Dom mapper, unsigned int loop_start, unsigned int loop_end) {
     unsigned int stride = FALMUtil::get_global_size();
     dim3 &isz = mapper._size;
     dim3 &osz =    dom._size;
-    for (unsigned int idx = FALMUtil::get_global_idx() + idx_start; idx < idx_end; idx += stride) {
+    for (unsigned int idx = FALMUtil::get_global_idx() + loop_start; idx < loop_end; idx += stride) {
         unsigned int ii, ij, ik;
         FALMUtil::d123(idx, ii, ij, ik, isz);
         unsigned int i, j, k;
@@ -269,11 +268,11 @@ __global__ static void interp_psvelocity_kernel_1(FieldCp<double> &u, FieldCp<do
     }
 }
 
-__global__ static void interp_psvelocity_kernel_2(FieldCp<double> &uc, FieldCp<double> &uu, DomCp &dom, DomCp &mapper, unsigned int idx_start, unsigned int idx_end) {
+__global__ static void interp_psvelocity_kernel_2(FieldCp<double> &uc, FieldCp<double> &uu, Dom dom, Dom mapper, unsigned int loop_start, unsigned int loop_end) {
     unsigned int stride = FALMUtil::get_global_size();
     dim3 &isz = mapper._size;
     dim3 &osz =    dom._size;
-    for (unsigned int idx = FALMUtil::get_global_idx() + idx_start; idx < idx_end; idx += stride) {
+    for (unsigned int idx = FALMUtil::get_global_idx() + loop_start; idx < loop_end; idx += stride) {
         unsigned int ii, ij, ik;
         FALMUtil::d123(idx, ii, ij, ik, isz);
         unsigned int i, j, k;
@@ -287,20 +286,59 @@ __global__ static void interp_psvelocity_kernel_2(FieldCp<double> &uc, FieldCp<d
     }
 }
 
-static void interp_psvelocity(Field<double> &u, Field<double> &uc, Field<double> &uu, Field<double> &kx, Field<double> &ja, Dom &dom, Dom &inner, Dom &uc_mapper, Dom &uu_mapper, int mpi_size, int mpi_rank, MPI_Request *req, double &kernel_time1, double &kernel_time2, double &comm_time) {
-    dim3 &isz =     inner._h._size;
-    dim3 &osz =       dom._h._size;
-    dim3 &csz = uc_mapper._h._size;
-    dim3 &usz = uu_mapper._h._size;
+static void interp_psvelocity(Field<double> &u, Field<double> &uc, Field<double> &uu, Field<double> &kx, Field<double> &ja, Dom &dom, int mpi_size, int mpi_rank, MPI_Request *req, double &kernel_time1, double &kernel_time2, double &comm_time) {
+    dim3 &osz = dom._size;
+    const unsigned int g = guide;
+    Dom inner(osz.x - 2 * g, osz.y - 2 * g, osz.z - 2 * g, g, g, g);
+    dim3 &isz = inner._size;
+    Dom ucmap(isz.x + 2, isz.y + 2, isz.z + 2, g - 1, g - 1, g - 1);
+    Dom uumap(isz.x + 1, isz.y + 1, isz.z + 1, g - 1, g - 1, g - 1);
+    dim3 &csz = ucmap._size;
+    dim3 &usz = uumap._size;
 
-    unsigned int idx_start, idx_end;
-    idx_start = (mpi_rank >  0           )? FALMUtil::d321(    0,0,0,csz) : FALMUtil::d321(      1,0,0,csz);
-    idx_end   = (mpi_rank == mpi_size - 1)? FALMUtil::d321(csz.x,0,0,csz) : FALMUtil::d321(csz.x+1,0,0,csz);
-    interp_psvelocity_kernel_1<<<n_blocks, n_threads>>>(*(u._dd), *(uc._dd), *(kx._dd), *(ja._dd), *(dom._d), *(uc_mapper._d), idx_start, idx_end);
+    unsigned int loop_start, loop_end;
+    loop_start = (mpi_rank == 0           )? FALMUtil::d321(    0,0,0,csz) : FALMUtil::d321(      1,0,0,csz);
+    loop_end   = (mpi_rank == mpi_size - 1)? FALMUtil::d321(csz.x,0,0,csz) : FALMUtil::d321(csz.x-1,0,0,csz);
+    interp_psvelocity_kernel_1<<<n_blocks, n_threads>>>(*(u._dd), *(uc._dd), *(kx._dd), *(ja._dd), dom, ucmap, loop_start, loop_end);
 
     if (mpi_size > 1) {
-        
+        int          buflen = osz.y * osz.z;
+        unsigned int  dlen1 = dom._num;
+        unsigned int  dlen2 = 2 * dlen1;
+        unsigned int  send0 = FALMUtil::d321(      g  ,0,0,osz);
+        unsigned int  send1 = FALMUtil::d321(osz.x-g-1,0,0,osz);
+        unsigned int  recv0 = FALMUtil::d321(      g-1,0,0,osz);
+        unsigned int  recv1 = FALMUtil::d321(osz.x-g  ,0,0,osz);
+        if (mpi_rank == 0) {
+            MPI_Isend(&(uc._hd._arr[send1      ]), buflen, MPI_DOUBLE, mpi_rank+1, 3, MPI_COMM_WORLD, &req[ 0]);
+            MPI_Isend(&(uc._hd._arr[send1+dlen1]), buflen, MPI_DOUBLE, mpi_rank+1, 4, MPI_COMM_WORLD, &req[ 1]);
+            MPI_Isend(&(uc._hd._arr[send1+dlen2]), buflen, MPI_DOUBLE, mpi_rank+1, 5, MPI_COMM_WORLD, &req[ 2]);
+            MPI_Irecv(&(uc._hd._arr[recv1      ]), buflen, MPI_DOUBLE, mpi_rank+1, 0, MPI_COMM_WORLD, &req[ 3]);
+            MPI_Irecv(&(uc._hd._arr[recv1+dlen1]), buflen, MPI_DOUBLE, mpi_rank+1, 1, MPI_COMM_WORLD, &req[ 4]);
+            MPI_Irecv(&(uc._hd._arr[recv1+dlen2]), buflen, MPI_DOUBLE, mpi_rank+1, 2, MPI_COMM_WORLD, &req[ 5]);
+        } else if (mpi_rank == mpi_size - 1) {
+            MPI_Isend(&(uc._hd._arr[send0      ]), buflen, MPI_DOUBLE, mpi_rank-1, 0, MPI_COMM_WORLD, &req[ 0]);
+            MPI_Isend(&(uc._hd._arr[send0+dlen1]), buflen, MPI_DOUBLE, mpi_rank-1, 1, MPI_COMM_WORLD, &req[ 1]);
+            MPI_Isend(&(uc._hd._arr[send0+dlen2]), buflen, MPI_DOUBLE, mpi_rank-1, 2, MPI_COMM_WORLD, &req[ 2]);
+            MPI_Irecv(&(uc._hd._arr[recv0      ]), buflen, MPI_DOUBLE, mpi_rank-1, 3, MPI_COMM_WORLD, &req[ 3]);
+            MPI_Irecv(&(uc._hd._arr[recv0+dlen1]), buflen, MPI_DOUBLE, mpi_rank-1, 4, MPI_COMM_WORLD, &req[ 4]);
+            MPI_Irecv(&(uc._hd._arr[recv0+dlen2]), buflen, MPI_DOUBLE, mpi_rank-1, 5, MPI_COMM_WORLD, &req[ 5]);
+        } else {
+            MPI_Isend(&(uc._hd._arr[send1      ]), buflen, MPI_DOUBLE, mpi_rank+1, 3, MPI_COMM_WORLD, &req[ 0]);
+            MPI_Isend(&(uc._hd._arr[send1+dlen1]), buflen, MPI_DOUBLE, mpi_rank+1, 4, MPI_COMM_WORLD, &req[ 1]);
+            MPI_Isend(&(uc._hd._arr[send1+dlen2]), buflen, MPI_DOUBLE, mpi_rank+1, 5, MPI_COMM_WORLD, &req[ 2]);
+            MPI_Isend(&(uc._hd._arr[send0      ]), buflen, MPI_DOUBLE, mpi_rank-1, 0, MPI_COMM_WORLD, &req[ 3]);
+            MPI_Isend(&(uc._hd._arr[send0+dlen1]), buflen, MPI_DOUBLE, mpi_rank-1, 1, MPI_COMM_WORLD, &req[ 4]);
+            MPI_Isend(&(uc._hd._arr[send0+dlen2]), buflen, MPI_DOUBLE, mpi_rank-1, 2, MPI_COMM_WORLD, &req[ 5]);
+            MPI_Irecv(&(uc._hd._arr[recv1      ]), buflen, MPI_DOUBLE, mpi_rank+1, 0, MPI_COMM_WORLD, &req[ 6]);
+            MPI_Irecv(&(uc._hd._arr[recv1+dlen1]), buflen, MPI_DOUBLE, mpi_rank+1, 1, MPI_COMM_WORLD, &req[ 7]);
+            MPI_Irecv(&(uc._hd._arr[recv1+dlen2]), buflen, MPI_DOUBLE, mpi_rank+1, 2, MPI_COMM_WORLD, &req[ 8]);
+            MPI_Irecv(&(uc._hd._arr[recv0      ]), buflen, MPI_DOUBLE, mpi_rank-1, 3, MPI_COMM_WORLD, &req[ 9]);
+            MPI_Irecv(&(uc._hd._arr[recv0+dlen1]), buflen, MPI_DOUBLE, mpi_rank-1, 4, MPI_COMM_WORLD, &req[10]);
+            MPI_Irecv(&(uc._hd._arr[recv0+dlen2]), buflen, MPI_DOUBLE, mpi_rank-1, 5, MPI_COMM_WORLD, &req[11]);
+        }
     }
+    
 }
 
 }
