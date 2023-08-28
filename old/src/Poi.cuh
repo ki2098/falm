@@ -10,7 +10,7 @@
 #include "StructuredMesh.cuh"
 #include "Util.cuh"
 
-namespace FALM {
+namespace FALMOld {
 
 struct LS_State {
     double re;

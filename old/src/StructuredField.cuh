@@ -8,7 +8,7 @@
 #include "Dom.cuh"
 #include "param.h"
 
-namespace FALM {
+namespace FALMOld {
 
 template<class T>
 struct FieldCp {
