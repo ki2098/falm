@@ -208,6 +208,35 @@ void Field<T>::sync(unsigned int direction) {
     }
 }
 
+namespace UTIL {
+
+template<class T>
+static void fieldcpy(Field<T> &dst, Field<T> &src, unsigned int loc) {
+    assert(dst.num == src.num);
+    if (loc & LOC::HOST) {
+        assert(dst.loc & src.loc & LOC::HOST);
+        memcpy(dst.host.ptr, src.host.ptr, sizeof(T) * dst.num);
+    }
+    if (loc & LOC::DEVICE) {
+        assert(dst.loc & src.loc & LOC::DEVICE);
+        cudaMemcpy(dst.dev.ptr, src.dev.ptr, sizeof(T) * dst.num, cudaMemcpyDeviceToDevice);
+    }
+}
+
+template<class T>
+static void fieldclear(Field<T> &dst, unsigned int loc) {
+    if (loc & LOC::HOST) {
+        assert(dst.loc & LOC::HOST);
+        memset(dst.host.ptr, 0, sizeof(T) * dst.num);
+    }
+    if (loc & LOC::DEVICE) {
+        assert(dst.loc & LOC::DEVICE);
+        cudaMemset(dst.dev.ptr, 0, sizeof(T) * dst.num);
+    }
+}
+
+}
+
 }
 
 #endif
