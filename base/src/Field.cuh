@@ -49,6 +49,7 @@ FieldFrame<T>::~FieldFrame() {
 
 template<class T>
 void FieldFrame<T>::init(dim3 &vsize, unsigned int vdim, unsigned int vloc, unsigned int vlabel) {
+    assert(loc == LOC::NONE);
     size  = vsize.x * vsize.y * vsize.z;
     dim   = vdim;
     num   = size * dim;
@@ -65,6 +66,7 @@ void FieldFrame<T>::init(dim3 &vsize, unsigned int vdim, unsigned int vloc, unsi
 
 template<class T>
 void FieldFrame<T>::init(unsigned int vsize, unsigned int vdim, unsigned int vloc, unsigned int vlabel) {
+    assert(loc == LOC::NONE);
     size  = vsize;
     dim   = vdim;
     num   = size * dim;
@@ -172,11 +174,13 @@ void Field<T>::init(unsigned int vsize, unsigned int vdim, unsigned int vloc, un
 
 template<class T>
 void Field<T>::release(unsigned int vloc) {
-    if ((loc & LOC::HOST) && (vloc & LOC::HOST)) {
+    if (vloc & LOC::HOST) {
+        assert(loc & LOC::HOST);
         host.release();
         loc &= (~LOC::HOST);
     }
-    if ((loc & LOC::DEVICE) && (vloc & LOC::DEVICE)) {
+    if (vloc & LOC::DEVICE) {
+        assert(loc & LOC::DEVICE);
         dev.release();
         cudaFree(devptr);
         loc &= (~LOC::DEVICE);
@@ -186,6 +190,7 @@ void Field<T>::release(unsigned int vloc) {
 template<class T>
 void Field<T>::sync(unsigned int direction) {
     if (direction == SYNC::H2D) {
+        assert(loc & LOC::HOST);
         if (loc ==LOC::BOTH) {
             cudaMemcpy(dev.ptr, host.ptr, sizeof(T) * num, cudaMemcpyHostToDevice);
         } else if (loc == LOC::HOST) {
@@ -197,6 +202,7 @@ void Field<T>::sync(unsigned int direction) {
             cudaMemcpy(devptr, &dev, sizeof(FieldFrame<T>), cudaMemcpyHostToDevice);
         }
     } else if (direction == SYNC::D2H) {
+        assert(loc & LOC::DEVICE);
         if (loc == LOC::BOTH) {
             cudaMemcpy(host.ptr, dev.ptr, sizeof(T) * num, cudaMemcpyDeviceToHost);
         } else if (loc == LOC::DEVICE) {
