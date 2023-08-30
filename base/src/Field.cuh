@@ -32,10 +32,26 @@ template<class T>
 FieldFrame<T>::FieldFrame() : ptr(nullptr), size(0), dim(0), num(0), loc(LOC::NONE), label(0) {}
 
 template<class T>
-FieldFrame<T>::FieldFrame(dim3 &vsize, unsigned int vdim, unsigned int vloc, unsigned int vlabel) : size(vsize.x * vsize.y * vsize.z), dim(vdim), num(vsize.x * vsize.y * vsize.z * vdim), loc(vloc), label(vlabel) {}
+FieldFrame<T>::FieldFrame(dim3 &vsize, unsigned int vdim, unsigned int vloc, unsigned int vlabel) : size(vsize.x * vsize.y * vsize.z), dim(vdim), num(vsize.x * vsize.y * vsize.z * vdim), loc(vloc), label(vlabel) {
+    if (loc == LOC::HOST) {
+        ptr = (T*)malloc(sizeof(T) * num);
+        memset(ptr, 0, sizeof(T) * num);
+    } else if (loc == LOC::DEVICE) {
+        cudaMalloc(&ptr, sizeof(T) * num);
+        cudaMemset(ptr, 0, sizeof(T) * num);
+    }
+}
 
 template<class T>
-FieldFrame<T>::FieldFrame(unsigned int vsize, unsigned int vdim, unsigned int vloc, unsigned int vlabel) : size(vsize), dim(vdim), num(vsize * vdim), loc(vloc), label(vlabel) {}
+FieldFrame<T>::FieldFrame(unsigned int vsize, unsigned int vdim, unsigned int vloc, unsigned int vlabel) : size(vsize), dim(vdim), num(vsize * vdim), loc(vloc), label(vlabel) {
+    if (loc == LOC::HOST) {
+        ptr = (T*)malloc(sizeof(T) * num);
+        memset(ptr, 0, sizeof(T) * num);
+    } else if (loc == LOC::DEVICE) {
+        cudaMalloc(&ptr, sizeof(T) * num);
+        cudaMemset(ptr, 0, sizeof(T) * num);
+    }
+}
 
 template<class T>
 FieldFrame<T>::~FieldFrame() {

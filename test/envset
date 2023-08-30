@@ -1,0 +1,2 @@
+export cuda_mpicxx=/opt/nvidia/hpc_sdk/Linux_x86_64/23.3/comm_libs/mpi/bin/mpic++
+export cuda_mpirun=/opt/nvidia/hpc_sdk/Linux_x86_64/23.3/comm_libs/mpi/bin/mpirun

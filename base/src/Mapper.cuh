@@ -12,6 +12,7 @@ struct Mapper {
     Mapper() : size(0,0,0), offset(0,0,0), num(0) {}
     Mapper(dim3 vsize, dim3 voffset) : size(vsize), offset(voffset) {num = size.x * size.y * size.z;}
     void set(dim3 vsize, dim3 voffset);
+    void set(Mapper &src) {set(src.size, src.offset);}
 };
 
 void Mapper::set(dim3 vsize, dim3 voffset) {

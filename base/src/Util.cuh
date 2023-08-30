@@ -6,6 +6,11 @@
 
 namespace FALM {
 
+struct MPI_State {
+    int size;
+    int rank;
+};
+
 namespace SYNC {
 
 static const unsigned int H2D = 0;
@@ -36,6 +41,10 @@ __device__ static inline void THREAD2IJK(unsigned int &i, unsigned int &j, unsig
     i = blockIdx.x * blockDim.x + threadIdx.x;
     j = blockIdx.y * blockDim.y + threadIdx.y;
     k = blockIdx.z * blockDim.z + threadIdx.z;
+}
+
+unsigned int flip_color(unsigned int color) {
+    return color ^ 1U;
 }
 
 }
