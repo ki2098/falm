@@ -19,12 +19,20 @@ struct Request {
     int           srcdst;
     int              tag;
     unsigned int   color;
+    unsigned int  bufloc;
     MPI_Request *request;
-    MPI_Status   *status;
     MPI_Datatype   dtype;
     MPI_Comm        comm;
     Mapper           map;
-    Request() : status(MPI_STATUSES_IGNORE) {};
+    Request() : buffer(nullptr), bufloc(LOC::NONE) {};
+    void release() {
+        if (bufloc == LOC::HOST) {
+            free(buffer);
+        } else if (bufloc == LOC::DEVICE) {
+            cudaFree(buffer);
+        }
+        bufloc = LOC::NONE;
+    }
 };
 
 static void cpm_alloc_buffer(Request &req, unsigned int loc) {
@@ -35,6 +43,7 @@ static void cpm_alloc_buffer(Request &req, unsigned int loc) {
         req.buffer = buffer;
     }
     req.buflen = range.num;
+    req.bufloc = loc;
 }
 
 static void cpm_alloc_buffer_colored(Request &req, Mapper &domain, unsigned int color, unsigned int loc) {
@@ -47,9 +56,11 @@ static void cpm_alloc_buffer_colored(Request &req, Mapper &domain, unsigned int 
     if (loc == LOC::DEVICE) {
         double *buffer;
         cudaMalloc(&buffer, sizeof(double) * color_num);
+        cudaMemset(buffer, 0, sizeof(double) * color_num);
         req.buffer = buffer;
     }
     req.buflen = color_num;
+    req.bufloc = loc;
 }
 
 __global__ static void cpm_pack_buffer_kernel(double *src, double *buffer, Mapper domain, Mapper range) {
@@ -170,8 +181,7 @@ static void cpm_unpack_buffer(double *dst, Mapper &domain, Request &req, unsigne
             (range.size.z + block.z - 1) / block.z
         );
         cpm_unpack_buffer_kernel<<<grid, block>>>(dst, buffer, domain, range);
-        cudaFree(req.buffer);
-        req.buffer == nullptr;
+        req.release();
     }
 }
 
@@ -190,8 +200,7 @@ static void cpm_unpack_buffer_colored(double *dst, Mapper &domain, Request &req,
             (range.size.z + block.z - 1) / block.z
         );
         cpm_unpack_buffer_kernel_colored<<<grid, block>>>(dst, buffer, domain, range, color);
-        cudaFree(req.buffer);
-        req.buffer == nullptr;
+        req.release();
     }
 }
 
@@ -235,12 +244,12 @@ static void cpm_irecv_colored(Mapper &domain, Request &req, unsigned int color, 
     MPI_Irecv(req.buffer, req.buflen, req.dtype, src, tag, comm, req.request);
 }
 
-static void cpm_wait(Request &req) {
-    MPI_Wait(req.request, req.status);
+static void cpm_wait(Request &req, MPI_Status *status) {
+    MPI_Wait(req.request, status);
 }
 
-static void cpm_waitall(Request *req, int n) {
-    MPI_Waitall(n, req[0].request, req[0].status);
+static void cpm_waitall(Request *req, int n, MPI_Status *status) {
+    MPI_Waitall(n, req[0].request, status);
 }
 
 }

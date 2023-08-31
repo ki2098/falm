@@ -158,7 +158,7 @@ Field<T>::~Field() {
 
 template<class T>
 void Field<T>::init(dim3 &vsize, unsigned int vdim, unsigned int vloc, unsigned int vlabel) {
-    assert(_loc == FALMLoc::NONE);
+    assert(loc == LOC::NONE);
     size  = vsize.x * vsize.y * vsize.z;
     dim   = vdim;
     num   = size * dim;
@@ -174,7 +174,7 @@ void Field<T>::init(dim3 &vsize, unsigned int vdim, unsigned int vloc, unsigned 
 
 template<class T>
 void Field<T>::init(unsigned int vsize, unsigned int vdim, unsigned int vloc, unsigned int vlabel) {
-    assert(_loc == FALMLoc::NONE);
+    assert(loc == LOC::NONE);
     size  = vsize;
     dim   = vdim;
     num   = size * dim;

@@ -195,7 +195,7 @@ static void poisson_sor_color_phase(Field<double> &a, Field<double> &x, Field<do
     if (mpi.size > 1) {
         dim3 yz_inner_slice(1, size.y - 2 * g, size.z - 2 * g);
         if (mpi.rank == 0) {
-            CPM::cpm_waitall(req, 2);
+            CPM::cpm_waitall(req, 2, MPI_STATUSES_IGNORE);
             CPM::cpm_unpack_buffer_colored(x.dev.ptr, domain, req[1], __color, LOC::DEVICE);
             t2 = MPI_Wtime();
             map.set(yz_inner_slice, dim3(size.x-g-1, g, g));
@@ -211,7 +211,7 @@ static void poisson_sor_color_phase(Field<double> &a, Field<double> &x, Field<do
             );
             poisson_sor_kernel<<<grid, block>>>(*(a.devptr), *(x.devptr), *(b.devptr), color, domain, map);
         } else if (mpi.rank == mpi.size - 1) {
-            CPM::cpm_waitall(req, 2);
+            CPM::cpm_waitall(req, 2, MPI_STATUSES_IGNORE);
             CPM::cpm_unpack_buffer_colored(x.dev.ptr, domain, req[1], __color, LOC::DEVICE);
             t2 = MPI_Wtime();
             map.set(yz_inner_slice, dim3(g, g, g));
@@ -227,7 +227,7 @@ static void poisson_sor_color_phase(Field<double> &a, Field<double> &x, Field<do
             );
             poisson_sor_kernel<<<grid, block>>>(*(a.devptr), *(x.devptr), *(b.devptr), color, domain, map);
         } else {
-            CPM::cpm_waitall(req, 4);
+            CPM::cpm_waitall(req, 4, MPI_STATUSES_IGNORE);
             CPM::cpm_unpack_buffer_colored(x.dev.ptr, domain, req[2], __color, LOC::DEVICE);
             CPM::cpm_unpack_buffer_colored(x.dev.ptr, domain, req[3], __color, LOC::DEVICE);
             dim3 block(
