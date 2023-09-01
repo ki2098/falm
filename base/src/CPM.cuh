@@ -13,6 +13,9 @@ namespace FALM {
 
 namespace CPM {
 
+const int SEND = 0U;
+const int RECV = 1U;
+
 struct Request {
     void         *buffer;
     int           buflen;
@@ -20,6 +23,7 @@ struct Request {
     int              tag;
     unsigned int   color;
     unsigned int  bufloc;
+    int         sendrecv;
     MPI_Request *request;
     MPI_Datatype   dtype;
     MPI_Comm        comm;
@@ -36,6 +40,7 @@ struct Request {
 };
 
 static void cpm_alloc_buffer(Request &req, unsigned int loc) {
+    assert(req.bufloc == LOC::NONE);
     Mapper &range = req.map;
     if (loc == LOC::DEVICE) {
         double *buffer;
@@ -47,6 +52,7 @@ static void cpm_alloc_buffer(Request &req, unsigned int loc) {
 }
 
 static void cpm_alloc_buffer_colored(Request &req, Mapper &domain, unsigned int color, unsigned int loc) {
+    assert(req.bufloc == LOC::NONE);
     Mapper &range = req.map;
     unsigned int ref_color = (domain.offset.x + domain.offset.y + domain.offset.z + range.offset.x + range.offset.y + range.offset.z) % 2;
     unsigned int color_num = range.num / 2;
@@ -181,8 +187,8 @@ static void cpm_unpack_buffer(double *dst, Mapper &domain, Request &req, unsigne
             (range.size.z + block.z - 1) / block.z
         );
         cpm_unpack_buffer_kernel<<<grid, block>>>(dst, buffer, domain, range);
-        req.release();
     }
+    req.release();
 }
 
 static void cpm_unpack_buffer_colored(double *dst, Mapper &domain, Request &req, unsigned int color, unsigned int loc) {
@@ -199,9 +205,9 @@ static void cpm_unpack_buffer_colored(double *dst, Mapper &domain, Request &req,
             (range.size.y + block.y - 1) / block.y,
             (range.size.z + block.z - 1) / block.z
         );
-        cpm_unpack_buffer_kernel_colored<<<grid, block>>>(dst, buffer, domain, range, color);
-        req.release();
+        cpm_unpack_buffer_kernel_colored<<<grid, block>>>(dst, buffer, domain, range, color);   
     }
+    req.release();
 }
 
 static void cpm_isend(double *src, Mapper &domain, Request &req, unsigned int loc, int dst, int tag, MPI_Comm comm) {
@@ -209,6 +215,7 @@ static void cpm_isend(double *src, Mapper &domain, Request &req, unsigned int lo
     req.tag = tag;
     req.comm = comm;
     req.dtype = MPI_DOUBLE;
+    req.sendrecv = SEND;
     cpm_alloc_buffer(req, loc);
     cpm_pack_buffer(src, domain, req, loc);
     MPI_Isend(req.buffer, req.buflen, req.dtype, dst, tag, comm, req.request);
@@ -220,6 +227,7 @@ static void cpm_isend_colored(double *src, Mapper &domain, Request &req, unsigne
     req.comm = comm;
     req.dtype = MPI_DOUBLE;
     req.color = color;
+    req.sendrecv = SEND;
     cpm_alloc_buffer_colored(req, domain, color, loc);
     cpm_pack_buffer_colored(src, domain, req, color, loc);
     MPI_Isend(req.buffer, req.buflen, req.dtype, dst, tag, comm, req.request);
@@ -230,6 +238,7 @@ static void cpm_irecv(Mapper &domain, Request &req, unsigned int loc, int src, i
     req.tag = tag;
     req.comm = comm;
     req.dtype = MPI_DOUBLE;
+    req.sendrecv = RECV;
     cpm_alloc_buffer(req, loc);
     MPI_Irecv(req.buffer, req.buflen, req.dtype, src, tag, comm, req.request);
 }
@@ -240,16 +249,25 @@ static void cpm_irecv_colored(Mapper &domain, Request &req, unsigned int color, 
     req.comm = comm;
     req.dtype = MPI_DOUBLE;
     req.color = color;
+    req.sendrecv = RECV;
     cpm_alloc_buffer_colored(req, domain, color, loc);
     MPI_Irecv(req.buffer, req.buflen, req.dtype, src, tag, comm, req.request);
 }
 
 static void cpm_wait(Request &req, MPI_Status *status) {
     MPI_Wait(req.request, status);
+    if (req.sendrecv == SEND) {
+        req.release();
+    }
 }
 
 static void cpm_waitall(Request *req, int n, MPI_Status *status) {
     MPI_Waitall(n, req[0].request, status);
+    for (int i = 0; i < n; i ++) {
+        if (req[i].sendrecv == SEND) {
+            req[i].release();
+        }
+    }
 }
 
 }

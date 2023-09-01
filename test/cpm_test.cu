@@ -171,9 +171,9 @@ int main(int argc, char **argv) {
         CPM::cpm_unpack_buffer_colored(x.dev.ptr, domain, req[2], 0, LOC::DEVICE);
         CPM::cpm_unpack_buffer_colored(x.dev.ptr, domain, req[3], 0, LOC::DEVICE);
     }
-    for (int i = 0; i < 4; i ++) {
-        req[i].release();
-    }
+    // for (int i = 0; i < 4; i ++) {
+    //     req[i].release();
+    // }
     x.sync(SYNC::D2H);
     for (int rank = 0; rank < mpi.size; rank ++) {
         if (rank == mpi.rank) {
@@ -220,9 +220,9 @@ int main(int argc, char **argv) {
         CPM::cpm_unpack_buffer_colored(x.dev.ptr, domain, req[2], 1, LOC::DEVICE);
         CPM::cpm_unpack_buffer_colored(x.dev.ptr, domain, req[3], 1, LOC::DEVICE);
     }
-    for (int i = 0; i < 4; i ++) {
-        req[i].release();
-    }
+    // for (int i = 0; i < 4; i ++) {
+    //     req[i].release();
+    // }
     x.sync(SYNC::D2H);
     for (int rank = 0; rank < mpi.size; rank ++) {
         if (rank == mpi.rank) {
@@ -317,9 +317,9 @@ int main(int argc, char **argv) {
         CPM::cpm_unpack_buffer_colored(x.dev.ptr, domain, req[2], 0, LOC::DEVICE);
         CPM::cpm_unpack_buffer_colored(x.dev.ptr, domain, req[3], 0, LOC::DEVICE);
     }
-    for (int i = 0; i < 4; i ++) {
-        req[i].release();
-    }
+    // for (int i = 0; i < 4; i ++) {
+    //     req[i].release();
+    // }
     x.sync(SYNC::D2H);
     for (int rank = 0; rank < mpi.size; rank ++) {
         if (rank == mpi.rank) {
@@ -366,9 +366,9 @@ int main(int argc, char **argv) {
         CPM::cpm_unpack_buffer_colored(x.dev.ptr, domain, req[2], 1, LOC::DEVICE);
         CPM::cpm_unpack_buffer_colored(x.dev.ptr, domain, req[3], 1, LOC::DEVICE);
     }
-    for (int i = 0; i < 4; i ++) {
-        req[i].release();
-    }
+    // for (int i = 0; i < 4; i ++) {
+    //     req[i].release();
+    // }
     x.sync(SYNC::D2H);
     for (int rank = 0; rank < mpi.size; rank ++) {
         if (rank == mpi.rank) {
@@ -462,9 +462,9 @@ int main(int argc, char **argv) {
         CPM::cpm_unpack_buffer_colored(x.dev.ptr, domain, req[2], 0, LOC::DEVICE);
         CPM::cpm_unpack_buffer_colored(x.dev.ptr, domain, req[3], 0, LOC::DEVICE);
     }
-    for (int i = 0; i < 4; i ++) {
-        req[i].release();
-    }
+    // for (int i = 0; i < 4; i ++) {
+    //     req[i].release();
+    // }
     x.sync(SYNC::D2H);
     for (int rank = 0; rank < mpi.size; rank ++) {
         if (rank == mpi.rank) {
@@ -511,9 +511,9 @@ int main(int argc, char **argv) {
         CPM::cpm_unpack_buffer_colored(x.dev.ptr, domain, req[2], 1, LOC::DEVICE);
         CPM::cpm_unpack_buffer_colored(x.dev.ptr, domain, req[3], 1, LOC::DEVICE);
     }
-    for (int i = 0; i < 4; i ++) {
-        req[i].release();
-    }
+    // for (int i = 0; i < 4; i ++) {
+    //     req[i].release();
+    // }
     x.sync(SYNC::D2H);
     for (int rank = 0; rank < mpi.size; rank ++) {
         if (rank == mpi.rank) {
