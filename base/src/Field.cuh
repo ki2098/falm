@@ -6,6 +6,8 @@
 #include <cassert>
 #include <mpi.h>
 #include "Util.cuh"
+#include "Mapper.cuh"
+#include "param.h"
 
 namespace FALM {
 
@@ -13,6 +15,7 @@ template<class T>
 struct FieldFrame {
     T             *ptr;
     unsigned int  size;
+    uint2 shape;
     unsigned int   dim;
     unsigned int   num;
     unsigned int   loc;
@@ -29,7 +32,7 @@ struct FieldFrame {
 };
 
 template<class T>
-FieldFrame<T>::FieldFrame() : ptr(nullptr), size(0), dim(0), num(0), loc(LOC::NONE), label(0) {}
+FieldFrame<T>::FieldFrame() : ptr(nullptr), size(0), shape(make_uint2(0,0)), dim(0), num(0), loc(LOC::NONE), label(0) {}
 
 template<class T>
 FieldFrame<T>::FieldFrame(dim3 &vsize, unsigned int vdim, unsigned int vloc, unsigned int vlabel) : size(vsize.x * vsize.y * vsize.z), dim(vdim), num(vsize.x * vsize.y * vsize.z * vdim), loc(vloc), label(vlabel) {
@@ -229,6 +232,58 @@ void Field<T>::sync(unsigned int direction) {
         }
     }
 }
+
+// __global__ static void fscala_norm2sq_kernel(FieldFrame<double> &a, double *partial_sum, Mapper domain, Mapper range) {
+//     unsigned int n_threads = block_size.x * block_size.y * block_size.z;
+//     __shared__ double cache[n_threads];
+//     unsigned int i, j, k;
+//     UTIL::THREAD2IJK(i, j, k);
+//     double value = 0;
+//     unsigned int thread_idx = UTIL::IDX(threadIdx.x, threadIdx.y, threadIdx.z, blockDim);
+//     if (i < range.size.x && j < range.size.y && k < range.size.z) {
+//         i += range.offset.x;
+//         j += range.offset.y;
+//         k += range.offset.z;
+//         unsigned int idx = UTIL::IDX(i, j, k, domain.size);
+//         value = a(idx);
+//     }
+//     cache[thread_idx] = value * value;
+//     __syncthreads();
+
+//     unsigned int length = n_threads;
+//     while (n_threads > 1) {
+//         unsigned int cut = length / 2;
+//         unsigned int reduce = length - cut;
+//         if (thread_idx < cut) {
+//             cache[thread_idx] += cache[thread_idx + reduce];
+//         }
+//         __syncthreads();
+//         length = reduce;
+//     }
+
+//     if (thread_idx == 0) {
+//         unsigned int block_idx = blockIdx.x + blockIdx.y * gridDim.x + blockIdx.z * gridDim.x * gridDim.y;
+//         partial_sum[block_idx] = cache[thread_idx];
+//     }
+// }
+
+// static double fscala_norm2sq(Field<double> &a, Mapper &domain) {
+//     assert(a.dim == 1);
+//     dim3 &size = domain.size;
+//     const unsigned int g = guide;
+//     Mapper map(
+//         dim3(size.x - 2 * g, size.y - 2 * g, size.z - 2 * g),
+//         dim3(g, g, g)
+//     );
+//     double *partial_sum, *partial_sum_dev;
+//     dim3 grid_size(
+//         (map.size.x + block_size.x - 1) / block_size.x,
+//         (map.size.y + block_size.y - 1) / block_size.y,
+//         (map.size.z + block_size.z - 1) / block_size.z
+//     );
+//     unsigned int n_blocks = grid_size.x * grid_size.y * grid_size.z;
+    
+// }
 
 namespace UTIL {
 
