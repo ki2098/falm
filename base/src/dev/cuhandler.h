@@ -5,6 +5,7 @@
 #include <cuda_runtime.h>
 #include <stdlib.h>
 #include <string.h>
+#include "../flag.h"
 
 namespace Falm {
 
@@ -26,12 +27,12 @@ static inline void falmDevMemset(void *ptr, int value, size_t size) {
     cudaMemset(ptr, value, size);
 }
 
-static inline void falmHostFreePtr(void *&ptr) {
+static inline void falmHostFreePtr(void *ptr) {
     free(ptr);
     ptr = nullptr;
 }
 
-static inline void falmDevFreePtr(void *&ptr) {
+static inline void falmDevFreePtr(void *ptr) {
     cudaFree(ptr);
     ptr = nullptr;
 }

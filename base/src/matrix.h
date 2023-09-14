@@ -18,7 +18,7 @@ struct MatrixFrame {
     __host__ __device__ T &operator()(unsigned int _idx) {return ptr[_idx];}
     __host__ __device__ T &operator()(unsigned int _row, unsigned int _col) {return ptr[_row + _col * shape.x];}
 
-    MatrixFrame() : ptr(nullptr), shape(unit2{0, 0}), size(0), hdctype(HDCTYPE::Empty), label(0) {}
+    MatrixFrame() : ptr(nullptr), shape(uint2{0, 0}), size(0), hdctype(HDCTYPE::Empty), label(0) {}
     MatrixFrame(uint3 _dom, unsigned int _dim, unsigned int _hdctype, int _label);
     MatrixFrame(unsigned int _row, unsigned int _col, unsigned int _hdctype, int _label);
     ~MatrixFrame();
@@ -35,10 +35,10 @@ template<typename T> MatrixFrame<T>::MatrixFrame(uint3 _dom, unsigned int _dim, 
     label(_label)
 {
     if (hdctype == HDCTYPE::Host) {
-        ptr = falmHostMalloc(sizeof(T) * size);
+        ptr = (T*)falmHostMalloc(sizeof(T) * size);
         falmHostMemset(ptr, 0, sizeof(T) * size);
     } else if (hdctype == HDCTYPE::Device) {
-        ptr = falmDevMalloc(sizeof(T) * size);
+        ptr = (T*)falmDevMalloc(sizeof(T) * size);
         falmDevMemset(ptr, 0, sizeof(T) * size);
     }
 }
@@ -50,10 +50,10 @@ template<typename T> MatrixFrame<T>::MatrixFrame(unsigned int _row, unsigned int
     label(_label)
 {
     if (hdctype == HDCTYPE::Host) {
-        ptr = falmHostMalloc(sizeof(T) * size);
+        ptr = (T*)falmHostMalloc(sizeof(T) * size);
         falmHostMemset(ptr, 0, sizeof(T) * size);
     } else if (hdctype == HDCTYPE::Device) {
-        ptr = falmDevMalloc(sizeof(T) * size);
+        ptr = (T*)falmDevMalloc(sizeof(T) * size);
         falmDevMemset(ptr, 0, sizeof(T) * size);
     }
 }
@@ -64,6 +64,7 @@ template<typename T> MatrixFrame<T>::~MatrixFrame() {
     } else if (hdctype == HDCTYPE::Device) {
         falmDevFreePtr(ptr);
     }
+    ptr = nullptr;
     hdctype = HDCTYPE::Empty;
 }
 
@@ -74,10 +75,10 @@ template<typename T> void MatrixFrame<T>::init(uint3 _dom, unsigned int _dim, un
     hdctype = _hdctype;
     label   = _label;
     if (hdctype == HDCTYPE::Host) {
-        ptr = falmHostMalloc(sizeof(T) * size);
+        ptr = (T*)falmHostMalloc(sizeof(T) * size);
         falmHostMemset(ptr, 0, sizeof(T) * size);
     } else if (hdctype == HDCTYPE::Device) {
-        ptr = falmDevMalloc(sizeof(T) * size);
+        ptr = (T*)falmDevMalloc(sizeof(T) * size);
         falmDevMemset(ptr, 0, sizeof(T) * size);
     }
 }
@@ -89,10 +90,10 @@ template<typename T> void MatrixFrame<T>::init(unsigned int _row, unsigned int _
     hdctype = _hdctype;
     label   = _label;
     if (hdctype == HDCTYPE::Host) {
-        ptr = falmHostMalloc(sizeof(T) * size);
+        ptr = (T*)falmHostMalloc(sizeof(T) * size);
         falmHostMemset(ptr, 0, sizeof(T) * size);
     } else if (hdctype == HDCTYPE::Device) {
-        ptr = falmDevMalloc(sizeof(T) * size);
+        ptr = (T*)falmDevMalloc(sizeof(T) * size);
         falmDevMemset(ptr, 0, sizeof(T) * size);
     }
 }
@@ -103,6 +104,7 @@ template<typename T> void MatrixFrame<T>::release() {
     } else if (hdctype == HDCTYPE::Device) {
         falmDevFreePtr(ptr);
     }
+    ptr = nullptr;
     hdctype = HDCTYPE::Empty;
 }
 
@@ -110,7 +112,7 @@ template<typename T> void MatrixFrame<T>::release() {
 template<typename T>
 struct Matrix {
     MatrixFrame<T>    host;
-    MatrixFrame<T>  device;
+    MatrixFrame<T>     dev;
     MatrixFrame<T> *devptr;
     uint2            shape;
     unsigned int      size;
@@ -133,29 +135,29 @@ struct Matrix {
 
 template<typename T> Matrix<T>::Matrix(uint3 _dom, unsigned int _dim, unsigned int _hdctype, int _label) :
     host(_dom, _dim, _hdctype & HDCTYPE::Host, _label),
-    device(_dom, _dim, _hdctype & HDCTYPE::Device, _label),
+    dev(_dom, _dim, _hdctype & HDCTYPE::Device, _label),
     shape(uint2{PRODUCT3(_dom), _dim}),
     size(PRODUCT3(_dom) * _dim),
     hdctype(_hdctype),
     label(_label)
 {
     if (hdctype & HDCTYPE::Device) {
-        devptr = falmDevMalloc(sizeof(MatrixFrame<T>));
-        falmMemcpy(devptr, &device, sizeof(MatrixFrame<T>), MCPTYPE::Hst2Dev);
+        devptr = (MatrixFrame<T>*)falmDevMalloc(sizeof(MatrixFrame<T>));
+        falmMemcpy(devptr, &dev, sizeof(MatrixFrame<T>), MCPTYPE::Hst2Dev);
     }
 }
 
 template<typename T> Matrix<T>::Matrix(unsigned _row, unsigned int _col, unsigned int _hdctype, int _label) :
     host(_row, _col, _hdctype & HDCTYPE::Host, _label),
-    device(_row, _col, _hdctype & HDCTYPE::Device, _label),
+    dev(_row, _col, _hdctype & HDCTYPE::Device, _label),
     shape(uint2{_row, _col}),
     size(_row * _col),
     hdctype(_hdctype),
     label(_label)
 {
     if (hdctype & HDCTYPE::Device) {
-        devptr = falmDevMalloc(sizeof(MatrixFrame<T>));
-        falmMemcpy(devptr, &device, sizeof(MatrixFrame<T>), MCPTYPE::Hst2Dev);
+        devptr = (MatrixFrame<T>*)falmDevMalloc(sizeof(MatrixFrame<T>));
+        falmMemcpy(devptr, &dev, sizeof(MatrixFrame<T>), MCPTYPE::Hst2Dev);
     }
 }
 
@@ -163,34 +165,35 @@ template<typename T> Matrix<T>::~Matrix() {
     if (hdctype & HDCTYPE::Device) {
         falmDevFreePtr(devptr);
     }
+    devptr = nullptr;
     hdctype = HDCTYPE::Empty;
 }
 
 template<typename T> void Matrix<T>::init(uint3 _dom, unsigned int _dim, unsigned int _hdctype, int _label) {
     assert(hdctype == HDCTYPE::Empty);
     host.init(_dom, _dim, _hdctype & HDCTYPE::Host, _label);
-    device.init(_dom, _dim, _hdctype & HDCTYPE::Device, _label);
+    dev.init(_dom, _dim, _hdctype & HDCTYPE::Device, _label);
     shape   = uint2{PRODUCT3(_dom), _dim};
     size    = PRODUCT3(_dom) * _dim;
     hdctype = _hdctype;
     label   = _label;
     if (hdctype & HDCTYPE::Device) {
-        devptr = falmDevMalloc(sizeof(MatrixFrame<T>));
-        falmMemcpy(devptr, &device, sizeof(MatrixFrame<T>), MCPTYPE::Hst2Dev);
+        devptr = (MatrixFrame<T>*)falmDevMalloc(sizeof(MatrixFrame<T>));
+        falmMemcpy(devptr, &dev, sizeof(MatrixFrame<T>), MCPTYPE::Hst2Dev);
     }
 }
 
 template<typename T> void Matrix<T>::init(unsigned _row, unsigned int _col, unsigned int _hdctype, int _label) {
     assert(hdctype == HDCTYPE::Empty);
     host.init(_row, _col, _hdctype & HDCTYPE::Host, _label);
-    device.init(_row, _col, _hdctype & HDCTYPE::Device, _label);
+    dev.init(_row, _col, _hdctype & HDCTYPE::Device, _label);
     shape   = uint2{_row, _col};
     size    = _row * _col;
     hdctype = _hdctype;
     label   = _label;
     if (hdctype & HDCTYPE::Device) {
-        devptr = falmDevMalloc(sizeof(MatrixFrame<T>));
-        falmMemcpy(devptr, &device, sizeof(MatrixFrame<T>), MCPTYPE::Hst2Dev);
+        devptr = (MatrixFrame<T>*)falmDevMalloc(sizeof(MatrixFrame<T>));
+        falmMemcpy(devptr, &dev, sizeof(MatrixFrame<T>), MCPTYPE::Hst2Dev);
     }
 }
 
@@ -202,7 +205,9 @@ template<typename T> void Matrix<T>::release(unsigned int _hdctype) {
     }
     if (_hdctype & HDCTYPE::Device) {
         assert(hdctype & HDCTYPE::Device);
-        device.release();
+        dev.release();
+        falmDevFreePtr(devptr);
+        devptr = nullptr;
         hdctype &= ~(HDCTYPE::Device);
     }
 }
@@ -211,7 +216,22 @@ template<typename T> void Matrix<T>::sync(unsigned int _mcptype) {
     if (_mcptype == MCPTYPE::Hst2Dev) {
         assert(hdctype & HDCTYPE::Host);
         if (hdctype & HDCTYPE::Device) {
-            falmMemcpy(host.ptr, device.ptr, sizeof(T) * size, MCPTYPE::Hst2Dev);
+            falmMemcpy(dev.ptr, host.ptr, sizeof(T) * size, MCPTYPE::Hst2Dev);
+        } else {
+            dev.init(shape.x, shape.y, HDCTYPE::Device, label);
+            falmMemcpy(dev.ptr, host.ptr, sizeof(T) * size, MCPTYPE::Hst2Dev);
+            devptr = (MatrixFrame<T>*)falmDevMalloc(sizeof(MatrixFrame<T>));
+            falmMemcpy(devptr, &dev, sizeof(MatrixFrame<T>), MCPTYPE::Hst2Dev);
+            hdctype |= HDCTYPE::Device;
+        }
+    } else if (_mcptype == MCPTYPE::Dev2Hst) {
+        assert(hdctype & HDCTYPE::Device);
+        if (hdctype & HDCTYPE::Host) {
+            falmMemcpy(dev.ptr, host.ptr, sizeof(T) * size, MCPTYPE::Dev2Hst);
+        } else {
+            host.init(shape.x, shape.y, HDCTYPE::Host, label);
+            falmMemcpy(dev.ptr, host.ptr, sizeof(T) * size, MCPTYPE::Dev2Hst);
+            hdctype |= HDCTYPE::Host;
         }
     }
 }
