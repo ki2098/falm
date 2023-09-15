@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include "../src/matrix.h"
-#include "../src/matbasic.h"
+#include "../src/mvbasic.h"
+
+#define SQR(n) (n)*(n)
 
 using namespace Falm;
 
@@ -19,17 +21,21 @@ int main() {
         for (int j = 0; j < 12; j ++) {
             for (int k = 0; k < 12; k ++) {
                 unsigned int idx = IDX(i, j, k, pdom.shape);
-                a(idx, 0) = idx;
-                b(idx, 0) = idx + 1;
+                a(idx, 0) = 300 - SQR(i - 7) - SQR(j - 2) - SQR(k - 5);
+                b(idx, 0) = 150 - SQR(i - 0) - SQR(j - 1) - SQR(k - 1);
             }
         }
     }
     a.sync(MCPTYPE::Hst2Dev);
     b.sync(MCPTYPE::Hst2Dev);
     dim3 block(4, 4, 2);
-    double dot  = dev_calc_dot_product(a, b, pdom, map, block);
-    double norm = dev_calc_norm2_sq(a, pdom, map, block);
+    double dot  = dev_DotProduct(a, b, pdom, map, block);
+    double norm = dev_Norm2Sq(a, pdom, map, block);
     printf("%.0lf %.0lf\n", dot, norm);
+
+    double a_max = dev_MaxDiag(a, pdom, map, block);
+    double b_max = dev_MaxDiag(b, pdom, map, block);
+    printf("%.0lf %.0lf\n", a_max, b_max);
 
     return 0;
 }

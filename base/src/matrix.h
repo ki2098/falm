@@ -131,6 +131,9 @@ struct Matrix {
     void init(unsigned _row, unsigned int _col, unsigned int _hdctype, int _label);
     void release(unsigned int _hdctype);
     void sync(unsigned int _mcptype);
+
+    void cpy(Matrix<T> &src, unsigned int _hdctype);
+    void clear(unsigned int _hdctype);
 };
 
 template<typename T> Matrix<T>::Matrix(uint3 _dom, unsigned int _dim, unsigned int _hdctype, int _label) :
@@ -227,12 +230,23 @@ template<typename T> void Matrix<T>::sync(unsigned int _mcptype) {
     } else if (_mcptype == MCPTYPE::Dev2Hst) {
         assert(hdctype & HDCTYPE::Device);
         if (hdctype & HDCTYPE::Host) {
-            falmMemcpy(dev.ptr, host.ptr, sizeof(T) * size, MCPTYPE::Dev2Hst);
+            falmMemcpy(host.ptr, dev.ptr, sizeof(T) * size, MCPTYPE::Dev2Hst);
         } else {
             host.init(shape.x, shape.y, HDCTYPE::Host, label);
-            falmMemcpy(dev.ptr, host.ptr, sizeof(T) * size, MCPTYPE::Dev2Hst);
+            falmMemcpy(host.ptr, dev.ptr, sizeof(T) * size, MCPTYPE::Dev2Hst);
             hdctype |= HDCTYPE::Host;
         }
+    }
+}
+
+template<typename T> void Matrix<T>::cpy(Matrix<T> &src, unsigned int _hdctype) {
+    if (_hdctype & HDCTYPE::Host) {
+        assert((hdctype & src.hdctype & HDCTYPE::Host) && (size == src.size));
+        falmMemcpy(host.ptr, src.host.ptr, sizeof(T) * size, MCPTYPE::Hst2Hst);
+    }
+    if (_hdctype & HDCTYPE::Device) {
+        assert((hdctype & src.hdctype & HDCTYPE::Device) && (size == src.size));
+        falmMemcpy(dev.ptr, src.dev.ptr, sizeof(T) * size, MCPTYPE::Dev2Dev);
     }
 }
 

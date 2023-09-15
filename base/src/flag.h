@@ -20,12 +20,10 @@ public:
     static const unsigned int HstDev = Host | Device;
 };
 
-class BUFTYPE {
+class COLOR {
 public:
-    static const unsigned int Empty = 0;
-    static const unsigned int In    = 1;
-    static const unsigned int Out   = 2;
-    static const unsigned int InOut = In | Out;
+    static const unsigned int Black = 0;
+    static const unsigned int Red   = 1;
 };
 
 }
