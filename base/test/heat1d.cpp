@@ -22,10 +22,10 @@ int main() {
         uint3{Nx, Ny, Nz},
         uint3{Gd, Gd, Gd}
     );
-    Matrix<double> a(pdom.shape, 7, HDCTYPE::Host  , 0);
-    Matrix<double> t(pdom.shape, 1, HDCTYPE::Device, 1);
-    Matrix<double> b(pdom.shape, 1, HDCTYPE::Host  , 2);
-    Matrix<double> r(pdom.shape, 1, HDCTYPE::Device, 3);
+    Matrix<double> a(pdom.shape, 7, HDCType::Host  , 0);
+    Matrix<double> t(pdom.shape, 1, HDCType::Device, 1);
+    Matrix<double> b(pdom.shape, 1, HDCType::Host  , 2);
+    Matrix<double> r(pdom.shape, 1, HDCType::Device, 3);
     const double dx = Lx / Nx;
     for (unsigned int i = Gd; i < Gd + Nx; i ++) {
         double ac, ae, aw, bc;
@@ -51,15 +51,15 @@ int main() {
         a(idx, 2) = aw;
         b(idx)    = bc;
     }
-    a.sync(MCPTYPE::Hst2Dev);
-    b.sync(MCPTYPE::Hst2Dev);
+    a.sync(MCpType::Hst2Dev);
+    b.sync(MCpType::Hst2Dev);
     dim3 block_dim(32, 1, 1);
     double max_diag = dev_MaxDiag(a, pdom, map, block_dim);
     printf("%12lf\n", max_diag);
     dev_ScaleMatrix(a, max_diag, block_dim);
     dev_ScaleMatrix(b, max_diag, block_dim);
-    a.sync(MCPTYPE::Dev2Hst);
-    b.sync(MCPTYPE::Dev2Hst);
+    a.sync(MCpType::Dev2Hst);
+    b.sync(MCpType::Dev2Hst);
 
     for (unsigned int i = Gd; i < Gd + Nx; i ++) {
         unsigned int idx = IDX(i, Gd, Gd, pdom.shape);
@@ -69,15 +69,15 @@ int main() {
         printf("= %12lf\n", b(idx));
     }
 
-    StructLEqSolver solver(10000, 1e-6, 1.2);
-    solver.dev_Struct3d7p_SOR(a, t, b, r, global, pdom, map, block_dim);
-    t.sync(MCPTYPE::Dev2Hst);
-    r.sync(MCPTYPE::Dev2Hst);
+    StructLEqSolver solver(LSType::PBiCGStab, 10000, 1e-9, 1.5, LSType::Jacobi, 5, 1.0);
+    solver.dev_Struct3d7p_Solve(a, t, b, r, global, pdom, map, block_dim);
+    t.sync(MCpType::Dev2Hst);
+    r.sync(MCpType::Dev2Hst);
     for (unsigned int i = Gd; i < Gd + Nx; i ++) {
         unsigned int idx = IDX(i, Gd, Gd, pdom.shape);
         printf("%12.4lf %12.4lf\n", t(idx), r(idx));
     }
-    printf("%d %lf\n", solver.it, solver.err);
+    printf("%d %.12lf\n", solver.it, solver.err);
 
     return 0;
 }

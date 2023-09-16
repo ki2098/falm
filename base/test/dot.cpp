@@ -15,8 +15,8 @@ int main() {
         uint3{10, 10, 10},
         uint3{1, 1, 1}
     );
-    Matrix<double> a(pdom.shape, 1, HDCTYPE::Host, 0);
-    Matrix<double> b(pdom.shape, 1, HDCTYPE::Host, 1);
+    Matrix<double> a(pdom.shape, 1, HDCType::Host, 0);
+    Matrix<double> b(pdom.shape, 1, HDCType::Host, 1);
     for (int i = 0; i < 12; i ++) {
         for (int j = 0; j < 12; j ++) {
             for (int k = 0; k < 12; k ++) {
@@ -26,8 +26,8 @@ int main() {
             }
         }
     }
-    a.sync(MCPTYPE::Hst2Dev);
-    b.sync(MCPTYPE::Hst2Dev);
+    a.sync(MCpType::Hst2Dev);
+    b.sync(MCpType::Hst2Dev);
     dim3 block(4, 4, 2);
     double dot  = dev_DotProduct(a, b, pdom, map, block);
     double norm = dev_Norm2Sq(a, pdom, map, block);

@@ -38,13 +38,13 @@ static inline void falmDevFreePtr(void *ptr) {
 }
 
 static void falmMemcpy(void *dst, void *src, size_t size, unsigned int mcptype) {
-    if (mcptype == MCPTYPE::Hst2Hst) {
+    if (mcptype == MCpType::Hst2Hst) {
         memcpy(dst, src, size);
-    } else if (mcptype == MCPTYPE::Hst2Dev) {
+    } else if (mcptype == MCpType::Hst2Dev) {
         cudaMemcpy(dst, src, size, cudaMemcpyHostToDevice);
-    } else if (mcptype == MCPTYPE::Dev2Hst) {
+    } else if (mcptype == MCpType::Dev2Hst) {
         cudaMemcpy(dst, src, size, cudaMemcpyDeviceToHost);
-    } else if (mcptype == MCPTYPE::Dev2Dev) {
+    } else if (mcptype == MCpType::Dev2Dev) {
         cudaMemcpy(dst, src, size, cudaMemcpyDeviceToDevice);
     }
 }

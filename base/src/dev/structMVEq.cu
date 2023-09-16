@@ -128,6 +128,42 @@ __global__ void kernel_Struct3d7p_Jacobi(MatrixFrame<double> &a, MatrixFrame<dou
     }
 }
 
+void StructLEqSolver::dev_Struct3d7p_JacobiSweep(Matrix<double> &a, Matrix<double> &x, Matrix<double> &xp, Matrix<double> &b, Mapper &pdom, Mapper &map, dim3 &block_dim) {
+    dim3 grid_dim(
+        (map.shape.x + block_dim.x - 1) / block_dim.x,
+        (map.shape.y + block_dim.y - 1) / block_dim.y,
+        (map.shape.z + block_dim.z - 1) / block_dim.z
+    );
+
+    xp.cpy(x, HDCType::Device);
+    kernel_Struct3d7p_Jacobi<<<grid_dim, block_dim, 0, 0>>>(*(a.devptr), *(x.devptr), *(xp.devptr), *(b.devptr), pdom.shape, map.shape, map.offset);
+}
+
+void StructLEqSolver::dev_Struct3d7p_Jacobi(Matrix<double> &a, Matrix<double> &x, Matrix<double> &b, Matrix<double> &r, Mapper &global, Mapper &pdom, Mapper &map, dim3 &block_dim) {
+    assert(
+        a.shape.x == x.shape.x && a.shape.x == b.shape.x && a.shape.x == r.shape.x &&
+        a.shape.y == 7 && x.shape.y == 1 && b.shape.y == 1 && r.shape.y == 1
+    );
+
+    Matrix<double> xp(x.shape.x, x.shape.y, HDCType::Device, x.label);
+    it = 0;
+    do {
+        dev_Struct3d7p_JacobiSweep(a, x, xp, b, pdom, map, block_dim);
+        dev_Struct3d7p_Res(a, x, b, r, pdom, map, block_dim);
+        err = sqrt(dev_Norm2Sq(r, pdom, map, block_dim));
+        it ++;
+    } while (it < maxit && err > tol);
+}
+
+void StructLEqSolver::dev_Struct3d7p_JAcobiPC(Matrix<double> &a, Matrix<double> &x, Matrix<double> &b, Mapper &pdom, Mapper &map, dim3 &block_dim) {
+    Matrix<double> xp(x.shape.x, x.shape.y, HDCType::Device, x.label);
+    int __it = 0;
+    do {
+        dev_Struct3d7p_JacobiSweep(a, x, xp, b, pdom, map, block_dim);
+        __it ++;
+    } while (__it < pc_maxit);
+}
+
 __global__ void kernel_Struct3d7p_SOR(MatrixFrame<double> &a, MatrixFrame<double> &x, MatrixFrame<double> &b, double omega, unsigned int color, uint3 pdom_shape, uint3 pdom_offset, uint3 map_shape, uint3 map_offset) {
     unsigned int i, j, k;
     GLOBAL_THREAD_IDX_3D(i, j, k);
@@ -165,26 +201,14 @@ __global__ void kernel_Struct3d7p_SOR(MatrixFrame<double> &a, MatrixFrame<double
     }
 }
 
-void StructLEqSolver::dev_Struct3d7p_Jacobi(Matrix<double> &a, Matrix<double> &x, Matrix<double> &b, Matrix<double> &r, Mapper &global, Mapper &pdom, Mapper &map, dim3 &block_dim) {
-    assert(
-        a.shape.x == x.shape.x && a.shape.x == b.shape.x && a.shape.x == r.shape.x &&
-        a.shape.y == 7 && x.shape.y == 1 && b.shape.y == 1 && r.shape.y == 1
-    );
+void StructLEqSolver::dev_Struct3d7p_SORSweep(Matrix<double> &a, Matrix<double> &x, Matrix<double> &b, double omega, unsigned int color, Mapper &pdom, Mapper &map, dim3 &block_dim) {
     dim3 grid_dim(
         (map.shape.x + block_dim.x - 1) / block_dim.x,
         (map.shape.y + block_dim.y - 1) / block_dim.y,
         (map.shape.z + block_dim.z - 1) / block_dim.z
     );
 
-    Matrix<double> xp(x.shape.x, x.shape.y, HDCTYPE::Device, x.label);
-    it = 0;
-    do {
-        xp.cpy(x, HDCTYPE::Device);
-        kernel_Struct3d7p_Jacobi<<<grid_dim, block_dim, 0, 0>>>(*(a.devptr), *(x.devptr), *(xp.devptr), *(b.devptr), pdom.shape, map.shape, map.offset);
-        dev_Struct3d7p_Res(a, x, b, r, pdom, map, block_dim);
-        err = sqrt(dev_Norm2Sq(r, pdom, map, block_dim));
-        it ++;
-    } while (it < maxit && err > tol);
+    kernel_Struct3d7p_SOR<<<grid_dim, block_dim, 0, 0>>>(*(a.devptr), *(x.devptr), *(b.devptr), omega, color, pdom.shape, pdom.offset, map.shape, map.offset);
 }
 
 void StructLEqSolver::dev_Struct3d7p_SOR(Matrix<double> &a, Matrix<double> &x, Matrix<double> &b, Matrix<double> &r, Mapper &global, Mapper &pdom, Mapper &map, dim3 &block_dim) {
@@ -192,18 +216,139 @@ void StructLEqSolver::dev_Struct3d7p_SOR(Matrix<double> &a, Matrix<double> &x, M
         a.shape.x == x.shape.x && a.shape.x == b.shape.x && a.shape.x == r.shape.x &&
         a.shape.y == 7 && x.shape.y == 1 && b.shape.y == 1 && r.shape.y == 1
     );
+
+    it = 0;
+    do {
+        dev_Struct3d7p_SORSweep(a, x, b, relax_factor, Color::Black, pdom, map, block_dim);
+        dev_Struct3d7p_SORSweep(a, x, b, relax_factor, Color::Red  , pdom, map, block_dim);
+        dev_Struct3d7p_Res(a, x, b, r, pdom, map, block_dim);
+        err = sqrt(dev_Norm2Sq(r, pdom, map, block_dim));
+        it ++;
+    } while (it < maxit && err > tol);
+}
+
+void StructLEqSolver::dev_Struct3d7p_SORPC(Matrix<double> &a, Matrix<double> &x, Matrix<double> &b, Mapper &pdom, Mapper &map, dim3 &block_dim) {
+    int __it = 0;
+    do {
+        dev_Struct3d7p_SORSweep(a, x, b, pc_relax_factor, Color::Black, pdom, map, block_dim);
+        dev_Struct3d7p_SORSweep(a, x, b, pc_relax_factor, Color::Red  , pdom, map, block_dim);
+         __it ++;
+    } while (__it < pc_maxit);
+}
+
+__global__ void kernel_PBiCGStab_1(MatrixFrame<double> &p, MatrixFrame<double> &q, MatrixFrame<double> &r, double beta, double omega, uint3 pdom_shape, uint3 map_shape, uint3 map_offset) {
+    unsigned int i, j, k;
+    GLOBAL_THREAD_IDX_3D(i, j, k);
+    if (i < map_shape.x && j < map_shape.y && k < map_shape.z) {
+        i += map_offset.x;
+        j += map_offset.y;
+        k += map_offset.z;
+        unsigned int idx = IDX(i, j, k, pdom_shape);
+        p(idx) = r(idx) + beta * (p(idx) - omega * q(idx));
+    }
+}
+
+__global__ void kernel_PBiCGStab_2(MatrixFrame<double> &s, MatrixFrame<double> &q, MatrixFrame<double> &r, double alpha, uint3 pdom_shape, uint3 map_shape, uint3 map_offset) {
+    unsigned int i, j, k;
+    GLOBAL_THREAD_IDX_3D(i, j, k);
+    if (i < map_shape.x && j < map_shape.y && k < map_shape.z) {
+        i += map_offset.x;
+        j += map_offset.y;
+        k += map_offset.z;
+        unsigned int idx = IDX(i, j, k, pdom_shape);
+        s(idx) = r(idx) - alpha * q(idx);
+    }
+}
+
+__global__ void kernel_PBiCGStab_3(MatrixFrame<double> &x, MatrixFrame<double> &pp, MatrixFrame<double> &ss, double alpha, double omega, uint3 pdom_shape, uint3 map_shape, uint3 map_offset) {
+    unsigned int i, j, k;
+    GLOBAL_THREAD_IDX_3D(i, j, k);
+    if (i < map_shape.x && j < map_shape.y && k < map_shape.z) {
+        i += map_offset.x;
+        j += map_offset.y;
+        k += map_offset.z;
+        unsigned int idx = IDX(i, j, k, pdom_shape);
+        x(idx) += alpha * pp(idx) + omega * ss(idx);
+    }
+}
+
+__global__ void kernel_PBiCGStab_4(MatrixFrame<double> &r, MatrixFrame<double> &s, MatrixFrame<double> &t, double omega, uint3 pdom_shape, uint3 map_shape, uint3 map_offset) {
+    unsigned int i, j, k;
+    GLOBAL_THREAD_IDX_3D(i, j, k);
+    if (i < map_shape.x && j < map_shape.y && k < map_shape.z) {
+        i += map_offset.x;
+        j += map_offset.y;
+        k += map_offset.z;
+        unsigned int idx = IDX(i, j, k, pdom_shape);
+        r(idx) = s(idx) - omega * t(idx);
+    }
+}
+
+void StructLEqSolver::dev_Struct3d7p_PBiCGStab(Matrix<double> &a, Matrix<double> &x, Matrix<double> &b, Matrix<double> &r, Mapper &global, Mapper &pdom, Mapper &map, dim3 &block_dim) {
+    assert(
+        a.shape.x == x.shape.x && a.shape.x == b.shape.x && a.shape.x == r.shape.x &&
+        a.shape.y == 7 && x.shape.y == 1 && b.shape.y == 1 && r.shape.y == 1
+    );
     dim3 grid_dim(
         (map.shape.x + block_dim.x - 1) / block_dim.x,
         (map.shape.y + block_dim.y - 1) / block_dim.y,
         (map.shape.z + block_dim.z - 1) / block_dim.z
     );
 
+    Matrix<double> rr(pdom.shape, 1, HDCType::Device, 101);
+    Matrix<double>  p(pdom.shape, 1, HDCType::Device, 102);
+    Matrix<double>  q(pdom.shape, 1, HDCType::Device, 103);
+    Matrix<double>  s(pdom.shape, 1, HDCType::Device, 104);
+    Matrix<double> pp(pdom.shape, 1, HDCType::Device, 105);
+    Matrix<double> ss(pdom.shape, 1, HDCType::Device, 106);
+    Matrix<double>  t(pdom.shape, 1, HDCType::Device, 107);
+
+    double rho, rrho, alpha, beta, omega;
+
+    dev_Struct3d7p_Res(a, x, b, r, pdom, map, block_dim);
+    err = sqrt(dev_Norm2Sq(r, pdom, map, block_dim)) / map.size;
+    rr.cpy(r, HDCType::Device);
+
+    rrho  = 1.0;
+    alpha = 0.0;
+    omega = 1.0;
+
     it = 0;
     do {
-        kernel_Struct3d7p_SOR<<<grid_dim, block_dim, 0, 0>>>(*(a.devptr), *(x.devptr), *(b.devptr), relax_factor, COLOR::Black, pdom.shape, pdom.offset, map.shape, map.offset);
-        kernel_Struct3d7p_SOR<<<grid_dim, block_dim, 0, 0>>>(*(a.devptr), *(x.devptr), *(b.devptr), relax_factor, COLOR::Red  , pdom.shape, pdom.offset, map.shape, map.offset);
-        dev_Struct3d7p_Res(a, x, b, r, pdom, map, block_dim);
-        err = sqrt(dev_Norm2Sq(r, pdom, map, block_dim));
+        if (err < tol) {
+            break;
+        }
+
+        rho = dev_DotProduct(r, rr, pdom, map, block_dim);
+        if (fabs(rho) < __FLT_MIN__) {
+            err = rho;
+            break;
+        }
+
+        if (it == 0) {
+            p.cpy(r, HDCType::Device);
+        } else {
+            beta = (rho * alpha) / (rrho * omega);
+            kernel_PBiCGStab_1<<<grid_dim, block_dim>>>(*(p.devptr), *(q.devptr), *(r.devptr), beta, omega, pdom.shape, map.shape, map.offset);
+        }
+        pp.clear(HDCType::Device);
+        dev_Struct3d7p_Precondition(a, pp, p, pdom, map, block_dim);
+        dev_Struct3d7p_MV(a, pp, q, pdom, map, block_dim);
+        alpha = rho / dev_DotProduct(rr, q, pdom, map, block_dim);
+
+        kernel_PBiCGStab_2<<<grid_dim, block_dim>>>(*(s.devptr), *(q.devptr), *(r.devptr), alpha, pdom.shape, map.shape, map.offset);
+        ss.clear(HDCType::Device);
+        dev_Struct3d7p_Precondition(a, ss, s, pdom, map, block_dim);
+        dev_Struct3d7p_MV(a, ss, t, pdom, map, block_dim);
+        omega = dev_DotProduct(t, s, pdom, map, block_dim) / dev_DotProduct(t, t, pdom, map, block_dim);
+
+        kernel_PBiCGStab_3<<<grid_dim, block_dim, 0, 0>>>(*(x.devptr), *(pp.devptr), *(ss.devptr), alpha, omega, pdom.shape, map.shape, map.offset);
+        kernel_PBiCGStab_4<<<grid_dim, block_dim, 0, 0>>>(*(r.devptr), *(s.devptr), *(t.devptr), omega, pdom.shape, map.shape, map.offset);
+
+        rrho = rho;
+
+        err = sqrt(dev_Norm2Sq(r, pdom, map, block_dim)) / map.size;
+
         it ++;
     } while (it < maxit && err > tol);
 }

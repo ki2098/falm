@@ -48,7 +48,7 @@ double dev_DotProduct(Matrix<double> &a, Matrix<double> &b, Mapper &pdom, Mapper
 
     kernel_DotProduct<<<grid_dim, block_dim, shared_size, 0>>>(*(a.devptr), *(b.devptr), partial_sum_dev, pdom.shape, map.shape, map.offset);
 
-    falmMemcpy(partial_sum, partial_sum_dev, sizeof(double) * n_blocks, MCPTYPE::Dev2Hst);
+    falmMemcpy(partial_sum, partial_sum_dev, sizeof(double) * n_blocks, MCpType::Dev2Hst);
     double sum = partial_sum[0];
     for (int i = 1; i < n_blocks; i ++) {
         sum += partial_sum[i];
@@ -105,7 +105,7 @@ double dev_Norm2Sq(Matrix<double> &a, Mapper &pdom, Mapper &map, dim3 &block_dim
 
     kernel_Norm2Sq<<<grid_dim, block_dim, shared_size, 0>>>(*(a.devptr), partial_sum_dev, pdom.shape, map.shape, map.offset);
 
-    falmMemcpy(partial_sum, partial_sum_dev, sizeof(double) * n_blocks, MCPTYPE::Dev2Hst);
+    falmMemcpy(partial_sum, partial_sum_dev, sizeof(double) * n_blocks, MCpType::Dev2Hst);
     double sum = partial_sum[0];
     for (int i = 1; i < n_blocks; i ++) {
         sum += partial_sum[i];
@@ -164,7 +164,7 @@ double dev_MaxDiag(Matrix<double> &a, Mapper &pdom, Mapper &map, dim3 &block_dim
 
     kernel_MaxDiag<<<grid_dim, block_dim, shared_size, 0>>>(*(a.devptr), partial_max_dev, pdom.shape, map.shape, map.offset);
 
-    falmMemcpy(partial_max, partial_max_dev, sizeof(double) * n_blocks, MCPTYPE::Dev2Hst);
+    falmMemcpy(partial_max, partial_max_dev, sizeof(double) * n_blocks, MCpType::Dev2Hst);
     double maximum = partial_max[0];
     for (int i = 1; i < n_blocks; i ++) {
         if (partial_max[i] > maximum) {

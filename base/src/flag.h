@@ -3,7 +3,7 @@
 
 namespace Falm {
 
-class MCPTYPE {
+class MCpType {
 public:
     static const unsigned int Empty   = 0;
     static const unsigned int Hst2Hst = 1;
@@ -12,7 +12,7 @@ public:
     static const unsigned int Dev2Dev = 8;
 };
 
-class HDCTYPE {
+class HDCType {
 public:
     static const unsigned int Empty  = 0;
     static const unsigned int Host   = 1;
@@ -20,7 +20,7 @@ public:
     static const unsigned int HstDev = Host | Device;
 };
 
-class COLOR {
+class Color {
 public:
     static const unsigned int Black = 0;
     static const unsigned int Red   = 1;
