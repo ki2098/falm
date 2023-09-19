@@ -113,6 +113,7 @@ int main(int argc, char **argv) {
     x.sync(MCpType::Hst2Dev);
     if (mpi_size > 1) {
         if (mpi_rank == 0) {
+            printf("Sending color %u...\n", Color::Black);
             dev_CPM_PackColoredBuffer(buffer[0], x.dev.ptr, process, block_dim_yz);
             CPM_ISend(buffer[0], mpi_rank + 1, 0, MPI_COMM_WORLD, &req[0]);
             CPM_IRecv(buffer[1], mpi_rank + 1, 1, MPI_COMM_WORLD, &req[1]);
@@ -142,20 +143,21 @@ int main(int argc, char **argv) {
             printf("%d printing...\n", mpi_rank);
             print_xy_slice(x, process.shape, process.shape.z / 2);
             printf("\n");
-            printf("B0: ");
-            print_buffer_dev(buffer[0]);
-            printf("B1: ");
-            print_buffer_dev(buffer[1]);
-            printf("B2: ");
-            print_buffer_dev(buffer[2]);
-            printf("B3: ");
-            print_buffer_dev(buffer[3]);
+            // printf("B0: ");
+            // print_buffer_dev(buffer[0]);
+            // printf("B1: ");
+            // print_buffer_dev(buffer[1]);
+            // printf("B2: ");
+            // print_buffer_dev(buffer[2]);
+            // printf("B3: ");
+            // print_buffer_dev(buffer[3]);
             fflush(stdout);
         }
         CPM_Barrier(MPI_COMM_WORLD);
     }
     if (mpi_size > 1) {
         if (mpi_rank == 0) {
+            printf("Sending color %u...\n", Color::Red);
             dev_CPM_PackColoredBuffer(buffer[4], x.dev.ptr, process, block_dim_yz);
             CPM_ISend(buffer[4], mpi_rank + 1, 0, MPI_COMM_WORLD, &req[4]);
             CPM_IRecv(buffer[5], mpi_rank + 1, 1, MPI_COMM_WORLD, &req[5]);
@@ -185,14 +187,14 @@ int main(int argc, char **argv) {
             printf("%d printing...\n", mpi_rank);
             print_xy_slice(x, process.shape, process.shape.z / 2);
             printf("\n");
-            printf("B4: ");
-            print_buffer_dev(buffer[4]);
-            printf("B5: ");
-            print_buffer_dev(buffer[5]);
-            printf("B6: ");
-            print_buffer_dev(buffer[6]);
-            printf("B7: ");
-            print_buffer_dev(buffer[7]);
+            // printf("B4: ");
+            // print_buffer_dev(buffer[4]);
+            // printf("B5: ");
+            // print_buffer_dev(buffer[5]);
+            // printf("B6: ");
+            // print_buffer_dev(buffer[6]);
+            // printf("B7: ");
+            // print_buffer_dev(buffer[7]);
             fflush(stdout);
         }
         CPM_Barrier(MPI_COMM_WORLD);
@@ -224,6 +226,7 @@ int main(int argc, char **argv) {
     x.sync(MCpType::Hst2Dev);
     if (mpi_size > 1) {
         if (mpi_rank == 0) {
+            printf("Sending color %u...\n", Color::Black);
             dev_CPM_PackColoredBuffer(buffer[0], x.dev.ptr, process, block_dim_yz);
             CPM_ISend(buffer[0], mpi_rank + 1, 0, MPI_COMM_WORLD, &req[0]);
             CPM_IRecv(buffer[1], mpi_rank + 1, 1, MPI_COMM_WORLD, &req[1]);
@@ -253,20 +256,21 @@ int main(int argc, char **argv) {
             printf("%d printing...\n", mpi_rank);
             print_xy_slice(x, process.shape, process.shape.z / 2);
             printf("\n");
-            printf("B0: ");
-            print_buffer_dev(buffer[0]);
-            printf("B1: ");
-            print_buffer_dev(buffer[1]);
-            printf("B2: ");
-            print_buffer_dev(buffer[2]);
-            printf("B3: ");
-            print_buffer_dev(buffer[3]);
+            // printf("B0: ");
+            // print_buffer_dev(buffer[0]);
+            // printf("B1: ");
+            // print_buffer_dev(buffer[1]);
+            // printf("B2: ");
+            // print_buffer_dev(buffer[2]);
+            // printf("B3: ");
+            // print_buffer_dev(buffer[3]);
             fflush(stdout);
         }
         CPM_Barrier(MPI_COMM_WORLD);
     }
     if (mpi_size > 1) {
         if (mpi_rank == 0) {
+            printf("Sending color %u...\n", Color::Red);
             dev_CPM_PackColoredBuffer(buffer[4], x.dev.ptr, process, block_dim_yz);
             CPM_ISend(buffer[4], mpi_rank + 1, 0, MPI_COMM_WORLD, &req[4]);
             CPM_IRecv(buffer[5], mpi_rank + 1, 1, MPI_COMM_WORLD, &req[5]);
@@ -296,14 +300,14 @@ int main(int argc, char **argv) {
             printf("%d printing...\n", mpi_rank);
             print_xy_slice(x, process.shape, process.shape.z / 2);
             printf("\n");
-            printf("B4: ");
-            print_buffer_dev(buffer[4]);
-            printf("B5: ");
-            print_buffer_dev(buffer[5]);
-            printf("B6: ");
-            print_buffer_dev(buffer[6]);
-            printf("B7: ");
-            print_buffer_dev(buffer[7]);
+            // printf("B4: ");
+            // print_buffer_dev(buffer[4]);
+            // printf("B5: ");
+            // print_buffer_dev(buffer[5]);
+            // printf("B6: ");
+            // print_buffer_dev(buffer[6]);
+            // printf("B7: ");
+            // print_buffer_dev(buffer[7]);
             fflush(stdout);
         }
         CPM_Barrier(MPI_COMM_WORLD);
