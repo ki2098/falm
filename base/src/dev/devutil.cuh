@@ -1,7 +1,7 @@
 #ifndef FALM_DEVUTIL_CUH
 #define FALM_DEVUTIL_CUH
 
-#include <cuda_runtime.h>
+#include "../typedef.h"
 
 namespace Falm {
 

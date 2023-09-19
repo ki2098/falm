@@ -22,10 +22,11 @@ int main() {
         uint3{Nx, Ny, Nz},
         uint3{Gd, Gd, Gd}
     );
-    Matrix<double> a(pdom.shape, 7, HDCType::Host  , 0);
-    Matrix<double> t(pdom.shape, 1, HDCType::Device, 1);
-    Matrix<double> b(pdom.shape, 1, HDCType::Host  , 2);
-    Matrix<double> r(pdom.shape, 1, HDCType::Device, 3);
+    Matrix<double> a, t, b, r;
+    a.init(pdom.shape, 7, HDCType::Host  , 0);
+    t.init(pdom.shape, 1, HDCType::Device, 1);
+    b.init(pdom.shape, 1, HDCType::Host  , 2);
+    r.init(pdom.shape, 1, HDCType::Device, 3);
     const double dx = Lx / Nx;
     for (unsigned int i = Gd; i < Gd + Nx; i ++) {
         double ac, ae, aw, bc;
