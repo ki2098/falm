@@ -6,7 +6,7 @@
 #PJM -L "elapse=06:00:00"
 #PJM -j
 #PJM -X
-#PJM -o "riamc++.4.log"
+#PJM -o "cpm++.log"
 
 module load nvhpc/nvhpc_20.11
 
