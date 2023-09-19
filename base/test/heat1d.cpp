@@ -23,10 +23,10 @@ int main() {
         uint3{Gd, Gd, Gd}
     );
     Matrix<double> a, t, b, r;
-    a.init(pdom.shape, 7, HDCType::Host  , 0);
-    t.init(pdom.shape, 1, HDCType::Device, 1);
-    b.init(pdom.shape, 1, HDCType::Host  , 2);
-    r.init(pdom.shape, 1, HDCType::Device, 3);
+    a.alloc(pdom.shape, 7, HDCType::Host  , 0);
+    t.alloc(pdom.shape, 1, HDCType::Device, 1);
+    b.alloc(pdom.shape, 1, HDCType::Host  , 2);
+    r.alloc(pdom.shape, 1, HDCType::Device, 3);
     const double dx = Lx / Nx;
     for (unsigned int i = Gd; i < Gd + Nx; i ++) {
         double ac, ae, aw, bc;
