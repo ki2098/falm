@@ -11,7 +11,7 @@
 
 using namespace Falm;
 
-void print_buffer(CPMBuffer<double> &buffer) {
+void print_buffer_dev(CPMBuffer<double> &buffer) {
     double *ptr = (double *)falmHostMalloc(sizeof(double) * buffer.size);
     falmMemcpy(ptr, buffer.ptr, sizeof(double) * buffer.size, MCpType::Dev2Hst);
     for (int i = 0; i < buffer.size; i ++) {
@@ -19,6 +19,13 @@ void print_buffer(CPMBuffer<double> &buffer) {
     }
     printf("\n");
     falmHostFreePtr(ptr);
+}
+
+void print_buffer_host(CPMBuffer<double> &buffer) {
+    for (int i = 0; i < buffer.size; i ++) {
+        printf("%-2.0lf ", buffer.ptr[i]);
+    }
+    printf("\n");
 }
 
 unsigned int dim_division(unsigned int dim_size, int mpi_size, int mpi_rank) {
@@ -56,6 +63,12 @@ int main(int argc, char **argv) {
     CPM_GetRank(MPI_COMM_WORLD, mpi_rank);
     CPM_GetSize(MPI_COMM_WORLD, mpi_size);
 
+    int gpu_count;
+    cudaGetDeviceCount(&gpu_count);
+    cudaSetDevice(mpi_rank % gpu_count);
+    printf("process %d running no device %d\n", mpi_rank, mpi_rank % gpu_count);
+    CPM_Barrier(MPI_COMM_WORLD);
+
     unsigned int ox = 0;
     for (int i = 0; i < mpi_rank; i ++) {
         ox += dim_division(global.shape.x, mpi_size, i);
@@ -85,7 +98,6 @@ int main(int argc, char **argv) {
 
     CPMBuffer<double> *buffer = new CPMBuffer<double>[8];
     MPI_Request req[8];
-    MPI_Status status[8];
     uint3 yz_inner_slice{1, Ny, Nz};
     buffer[0].init(yz_inner_slice, uint3{process.shape.x - Gd - 1, Gd, Gd}, BufType::Out, HDCType::Device, process, Color::Black);
     buffer[1].init(yz_inner_slice, uint3{process.shape.x - Gd    , Gd, Gd}, BufType::In , HDCType::Device, process, Color::Black);
@@ -131,13 +143,13 @@ int main(int argc, char **argv) {
             print_xy_slice(x, process.shape, process.shape.z / 2);
             printf("\n");
             printf("B0: ");
-            print_buffer(buffer[0]);
+            print_buffer_dev(buffer[0]);
             printf("B1: ");
-            print_buffer(buffer[1]);
+            print_buffer_dev(buffer[1]);
             printf("B2: ");
-            print_buffer(buffer[2]);
+            print_buffer_dev(buffer[2]);
             printf("B3: ");
-            print_buffer(buffer[3]);
+            print_buffer_dev(buffer[3]);
             fflush(stdout);
         }
         CPM_Barrier(MPI_COMM_WORLD);
@@ -174,13 +186,13 @@ int main(int argc, char **argv) {
             print_xy_slice(x, process.shape, process.shape.z / 2);
             printf("\n");
             printf("B4: ");
-            print_buffer(buffer[4]);
+            print_buffer_dev(buffer[4]);
             printf("B5: ");
-            print_buffer(buffer[5]);
+            print_buffer_dev(buffer[5]);
             printf("B6: ");
-            print_buffer(buffer[6]);
+            print_buffer_dev(buffer[6]);
             printf("B7: ");
-            print_buffer(buffer[7]);
+            print_buffer_dev(buffer[7]);
             fflush(stdout);
         }
         CPM_Barrier(MPI_COMM_WORLD);
@@ -213,24 +225,24 @@ int main(int argc, char **argv) {
     if (mpi_size > 1) {
         if (mpi_rank == 0) {
             dev_CPM_PackColoredBuffer(buffer[0], x.dev.ptr, process, block_dim_yz);
-            CPM_ISend(buffer[0], mpi_rank + 1, 0 + 10, MPI_COMM_WORLD, &req[0]);
-            CPM_IRecv(buffer[1], mpi_rank + 1, 1 + 10, MPI_COMM_WORLD, &req[1]);
-            CPM_Waitall(2, &req[0], &status[0]);
+            CPM_ISend(buffer[0], mpi_rank + 1, 0, MPI_COMM_WORLD, &req[0]);
+            CPM_IRecv(buffer[1], mpi_rank + 1, 1, MPI_COMM_WORLD, &req[1]);
+            CPM_Waitall(2, &req[0], MPI_STATUSES_IGNORE);
             dev_CPM_UnpackColoredBuffer(buffer[1], x.dev.ptr, process, block_dim_yz);
         } else if (mpi_rank == mpi_size - 1) {
             dev_CPM_PackColoredBuffer(buffer[2], x.dev.ptr, process, block_dim_yz);
-            CPM_ISend(buffer[2], mpi_rank - 1, 1 + 10, MPI_COMM_WORLD, &req[2]);
-            CPM_IRecv(buffer[3], mpi_rank - 1, 0 + 10, MPI_COMM_WORLD, &req[3]);
-            CPM_Waitall(2, &req[2], &status[2]);
+            CPM_ISend(buffer[2], mpi_rank - 1, 1, MPI_COMM_WORLD, &req[2]);
+            CPM_IRecv(buffer[3], mpi_rank - 1, 0, MPI_COMM_WORLD, &req[3]);
+            CPM_Waitall(2, &req[2], MPI_STATUSES_IGNORE);
             dev_CPM_UnpackColoredBuffer(buffer[3], x.dev.ptr, process, block_dim_yz);
         } else {
             dev_CPM_PackColoredBuffer(buffer[0], x.dev.ptr, process, block_dim_yz);
-            CPM_ISend(buffer[0], mpi_rank + 1, 0 + 10, MPI_COMM_WORLD, &req[0]);
-            CPM_IRecv(buffer[1], mpi_rank + 1, 1 + 10, MPI_COMM_WORLD, &req[1]);
+            CPM_ISend(buffer[0], mpi_rank + 1, 0, MPI_COMM_WORLD, &req[0]);
+            CPM_IRecv(buffer[1], mpi_rank + 1, 1, MPI_COMM_WORLD, &req[1]);
             dev_CPM_PackColoredBuffer(buffer[2], x.dev.ptr, process, block_dim_yz);
-            CPM_ISend(buffer[2], mpi_rank - 1, 1 + 10, MPI_COMM_WORLD, &req[2]);
-            CPM_IRecv(buffer[3], mpi_rank - 1, 0 + 10, MPI_COMM_WORLD, &req[3]);
-            CPM_Waitall(4, &req[0], &status[0]);
+            CPM_ISend(buffer[2], mpi_rank - 1, 1, MPI_COMM_WORLD, &req[2]);
+            CPM_IRecv(buffer[3], mpi_rank - 1, 0, MPI_COMM_WORLD, &req[3]);
+            CPM_Waitall(4, &req[0], MPI_STATUSES_IGNORE);
             dev_CPM_UnpackColoredBuffer(buffer[1], x.dev.ptr, process, block_dim_yz);
             dev_CPM_UnpackColoredBuffer(buffer[3], x.dev.ptr, process, block_dim_yz);
         }
@@ -242,17 +254,13 @@ int main(int argc, char **argv) {
             print_xy_slice(x, process.shape, process.shape.z / 2);
             printf("\n");
             printf("B0: ");
-            print_buffer(buffer[0]);
+            print_buffer_dev(buffer[0]);
             printf("B1: ");
-            print_buffer(buffer[1]);
+            print_buffer_dev(buffer[1]);
             printf("B2: ");
-            print_buffer(buffer[2]);
+            print_buffer_dev(buffer[2]);
             printf("B3: ");
-            print_buffer(buffer[3]);
-            for (int s = 0; s < 4; s ++) {
-                printf("%d:%d:%d | ", status[s].MPI_SOURCE, status[s].MPI_TAG, status[s].MPI_ERROR);
-            }
-            printf("\n");
+            print_buffer_dev(buffer[3]);
             fflush(stdout);
         }
         CPM_Barrier(MPI_COMM_WORLD);
@@ -260,23 +268,23 @@ int main(int argc, char **argv) {
     if (mpi_size > 1) {
         if (mpi_rank == 0) {
             dev_CPM_PackColoredBuffer(buffer[4], x.dev.ptr, process, block_dim_yz);
-            CPM_ISend(buffer[4], mpi_rank + 1, 0 + 10, MPI_COMM_WORLD, &req[4]);
-            CPM_IRecv(buffer[5], mpi_rank + 1, 1 + 10, MPI_COMM_WORLD, &req[5]);
+            CPM_ISend(buffer[4], mpi_rank + 1, 0, MPI_COMM_WORLD, &req[4]);
+            CPM_IRecv(buffer[5], mpi_rank + 1, 1, MPI_COMM_WORLD, &req[5]);
             CPM_Waitall(2, &req[4], MPI_STATUSES_IGNORE);
             dev_CPM_UnpackColoredBuffer(buffer[5], x.dev.ptr, process, block_dim_yz);
         } else if (mpi_rank == mpi_size - 1) {
             dev_CPM_PackColoredBuffer(buffer[6], x.dev.ptr, process, block_dim_yz);
-            CPM_ISend(buffer[6], mpi_rank - 1, 1 + 10, MPI_COMM_WORLD, &req[6]);
-            CPM_IRecv(buffer[7], mpi_rank - 1, 0 + 10, MPI_COMM_WORLD, &req[7]);
+            CPM_ISend(buffer[6], mpi_rank - 1, 1, MPI_COMM_WORLD, &req[6]);
+            CPM_IRecv(buffer[7], mpi_rank - 1, 0, MPI_COMM_WORLD, &req[7]);
             CPM_Waitall(2, &req[6], MPI_STATUSES_IGNORE);
             dev_CPM_UnpackColoredBuffer(buffer[7], x.dev.ptr, process, block_dim_yz);
         } else {
             dev_CPM_PackColoredBuffer(buffer[4], x.dev.ptr, process, block_dim_yz);
-            CPM_ISend(buffer[4], mpi_rank + 1, 0 + 10, MPI_COMM_WORLD, &req[4]);
-            CPM_IRecv(buffer[5], mpi_rank + 1, 1 + 10, MPI_COMM_WORLD, &req[5]);
+            CPM_ISend(buffer[4], mpi_rank + 1, 0, MPI_COMM_WORLD, &req[4]);
+            CPM_IRecv(buffer[5], mpi_rank + 1, 1, MPI_COMM_WORLD, &req[5]);
             dev_CPM_PackColoredBuffer(buffer[6], x.dev.ptr, process, block_dim_yz);
-            CPM_ISend(buffer[6], mpi_rank - 1, 1 + 10, MPI_COMM_WORLD, &req[6]);
-            CPM_IRecv(buffer[7], mpi_rank - 1, 0 + 10, MPI_COMM_WORLD, &req[7]);
+            CPM_ISend(buffer[6], mpi_rank - 1, 1, MPI_COMM_WORLD, &req[6]);
+            CPM_IRecv(buffer[7], mpi_rank - 1, 0, MPI_COMM_WORLD, &req[7]);
             CPM_Waitall(4, &req[4], MPI_STATUSES_IGNORE);
             dev_CPM_UnpackColoredBuffer(buffer[5], x.dev.ptr, process, block_dim_yz);
             dev_CPM_UnpackColoredBuffer(buffer[7], x.dev.ptr, process, block_dim_yz);
@@ -289,13 +297,13 @@ int main(int argc, char **argv) {
             print_xy_slice(x, process.shape, process.shape.z / 2);
             printf("\n");
             printf("B4: ");
-            print_buffer(buffer[4]);
+            print_buffer_dev(buffer[4]);
             printf("B5: ");
-            print_buffer(buffer[5]);
+            print_buffer_dev(buffer[5]);
             printf("B6: ");
-            print_buffer(buffer[6]);
+            print_buffer_dev(buffer[6]);
             printf("B7: ");
-            print_buffer(buffer[7]);
+            print_buffer_dev(buffer[7]);
             fflush(stdout);
         }
         CPM_Barrier(MPI_COMM_WORLD);

@@ -52,6 +52,19 @@ void dev_CPM_PackColoredBuffer(CPMBuffer<double> &buffer, double *src, Mapper &p
     kernel_CPM_PackColoredBuffer<<<grid_dim, block_dim, 0, 0>>>(buffer.ptr, buffer.map.shape, buffer.map.offset, buffer.color, src, pdom.shape, pdom.offset);
 }
 
+void dev2hst_CPM_PackColoredBuffer(CPMBuffer<double> &buffer, double *src, Mapper &pdom, dim3 &block_dim) {
+    Mapper &map = buffer.map;
+    dim3 grid_dim(
+        (map.shape.x + block_dim.x - 1) / block_dim.x,
+        (map.shape.y + block_dim.y - 1) / block_dim.y,
+        (map.shape.z + block_dim.z - 1) / block_dim.z
+    );
+    double *ptr = (double*)falmDevMalloc(sizeof(double) * buffer.size);
+    kernel_CPM_PackColoredBuffer<<<grid_dim, block_dim, 0, 0>>>(ptr, buffer.map.shape, buffer.map.offset, buffer.color, src, pdom.shape, pdom.offset);
+    falmMemcpy(buffer.ptr, ptr, sizeof(double) * buffer.size, MCpType::Dev2Hst);
+    falmDevFreePtr(ptr);
+}
+
 __global__ void kernel_CPM_UnpackBuffer(double *buffer, uint3 buf_shape, uint3 buf_offset, double *dst, uint3 dst_shape) {
     unsigned int i, j, k;
     GLOBAL_THREAD_IDX_3D(i, j, k);
@@ -98,6 +111,19 @@ void dev_CPM_UnpackColoredBuffer(CPMBuffer<double> &buffer, double *dst, Mapper 
         (map.shape.z + block_dim.z - 1) / block_dim.z
     );
     kernel_CPM_UnpackColoredBuffer<<<grid_dim, block_dim, 0, 0>>>(buffer.ptr, buffer.map.shape, buffer.map.offset, buffer.color, dst, pdom.shape, pdom.offset);
+}
+
+void hst2dev_CPM_UnpackColoredBuffer(CPMBuffer<double> &buffer, double *dst, Mapper &pdom, dim3 &block_dim) {
+    Mapper &map = buffer.map;
+    dim3 grid_dim(
+        (map.shape.x + block_dim.x - 1) / block_dim.x,
+        (map.shape.y + block_dim.y - 1) / block_dim.y,
+        (map.shape.z + block_dim.z - 1) / block_dim.z
+    );
+    double *ptr = (double*)falmDevMalloc(sizeof(double) * buffer.size);
+    falmMemcpy(ptr, buffer.ptr, sizeof(double) * buffer.size, MCpType::Hst2Dev);
+    kernel_CPM_UnpackColoredBuffer<<<grid_dim, block_dim, 0, 0>>>(ptr, buffer.map.shape, buffer.map.offset, buffer.color, dst, pdom.shape, pdom.offset);
+    falmDevFreePtr(ptr);
 }
 
 }
