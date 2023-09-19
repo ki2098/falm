@@ -114,6 +114,7 @@ int main(int argc, char **argv) {
     if (mpi_size > 1) {
         if (mpi_rank == 0) {
             printf("Sending color %u...\n", Color::Black);
+            fflush(stdout);
             dev_CPM_PackColoredBuffer(buffer[0], x.dev.ptr, process, block_dim_yz);
             CPM_ISend(buffer[0], mpi_rank + 1, 0, MPI_COMM_WORLD, &req[0]);
             CPM_IRecv(buffer[1], mpi_rank + 1, 1, MPI_COMM_WORLD, &req[1]);
@@ -158,6 +159,7 @@ int main(int argc, char **argv) {
     if (mpi_size > 1) {
         if (mpi_rank == 0) {
             printf("Sending color %u...\n", Color::Red);
+            fflush(stdout);
             dev_CPM_PackColoredBuffer(buffer[4], x.dev.ptr, process, block_dim_yz);
             CPM_ISend(buffer[4], mpi_rank + 1, 0, MPI_COMM_WORLD, &req[4]);
             CPM_IRecv(buffer[5], mpi_rank + 1, 1, MPI_COMM_WORLD, &req[5]);
@@ -227,6 +229,7 @@ int main(int argc, char **argv) {
     if (mpi_size > 1) {
         if (mpi_rank == 0) {
             printf("Sending color %u...\n", Color::Black);
+            fflush(stdout);
             dev_CPM_PackColoredBuffer(buffer[0], x.dev.ptr, process, block_dim_yz);
             CPM_ISend(buffer[0], mpi_rank + 1, 0, MPI_COMM_WORLD, &req[0]);
             CPM_IRecv(buffer[1], mpi_rank + 1, 1, MPI_COMM_WORLD, &req[1]);
@@ -271,6 +274,7 @@ int main(int argc, char **argv) {
     if (mpi_size > 1) {
         if (mpi_rank == 0) {
             printf("Sending color %u...\n", Color::Red);
+            fflush(stdout);
             dev_CPM_PackColoredBuffer(buffer[4], x.dev.ptr, process, block_dim_yz);
             CPM_ISend(buffer[4], mpi_rank + 1, 0, MPI_COMM_WORLD, &req[4]);
             CPM_IRecv(buffer[5], mpi_rank + 1, 1, MPI_COMM_WORLD, &req[5]);
