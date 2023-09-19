@@ -23,3 +23,7 @@ assign:
 cpm: cpmdev
 	$(nvmpicxx) -cuda -c cpmtest.cpp --std=c++11 -o bin/cpmtest.o
 	$(nvmpicxx) -cuda bin/cpmtest.o bin/CPMDev.o -o bin/cpm
+
+cpm_ito: cpmdev
+	mpic++ -cuda -c cpmtest.cpp --std=c++11 -o bin/cpmtest.o
+	mpic++ -cuda bin/cpmtest.o bin/CPMDev.o -o bin/cpm
