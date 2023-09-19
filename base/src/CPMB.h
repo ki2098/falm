@@ -31,8 +31,8 @@ struct CPMBuffer {
     CPMBuffer(uint3 _buf_shape, uint3 _buf_offset, unsigned int _buftype, unsigned int _hdctype, Mapper &_pdom, unsigned int _color);
     ~CPMBuffer();
 
-    void init(uint3 _buf_shape, uint3 _buf_offset, unsigned int _buftype, unsigned int _hdctype);
-    void init(uint3 _buf_shape, uint3 _buf_offset, unsigned int _buftype, unsigned int _hdctype, Mapper &_pdom, unsigned int _color);
+    void alloc(uint3 _buf_shape, uint3 _buf_offset, unsigned int _buftype, unsigned int _hdctype);
+    void alloc(uint3 _buf_shape, uint3 _buf_offset, unsigned int _buftype, unsigned int _hdctype, Mapper &_pdom, unsigned int _color);
     void release();
 
     void clear() {
@@ -83,7 +83,7 @@ template<typename T> CPMBuffer<T>::~CPMBuffer() {
     }
 }
 
-template<typename T> void CPMBuffer<T>::init(uint3 _buf_shape, uint3 _buf_offset, unsigned int _buftype, unsigned int _hdctype) {
+template<typename T> void CPMBuffer<T>::alloc(uint3 _buf_shape, uint3 _buf_offset, unsigned int _buftype, unsigned int _hdctype) {
     assert(hdctype == HDCType::Empty);
     assert(buftype == BufType::Empty);
     
@@ -98,7 +98,7 @@ template<typename T> void CPMBuffer<T>::init(uint3 _buf_shape, uint3 _buf_offset
     }
 }
 
-template<typename T> void CPMBuffer<T>::init(uint3 _buf_shape, uint3 _buf_offset, unsigned int _buftype, unsigned int _hdctype, Mapper &_pdom, unsigned int _color) {
+template<typename T> void CPMBuffer<T>::alloc(uint3 _buf_shape, uint3 _buf_offset, unsigned int _buftype, unsigned int _hdctype, Mapper &_pdom, unsigned int _color) {
     assert(hdctype == HDCType::Empty);
     assert(buftype == BufType::Empty);
     map     = Mapper(_buf_shape, _buf_offset);

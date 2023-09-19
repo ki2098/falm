@@ -99,37 +99,49 @@ int main(int argc, char **argv) {
     CPMBuffer<double> *buffer = new CPMBuffer<double>[8];
     MPI_Request req[8];
     uint3 yz_inner_slice{1, Ny, Nz};
-    buffer[0].init(yz_inner_slice, uint3{process.shape.x - Gd - 1, Gd, Gd}, BufType::Out, HDCType::Device, process, Color::Black);
-    buffer[1].init(yz_inner_slice, uint3{process.shape.x - Gd    , Gd, Gd}, BufType::In , HDCType::Device, process, Color::Black);
-    buffer[2].init(yz_inner_slice, uint3{                  Gd    , Gd, Gd}, BufType::Out, HDCType::Device, process, Color::Black);
-    buffer[3].init(yz_inner_slice, uint3{                  Gd - 1, Gd, Gd}, BufType::In , HDCType::Device, process, Color::Black);
-    buffer[4].init(yz_inner_slice, uint3{process.shape.x - Gd - 1, Gd, Gd}, BufType::Out, HDCType::Device, process, Color::Red  );
-    buffer[5].init(yz_inner_slice, uint3{process.shape.x - Gd    , Gd, Gd}, BufType::In , HDCType::Device, process, Color::Red  );
-    buffer[6].init(yz_inner_slice, uint3{                  Gd    , Gd, Gd}, BufType::Out, HDCType::Device, process, Color::Red  );
-    buffer[7].init(yz_inner_slice, uint3{                  Gd - 1, Gd, Gd}, BufType::In , HDCType::Device, process, Color::Red  );
+    // buffer[0].alloc(yz_inner_slice, uint3{process.shape.x - Gd - 1, Gd, Gd}, BufType::Out, HDCType::Device, process, Color::Black);
+    // buffer[1].alloc(yz_inner_slice, uint3{process.shape.x - Gd    , Gd, Gd}, BufType::In , HDCType::Device, process, Color::Black);
+    // buffer[2].alloc(yz_inner_slice, uint3{                  Gd    , Gd, Gd}, BufType::Out, HDCType::Device, process, Color::Black);
+    // buffer[3].alloc(yz_inner_slice, uint3{                  Gd - 1, Gd, Gd}, BufType::In , HDCType::Device, process, Color::Black);
+    // buffer[4].alloc(yz_inner_slice, uint3{process.shape.x - Gd - 1, Gd, Gd}, BufType::Out, HDCType::Device, process, Color::Red  );
+    // buffer[5].alloc(yz_inner_slice, uint3{process.shape.x - Gd    , Gd, Gd}, BufType::In , HDCType::Device, process, Color::Red  );
+    // buffer[6].alloc(yz_inner_slice, uint3{                  Gd    , Gd, Gd}, BufType::Out, HDCType::Device, process, Color::Red  );
+    // buffer[7].alloc(yz_inner_slice, uint3{                  Gd - 1, Gd, Gd}, BufType::In , HDCType::Device, process, Color::Red  );
 
     dim3 block_dim_yz(1, 8, 4);
 
     x.sync(MCpType::Hst2Dev);
     if (mpi_size > 1) {
         if (mpi_rank == 0) {
-            printf("Sending color %u...\n", Color::Red);
+            printf("Sending color %u...\n", Color::Black);
             fflush(stdout);
         }
         CPM_Barrier(MPI_COMM_WORLD);
         if (mpi_rank == 0) {
+            buffer[0].alloc(yz_inner_slice, uint3{process.shape.x - Gd - 1, Gd, Gd}, BufType::Out, HDCType::Device, process, Color::Black);
+            buffer[1].alloc(yz_inner_slice, uint3{process.shape.x - Gd    , Gd, Gd}, BufType::In , HDCType::Device, process, Color::Black);
             dev_CPM_PackColoredBuffer(buffer[0], x.dev.ptr, process, block_dim_yz);
             CPM_ISend(buffer[0], mpi_rank + 1, 0, MPI_COMM_WORLD, &req[0]);
             CPM_IRecv(buffer[1], mpi_rank + 1, 1, MPI_COMM_WORLD, &req[1]);
             CPM_Waitall(2, &req[0], MPI_STATUSES_IGNORE);
             dev_CPM_UnpackColoredBuffer(buffer[1], x.dev.ptr, process, block_dim_yz);
+            buffer[0].release();
+            buffer[1].release();
         } else if (mpi_rank == mpi_size - 1) {
+            buffer[2].alloc(yz_inner_slice, uint3{                  Gd    , Gd, Gd}, BufType::Out, HDCType::Device, process, Color::Black);
+            buffer[3].alloc(yz_inner_slice, uint3{                  Gd - 1, Gd, Gd}, BufType::In , HDCType::Device, process, Color::Black);
             dev_CPM_PackColoredBuffer(buffer[2], x.dev.ptr, process, block_dim_yz);
             CPM_ISend(buffer[2], mpi_rank - 1, 1, MPI_COMM_WORLD, &req[2]);
             CPM_IRecv(buffer[3], mpi_rank - 1, 0, MPI_COMM_WORLD, &req[3]);
             CPM_Waitall(2, &req[2], MPI_STATUSES_IGNORE);
             dev_CPM_UnpackColoredBuffer(buffer[3], x.dev.ptr, process, block_dim_yz);
+            buffer[2].release();
+            buffer[3].release();
         } else {
+            buffer[0].alloc(yz_inner_slice, uint3{process.shape.x - Gd - 1, Gd, Gd}, BufType::Out, HDCType::Device, process, Color::Black);
+            buffer[1].alloc(yz_inner_slice, uint3{process.shape.x - Gd    , Gd, Gd}, BufType::In , HDCType::Device, process, Color::Black);
+            buffer[2].alloc(yz_inner_slice, uint3{                  Gd    , Gd, Gd}, BufType::Out, HDCType::Device, process, Color::Black);
+            buffer[3].alloc(yz_inner_slice, uint3{                  Gd - 1, Gd, Gd}, BufType::In , HDCType::Device, process, Color::Black);
             dev_CPM_PackColoredBuffer(buffer[0], x.dev.ptr, process, block_dim_yz);
             CPM_ISend(buffer[0], mpi_rank + 1, 0, MPI_COMM_WORLD, &req[0]);
             CPM_IRecv(buffer[1], mpi_rank + 1, 1, MPI_COMM_WORLD, &req[1]);
@@ -139,6 +151,10 @@ int main(int argc, char **argv) {
             CPM_Waitall(4, &req[0], MPI_STATUSES_IGNORE);
             dev_CPM_UnpackColoredBuffer(buffer[1], x.dev.ptr, process, block_dim_yz);
             dev_CPM_UnpackColoredBuffer(buffer[3], x.dev.ptr, process, block_dim_yz);
+            buffer[0].release();
+            buffer[1].release();
+            buffer[2].release();
+            buffer[3].release();
         }
     }
     x.sync(MCpType::Dev2Hst);
@@ -166,18 +182,30 @@ int main(int argc, char **argv) {
         }
         CPM_Barrier(MPI_COMM_WORLD);
         if (mpi_rank == 0) {
+            buffer[4].alloc(yz_inner_slice, uint3{process.shape.x - Gd - 1, Gd, Gd}, BufType::Out, HDCType::Device, process, Color::Red  );
+            buffer[5].alloc(yz_inner_slice, uint3{process.shape.x - Gd    , Gd, Gd}, BufType::In , HDCType::Device, process, Color::Red  );
             dev_CPM_PackColoredBuffer(buffer[4], x.dev.ptr, process, block_dim_yz);
             CPM_ISend(buffer[4], mpi_rank + 1, 0, MPI_COMM_WORLD, &req[4]);
             CPM_IRecv(buffer[5], mpi_rank + 1, 1, MPI_COMM_WORLD, &req[5]);
             CPM_Waitall(2, &req[4], MPI_STATUSES_IGNORE);
             dev_CPM_UnpackColoredBuffer(buffer[5], x.dev.ptr, process, block_dim_yz);
+            buffer[4].release();
+            buffer[5].release();
         } else if (mpi_rank == mpi_size - 1) {
+            buffer[6].alloc(yz_inner_slice, uint3{                  Gd    , Gd, Gd}, BufType::Out, HDCType::Device, process, Color::Red  );
+            buffer[7].alloc(yz_inner_slice, uint3{                  Gd - 1, Gd, Gd}, BufType::In , HDCType::Device, process, Color::Red  );
             dev_CPM_PackColoredBuffer(buffer[6], x.dev.ptr, process, block_dim_yz);
             CPM_ISend(buffer[6], mpi_rank - 1, 1, MPI_COMM_WORLD, &req[6]);
             CPM_IRecv(buffer[7], mpi_rank - 1, 0, MPI_COMM_WORLD, &req[7]);
             CPM_Waitall(2, &req[6], MPI_STATUSES_IGNORE);
             dev_CPM_UnpackColoredBuffer(buffer[7], x.dev.ptr, process, block_dim_yz);
+            buffer[6].release();
+            buffer[7].release();
         } else {
+            buffer[4].alloc(yz_inner_slice, uint3{process.shape.x - Gd - 1, Gd, Gd}, BufType::Out, HDCType::Device, process, Color::Red  );
+            buffer[5].alloc(yz_inner_slice, uint3{process.shape.x - Gd    , Gd, Gd}, BufType::In , HDCType::Device, process, Color::Red  );
+            buffer[6].alloc(yz_inner_slice, uint3{                  Gd    , Gd, Gd}, BufType::Out, HDCType::Device, process, Color::Red  );
+            buffer[7].alloc(yz_inner_slice, uint3{                  Gd - 1, Gd, Gd}, BufType::In , HDCType::Device, process, Color::Red  );
             dev_CPM_PackColoredBuffer(buffer[4], x.dev.ptr, process, block_dim_yz);
             CPM_ISend(buffer[4], mpi_rank + 1, 0, MPI_COMM_WORLD, &req[4]);
             CPM_IRecv(buffer[5], mpi_rank + 1, 1, MPI_COMM_WORLD, &req[5]);
@@ -187,6 +215,10 @@ int main(int argc, char **argv) {
             CPM_Waitall(4, &req[4], MPI_STATUSES_IGNORE);
             dev_CPM_UnpackColoredBuffer(buffer[5], x.dev.ptr, process, block_dim_yz);
             dev_CPM_UnpackColoredBuffer(buffer[7], x.dev.ptr, process, block_dim_yz);
+            buffer[4].release();
+            buffer[5].release();
+            buffer[6].release();
+            buffer[7].release();
         }
     }
     x.sync(MCpType::Dev2Hst);
@@ -213,6 +245,7 @@ int main(int argc, char **argv) {
     printf("_____________________________________________________________________\n");
     fflush(stdout);
     CPM_Barrier(MPI_COMM_WORLD);
+    CPMBuffer<double> *buffer__ = new CPMBuffer<double>[8];
     
     x.clear(HDCType::HstDev);
     for (int i = Gd; i < process.shape.x - Gd; i ++) {
@@ -234,32 +267,48 @@ int main(int argc, char **argv) {
     x.sync(MCpType::Hst2Dev);
     if (mpi_size > 1) {
         if (mpi_rank == 0) {
-            printf("Sending color %u...\n", Color::Red);
+            printf("Sending color %u...\n", Color::Black);
             fflush(stdout);
         }
         CPM_Barrier(MPI_COMM_WORLD);
         if (mpi_rank == 0) {
-            dev_CPM_PackColoredBuffer(buffer[0], x.dev.ptr, process, block_dim_yz);
-            CPM_ISend(buffer[0], mpi_rank + 1, 0, MPI_COMM_WORLD, &req[0]);
-            CPM_IRecv(buffer[1], mpi_rank + 1, 1, MPI_COMM_WORLD, &req[1]);
+            buffer__[0].alloc(yz_inner_slice, uint3{process.shape.x - Gd - 1, Gd, Gd}, BufType::Out, HDCType::Device, process, Color::Black);
+            buffer__[1].alloc(yz_inner_slice, uint3{process.shape.x - Gd    , Gd, Gd}, BufType::In , HDCType::Device, process, Color::Black);
+            dev_CPM_PackColoredBuffer(buffer__[0], x.dev.ptr, process, block_dim_yz);
+            CPM_ISend(buffer__[0], mpi_rank + 1, 0, MPI_COMM_WORLD, &req[0]);
+            CPM_IRecv(buffer__[1], mpi_rank + 1, 1, MPI_COMM_WORLD, &req[1]);
             CPM_Waitall(2, &req[0], MPI_STATUSES_IGNORE);
-            dev_CPM_UnpackColoredBuffer(buffer[1], x.dev.ptr, process, block_dim_yz);
+            dev_CPM_UnpackColoredBuffer(buffer__[1], x.dev.ptr, process, block_dim_yz);
+            buffer__[0].release();
+            buffer__[1].release();
         } else if (mpi_rank == mpi_size - 1) {
-            dev_CPM_PackColoredBuffer(buffer[2], x.dev.ptr, process, block_dim_yz);
-            CPM_ISend(buffer[2], mpi_rank - 1, 1, MPI_COMM_WORLD, &req[2]);
-            CPM_IRecv(buffer[3], mpi_rank - 1, 0, MPI_COMM_WORLD, &req[3]);
+            buffer__[2].alloc(yz_inner_slice, uint3{                  Gd    , Gd, Gd}, BufType::Out, HDCType::Device, process, Color::Black);
+            buffer__[3].alloc(yz_inner_slice, uint3{                  Gd - 1, Gd, Gd}, BufType::In , HDCType::Device, process, Color::Black);
+            dev_CPM_PackColoredBuffer(buffer__[2], x.dev.ptr, process, block_dim_yz);
+            CPM_ISend(buffer__[2], mpi_rank - 1, 1, MPI_COMM_WORLD, &req[2]);
+            CPM_IRecv(buffer__[3], mpi_rank - 1, 0, MPI_COMM_WORLD, &req[3]);
             CPM_Waitall(2, &req[2], MPI_STATUSES_IGNORE);
-            dev_CPM_UnpackColoredBuffer(buffer[3], x.dev.ptr, process, block_dim_yz);
+            dev_CPM_UnpackColoredBuffer(buffer__[3], x.dev.ptr, process, block_dim_yz);
+            buffer__[2].release();
+            buffer__[3].release();
         } else {
-            dev_CPM_PackColoredBuffer(buffer[0], x.dev.ptr, process, block_dim_yz);
-            CPM_ISend(buffer[0], mpi_rank + 1, 0, MPI_COMM_WORLD, &req[0]);
-            CPM_IRecv(buffer[1], mpi_rank + 1, 1, MPI_COMM_WORLD, &req[1]);
-            dev_CPM_PackColoredBuffer(buffer[2], x.dev.ptr, process, block_dim_yz);
-            CPM_ISend(buffer[2], mpi_rank - 1, 1, MPI_COMM_WORLD, &req[2]);
-            CPM_IRecv(buffer[3], mpi_rank - 1, 0, MPI_COMM_WORLD, &req[3]);
+            buffer__[0].alloc(yz_inner_slice, uint3{process.shape.x - Gd - 1, Gd, Gd}, BufType::Out, HDCType::Device, process, Color::Black);
+            buffer__[1].alloc(yz_inner_slice, uint3{process.shape.x - Gd    , Gd, Gd}, BufType::In , HDCType::Device, process, Color::Black);
+            buffer__[2].alloc(yz_inner_slice, uint3{                  Gd    , Gd, Gd}, BufType::Out, HDCType::Device, process, Color::Black);
+            buffer__[3].alloc(yz_inner_slice, uint3{                  Gd - 1, Gd, Gd}, BufType::In , HDCType::Device, process, Color::Black);
+            dev_CPM_PackColoredBuffer(buffer__[0], x.dev.ptr, process, block_dim_yz);
+            CPM_ISend(buffer__[0], mpi_rank + 1, 0, MPI_COMM_WORLD, &req[0]);
+            CPM_IRecv(buffer__[1], mpi_rank + 1, 1, MPI_COMM_WORLD, &req[1]);
+            dev_CPM_PackColoredBuffer(buffer__[2], x.dev.ptr, process, block_dim_yz);
+            CPM_ISend(buffer__[2], mpi_rank - 1, 1, MPI_COMM_WORLD, &req[2]);
+            CPM_IRecv(buffer__[3], mpi_rank - 1, 0, MPI_COMM_WORLD, &req[3]);
             CPM_Waitall(4, &req[0], MPI_STATUSES_IGNORE);
-            dev_CPM_UnpackColoredBuffer(buffer[1], x.dev.ptr, process, block_dim_yz);
-            dev_CPM_UnpackColoredBuffer(buffer[3], x.dev.ptr, process, block_dim_yz);
+            dev_CPM_UnpackColoredBuffer(buffer__[1], x.dev.ptr, process, block_dim_yz);
+            dev_CPM_UnpackColoredBuffer(buffer__[3], x.dev.ptr, process, block_dim_yz);
+            buffer__[0].release();
+            buffer__[1].release();
+            buffer__[2].release();
+            buffer__[3].release();
         }
     }
     x.sync(MCpType::Dev2Hst);
@@ -287,27 +336,43 @@ int main(int argc, char **argv) {
         }
         CPM_Barrier(MPI_COMM_WORLD);
         if (mpi_rank == 0) {
-            dev_CPM_PackColoredBuffer(buffer[4], x.dev.ptr, process, block_dim_yz);
-            CPM_ISend(buffer[4], mpi_rank + 1, 0, MPI_COMM_WORLD, &req[4]);
-            CPM_IRecv(buffer[5], mpi_rank + 1, 1, MPI_COMM_WORLD, &req[5]);
+            buffer__[4].alloc(yz_inner_slice, uint3{process.shape.x - Gd - 1, Gd, Gd}, BufType::Out, HDCType::Device, process, Color::Red  );
+            buffer__[5].alloc(yz_inner_slice, uint3{process.shape.x - Gd    , Gd, Gd}, BufType::In , HDCType::Device, process, Color::Red  );
+            dev_CPM_PackColoredBuffer(buffer__[4], x.dev.ptr, process, block_dim_yz);
+            CPM_ISend(buffer__[4], mpi_rank + 1, 0, MPI_COMM_WORLD, &req[4]);
+            CPM_IRecv(buffer__[5], mpi_rank + 1, 1, MPI_COMM_WORLD, &req[5]);
             CPM_Waitall(2, &req[4], MPI_STATUSES_IGNORE);
-            dev_CPM_UnpackColoredBuffer(buffer[5], x.dev.ptr, process, block_dim_yz);
+            dev_CPM_UnpackColoredBuffer(buffer__[5], x.dev.ptr, process, block_dim_yz);
+            buffer__[4].release();
+            buffer__[5].release();
         } else if (mpi_rank == mpi_size - 1) {
-            dev_CPM_PackColoredBuffer(buffer[6], x.dev.ptr, process, block_dim_yz);
-            CPM_ISend(buffer[6], mpi_rank - 1, 1, MPI_COMM_WORLD, &req[6]);
-            CPM_IRecv(buffer[7], mpi_rank - 1, 0, MPI_COMM_WORLD, &req[7]);
+            buffer__[6].alloc(yz_inner_slice, uint3{                  Gd    , Gd, Gd}, BufType::Out, HDCType::Device, process, Color::Red  );
+            buffer__[7].alloc(yz_inner_slice, uint3{                  Gd - 1, Gd, Gd}, BufType::In , HDCType::Device, process, Color::Red  );
+            dev_CPM_PackColoredBuffer(buffer__[6], x.dev.ptr, process, block_dim_yz);
+            CPM_ISend(buffer__[6], mpi_rank - 1, 1, MPI_COMM_WORLD, &req[6]);
+            CPM_IRecv(buffer__[7], mpi_rank - 1, 0, MPI_COMM_WORLD, &req[7]);
             CPM_Waitall(2, &req[6], MPI_STATUSES_IGNORE);
-            dev_CPM_UnpackColoredBuffer(buffer[7], x.dev.ptr, process, block_dim_yz);
+            dev_CPM_UnpackColoredBuffer(buffer__[7], x.dev.ptr, process, block_dim_yz);
+            buffer__[6].release();
+            buffer__[7].release();
         } else {
-            dev_CPM_PackColoredBuffer(buffer[4], x.dev.ptr, process, block_dim_yz);
-            CPM_ISend(buffer[4], mpi_rank + 1, 0, MPI_COMM_WORLD, &req[4]);
-            CPM_IRecv(buffer[5], mpi_rank + 1, 1, MPI_COMM_WORLD, &req[5]);
-            dev_CPM_PackColoredBuffer(buffer[6], x.dev.ptr, process, block_dim_yz);
-            CPM_ISend(buffer[6], mpi_rank - 1, 1, MPI_COMM_WORLD, &req[6]);
-            CPM_IRecv(buffer[7], mpi_rank - 1, 0, MPI_COMM_WORLD, &req[7]);
+            buffer__[4].alloc(yz_inner_slice, uint3{process.shape.x - Gd - 1, Gd, Gd}, BufType::Out, HDCType::Device, process, Color::Red  );
+            buffer__[5].alloc(yz_inner_slice, uint3{process.shape.x - Gd    , Gd, Gd}, BufType::In , HDCType::Device, process, Color::Red  );
+            buffer__[6].alloc(yz_inner_slice, uint3{                  Gd    , Gd, Gd}, BufType::Out, HDCType::Device, process, Color::Red  );
+            buffer__[7].alloc(yz_inner_slice, uint3{                  Gd - 1, Gd, Gd}, BufType::In , HDCType::Device, process, Color::Red  );
+            dev_CPM_PackColoredBuffer(buffer__[4], x.dev.ptr, process, block_dim_yz);
+            CPM_ISend(buffer__[4], mpi_rank + 1, 0, MPI_COMM_WORLD, &req[4]);
+            CPM_IRecv(buffer__[5], mpi_rank + 1, 1, MPI_COMM_WORLD, &req[5]);
+            dev_CPM_PackColoredBuffer(buffer__[6], x.dev.ptr, process, block_dim_yz);
+            CPM_ISend(buffer__[6], mpi_rank - 1, 1, MPI_COMM_WORLD, &req[6]);
+            CPM_IRecv(buffer__[7], mpi_rank - 1, 0, MPI_COMM_WORLD, &req[7]);
             CPM_Waitall(4, &req[4], MPI_STATUSES_IGNORE);
-            dev_CPM_UnpackColoredBuffer(buffer[5], x.dev.ptr, process, block_dim_yz);
-            dev_CPM_UnpackColoredBuffer(buffer[7], x.dev.ptr, process, block_dim_yz);
+            dev_CPM_UnpackColoredBuffer(buffer__[5], x.dev.ptr, process, block_dim_yz);
+            dev_CPM_UnpackColoredBuffer(buffer__[7], x.dev.ptr, process, block_dim_yz);
+            buffer__[4].release();
+            buffer__[5].release();
+            buffer__[6].release();
+            buffer__[7].release();
         }
     }
     x.sync(MCpType::Dev2Hst);
