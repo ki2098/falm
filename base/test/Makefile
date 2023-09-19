@@ -21,9 +21,9 @@ assign:
 	nvc++ -cuda assign.cpp --std=c++11 -o bin/assign
 
 cpm: cpmdev
-	$(nvmpicxx) -cuda -c cpmtest.cpp --std=c++11 -o bin/cpmtest.o
-	$(nvmpicxx) -cuda bin/cpmtest.o bin/CPMDev.o -o bin/cpm
+	$(nvmpicxx) -Mcuda=cuda12.1 -c cpmtest.cpp --std=c++11 -o bin/cpmtest.o
+	$(nvmpicxx) -Mcuda=cuda12.1 bin/cpmtest.o bin/CPMDev.o -o bin/cpm
 
 cpm_ito: cpmdev
-	mpic++ -cuda -c cpmtest.cpp --std=c++11 -o bin/cpmtest.o
-	mpic++ -cuda bin/cpmtest.o bin/CPMDev.o -o bin/cpm
+	mpic++ -gpu=cc60,cuda11.0,pinned -c cpmtest.cpp --std=c++11 -o bin/cpmtest.o
+	mpic++ -gpu=cc60,cuda11.0,pinned bin/cpmtest.o bin/CPMDev.o -o bin/cpm
