@@ -4,8 +4,8 @@
 #include "../src/matrix.h"
 
 #define Nx   15
-#define Ny   12
-#define Nz   13
+#define Ny   7
+#define Nz   9
 #define Gd   2
 #define Gdx2 4
 
