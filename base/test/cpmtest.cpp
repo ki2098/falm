@@ -136,7 +136,7 @@ int main(int argc, char **argv) {
     x.sync(MCpType::Dev2Hst);
     for (int i = 0; i < cpm.size; i ++) {
         if (cpm.rank == i) {
-            printf("%d printing...\n", cpm.rank);
+            printf("%d(%u %u %u) printing...\n", cpm.rank, cpm.idx.x, cpm.idx.y, cpm.idx.z);
             print_xy_slice(x, process.shape, process.shape.z / 2);
             printf("\n");
             // printf("B0: ");
@@ -164,7 +164,7 @@ int main(int argc, char **argv) {
     x.sync(MCpType::Dev2Hst);
     for (int i = 0; i < cpm.size; i ++) {
         if (cpm.rank == i) {
-            printf("%d printing...\n", cpm.rank);
+            printf("%d(%u %u %u) printing...\n", cpm.rank, cpm.idx.x, cpm.idx.y, cpm.idx.z);
             print_xy_slice(x, process.shape, process.shape.z / 2);
             printf("\n");
             // printf("B4: ");
@@ -198,7 +198,7 @@ int main(int argc, char **argv) {
     }
     for (int i = 0; i < cpm.size; i ++) {
         if (cpm.rank == i) {
-            printf("%d printing...\n", cpm.rank);
+            printf("%d(%u %u %u) printing...\n", cpm.rank, cpm.idx.x, cpm.idx.y, cpm.idx.z);
             print_xy_slice(x, process.shape, process.shape.z / 2);
             printf("\n");
         }
@@ -219,7 +219,7 @@ int main(int argc, char **argv) {
     x.sync(MCpType::Dev2Hst);
     for (int i = 0; i < cpm.size; i ++) {
         if (cpm.rank == i) {
-            printf("%d printing...\n", cpm.rank);
+            printf("%d(%u %u %u) printing...\n", cpm.rank, cpm.idx.x, cpm.idx.y, cpm.idx.z);
             print_xy_slice(x, process.shape, process.shape.z / 2);
             printf("\n");
             // printf("B0: ");
@@ -247,7 +247,7 @@ int main(int argc, char **argv) {
     x.sync(MCpType::Dev2Hst);
     for (int i = 0; i < cpm.size; i ++) {
         if (cpm.rank == i) {
-            printf("%d printing...\n", cpm.rank);
+            printf("%d(%u %u %u) printing...\n", cpm.rank, cpm.idx.x, cpm.idx.y, cpm.idx.z);
             print_xy_slice(x, process.shape, process.shape.z / 2);
             printf("\n");
             // printf("B4: ");
