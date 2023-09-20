@@ -35,6 +35,6 @@ cpmcore_ito:
 cpmdev_ito:
 	nvcc -c ../src/dev/CPMDev.cu --std=c++11 -o bin/CPMDev.o
 
-cpm_ito: cpmdev_ito
+cpm_ito: cpmdev_ito cpmcore_ito
 	mpic++ -cuda -c cpmtest.cpp --std=c++11 -o bin/cpmtest.o
 	mpic++ -cuda bin/cpmtest.o bin/CPMDev.o -o bin/cpm
