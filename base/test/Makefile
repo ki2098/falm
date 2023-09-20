@@ -37,4 +37,4 @@ cpmdev_ito:
 
 cpm_ito: cpmdev_ito cpmcore_ito
 	mpic++ -cuda -c cpmtest.cpp --std=c++11 -o bin/cpmtest.o
-	mpic++ -cuda bin/cpmtest.o bin/CPMDev.o -o bin/cpm
+	mpic++ -cuda bin/cpmcore.o bin/cpmtest.o bin/CPMDev.o -o bin/cpm
