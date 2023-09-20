@@ -22,9 +22,15 @@ heat: mvbasic mveq
 assign:
 	$(nvnvcxx) -cuda assign.cpp --std=c++11 -o bin/assign
 
-cpm: cpmdev
+cpmcore:
+	$(nvmpicxx) -cuda -c ../src/CPM.cpp --std=c++11 -o bin/cpmcore.o
+
+cpm: cpmcore cpmdev
 	$(nvmpicxx) -cuda -c cpmtest.cpp --std=c++11 -o bin/cpmtest.o
-	$(nvmpicxx) -cuda bin/cpmtest.o bin/CPMDev.o -o bin/cpm
+	$(nvmpicxx) -cuda bin/cpmcore.o bin/cpmtest.o bin/CPMDev.o -o bin/cpm
+
+cpmcore_ito:
+	mpic++ -cuda -c ../src/CPM.cpp --std=c++11 -o bin/cpmcore.o
 
 cpmdev_ito:
 	nvcc -c ../src/dev/CPMDev.cu --std=c++11 -o bin/CPMDev.o
