@@ -12,4 +12,4 @@ module load nvhpc/nvhpc_20.11
 
 date
 
-mpirun -np 4 bin/cpm 2 2 1
+mpirun -np 4 bin/cpm 4 1 1
