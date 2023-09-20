@@ -6,10 +6,10 @@ mvbasic:
 	$(nvnvcc) -c ../src/dev/mvbasic.cu --std=c++11 -o bin/mvbasic.o
 
 mveq:
-	$(nvnvcc) -c -c ../src/dev/structMVEq.cu --std=c++11 -o bin/structMVEq.o
+	$(nvnvcc) -c ../src/dev/structMVEq.cu --std=c++11 -o bin/structMVEq.o
 
 cpmdev:
-	$(nvnvcc) -c -c ../src/dev/CPMDev.cu --std=c++11 -o bin/CPMDev.o
+	$(nvnvcc) -c ../src/dev/CPMDev.cu --std=c++11 -o bin/CPMDev.o
 
 dot: mvbasic
 	$(nvnvcxx) -cuda -c dot.cpp --std=c++11 -o bin/dot.o
@@ -25,6 +25,9 @@ assign:
 cpm: cpmdev
 	$(nvmpicxx) -cuda -c cpmtest.cpp --std=c++11 -o bin/cpmtest.o
 	$(nvmpicxx) -cuda bin/cpmtest.o bin/CPMDev.o -o bin/cpm
+
+cpmdev_ito:
+	nvcc -c ../src/dev/CPMDev.cu --std=c++11 -o bin/CPMDev.o
 
 cpm_ito: cpmdev
 	mpic++ -cuda -c cpmtest.cpp --std=c++11 -o bin/cpmtest.o
