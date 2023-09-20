@@ -50,6 +50,20 @@ void print_xy_slice(Matrix<double> &x, uint3 domain_shape, unsigned int slice_at
     }
 }
 
+void print_xz_slice(Matrix<double> &x, uint3 domain_shape, unsigned int slice_at_y) {
+    for (int k = domain_shape.z - 1; k >= 0; k --) {
+        for (int i = 0; i < domain_shape.x; i ++) {
+            double value = x(IDX(i, slice_at_y, k, domain_shape));
+            if (value == 0) {
+                printf(".   ", value);
+            } else {
+                printf("%-3.0lf ", value);
+            }
+        }
+        printf("\n");
+    }
+}
+
 int main(int argc, char **argv) {
     CPM_Init(&argc, &argv);
 
@@ -111,7 +125,7 @@ int main(int argc, char **argv) {
     for (int i = 0; i < cpm.size; i ++) {
         if (cpm.rank == i) {
             printf("%d(%u %u %u) printing...\n", cpm.rank, cpm.idx.x, cpm.idx.y, cpm.idx.z);
-            print_xy_slice(x, process.shape, process.shape.z / 2);
+            print_xz_slice(x, process.shape, process.shape.y / 2);
             printf("\n");
         }
         CPM_Barrier(MPI_COMM_WORLD);
@@ -137,7 +151,7 @@ int main(int argc, char **argv) {
     for (int i = 0; i < cpm.size; i ++) {
         if (cpm.rank == i) {
             printf("%d(%u %u %u) printing...\n", cpm.rank, cpm.idx.x, cpm.idx.y, cpm.idx.z);
-            print_xy_slice(x, process.shape, process.shape.z / 2);
+            print_xz_slice(x, process.shape, process.shape.y / 2);
             printf("\n");
             // printf("B0: ");
             // print_buffer_dev(buffer[0]);
@@ -165,7 +179,7 @@ int main(int argc, char **argv) {
     for (int i = 0; i < cpm.size; i ++) {
         if (cpm.rank == i) {
             printf("%d(%u %u %u) printing...\n", cpm.rank, cpm.idx.x, cpm.idx.y, cpm.idx.z);
-            print_xy_slice(x, process.shape, process.shape.z / 2);
+            print_xz_slice(x, process.shape, process.shape.y / 2);
             printf("\n");
             // printf("B4: ");
             // print_buffer_dev(buffer[4]);
@@ -199,7 +213,7 @@ int main(int argc, char **argv) {
     for (int i = 0; i < cpm.size; i ++) {
         if (cpm.rank == i) {
             printf("%d(%u %u %u) printing...\n", cpm.rank, cpm.idx.x, cpm.idx.y, cpm.idx.z);
-            print_xy_slice(x, process.shape, process.shape.z / 2);
+            print_xz_slice(x, process.shape, process.shape.y / 2);
             printf("\n");
         }
         CPM_Barrier(MPI_COMM_WORLD);
@@ -220,7 +234,7 @@ int main(int argc, char **argv) {
     for (int i = 0; i < cpm.size; i ++) {
         if (cpm.rank == i) {
             printf("%d(%u %u %u) printing...\n", cpm.rank, cpm.idx.x, cpm.idx.y, cpm.idx.z);
-            print_xy_slice(x, process.shape, process.shape.z / 2);
+            print_xz_slice(x, process.shape, process.shape.y / 2);
             printf("\n");
             // printf("B0: ");
             // print_buffer_dev(buffer[0]);
@@ -248,7 +262,7 @@ int main(int argc, char **argv) {
     for (int i = 0; i < cpm.size; i ++) {
         if (cpm.rank == i) {
             printf("%d(%u %u %u) printing...\n", cpm.rank, cpm.idx.x, cpm.idx.y, cpm.idx.z);
-            print_xy_slice(x, process.shape, process.shape.z / 2);
+            print_xz_slice(x, process.shape, process.shape.y / 2);
             printf("\n");
             // printf("B4: ");
             // print_buffer_dev(buffer[4]);
