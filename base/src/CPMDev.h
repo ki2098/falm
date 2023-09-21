@@ -5,17 +5,13 @@
 
 namespace Falm {
 
-void dev_CPM_PackBuffer(CPMBuffer<double> &buffer, double *src, Mapper &pdom, dim3 &block_dim);
+void CPML1dev_PackBuffer(CPMBuffer<double> &buffer, double *src, Mapper &pdom, dim3 &block_dim);
 
-void dev_CPM_PackColoredBuffer(CPMBuffer<double> &buffer, double *src, Mapper &pdom, dim3 &block_dim);
+void CPML1dev_PackColoredBuffer(CPMBuffer<double> &buffer, double *src, Mapper &pdom, dim3 &block_dim);
 
-void dev2hst_CPM_PackColoredBuffer(CPMBuffer<double> &buffer, double *src, Mapper &pdom, dim3 &block_dim);
+void CPML1dev_UnpackBuffer(CPMBuffer<double> &buffer, double *dst, Mapper &pdom, dim3 &block_dim);
 
-void dev_CPM_UnpackBuffer(CPMBuffer<double> &buffer, double *dst, Mapper &pdom, dim3 &block_dim);
-
-void dev_CPM_UnpackColoredBuffer(CPMBuffer<double> &buffer, double *dst, Mapper &pdom, dim3 &block_dim);
-
-void hst2dev_CPM_UnpackColoredBuffer(CPMBuffer<double> &buffer, double *dst, Mapper &pdom, dim3 &block_dim);
+void CPML1dev_UnpackColoredBuffer(CPMBuffer<double> &buffer, double *dst, Mapper &pdom, dim3 &block_dim);
 
 }
 

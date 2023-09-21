@@ -29,12 +29,10 @@ static inline void falmDevMemset(void *ptr, int value, size_t size) {
 
 static inline void falmHostFreePtr(void *ptr) {
     free(ptr);
-    ptr = nullptr;
 }
 
 static inline void falmDevFreePtr(void *ptr) {
     cudaFree(ptr);
-    ptr = nullptr;
 }
 
 static void falmMemcpy(void *dst, void *src, size_t size, unsigned int mcptype) {

@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include "../src/matrix.h"
-#include "../src/mvbasic.h"
+#include "../src/MVBasic.h"
 
 #define SQR(n) (n)*(n)
 
@@ -29,12 +29,12 @@ int main() {
     a.sync(MCpType::Hst2Dev);
     b.sync(MCpType::Hst2Dev);
     dim3 block(4, 4, 2);
-    double dot  = dev_DotProduct(a, b, pdom, map, block);
-    double norm = dev_Norm2Sq(a, pdom, map, block);
+    double dot  = devL1_DotProduct(a, b, pdom, map, block);
+    double norm = devL1_Norm2Sq(a, pdom, map, block);
     printf("%.0lf %.0lf\n", dot, norm);
 
-    double a_max = dev_MaxDiag(a, pdom, map, block);
-    double b_max = dev_MaxDiag(b, pdom, map, block);
+    double a_max = devL1_MaxDiag(a, pdom, map, block);
+    double b_max = devL1_MaxDiag(b, pdom, map, block);
     printf("%.0lf %.0lf\n", a_max, b_max);
 
     return 0;

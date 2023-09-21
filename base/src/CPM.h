@@ -3,43 +3,48 @@
 
 #include <mpi.h>
 #include "CPMB.h"
+#include "CPMDev.h"
 
 namespace Falm {
 
-static inline int CPM_ISend(CPMBuffer<double> &buffer, int dst_rank, int tag, MPI_Comm mpi_comm, MPI_Request *mpi_req) {
+static inline int CPML1_ISend(CPMBuffer<double> &buffer, int dst_rank, int tag, MPI_Comm mpi_comm, MPI_Request *mpi_req) {
     return MPI_Isend(buffer.ptr, buffer.size, MPI_DOUBLE, dst_rank, tag, mpi_comm, mpi_req);
 }
 
-static inline int CPM_IRecv(CPMBuffer<double> &buffer, int src_rank, int tag, MPI_Comm mpi_comm, MPI_Request *mpi_req) {
+static inline int CPML1_IRecv(CPMBuffer<double> &buffer, int src_rank, int tag, MPI_Comm mpi_comm, MPI_Request *mpi_req) {
     return MPI_Irecv(buffer.ptr, buffer.size, MPI_DOUBLE, src_rank, tag, mpi_comm, mpi_req);
 }
 
-static inline int CPM_Wait(MPI_Request *mpi_req, MPI_Status *mpi_status) {
+static inline int CPML1_Wait(MPI_Request *mpi_req, MPI_Status *mpi_status) {
     return MPI_Wait(mpi_req, mpi_status);
 }
 
-static inline int CPM_Waitall(int n, MPI_Request *mpi_req, MPI_Status *mpi_status) {
+static inline int CPML1_Waitall(int n, MPI_Request *mpi_req, MPI_Status *mpi_status) {
     return MPI_Waitall(n, mpi_req, mpi_status);
 }
 
-static inline int CPM_Init(int *argc, char ***argv) {
+static inline int CPML1_Init(int *argc, char ***argv) {
     return MPI_Init(argc, argv);
 }
 
-static inline int CPM_Finalize() {
+static inline int CPML1_Finalize() {
     return MPI_Finalize();
 }
 
-static inline int CPM_GetRank(MPI_Comm mpi_comm, int &mpi_rank) {
+static inline int CPML1_GetRank(MPI_Comm mpi_comm, int &mpi_rank) {
     return MPI_Comm_rank(mpi_comm, &mpi_rank);
 }
 
-static inline int CPM_GetSize(MPI_Comm mpi_comm, int &mpi_size) {
+static inline int CPML1_GetSize(MPI_Comm mpi_comm, int &mpi_size) {
     return MPI_Comm_size(mpi_comm, &mpi_size);
 }
 
-static inline int CPM_Barrier(MPI_Comm mpi_comm) {
+static inline int CPML1_Barrier(MPI_Comm mpi_comm) {
     return MPI_Barrier(mpi_comm);
+}
+
+static inline int CPML1_AllReduce(void *buffer, int n, MPI_Datatype mpi_dtype, MPI_Op mpi_op, MPI_Comm mpi_comm) {
+    return MPI_Allreduce(MPI_IN_PLACE, buffer, n, mpi_dtype, mpi_op, mpi_comm);
 }
 
 class CPM {
@@ -90,11 +95,53 @@ public:
         }
     }
 
-    void dev_IExchange6Face(double *data, Mapper &pdom, unsigned int thick, int grp_tag, CPMBuffer<double> *&buffer, MPI_Request *&req);
-    void dev_IExchange6ColoredFace(double *data, Mapper &pdom, unsigned int color, unsigned int thick, int grp_tag, CPMBuffer<double> *&buffer, MPI_Request *&req);
-    void dev_PostExchange6Face(double *data, Mapper &pdom, CPMBuffer<double> *&buffer, MPI_Request *&req);
-    void dev_PostExchange6ColoredFace(double *data, Mapper &pdom, unsigned int color, CPMBuffer<double> *&buffer, MPI_Request *&req);
-    void Wait6Face(MPI_Request *req);
+    void CPML2dev_IExchange6Face(double *data, Mapper &pdom, unsigned int thick, int grp_tag, CPMBuffer<double> *&buffer, unsigned int buf_hdctype, MPI_Request *&req);
+    void CPML2dev_IExchange6ColoredFace(double *data, Mapper &pdom, unsigned int color, unsigned int thick, int grp_tag, CPMBuffer<double> *&buffer, unsigned int buf_hdctype, MPI_Request *&req);
+    void CPML2dev_PostExchange6Face(double *data, Mapper &pdom, CPMBuffer<double> *&buffer, MPI_Request *&req);
+    void CPML2dev_PostExchange6ColoredFace(double *data, Mapper &pdom, unsigned int color, CPMBuffer<double> *&buffer, MPI_Request *&req);
+    void CPML2_Wait6Face(MPI_Request *req);
+
+    void setRegions(uint3 &inner_shape, uint3 &inner_offset, uint3 *boundary_shape, uint3 *boundary_offset, unsigned int thick, Mapper &pdom) {
+        inner_shape = {
+            pdom.shape.x - Gdx2,
+            pdom.shape.y - Gdx2,
+            pdom.shape.z - Gdx2
+        };
+        inner_offset = {Gd, Gd, Gd};
+        if (neighbour[0] >= 0) {
+            boundary_shape[0]  = {thick, inner_shape.y, inner_shape.z};
+            boundary_offset[0] = {inner_offset.x + inner_shape.x - thick, inner_offset.y, inner_offset.z};
+            inner_shape.x -= thick;
+        }
+        if (neighbour[1] >= 0) {
+            boundary_shape[1]  = {thick, inner_shape.y, inner_shape.z};
+            boundary_offset[1] = {inner_offset.x, inner_offset.y, inner_offset.z};
+            inner_shape.x  -= thick;
+            inner_offset.x += thick; 
+        }
+        if (neighbour[2] >= 0) {
+            boundary_shape[2]  = {inner_shape.x, thick, inner_shape.z};
+            boundary_offset[2] = {inner_offset.x, inner_offset.y + inner_shape.y - thick, inner_offset.z};
+            inner_shape.y -= thick;
+        }
+        if (neighbour[3] >= 0) {
+            boundary_shape[3]  = {inner_shape.x, thick, inner_shape.z};
+            boundary_offset[3] = {inner_offset.x, inner_offset.y, inner_offset.z};
+            inner_shape.y  -= thick;
+            inner_offset.y += thick;
+        }
+        if (neighbour[4] >= 0) {
+            boundary_shape[4]  = {inner_shape.x, inner_shape.y, thick};
+            boundary_offset[4] = {inner_offset.x, inner_offset.y, inner_offset.z + inner_shape.z - thick};
+            inner_shape.z -= thick;
+        }
+        if (neighbour[5] >= 0) {
+            boundary_shape[5]  = {inner_shape.x, inner_shape.y, thick};
+            boundary_offset[5] = {inner_offset.x, inner_offset.y, inner_offset.z};
+            inner_shape.z  -= thick;
+            inner_offset.z += thick;
+        }
+    }
 };
 
 }

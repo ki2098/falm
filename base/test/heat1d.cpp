@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include "../src/structMVEq.h"
-#include "../src/mvbasic.h"
+#include "../src/MVBasic.h"
 
 using namespace Falm;
 
@@ -55,10 +55,10 @@ int main() {
     a.sync(MCpType::Hst2Dev);
     b.sync(MCpType::Hst2Dev);
     dim3 block_dim(32, 1, 1);
-    double max_diag = dev_MaxDiag(a, pdom, map, block_dim);
+    double max_diag = devL1_MaxDiag(a, pdom, map, block_dim);
     printf("%12lf\n", max_diag);
-    dev_ScaleMatrix(a, max_diag, block_dim);
-    dev_ScaleMatrix(b, max_diag, block_dim);
+    devL1_ScaleMatrix(a, max_diag, block_dim);
+    devL1_ScaleMatrix(b, max_diag, block_dim);
     a.sync(MCpType::Dev2Hst);
     b.sync(MCpType::Dev2Hst);
 
@@ -70,8 +70,8 @@ int main() {
         printf("= %12lf\n", b(idx));
     }
 
-    StructLEqSolver solver(LSType::PBiCGStab, 10000, 1e-9, 1.5, LSType::Jacobi, 5, 1.0);
-    solver.dev_Struct3d7p_Solve(a, t, b, r, global, pdom, map, block_dim);
+    L1EqSolver solver(LSType::PBiCGStab, 10000, 1e-9, 1.5, LSType::Jacobi, 5, 1.0);
+    solver.devL1_Struct3d7p_Solve(a, t, b, r, global, pdom, map, block_dim);
     t.sync(MCpType::Dev2Hst);
     r.sync(MCpType::Dev2Hst);
     for (unsigned int i = Gd; i < Gd + Nx; i ++) {
