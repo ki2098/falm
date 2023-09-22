@@ -5,7 +5,6 @@
 namespace Falm {
 
 void devL2_Struct3d7p_MV(Matrix<double> &a, Matrix<double> &x, Matrix<double> &ax, Mapper &pdom, dim3 block_dim, CPM &cpm) {
-    Mapper map(pdom, Gd);
     CPMBuffer<double> *buffer;
     MPI_Request *req;
     cpm.CPML2dev_IExchange6Face(a.dev.ptr, pdom, 1, 0, buffer, HDCType::Device, req);
@@ -45,7 +44,6 @@ void devL2_Struct3d7p_MV(Matrix<double> &a, Matrix<double> &x, Matrix<double> &a
 }
 
 void devL2_Struct3d7p_Res(Matrix<double> &a, Matrix<double> &x, Matrix<double> &b, Matrix<double> &r, Mapper &pdom, dim3 block_dim, CPM &cpm) {
-    Mapper map(pdom, Gd);
     CPMBuffer<double> *buffer;
     MPI_Request *req;
     cpm.CPML2dev_IExchange6Face(a.dev.ptr, pdom, 1, 0, buffer, HDCType::Device, req);
@@ -86,7 +84,6 @@ void devL2_Struct3d7p_Res(Matrix<double> &a, Matrix<double> &x, Matrix<double> &
 
 void L2EqSolver::devL2_Struct3d7p_Jacobi(Matrix<double> &a, Matrix<double> &x, Matrix<double> &b, Matrix<double> &r, Mapper &global, Mapper &pdom, dim3 block_dim, CPM &cpm) {
     Mapper gmap(global, Gd);
-    Mapper map(pdom, Gd);
     CPMBuffer<double> *buffer;
     MPI_Request *req;
     uint3 inner_shape, inner_offset, boundary_shape[6], boundary_offset[6];
@@ -114,7 +111,6 @@ void L2EqSolver::devL2_Struct3d7p_Jacobi(Matrix<double> &a, Matrix<double> &x, M
 }
 
 void L2EqSolver::devL2_Struct3d7p_JacobiPC(Matrix<double> &a, Matrix<double> &x, Matrix<double> &b, Mapper &pdom, dim3 block_dim, CPM &cpm) {
-    Mapper map(pdom, Gd);
     CPMBuffer<double> *buffer;
     MPI_Request *req;
     uint3 inner_shape, inner_offset, boundary_shape[6], boundary_offset[6];
@@ -141,7 +137,6 @@ void L2EqSolver::devL2_Struct3d7p_JacobiPC(Matrix<double> &a, Matrix<double> &x,
 
 void L2EqSolver::devL2_Struct3d7p_SOR(Matrix<double> &a, Matrix<double> &x, Matrix<double> &b, Matrix<double> &r, Mapper &global, Mapper &pdom, dim3 block_dim, CPM &cpm) {
     Mapper gmap(global, Gd);
-    Mapper map(pdom, Gd);
     CPMBuffer<double> *buffer;
     MPI_Request *req;
     uint3 inner_shape, inner_offset, boundary_shape[6], boundary_offset[6];
@@ -155,22 +150,21 @@ void L2EqSolver::devL2_Struct3d7p_SOR(Matrix<double> &a, Matrix<double> &x, Matr
         devL0_Struct3d7p_SORSweep(a, x, b, relax_factor, Color::Black, pdom, inner_map, block_dim);
         cpm.CPML2_Wait6Face(req);
         cpm.CPML2dev_PostExchange6ColoredFace(x.dev.ptr, pdom, Color::Red, buffer, req);
-        devL2_Struct3d7p_SORSweepBoundary(a, x, b, Color::Black, pdom, cpm, boundary_shape, boundary_offset);
+        devL2_Struct3d7p_SORSweepBoundary(a, x, b, relax_factor, Color::Black, pdom, cpm, boundary_shape, boundary_offset);
 
         cpm.CPML2dev_IExchange6ColoredFace(x.dev.ptr, pdom, Color::Black, 1, 0, buffer, HDCType::Device, req);
         devL0_Struct3d7p_SORSweep(a, x, b, relax_factor, Color::Red, pdom, inner_map, block_dim);
         cpm.CPML2_Wait6Face(req);
         cpm.CPML2dev_PostExchange6ColoredFace(x.dev.ptr, pdom, Color::Black, buffer, req);
-        devL2_Struct3d7p_SORSweepBoundary(a, x, b, Color::Red, pdom, cpm, boundary_shape, boundary_offset);
+        devL2_Struct3d7p_SORSweepBoundary(a, x, b, relax_factor, Color::Red, pdom, cpm, boundary_shape, boundary_offset);
 
         devL2_Struct3d7p_Res(a, x, b, r, pdom, block_dim, cpm);
-        err = sqrt(devL2_Norm2Sq(x, pdom, block_dim, cpm)) / gmap.size;
+        err = sqrt(devL2_Norm2Sq(r, pdom, block_dim, cpm)) / gmap.size;
         it ++;
-    } while (it < maxit && err < tol);
+    } while (it < maxit && err > tol);
 }
 
 void L2EqSolver::devL2_Struct3d7p_SORPC(Matrix<double> &a, Matrix<double> &x, Matrix<double> &b, Mapper &pdom, dim3 block_dim, CPM &cpm) {
-    Mapper map(pdom, Gd);
     CPMBuffer<double> *buffer;
     MPI_Request *req;
     uint3 inner_shape, inner_offset, boundary_shape[6], boundary_offset[6];
@@ -181,16 +175,16 @@ void L2EqSolver::devL2_Struct3d7p_SORPC(Matrix<double> &a, Matrix<double> &x, Ma
     int __it = 0;
     do {
         cpm.CPML2dev_IExchange6ColoredFace(x.dev.ptr, pdom, Color::Red, 1, 0, buffer, HDCType::Device, req);
-        devL0_Struct3d7p_SORSweep(a, x, b, relax_factor, Color::Black, pdom, inner_map, block_dim);
+        devL0_Struct3d7p_SORSweep(a, x, b, pc_relax_factor, Color::Black, pdom, inner_map, block_dim);
         cpm.CPML2_Wait6Face(req);
         cpm.CPML2dev_PostExchange6ColoredFace(x.dev.ptr, pdom, Color::Red, buffer, req);
-        devL2_Struct3d7p_SORSweepBoundary(a, x, b, Color::Black, pdom, cpm, boundary_shape, boundary_offset);
+        devL2_Struct3d7p_SORSweepBoundary(a, x, b, pc_relax_factor, Color::Black, pdom, cpm, boundary_shape, boundary_offset);
 
         cpm.CPML2dev_IExchange6ColoredFace(x.dev.ptr, pdom, Color::Black, 1, 0, buffer, HDCType::Device, req);
-        devL0_Struct3d7p_SORSweep(a, x, b, relax_factor, Color::Red, pdom, inner_map, block_dim);
+        devL0_Struct3d7p_SORSweep(a, x, b, pc_relax_factor, Color::Red, pdom, inner_map, block_dim);
         cpm.CPML2_Wait6Face(req);
         cpm.CPML2dev_PostExchange6ColoredFace(x.dev.ptr, pdom, Color::Black, buffer, req);
-        devL2_Struct3d7p_SORSweepBoundary(a, x, b, Color::Red, pdom, cpm, boundary_shape, boundary_offset);
+        devL2_Struct3d7p_SORSweepBoundary(a, x, b, pc_relax_factor, Color::Red, pdom, cpm, boundary_shape, boundary_offset);
 
         __it ++;
     } while (__it < pc_maxit);
@@ -199,8 +193,6 @@ void L2EqSolver::devL2_Struct3d7p_SORPC(Matrix<double> &a, Matrix<double> &x, Ma
 void L2EqSolver::devL2_Struct3d7p_PBiCGStab(Matrix<double> &a, Matrix<double> &x, Matrix<double> &b, Matrix<double> &r, Mapper &global, Mapper &pdom, dim3 block_dim, CPM &cpm) {
     Mapper gmap(global, Gd);
     Mapper map(pdom, Gd);
-    CPMBuffer<double> *buffer;
-    MPI_Request *req;
     uint3 inner_shape, inner_offset, boundary_shape[6], boundary_offset[6];
     cpm.setRegions(inner_shape, inner_offset, boundary_shape, boundary_offset, 1, pdom);
 

@@ -68,30 +68,30 @@ private:
         }
     }
 
-    void devL2_Struct3d7p_SORSweepBoundary(Matrix<double> &a, Matrix<double> &x, Matrix<double> &b, unsigned int color, Mapper &pdom, CPM &cpm, uint3 *boundary_shape, uint3 *boundary_offset) {
+    void devL2_Struct3d7p_SORSweepBoundary(Matrix<double> &a, Matrix<double> &x, Matrix<double> &b, double omega, unsigned int color, Mapper &pdom, CPM &cpm, uint3 *boundary_shape, uint3 *boundary_offset) {
         if (cpm.neighbour[0] >= 0) {
             Mapper emap(boundary_shape[0], boundary_offset[0]);
-            devL0_Struct3d7p_SORSweep(a, x, b, relax_factor, color, pdom, emap, dim3(1, 8, 8));
+            devL0_Struct3d7p_SORSweep(a, x, b, omega, color, pdom, emap, dim3(1, 8, 8));
         }
         if (cpm.neighbour[1] >= 0) {
             Mapper wmap(boundary_shape[1], boundary_offset[1]);
-            devL0_Struct3d7p_SORSweep(a, x, b, relax_factor, color, pdom, wmap, dim3(1, 8, 8));
+            devL0_Struct3d7p_SORSweep(a, x, b, omega, color, pdom, wmap, dim3(1, 8, 8));
         }
         if (cpm.neighbour[2] >= 0) {
             Mapper nmap(boundary_shape[2], boundary_offset[2]);
-            devL0_Struct3d7p_SORSweep(a, x, b, relax_factor, color, pdom, nmap, dim3(8, 1, 8));
+            devL0_Struct3d7p_SORSweep(a, x, b, omega, color, pdom, nmap, dim3(8, 1, 8));
         }
         if (cpm.neighbour[3] >= 0) {
             Mapper smap(boundary_shape[3], boundary_offset[3]);
-            devL0_Struct3d7p_SORSweep(a, x, b, relax_factor, color, pdom, smap, dim3(8, 1, 8));
+            devL0_Struct3d7p_SORSweep(a, x, b, omega, color, pdom, smap, dim3(8, 1, 8));
         }
         if (cpm.neighbour[4] >= 0) {
             Mapper tmap(boundary_shape[4], boundary_offset[4]);
-            devL0_Struct3d7p_SORSweep(a, x, b, relax_factor, color, pdom, tmap, dim3(8, 8, 1));
+            devL0_Struct3d7p_SORSweep(a, x, b, omega, color, pdom, tmap, dim3(8, 8, 1));
         }
         if (cpm.neighbour[5] >= 0) {
             Mapper bmap(boundary_shape[5], boundary_offset[5]);
-            devL0_Struct3d7p_SORSweep(a, x, b, relax_factor, color, pdom, bmap, dim3(8, 8, 1));
+            devL0_Struct3d7p_SORSweep(a, x, b, omega, color, pdom, bmap, dim3(8, 8, 1));
         }
     }
 };
