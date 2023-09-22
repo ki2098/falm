@@ -26,6 +26,8 @@ public:
     static const unsigned int Red   = 1;
 };
 
+static const unsigned int __BUFHDC__ = HDCType::Device;
+
 }
 
 #endif

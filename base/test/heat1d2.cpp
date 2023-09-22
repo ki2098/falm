@@ -118,6 +118,12 @@ int main(int argc, char **argv) {
     fflush(stdout);
     CPML2_Barrier(MPI_COMM_WORLD);
 
+    int gpu_count;
+    cudaGetDeviceCount(&gpu_count);
+    cudaSetDevice(cpm.rank % gpu_count);
+    printf("process %d running no device %d\n", cpm.rank, cpm.rank % gpu_count);
+    CPML2_Barrier(MPI_COMM_WORLD);
+
     unsigned int ox = 0, oy = 0, oz = 0;
     for (int i = 0; i < cpm.idx.x; i ++) {
         ox += dim_division(Nx, cpm.shape.x, i);
@@ -199,7 +205,7 @@ int main(int argc, char **argv) {
         }
         CPML2_Barrier(MPI_COMM_WORLD);
     }
-    L2EqSolver solver(LSType::SOR, 10000, 1e-9, 1.2, LSType::Jacobi, 5, 1.0);
+    L2EqSolver solver(LSType::PBiCGStab, 10000, 1e-9, 1.2, LSType::Jacobi, 5, 1.0);
     solver.devL2_Struct3d7p_Solve(a, t, b, r, global, process, block_dim, cpm);
     t.sync(MCpType::Dev2Hst);
     r.sync(MCpType::Dev2Hst);
