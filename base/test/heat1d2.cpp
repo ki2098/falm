@@ -205,7 +205,7 @@ int main(int argc, char **argv) {
         }
         CPML2_Barrier(MPI_COMM_WORLD);
     }
-    L2EqSolver solver(LSType::PBiCGStab, 10000, 1e-9, 1.2, LSType::Jacobi, 5, 1.0);
+    L2EqSolver solver(LSType::PBiCGStab, 10000, 1e-9, 1.2, LSType::SOR, 5, 1.5);
     solver.devL2_Struct3d7p_Solve(a, t, b, r, global, process, block_dim, cpm);
     t.sync(MCpType::Dev2Hst);
     r.sync(MCpType::Dev2Hst);
