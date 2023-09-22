@@ -1,10 +1,9 @@
-#include "CPM.h"
-#include "CPMDev.h"
+#include "CPML2.h"
 
 namespace Falm {
 
 void CPM::CPML2_Wait6Face(MPI_Request *req) {
-    CPML1_Waitall(nP2P, req, MPI_STATUSES_IGNORE);
+    CPML2_Waitall(nP2P, req, MPI_STATUSES_IGNORE);
 }
 
 void CPM::CPML2dev_IExchange6Face(double *data, Mapper &pdom, unsigned int thick, int grp_tag, CPMBuffer<double> *&buffer, unsigned int buf_hdctype, MPI_Request *&req) {
@@ -27,8 +26,8 @@ void CPM::CPML2dev_IExchange6Face(double *data, Mapper &pdom, unsigned int thick
             BufType::In,
             buf_hdctype
         );
-        CPML1_ISend(buffer[nP2P  ], neighbour[0], neighbour[0] + grp_tag, MPI_COMM_WORLD, &req[nP2P  ]);
-        CPML1_IRecv(buffer[nP2P+1], neighbour[0], rank         + grp_tag, MPI_COMM_WORLD, &req[nP2P+1]);
+        CPML2_ISend(buffer[nP2P  ], neighbour[0], neighbour[0] + grp_tag, MPI_COMM_WORLD, &req[nP2P  ]);
+        CPML2_IRecv(buffer[nP2P+1], neighbour[0], rank         + grp_tag, MPI_COMM_WORLD, &req[nP2P+1]);
         nP2P += 2;
     }
     if (neighbour[1] >= 0) {
@@ -45,8 +44,8 @@ void CPM::CPML2dev_IExchange6Face(double *data, Mapper &pdom, unsigned int thick
             BufType::In,
             buf_hdctype
         );
-        CPML1_ISend(buffer[nP2P  ], neighbour[1], neighbour[1] + grp_tag, MPI_COMM_WORLD, &req[nP2P  ]);
-        CPML1_IRecv(buffer[nP2P+1], neighbour[1], rank         + grp_tag, MPI_COMM_WORLD, &req[nP2P+1]);
+        CPML2_ISend(buffer[nP2P  ], neighbour[1], neighbour[1] + grp_tag, MPI_COMM_WORLD, &req[nP2P  ]);
+        CPML2_IRecv(buffer[nP2P+1], neighbour[1], rank         + grp_tag, MPI_COMM_WORLD, &req[nP2P+1]);
         nP2P += 2;
     }
     uint3 xz_inner_slice{pdom.shape.x - Gdx2, thick, pdom.shape.z - Gdx2};
@@ -65,8 +64,8 @@ void CPM::CPML2dev_IExchange6Face(double *data, Mapper &pdom, unsigned int thick
             BufType::In,
             buf_hdctype
         );
-        CPML1_ISend(buffer[nP2P  ], neighbour[2], neighbour[2] + grp_tag, MPI_COMM_WORLD, &req[nP2P  ]);
-        CPML1_IRecv(buffer[nP2P+1], neighbour[2], rank         + grp_tag, MPI_COMM_WORLD, &req[nP2P+1]);
+        CPML2_ISend(buffer[nP2P  ], neighbour[2], neighbour[2] + grp_tag, MPI_COMM_WORLD, &req[nP2P  ]);
+        CPML2_IRecv(buffer[nP2P+1], neighbour[2], rank         + grp_tag, MPI_COMM_WORLD, &req[nP2P+1]);
         nP2P += 2;
     }
     if (neighbour[3] >= 0) {
@@ -83,8 +82,8 @@ void CPM::CPML2dev_IExchange6Face(double *data, Mapper &pdom, unsigned int thick
             BufType::In,
             buf_hdctype
         );
-        CPML1_ISend(buffer[nP2P  ], neighbour[3], neighbour[3] + grp_tag, MPI_COMM_WORLD, &req[nP2P  ]);
-        CPML1_IRecv(buffer[nP2P+1], neighbour[3], rank         + grp_tag, MPI_COMM_WORLD, &req[nP2P+1]);
+        CPML2_ISend(buffer[nP2P  ], neighbour[3], neighbour[3] + grp_tag, MPI_COMM_WORLD, &req[nP2P  ]);
+        CPML2_IRecv(buffer[nP2P+1], neighbour[3], rank         + grp_tag, MPI_COMM_WORLD, &req[nP2P+1]);
         nP2P += 2;
     }
     uint3 xy_inner_slice{pdom.shape.x - Gdx2, pdom.shape.x - Gdx2, thick};
@@ -103,8 +102,8 @@ void CPM::CPML2dev_IExchange6Face(double *data, Mapper &pdom, unsigned int thick
             BufType::In,
             buf_hdctype
         );
-        CPML1_ISend(buffer[nP2P  ], neighbour[4], neighbour[4] + grp_tag, MPI_COMM_WORLD, &req[nP2P  ]);
-        CPML1_IRecv(buffer[nP2P+1], neighbour[4], rank         + grp_tag, MPI_COMM_WORLD, &req[nP2P+1]);
+        CPML2_ISend(buffer[nP2P  ], neighbour[4], neighbour[4] + grp_tag, MPI_COMM_WORLD, &req[nP2P  ]);
+        CPML2_IRecv(buffer[nP2P+1], neighbour[4], rank         + grp_tag, MPI_COMM_WORLD, &req[nP2P+1]);
         nP2P += 2;
     }
     if (neighbour[5] >= 0) {
@@ -121,8 +120,8 @@ void CPM::CPML2dev_IExchange6Face(double *data, Mapper &pdom, unsigned int thick
             BufType::In,
             buf_hdctype
         );
-        CPML1_ISend(buffer[nP2P  ], neighbour[5], neighbour[5] + grp_tag, MPI_COMM_WORLD, &req[nP2P  ]);
-        CPML1_IRecv(buffer[nP2P+1], neighbour[5], rank         + grp_tag, MPI_COMM_WORLD, &req[nP2P+1]);
+        CPML2_ISend(buffer[nP2P  ], neighbour[5], neighbour[5] + grp_tag, MPI_COMM_WORLD, &req[nP2P  ]);
+        CPML2_IRecv(buffer[nP2P+1], neighbour[5], rank         + grp_tag, MPI_COMM_WORLD, &req[nP2P+1]);
         nP2P += 2;
     }
 }
@@ -149,8 +148,8 @@ void CPM::CPML2dev_IExchange6ColoredFace(double *data, Mapper &pdom, unsigned in
             buf_hdctype,
             pdom, color
         );
-        CPML1_ISend(buffer[nP2P  ], neighbour[0], neighbour[0] + grp_tag, MPI_COMM_WORLD, &req[nP2P  ]);
-        CPML1_IRecv(buffer[nP2P+1], neighbour[0], rank         + grp_tag, MPI_COMM_WORLD, &req[nP2P+1]);
+        CPML2_ISend(buffer[nP2P  ], neighbour[0], neighbour[0] + grp_tag, MPI_COMM_WORLD, &req[nP2P  ]);
+        CPML2_IRecv(buffer[nP2P+1], neighbour[0], rank         + grp_tag, MPI_COMM_WORLD, &req[nP2P+1]);
         nP2P += 2;
     }
     if (neighbour[1] >= 0) {
@@ -169,8 +168,8 @@ void CPM::CPML2dev_IExchange6ColoredFace(double *data, Mapper &pdom, unsigned in
             buf_hdctype,
             pdom, color
         );
-        CPML1_ISend(buffer[nP2P  ], neighbour[1], neighbour[1] + grp_tag, MPI_COMM_WORLD, &req[nP2P  ]);
-        CPML1_IRecv(buffer[nP2P+1], neighbour[1], rank         + grp_tag, MPI_COMM_WORLD, &req[nP2P+1]);
+        CPML2_ISend(buffer[nP2P  ], neighbour[1], neighbour[1] + grp_tag, MPI_COMM_WORLD, &req[nP2P  ]);
+        CPML2_IRecv(buffer[nP2P+1], neighbour[1], rank         + grp_tag, MPI_COMM_WORLD, &req[nP2P+1]);
         nP2P += 2;
     }
     uint3 xz_inner_slice{pdom.shape.x - Gdx2, thick, pdom.shape.z - Gdx2};
@@ -191,8 +190,8 @@ void CPM::CPML2dev_IExchange6ColoredFace(double *data, Mapper &pdom, unsigned in
             buf_hdctype,
             pdom, color
         );
-        CPML1_ISend(buffer[nP2P  ], neighbour[2], neighbour[2] + grp_tag, MPI_COMM_WORLD, &req[nP2P  ]);
-        CPML1_IRecv(buffer[nP2P+1], neighbour[2], rank         + grp_tag, MPI_COMM_WORLD, &req[nP2P+1]);
+        CPML2_ISend(buffer[nP2P  ], neighbour[2], neighbour[2] + grp_tag, MPI_COMM_WORLD, &req[nP2P  ]);
+        CPML2_IRecv(buffer[nP2P+1], neighbour[2], rank         + grp_tag, MPI_COMM_WORLD, &req[nP2P+1]);
         nP2P += 2;
     }
     if (neighbour[3] >= 0) {
@@ -211,8 +210,8 @@ void CPM::CPML2dev_IExchange6ColoredFace(double *data, Mapper &pdom, unsigned in
             buf_hdctype,
             pdom, color
         );
-        CPML1_ISend(buffer[nP2P  ], neighbour[3], neighbour[3] + grp_tag, MPI_COMM_WORLD, &req[nP2P  ]);
-        CPML1_IRecv(buffer[nP2P+1], neighbour[3], rank         + grp_tag, MPI_COMM_WORLD, &req[nP2P+1]);
+        CPML2_ISend(buffer[nP2P  ], neighbour[3], neighbour[3] + grp_tag, MPI_COMM_WORLD, &req[nP2P  ]);
+        CPML2_IRecv(buffer[nP2P+1], neighbour[3], rank         + grp_tag, MPI_COMM_WORLD, &req[nP2P+1]);
         nP2P += 2;
     }
     uint3 xy_inner_slice{pdom.shape.x - Gdx2, pdom.shape.x - Gdx2, thick};
@@ -233,8 +232,8 @@ void CPM::CPML2dev_IExchange6ColoredFace(double *data, Mapper &pdom, unsigned in
             buf_hdctype,
             pdom, color
         );
-        CPML1_ISend(buffer[nP2P  ], neighbour[4], neighbour[4] + grp_tag, MPI_COMM_WORLD, &req[nP2P  ]);
-        CPML1_IRecv(buffer[nP2P+1], neighbour[4], rank         + grp_tag, MPI_COMM_WORLD, &req[nP2P+1]);
+        CPML2_ISend(buffer[nP2P  ], neighbour[4], neighbour[4] + grp_tag, MPI_COMM_WORLD, &req[nP2P  ]);
+        CPML2_IRecv(buffer[nP2P+1], neighbour[4], rank         + grp_tag, MPI_COMM_WORLD, &req[nP2P+1]);
         nP2P += 2;
     }
     if (neighbour[5] >= 0) {
@@ -253,8 +252,8 @@ void CPM::CPML2dev_IExchange6ColoredFace(double *data, Mapper &pdom, unsigned in
             buf_hdctype,
             pdom, color
         );
-        CPML1_ISend(buffer[nP2P  ], neighbour[5], neighbour[5] + grp_tag, MPI_COMM_WORLD, &req[nP2P  ]);
-        CPML1_IRecv(buffer[nP2P+1], neighbour[5], rank         + grp_tag, MPI_COMM_WORLD, &req[nP2P+1]);
+        CPML2_ISend(buffer[nP2P  ], neighbour[5], neighbour[5] + grp_tag, MPI_COMM_WORLD, &req[nP2P  ]);
+        CPML2_IRecv(buffer[nP2P+1], neighbour[5], rank         + grp_tag, MPI_COMM_WORLD, &req[nP2P+1]);
         nP2P += 2;
     }
 }

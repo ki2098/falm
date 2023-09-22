@@ -1,4 +1,4 @@
-#include "../MVBasicDev.h"
+#include "../MVL1.h"
 #include "devutil.cuh"
 
 namespace Falm {
@@ -34,7 +34,7 @@ __global__ void kernel_DotProduct(MatrixFrame<double> &a, MatrixFrame<double> &b
     }
 }
 
-double devL1_DotProduct(Matrix<double> &a, Matrix<double> &b, Mapper &pdom, Mapper &map, dim3 &block_dim) {
+double devL0_DotProduct(Matrix<double> &a, Matrix<double> &b, Mapper &pdom, Mapper &map, dim3 block_dim) {
     dim3 grid_dim(
         (map.shape.x + block_dim.x - 1) / block_dim.x,
         (map.shape.y + block_dim.y - 1) / block_dim.y,
@@ -91,7 +91,7 @@ __global__ void kernel_Norm2Sq(MatrixFrame<double> &a, double *partial_sum_dev, 
     }
 }
 
-double devL1_Norm2Sq(Matrix<double> &a, Mapper &pdom, Mapper &map, dim3 &block_dim) {
+double devL0_Norm2Sq(Matrix<double> &a, Mapper &pdom, Mapper &map, dim3 block_dim) {
     dim3 grid_dim(
         (map.shape.x + block_dim.x - 1) / block_dim.x,
         (map.shape.y + block_dim.y - 1) / block_dim.y,
@@ -150,7 +150,7 @@ __global__ void kernel_MaxDiag(MatrixFrame<double> &a, double *partial_max_dev, 
     }
 }
 
-double devL1_MaxDiag(Matrix<double> &a, Mapper &pdom, Mapper &map, dim3 &block_dim) {
+double devL0_MaxDiag(Matrix<double> &a, Mapper &pdom, Mapper &map, dim3 block_dim) {
     dim3 grid_dim(
         (map.shape.x + block_dim.x - 1) / block_dim.x,
         (map.shape.y + block_dim.y - 1) / block_dim.y,
@@ -188,7 +188,7 @@ __global__ void kernel_ScaleMatrix(MatrixFrame<double> &a, double scale) {
     }
 }
 
-void devL1_ScaleMatrix(Matrix<double> &a, double scale, dim3 &block_dim) {
+void devL1_ScaleMatrix(Matrix<double> &a, double scale, dim3 block_dim) {
     unsigned int n_threads = PRODUCT3(block_dim);
     unsigned int n_blocks = (a.size + n_threads - 1) / n_threads;
     kernel_ScaleMatrix<<<n_blocks, n_threads, 0, 0>>>(*(a.devptr), scale);

@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include "../src/CPM.h"
+#include "../src/CPML2.h"
 #include "../src/matrix.h"
 
 #define Nx   15
@@ -64,7 +64,7 @@ void print_xz_slice(Matrix<double> &x, uint3 domain_shape, unsigned int slice_at
 }
 
 int main(int argc, char **argv) {
-    CPML1_Init(&argc, &argv);
+    CPML2_Init(&argc, &argv);
 
     Mapper global(
         uint3{Nx + Gdx2, Ny + Gdx2, Nz + Gdx2},
@@ -72,27 +72,27 @@ int main(int argc, char **argv) {
     );
 
     CPM cpm;
-    CPML1_GetRank(MPI_COMM_WORLD, cpm.rank);
-    CPML1_GetSize(MPI_COMM_WORLD, cpm.size);
+    CPML2_GetRank(MPI_COMM_WORLD, cpm.rank);
+    CPML2_GetSize(MPI_COMM_WORLD, cpm.size);
     cpm.shape = uint3{(unsigned int)atoi(argv[1]), (unsigned int)atoi(argv[2]), (unsigned int)atoi(argv[3])};
     if (PRODUCT3(cpm.shape) != cpm.size) {
         printf("wrong group shape: %ux%ux%u != %d\n",cpm.shape.x, cpm.shape.y, cpm.shape.z, cpm.size);
-        CPML1_Finalize();
+        CPML2_Finalize();
         return 0;
     }
     printf("group shape %ux%ux%u\n", cpm.shape.x, cpm.shape.y, cpm.shape.z);
     fflush(stdout);
-    CPML1_Barrier(MPI_COMM_WORLD);
+    CPML2_Barrier(MPI_COMM_WORLD);
     cpm.init_neighbour();
     printf("%d(%u %u %u): E%2d W%2d N%2d S%2d T%2d B%2d\n", cpm.rank, cpm.idx.x, cpm.idx.y, cpm.idx.z, cpm.neighbour[0], cpm.neighbour[1], cpm.neighbour[2], cpm.neighbour[3], cpm.neighbour[4], cpm.neighbour[5]);
     fflush(stdout);
-    CPML1_Barrier(MPI_COMM_WORLD);
+    CPML2_Barrier(MPI_COMM_WORLD);
 
     int gpu_count;
     cudaGetDeviceCount(&gpu_count);
     cudaSetDevice(cpm.rank % gpu_count);
     printf("process %d running no device %d\n", cpm.rank, cpm.rank % gpu_count);
-    CPML1_Barrier(MPI_COMM_WORLD);
+    CPML2_Barrier(MPI_COMM_WORLD);
 
     unsigned int ox = 0, oy = 0, oz = 0;
     for (int i = 0; i < cpm.idx.x; i ++) {
@@ -110,7 +110,7 @@ int main(int argc, char **argv) {
     );
     printf("%d(%u %u %u): (%u %u %u) (%u %u %u))\n", cpm.rank, cpm.idx.x, cpm.idx.y, cpm.idx.z, process.shape.x, process.shape.y, process.shape.z, process.offset.x, process.offset.y, process.offset.z);
     fflush(stdout);
-    CPML1_Barrier(MPI_COMM_WORLD);
+    CPML2_Barrier(MPI_COMM_WORLD);
 
     Matrix<double> x(process.shape, 1, HDCType::Host, 0);
     for (int i = Gd; i < process.shape.x - Gd; i ++) {
@@ -127,12 +127,12 @@ int main(int argc, char **argv) {
             print_xz_slice(x, process.shape, process.shape.y / 2);
             printf("\n");
         }
-        CPML1_Barrier(MPI_COMM_WORLD);
+        CPML2_Barrier(MPI_COMM_WORLD);
     }
 
     MPI_Request *req;
     CPMBuffer<double> *buffer;
-    unsigned int bufhdc = HDCType::Device;
+    unsigned int bufhdc = HDCType::Host;
     
     dim3 block_dim_yz(1, 8, 4);
 
@@ -142,7 +142,7 @@ int main(int argc, char **argv) {
             printf("Sending color %u...\n", Color::Black);
             fflush(stdout);
         }
-        CPML1_Barrier(MPI_COMM_WORLD);
+        CPML2_Barrier(MPI_COMM_WORLD);
         cpm.CPML2dev_IExchange6ColoredFace(x.dev.ptr, process, Color::Black, 2, 0, buffer, bufhdc, req);
         cpm.CPML2_Wait6Face(req);
         cpm.CPML2dev_PostExchange6ColoredFace(x.dev.ptr, process, Color::Black, buffer, req);
@@ -163,14 +163,14 @@ int main(int argc, char **argv) {
             // print_buffer_dev(buffer[3]);
             fflush(stdout);
         }
-        CPML1_Barrier(MPI_COMM_WORLD);
+        CPML2_Barrier(MPI_COMM_WORLD);
     }
     if (cpm.size > 1) {
         if (cpm.rank == 0) {
             printf("Sending color %u...\n", Color::Red);
             fflush(stdout);
         }
-        CPML1_Barrier(MPI_COMM_WORLD);
+        CPML2_Barrier(MPI_COMM_WORLD);
         cpm.CPML2dev_IExchange6ColoredFace(x.dev.ptr, process, Color::Red, 2, 0, buffer, bufhdc, req);
         cpm.CPML2_Wait6Face(req);
         cpm.CPML2dev_PostExchange6ColoredFace(x.dev.ptr, process, Color::Red, buffer, req);
@@ -191,7 +191,7 @@ int main(int argc, char **argv) {
             // print_buffer_dev(buffer[7]);
             fflush(stdout);
         }
-        CPML1_Barrier(MPI_COMM_WORLD);
+        CPML2_Barrier(MPI_COMM_WORLD);
     }
     // for (int i = 0; i < 8; i ++) {
     //     buffer[i].clear();
@@ -200,7 +200,7 @@ int main(int argc, char **argv) {
     
     printf("_____________________________________________________________________\n");
     fflush(stdout);
-    CPML1_Barrier(MPI_COMM_WORLD);
+    CPML2_Barrier(MPI_COMM_WORLD);
     
     x.alloc(process.shape, 1, HDCType::Host, 0);
     for (int i = Gd; i < process.shape.x - Gd; i ++) {
@@ -216,7 +216,7 @@ int main(int argc, char **argv) {
             print_xz_slice(x, process.shape, process.shape.y / 2);
             printf("\n");
         }
-        CPML1_Barrier(MPI_COMM_WORLD);
+        CPML2_Barrier(MPI_COMM_WORLD);
     }
 
     x.sync(MCpType::Hst2Dev);
@@ -225,7 +225,7 @@ int main(int argc, char **argv) {
             printf("Sending color %u...\n", Color::Black);
             fflush(stdout);
         }
-        CPML1_Barrier(MPI_COMM_WORLD);
+        CPML2_Barrier(MPI_COMM_WORLD);
         cpm.CPML2dev_IExchange6ColoredFace(x.dev.ptr, process, Color::Black, 2, 0, buffer, bufhdc, req);
         cpm.CPML2_Wait6Face(req);
         cpm.CPML2dev_PostExchange6ColoredFace(x.dev.ptr, process, Color::Black, buffer, req);
@@ -246,14 +246,14 @@ int main(int argc, char **argv) {
             // print_buffer_dev(buffer[3]);
             fflush(stdout);
         }
-        CPML1_Barrier(MPI_COMM_WORLD);
+        CPML2_Barrier(MPI_COMM_WORLD);
     }
     if (cpm.size > 1) {
         if (cpm.rank == 0) {
             printf("Sending color %u...\n", Color::Red);
             fflush(stdout);
         }
-        CPML1_Barrier(MPI_COMM_WORLD);
+        CPML2_Barrier(MPI_COMM_WORLD);
         cpm.CPML2dev_IExchange6ColoredFace(x.dev.ptr, process, Color::Red, 2, 0, buffer, bufhdc, req);
         cpm.CPML2_Wait6Face(req);
         cpm.CPML2dev_PostExchange6ColoredFace(x.dev.ptr, process, Color::Red, buffer, req);
@@ -274,12 +274,12 @@ int main(int argc, char **argv) {
             // print_buffer_dev(buffer[7]);
             fflush(stdout);
         }
-        CPML1_Barrier(MPI_COMM_WORLD);
+        CPML2_Barrier(MPI_COMM_WORLD);
     }
     x.release(HDCType::HstDev);
     
 
-    CPML1_Finalize();
+    CPML2_Finalize();
     
     return 0;
 }

@@ -2,42 +2,42 @@ nvmpicxx = /opt/nvidia/hpc_sdk/Linux_x86_64/23.3/comm_libs/mpi/bin/mpic++
 nvnvcxx = /opt/nvidia/hpc_sdk/Linux_x86_64/23.3/compilers/bin/nvc++
 nvnvcc = /opt/nvidia/hpc_sdk/Linux_x86_64/23.3/cuda/bin/nvcc
 
-mvbasic:
-	$(nvnvcc) -c ../src/dev/mvbasic.cu --std=c++11 -o bin/mvbasic.o
+mvl1:
+	$(nvnvcc) -c ../src/dev/MVL1.cu --std=c++11 -o bin/MVL1.o
 
-mveq:
-	$(nvnvcc) -c ../src/dev/structMVEq.cu --std=c++11 -o bin/structMVEq.o
+eql1:
+	$(nvnvcc) -c ../src/dev/structEqL1.cu --std=c++11 -o bin/structEqL1.o
 
-cpmdev:
-	$(nvnvcc) -c ../src/dev/CPMDev.cu --std=c++11 -o bin/CPMDev.o
+cpml1:
+	$(nvnvcc) -c ../src/dev/CPML1.cu --std=c++11 -o bin/CPML1.o
 
-dot: mvbasic
+dot: mvl1
 	$(nvnvcxx) -cuda -c dot.cpp --std=c++11 -o bin/dot.o
-	$(nvnvcxx) -cuda bin/mvbasic.o bin/dot.o -o bin/dot
+	$(nvnvcxx) -cuda bin/MVL1.o bin/dot.o -o bin/dot
 
-heat: mvbasic mveq
+heat: mvl1 eql1
 	$(nvnvcxx) -cuda -c heat1d.cpp --std=c++11 -o bin/heat1d.o
-	$(nvnvcxx) -cuda bin/mvbasic.o bin/heat1d.o bin/structMVEq.o -o bin/heat1d
+	$(nvnvcxx) -cuda bin/MVL1.o bin/heat1d.o bin/structEqL1.o -o bin/heat1d
 
 assign:
 	$(nvnvcxx) -cuda assign.cpp --std=c++11 -o bin/assign
 
-cpmcore: cpmdev
-	$(nvmpicxx) -cuda -c ../src/CPM.cpp --std=c++11 -o bin/cpmcore.o
+cpml2: cpml1
+	$(nvmpicxx) -cuda -c ../src/CPML2.cpp --std=c++11 -o bin/CPML2.o
 
-cpm: cpmcore 
+cpmtest: cpml2 
 	$(nvmpicxx) -cuda -c cpmtest.cpp --std=c++11 -o bin/cpmtest.o
-	$(nvmpicxx) -cuda bin/cpmcore.o bin/cpmtest.o bin/CPMDev.o -o bin/cpm
+	$(nvmpicxx) -cuda bin/CPML2.o bin/cpmtest.o bin/CPML1.o -o bin/cpmtest
 
-cpmcore_ito:
-	mpic++ -cuda -c ../src/CPM.cpp --std=c++11 -o bin/cpmcore.o
+cpml2ito:
+	mpic++ -cuda -c ../src/CPML2.cpp --std=c++11 -o bin/CPML2.o
 
-cpmdev_ito:
-	nvcc -c ../src/dev/CPMDev.cu --std=c++11 -o bin/CPMDev.o
+cpml1ito:
+	nvcc -c ../src/dev/CPML1.cu --std=c++11 -o bin/CPML1.o
 
-cpm_ito: cpmdev_ito cpmcore_ito
+cpmtestito: cpml1ito cpml2ito
 	mpic++ -cuda -c cpmtest.cpp --std=c++11 -o bin/cpmtest.o
-	mpic++ -cuda bin/cpmcore.o bin/cpmtest.o bin/CPMDev.o -o bin/cpm
+	mpic++ -cuda bin/CPML1.o bin/cpmtest.o bin/CPML2.o -o bin/cpmtest
 
-cpm2: 
-	$(nvmpicxx) -cuda cpmtest2.cpp -o bin/cpm2
+cpmtest2: 
+	$(nvmpicxx) -cuda cpmtest2.cpp -o bin/cpmtest2

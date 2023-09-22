@@ -1,6 +1,6 @@
 #include <stdio.h>
-#include "../src/structMVEq.h"
-#include "../src/MVBasic.h"
+#include "../src/structEqL1.h"
+#include "../src/MVL1.h"
 
 using namespace Falm;
 
@@ -8,7 +8,6 @@ using namespace Falm;
 #define Ny 1
 #define Nz 1
 #define Lx 1.0
-#define Gd 1
 #define TW 0.0
 #define TE 100.0
 
@@ -18,10 +17,6 @@ int main() {
         uint3{0, 0, 0}
     );
     Mapper pdom(global.shape, global.offset);
-    Mapper map(
-        uint3{Nx, Ny, Nz},
-        uint3{Gd, Gd, Gd}
-    );
     Matrix<double> a, t, b, r;
     a.alloc(pdom.shape, 7, HDCType::Host  , 0);
     t.alloc(pdom.shape, 1, HDCType::Device, 1);
@@ -55,7 +50,7 @@ int main() {
     a.sync(MCpType::Hst2Dev);
     b.sync(MCpType::Hst2Dev);
     dim3 block_dim(32, 1, 1);
-    double max_diag = devL1_MaxDiag(a, pdom, map, block_dim);
+    double max_diag = devL1_MaxDiag(a, pdom, block_dim);
     printf("%12lf\n", max_diag);
     devL1_ScaleMatrix(a, max_diag, block_dim);
     devL1_ScaleMatrix(b, max_diag, block_dim);
@@ -71,7 +66,7 @@ int main() {
     }
 
     L1EqSolver solver(LSType::PBiCGStab, 10000, 1e-9, 1.5, LSType::Jacobi, 5, 1.0);
-    solver.devL1_Struct3d7p_Solve(a, t, b, r, global, pdom, map, block_dim);
+    solver.devL1_Struct3d7p_Solve(a, t, b, r, global, pdom, block_dim);
     t.sync(MCpType::Dev2Hst);
     r.sync(MCpType::Dev2Hst);
     for (unsigned int i = Gd; i < Gd + Nx; i ++) {

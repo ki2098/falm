@@ -1,49 +1,49 @@
-#ifndef FALM_CPM_H
-#define FALM_CPM_H
+#ifndef FALM_CPML2_H
+#define FALM_CPML2_H
 
 #include <mpi.h>
 #include "CPMB.h"
-#include "CPMDev.h"
+#include "CPML1.h"
 
 namespace Falm {
 
-static inline int CPML1_ISend(CPMBuffer<double> &buffer, int dst_rank, int tag, MPI_Comm mpi_comm, MPI_Request *mpi_req) {
+static inline int CPML2_ISend(CPMBuffer<double> &buffer, int dst_rank, int tag, MPI_Comm mpi_comm, MPI_Request *mpi_req) {
     return MPI_Isend(buffer.ptr, buffer.size, MPI_DOUBLE, dst_rank, tag, mpi_comm, mpi_req);
 }
 
-static inline int CPML1_IRecv(CPMBuffer<double> &buffer, int src_rank, int tag, MPI_Comm mpi_comm, MPI_Request *mpi_req) {
+static inline int CPML2_IRecv(CPMBuffer<double> &buffer, int src_rank, int tag, MPI_Comm mpi_comm, MPI_Request *mpi_req) {
     return MPI_Irecv(buffer.ptr, buffer.size, MPI_DOUBLE, src_rank, tag, mpi_comm, mpi_req);
 }
 
-static inline int CPML1_Wait(MPI_Request *mpi_req, MPI_Status *mpi_status) {
+static inline int CPML2_Wait(MPI_Request *mpi_req, MPI_Status *mpi_status) {
     return MPI_Wait(mpi_req, mpi_status);
 }
 
-static inline int CPML1_Waitall(int n, MPI_Request *mpi_req, MPI_Status *mpi_status) {
+static inline int CPML2_Waitall(int n, MPI_Request *mpi_req, MPI_Status *mpi_status) {
     return MPI_Waitall(n, mpi_req, mpi_status);
 }
 
-static inline int CPML1_Init(int *argc, char ***argv) {
+static inline int CPML2_Init(int *argc, char ***argv) {
     return MPI_Init(argc, argv);
 }
 
-static inline int CPML1_Finalize() {
+static inline int CPML2_Finalize() {
     return MPI_Finalize();
 }
 
-static inline int CPML1_GetRank(MPI_Comm mpi_comm, int &mpi_rank) {
+static inline int CPML2_GetRank(MPI_Comm mpi_comm, int &mpi_rank) {
     return MPI_Comm_rank(mpi_comm, &mpi_rank);
 }
 
-static inline int CPML1_GetSize(MPI_Comm mpi_comm, int &mpi_size) {
+static inline int CPML2_GetSize(MPI_Comm mpi_comm, int &mpi_size) {
     return MPI_Comm_size(mpi_comm, &mpi_size);
 }
 
-static inline int CPML1_Barrier(MPI_Comm mpi_comm) {
+static inline int CPML2_Barrier(MPI_Comm mpi_comm) {
     return MPI_Barrier(mpi_comm);
 }
 
-static inline int CPML1_AllReduce(void *buffer, int n, MPI_Datatype mpi_dtype, MPI_Op mpi_op, MPI_Comm mpi_comm) {
+static inline int CPML2_AllReduce(void *buffer, int n, MPI_Datatype mpi_dtype, MPI_Op mpi_op, MPI_Comm mpi_comm) {
     return MPI_Allreduce(MPI_IN_PLACE, buffer, n, mpi_dtype, mpi_op, mpi_comm);
 }
 

@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include "../src/CPM.h"
+#include "../src/CPML2.h"
 #include "../src/matrix.h"
 
 #define Nx   15
@@ -59,7 +59,7 @@ void set_matrix_value(Matrix<double> &x, uint3 range_shape, uint3 range_offset, 
 }
 
 int main(int argc, char **argv) {
-    CPML1_Init(&argc, &argv);
+    CPML2_Init(&argc, &argv);
 
     Mapper global(
         uint3{Nx + Gdx2, Ny + Gdx2, Nz + Gdx2},
@@ -67,21 +67,21 @@ int main(int argc, char **argv) {
     );
 
     CPM cpm;
-    CPML1_GetRank(MPI_COMM_WORLD, cpm.rank);
-    CPML1_GetSize(MPI_COMM_WORLD, cpm.size);
+    CPML2_GetRank(MPI_COMM_WORLD, cpm.rank);
+    CPML2_GetSize(MPI_COMM_WORLD, cpm.size);
     cpm.shape = uint3{(unsigned int)atoi(argv[1]), (unsigned int)atoi(argv[2]), (unsigned int)atoi(argv[3])};
     if (PRODUCT3(cpm.shape) != cpm.size) {
         printf("wrong group shape: %ux%ux%u != %d\n",cpm.shape.x, cpm.shape.y, cpm.shape.z, cpm.size);
-        CPML1_Finalize();
+        CPML2_Finalize();
         return 0;
     }
     printf("group shape %ux%ux%u\n", cpm.shape.x, cpm.shape.y, cpm.shape.z);
     fflush(stdout);
-    CPML1_Barrier(MPI_COMM_WORLD);
+    CPML2_Barrier(MPI_COMM_WORLD);
     cpm.init_neighbour();
     printf("%d(%u %u %u): E%2d W%2d N%2d S%2d T%2d B%2d\n", cpm.rank, cpm.idx.x, cpm.idx.y, cpm.idx.z, cpm.neighbour[0], cpm.neighbour[1], cpm.neighbour[2], cpm.neighbour[3], cpm.neighbour[4], cpm.neighbour[5]);
     fflush(stdout);
-    CPML1_Barrier(MPI_COMM_WORLD);
+    CPML2_Barrier(MPI_COMM_WORLD);
 
     unsigned int ox = 0, oy = 0, oz = 0;
     for (int i = 0; i < cpm.idx.x; i ++) {
@@ -99,7 +99,7 @@ int main(int argc, char **argv) {
     );
     printf("%d(%u %u %u): (%u %u %u) (%u %u %u))\n", cpm.rank, cpm.idx.x, cpm.idx.y, cpm.idx.z, process.shape.x, process.shape.y, process.shape.z, process.offset.x, process.offset.y, process.offset.z);
     fflush(stdout);
-    CPML1_Barrier(MPI_COMM_WORLD);
+    CPML2_Barrier(MPI_COMM_WORLD);
 
     uint3 inner_shape, inner_offset;
     uint3 boundary_shape[6], boundary_offset[6];
@@ -118,10 +118,10 @@ int main(int argc, char **argv) {
             print_xy_slice(x, process.shape, process.shape.z / 2);
             printf("\n");
         }
-        CPML1_Barrier(MPI_COMM_WORLD);
+        CPML2_Barrier(MPI_COMM_WORLD);
     }
 
-    CPML1_Finalize();
+    CPML2_Finalize();
 
     return 0;
 }
