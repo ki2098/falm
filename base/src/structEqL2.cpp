@@ -7,7 +7,7 @@ namespace Falm {
 void devL2_Struct3d7p_MV(Matrix<double> &a, Matrix<double> &x, Matrix<double> &ax, Mapper &pdom, dim3 block_dim, CPM &cpm) {
     CPMBuffer<double> *buffer;
     MPI_Request *req;
-    cpm.CPML2dev_IExchange6Face(a.dev.ptr, pdom, 1, 0, buffer, HDCType::Device, req);
+    cpm.CPML2dev_IExchange6Face(x.dev.ptr, pdom, 1, 0, buffer, HDCType::Device, req);
     uint3 inner_shape, inner_offset, boundary_shape[6], boundary_offset[6];
     cpm.setRegions(inner_shape, inner_offset, boundary_shape, boundary_offset, 1, pdom);
 
@@ -15,7 +15,7 @@ void devL2_Struct3d7p_MV(Matrix<double> &a, Matrix<double> &x, Matrix<double> &a
     devL0_Struct3d7p_MV(a, x, ax, pdom, inner_map, block_dim);
 
     cpm.CPML2_Wait6Face(req);
-    cpm.CPML2dev_PostExchange6Face(a.dev.ptr, pdom, buffer, req);
+    cpm.CPML2dev_PostExchange6Face(x.dev.ptr, pdom, buffer, req);
 
     if (cpm.neighbour[0] >= 0) {
         Mapper emap(boundary_shape[0], boundary_offset[0]);
@@ -46,7 +46,7 @@ void devL2_Struct3d7p_MV(Matrix<double> &a, Matrix<double> &x, Matrix<double> &a
 void devL2_Struct3d7p_Res(Matrix<double> &a, Matrix<double> &x, Matrix<double> &b, Matrix<double> &r, Mapper &pdom, dim3 block_dim, CPM &cpm) {
     CPMBuffer<double> *buffer;
     MPI_Request *req;
-    cpm.CPML2dev_IExchange6Face(a.dev.ptr, pdom, 1, 0, buffer, HDCType::Device, req);
+    cpm.CPML2dev_IExchange6Face(x.dev.ptr, pdom, 1, 0, buffer, HDCType::Device, req);
     uint3 inner_shape, inner_offset, boundary_shape[6], boundary_offset[6];
     cpm.setRegions(inner_shape, inner_offset, boundary_shape, boundary_offset, 1, pdom);
 
@@ -54,7 +54,7 @@ void devL2_Struct3d7p_Res(Matrix<double> &a, Matrix<double> &x, Matrix<double> &
     devL0_Struct3d7p_Res(a, x, b, r, pdom, inner_map, block_dim);
 
     cpm.CPML2_Wait6Face(req);
-    cpm.CPML2dev_PostExchange6Face(a.dev.ptr, pdom, buffer, req);
+    cpm.CPML2dev_PostExchange6Face(x.dev.ptr, pdom, buffer, req);
 
     if (cpm.neighbour[0] >= 0) {
         Mapper emap(boundary_shape[0], boundary_offset[0]);
@@ -100,7 +100,7 @@ void L2EqSolver::devL2_Struct3d7p_Jacobi(Matrix<double> &a, Matrix<double> &x, M
         devL0_Struct3d7p_JacobiSweep(a, x, xp, b, pdom, inner_map, block_dim);
 
         cpm.CPML2_Wait6Face(req);
-        cpm.CPML2dev_PostExchange6Face(a.dev.ptr, pdom, buffer, req);
+        cpm.CPML2dev_PostExchange6Face(xp.dev.ptr, pdom, buffer, req);
 
         devL2_Struct3d7p_JacobiSweepBoundary(a, x, xp, b, pdom, cpm, boundary_shape, boundary_offset);
 
@@ -127,7 +127,7 @@ void L2EqSolver::devL2_Struct3d7p_JacobiPC(Matrix<double> &a, Matrix<double> &x,
         devL0_Struct3d7p_JacobiSweep(a, x, xp, b, pdom, inner_map, block_dim);
 
         cpm.CPML2_Wait6Face(req);
-        cpm.CPML2dev_PostExchange6Face(a.dev.ptr, pdom, buffer, req);
+        cpm.CPML2dev_PostExchange6Face(xp.dev.ptr, pdom, buffer, req);
 
         devL2_Struct3d7p_JacobiSweepBoundary(a, x, xp, b, pdom, cpm, boundary_shape, boundary_offset);
         

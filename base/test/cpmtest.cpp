@@ -143,9 +143,11 @@ int main(int argc, char **argv) {
             fflush(stdout);
         }
         CPML2_Barrier(MPI_COMM_WORLD);
-        cpm.CPML2dev_IExchange6ColoredFace(x.dev.ptr, process, Color::Black, 2, 0, buffer, bufhdc, req);
+        // cpm.CPML2dev_IExchange6ColoredFace(x.dev.ptr, process, Color::Black, 2, 0, buffer, bufhdc, req);
+        cpm.CPML2dev_IExchange6Face(x.dev.ptr, process, 2, 0, buffer, HDCType::Device, req);
         cpm.CPML2_Wait6Face(req);
-        cpm.CPML2dev_PostExchange6ColoredFace(x.dev.ptr, process, Color::Black, buffer, req);
+        // cpm.CPML2dev_PostExchange6ColoredFace(x.dev.ptr, process, Color::Black, buffer, req);
+        cpm.CPML2dev_PostExchange6Face(x.dev.ptr, process, buffer, req);
     }
     x.sync(MCpType::Dev2Hst);
     for (int i = 0; i < cpm.size; i ++) {
@@ -165,34 +167,34 @@ int main(int argc, char **argv) {
         }
         CPML2_Barrier(MPI_COMM_WORLD);
     }
-    if (cpm.size > 1) {
-        if (cpm.rank == 0) {
-            printf("Sending color %u...\n", Color::Red);
-            fflush(stdout);
-        }
-        CPML2_Barrier(MPI_COMM_WORLD);
-        cpm.CPML2dev_IExchange6ColoredFace(x.dev.ptr, process, Color::Red, 2, 0, buffer, bufhdc, req);
-        cpm.CPML2_Wait6Face(req);
-        cpm.CPML2dev_PostExchange6ColoredFace(x.dev.ptr, process, Color::Red, buffer, req);
-    }
-    x.sync(MCpType::Dev2Hst);
-    for (int i = 0; i < cpm.size; i ++) {
-        if (cpm.rank == i) {
-            printf("%d(%u %u %u) printing...\n", cpm.rank, cpm.idx.x, cpm.idx.y, cpm.idx.z);
-            print_xz_slice(x, process.shape, process.shape.y / 2);
-            printf("\n");
-            // printf("B4: ");
-            // print_buffer_dev(buffer[4]);
-            // printf("B5: ");
-            // print_buffer_dev(buffer[5]);
-            // printf("B6: ");
-            // print_buffer_dev(buffer[6]);
-            // printf("B7: ");
-            // print_buffer_dev(buffer[7]);
-            fflush(stdout);
-        }
-        CPML2_Barrier(MPI_COMM_WORLD);
-    }
+    // if (cpm.size > 1) {
+    //     if (cpm.rank == 0) {
+    //         printf("Sending color %u...\n", Color::Red);
+    //         fflush(stdout);
+    //     }
+    //     CPML2_Barrier(MPI_COMM_WORLD);
+    //     cpm.CPML2dev_IExchange6ColoredFace(x.dev.ptr, process, Color::Red, 2, 0, buffer, bufhdc, req);
+    //     cpm.CPML2_Wait6Face(req);
+    //     cpm.CPML2dev_PostExchange6ColoredFace(x.dev.ptr, process, Color::Red, buffer, req);
+    // }
+    // x.sync(MCpType::Dev2Hst);
+    // for (int i = 0; i < cpm.size; i ++) {
+    //     if (cpm.rank == i) {
+    //         printf("%d(%u %u %u) printing...\n", cpm.rank, cpm.idx.x, cpm.idx.y, cpm.idx.z);
+    //         print_xz_slice(x, process.shape, process.shape.y / 2);
+    //         printf("\n");
+    //         // printf("B4: ");
+    //         // print_buffer_dev(buffer[4]);
+    //         // printf("B5: ");
+    //         // print_buffer_dev(buffer[5]);
+    //         // printf("B6: ");
+    //         // print_buffer_dev(buffer[6]);
+    //         // printf("B7: ");
+    //         // print_buffer_dev(buffer[7]);
+    //         fflush(stdout);
+    //     }
+    //     CPML2_Barrier(MPI_COMM_WORLD);
+    // }
     // for (int i = 0; i < 8; i ++) {
     //     buffer[i].clear();
     // }
@@ -202,81 +204,81 @@ int main(int argc, char **argv) {
     fflush(stdout);
     CPML2_Barrier(MPI_COMM_WORLD);
     
-    x.alloc(process.shape, 1, HDCType::Host, 0);
-    for (int i = Gd; i < process.shape.x - Gd; i ++) {
-        for (int j = Gd; j < process.shape.y - Gd; j ++) {
-            for (int k = Gd; k < process.shape.z - Gd; k ++) {
-                x(IDX(i, j, k, process.shape)) = (i + j + k + SUM3(process.offset)) % 2 + cpm.rank * 100;
-            }
-        }
-    }
-    for (int i = 0; i < cpm.size; i ++) {
-        if (cpm.rank == i) {
-            printf("%d(%u %u %u) printing...\n", cpm.rank, cpm.idx.x, cpm.idx.y, cpm.idx.z);
-            print_xz_slice(x, process.shape, process.shape.y / 2);
-            printf("\n");
-        }
-        CPML2_Barrier(MPI_COMM_WORLD);
-    }
+    // x.alloc(process.shape, 1, HDCType::Host, 0);
+    // for (int i = Gd; i < process.shape.x - Gd; i ++) {
+    //     for (int j = Gd; j < process.shape.y - Gd; j ++) {
+    //         for (int k = Gd; k < process.shape.z - Gd; k ++) {
+    //             x(IDX(i, j, k, process.shape)) = (i + j + k + SUM3(process.offset)) % 2 + cpm.rank * 100;
+    //         }
+    //     }
+    // }
+    // for (int i = 0; i < cpm.size; i ++) {
+    //     if (cpm.rank == i) {
+    //         printf("%d(%u %u %u) printing...\n", cpm.rank, cpm.idx.x, cpm.idx.y, cpm.idx.z);
+    //         print_xz_slice(x, process.shape, process.shape.y / 2);
+    //         printf("\n");
+    //     }
+    //     CPML2_Barrier(MPI_COMM_WORLD);
+    // }
 
-    x.sync(MCpType::Hst2Dev);
-    if (cpm.size > 1) {
-        if (cpm.rank == 0) {
-            printf("Sending color %u...\n", Color::Black);
-            fflush(stdout);
-        }
-        CPML2_Barrier(MPI_COMM_WORLD);
-        cpm.CPML2dev_IExchange6ColoredFace(x.dev.ptr, process, Color::Black, 2, 0, buffer, bufhdc, req);
-        cpm.CPML2_Wait6Face(req);
-        cpm.CPML2dev_PostExchange6ColoredFace(x.dev.ptr, process, Color::Black, buffer, req);
-    }
-    x.sync(MCpType::Dev2Hst);
-    for (int i = 0; i < cpm.size; i ++) {
-        if (cpm.rank == i) {
-            printf("%d(%u %u %u) printing...\n", cpm.rank, cpm.idx.x, cpm.idx.y, cpm.idx.z);
-            print_xz_slice(x, process.shape, process.shape.y / 2);
-            printf("\n");
-            // printf("B0: ");
-            // print_buffer_dev(buffer[0]);
-            // printf("B1: ");
-            // print_buffer_dev(buffer[1]);
-            // printf("B2: ");
-            // print_buffer_dev(buffer[2]);
-            // printf("B3: ");
-            // print_buffer_dev(buffer[3]);
-            fflush(stdout);
-        }
-        CPML2_Barrier(MPI_COMM_WORLD);
-    }
-    if (cpm.size > 1) {
-        if (cpm.rank == 0) {
-            printf("Sending color %u...\n", Color::Red);
-            fflush(stdout);
-        }
-        CPML2_Barrier(MPI_COMM_WORLD);
-        cpm.CPML2dev_IExchange6ColoredFace(x.dev.ptr, process, Color::Red, 2, 0, buffer, bufhdc, req);
-        cpm.CPML2_Wait6Face(req);
-        cpm.CPML2dev_PostExchange6ColoredFace(x.dev.ptr, process, Color::Red, buffer, req);
-    }
-    x.sync(MCpType::Dev2Hst);
-    for (int i = 0; i < cpm.size; i ++) {
-        if (cpm.rank == i) {
-            printf("%d(%u %u %u) printing...\n", cpm.rank, cpm.idx.x, cpm.idx.y, cpm.idx.z);
-            print_xz_slice(x, process.shape, process.shape.y / 2);
-            printf("\n");
-            // printf("B4: ");
-            // print_buffer_dev(buffer[4]);
-            // printf("B5: ");
-            // print_buffer_dev(buffer[5]);
-            // printf("B6: ");
-            // print_buffer_dev(buffer[6]);
-            // printf("B7: ");
-            // print_buffer_dev(buffer[7]);
-            fflush(stdout);
-        }
-        CPML2_Barrier(MPI_COMM_WORLD);
-    }
-    x.release(HDCType::HstDev);
+    // x.sync(MCpType::Hst2Dev);
+    // if (cpm.size > 1) {
+    //     if (cpm.rank == 0) {
+    //         printf("Sending color %u...\n", Color::Black);
+    //         fflush(stdout);
+    //     }
+    //     CPML2_Barrier(MPI_COMM_WORLD);
+    //     cpm.CPML2dev_IExchange6ColoredFace(x.dev.ptr, process, Color::Black, 2, 0, buffer, bufhdc, req);
+    //     cpm.CPML2_Wait6Face(req);
+    //     cpm.CPML2dev_PostExchange6ColoredFace(x.dev.ptr, process, Color::Black, buffer, req);
+    // }
+    // x.sync(MCpType::Dev2Hst);
+    // for (int i = 0; i < cpm.size; i ++) {
+    //     if (cpm.rank == i) {
+    //         printf("%d(%u %u %u) printing...\n", cpm.rank, cpm.idx.x, cpm.idx.y, cpm.idx.z);
+    //         print_xz_slice(x, process.shape, process.shape.y / 2);
+    //         printf("\n");
+    //         // printf("B0: ");
+    //         // print_buffer_dev(buffer[0]);
+    //         // printf("B1: ");
+    //         // print_buffer_dev(buffer[1]);
+    //         // printf("B2: ");
+    //         // print_buffer_dev(buffer[2]);
+    //         // printf("B3: ");
+    //         // print_buffer_dev(buffer[3]);
+    //         fflush(stdout);
+    //     }
+    //     CPML2_Barrier(MPI_COMM_WORLD);
+    // }
+    // if (cpm.size > 1) {
+    //     if (cpm.rank == 0) {
+    //         printf("Sending color %u...\n", Color::Red);
+    //         fflush(stdout);
+    //     }
+    //     CPML2_Barrier(MPI_COMM_WORLD);
+    //     cpm.CPML2dev_IExchange6ColoredFace(x.dev.ptr, process, Color::Red, 2, 0, buffer, bufhdc, req);
+    //     cpm.CPML2_Wait6Face(req);
+    //     cpm.CPML2dev_PostExchange6ColoredFace(x.dev.ptr, process, Color::Red, buffer, req);
+    // }
+    // x.sync(MCpType::Dev2Hst);
+    // for (int i = 0; i < cpm.size; i ++) {
+    //     if (cpm.rank == i) {
+    //         printf("%d(%u %u %u) printing...\n", cpm.rank, cpm.idx.x, cpm.idx.y, cpm.idx.z);
+    //         print_xz_slice(x, process.shape, process.shape.y / 2);
+    //         printf("\n");
+    //         // printf("B4: ");
+    //         // print_buffer_dev(buffer[4]);
+    //         // printf("B5: ");
+    //         // print_buffer_dev(buffer[5]);
+    //         // printf("B6: ");
+    //         // print_buffer_dev(buffer[6]);
+    //         // printf("B7: ");
+    //         // print_buffer_dev(buffer[7]);
+    //         fflush(stdout);
+    //     }
+    //     CPML2_Barrier(MPI_COMM_WORLD);
+    // }
+    // x.release(HDCType::HstDev);
     
 
     CPML2_Finalize();
