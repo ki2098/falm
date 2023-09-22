@@ -41,7 +41,7 @@ assign:
 cpml2: cpml1
 	$(nvmpicxx) -cuda -c ../src/CPML2.cpp --std=c++11 -o $(cpml2obj)
 
-cpml2ito:
+cpml2ito: cpml1ito
 	mpic++ -cuda -c ../src/CPML2.cpp --std=c++11 -o $(cpml2obj)
 
 cpmtest: cpml2 
