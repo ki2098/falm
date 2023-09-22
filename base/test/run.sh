@@ -6,10 +6,10 @@
 #PJM -L "elapse=06:00:00"
 #PJM -j
 #PJM -X
-#PJM -o "cpm++.log"
+#PJM -o "heat++.log"
 
 module load nvhpc/nvhpc_20.11
 
 date
 
-mpirun -np 4 bin/cpm 2 1 2
+mpirun -np 4 bin/heat1d2
