@@ -7,12 +7,15 @@
 #define Ny   12
 #define Nz   9
 
+#define USE_CUDA_AWARE_MPI false
+
 using namespace Falm;
 
-void print_xy_slice(Matrix<double> &x, uint3 domain_shape, unsigned int slice_at_z) {
+void print_xy_slice(Matrix<double> &x, uint3 domain_shape, uint3 domain_offset) {
     for (int j = domain_shape.y - 1; j >= 0; j --) {
+        printf(" ");
         for (int i = 0; i < domain_shape.x; i ++) {
-            double value = x(IDX(i, j, slice_at_z, domain_shape));
+            double value = x(IDX(i, j, (Nz + Gdx2) / 2 - domain_offset.z, domain_shape));
             if (value == 0) {
                 printf(".   ", value);
             } else {
@@ -21,12 +24,14 @@ void print_xy_slice(Matrix<double> &x, uint3 domain_shape, unsigned int slice_at
         }
         printf("\n");
     }
+    printf("yx\n");
 }
 
-void print_xz_slice(Matrix<double> &x, uint3 domain_shape, unsigned int slice_at_y) {
+void print_xz_slice(Matrix<double> &x, uint3 domain_shape, uint3 domain_offset) {
     for (int k = domain_shape.z - 1; k >= 0; k --) {
+        printf(" ");
         for (int i = 0; i < domain_shape.x; i ++) {
-            double value = x(IDX(i, slice_at_y, k, domain_shape));
+            double value = x(IDX(i, (Ny + Gdx2) / 2 - domain_offset.y, k, domain_shape));
             if (value == 0) {
                 printf(".   ", value);
             } else {
@@ -35,6 +40,7 @@ void print_xz_slice(Matrix<double> &x, uint3 domain_shape, unsigned int slice_at
         }
         printf("\n");
     }
+    printf("zx\n");
 }
 
 unsigned int dim_division(unsigned int dim_size, int mpi_size, int mpi_rank) {
@@ -105,14 +111,17 @@ int main(int argc, char **argv) {
     for (int i = 0; i < cpm.size; i ++) {
         if (cpm.rank == i) {
             printf("%d(%u %u %u) printing...\n", cpm.rank, cpm.idx.x, cpm.idx.y, cpm.idx.z);
-            print_xz_slice(x, process.shape, process.shape.y / 2);
+            if (cpm.shape.y == 1) 
+                print_xz_slice(x, process.shape, process.offset);
+            else
+                print_xy_slice(x, process.shape, process.offset);
             printf("\n");
             fflush(stdout);
         }
         CPML2_Barrier(MPI_COMM_WORLD);
     }
 
-    cpm.use_cuda_aware_mpi = true;
+    cpm.use_cuda_aware_mpi = USE_CUDA_AWARE_MPI;
     CPMOp<double> cpmop(cpm);
     printf("cpmop %d: %d %u\n", cpm.rank, cpmop.mpi_dtype == MPI_DOUBLE, cpmop.buffer_hdctype);
     CPML2_Barrier(MPI_COMM_WORLD);
@@ -133,7 +142,10 @@ int main(int argc, char **argv) {
     for (int i = 0; i < cpm.size; i ++) {
         if (cpm.rank == i) {
             printf("%d(%u %u %u) printing...\n", cpm.rank, cpm.idx.x, cpm.idx.y, cpm.idx.z);
-            print_xz_slice(x, process.shape, process.shape.y / 2);
+            if (cpm.shape.y == 1) 
+                print_xz_slice(x, process.shape, process.offset);
+            else
+                print_xy_slice(x, process.shape, process.offset);
             printf("\n");
             // printf("B0: ");
             // print_buffer_dev(buffer[0]);
@@ -161,7 +173,10 @@ int main(int argc, char **argv) {
     for (int i = 0; i < cpm.size; i ++) {
         if (cpm.rank == i) {
             printf("%d(%u %u %u) printing...\n", cpm.rank, cpm.idx.x, cpm.idx.y, cpm.idx.z);
-            print_xz_slice(x, process.shape, process.shape.y / 2);
+            if (cpm.shape.y == 1) 
+                print_xz_slice(x, process.shape, process.offset);
+            else
+                print_xy_slice(x, process.shape, process.offset);
             printf("\n");
             // printf("B0: ");
             // print_buffer_dev(buffer[0]);
@@ -193,7 +208,10 @@ int main(int argc, char **argv) {
     for (int i = 0; i < cpm.size; i ++) {
         if (cpm.rank == i) {
             printf("%d(%u %u %u) printing...\n", cpm.rank, cpm.idx.x, cpm.idx.y, cpm.idx.z);
-            print_xz_slice(x, process.shape, process.shape.y / 2);
+            if (cpm.shape.y == 1) 
+                print_xz_slice(x, process.shape, process.offset);
+            else
+                print_xy_slice(x, process.shape, process.offset);
             printf("\n");
             fflush(stdout);
         }
@@ -215,7 +233,10 @@ int main(int argc, char **argv) {
     for (int i = 0; i < cpm.size; i ++) {
         if (cpm.rank == i) {
             printf("%d(%u %u %u) printing...\n", cpm.rank, cpm.idx.x, cpm.idx.y, cpm.idx.z);
-            print_xz_slice(x, process.shape, process.shape.y / 2);
+            if (cpm.shape.y == 1) 
+                print_xz_slice(x, process.shape, process.offset);
+            else
+                print_xy_slice(x, process.shape, process.offset);
             printf("\n");
             // printf("B0: ");
             // print_buffer_dev(buffer[0]);
@@ -243,7 +264,10 @@ int main(int argc, char **argv) {
     for (int i = 0; i < cpm.size; i ++) {
         if (cpm.rank == i) {
             printf("%d(%u %u %u) printing...\n", cpm.rank, cpm.idx.x, cpm.idx.y, cpm.idx.z);
-            print_xz_slice(x, process.shape, process.shape.y / 2);
+            if (cpm.shape.y == 1) 
+                print_xz_slice(x, process.shape, process.offset);
+            else
+                print_xy_slice(x, process.shape, process.offset);
             printf("\n");
             // printf("B0: ");
             // print_buffer_dev(buffer[0]);
