@@ -7,7 +7,7 @@
 #define Ny   12
 #define Nz   9
 
-#define USE_CUDA_AWARE_MPI false
+#define USE_CUDA_AWARE_MPI true
 
 using namespace Falm;
 
