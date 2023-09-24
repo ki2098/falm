@@ -2,12 +2,14 @@ nvmpicxx = /opt/nvidia/hpc_sdk/Linux_x86_64/23.3/comm_libs/mpi/bin/mpic++
 nvnvcxx = /opt/nvidia/hpc_sdk/Linux_x86_64/23.3/compilers/bin/nvc++
 nvnvcc = /opt/nvidia/hpc_sdk/Linux_x86_64/23.3/cuda/bin/nvcc
 
-mvl1obj  = bin/MVL1.o
-mvl2obj  = 
-eql1obj  = bin/structEqL1.o
-eql2obj  = bin/structEqL2.o
-cpml1obj = bin/CPML1.o
-cpml2obj = bin/CPML2.o
+mvl1obj    = bin/MVL1.o
+mvl2obj    = 
+eql1obj    = bin/structEqL1.o
+eql2obj    = bin/structEqL2.o
+cpml1obj   = bin/CPML1.o
+cpml2obj   = bin/CPML2.o
+cpml1v2obj = bin/CPML1v2.o
+cpml2v2obj = 
 
 mvl1:
 	$(nvnvcc) -c ../src/dev/MVL1.cu --std=c++11 -o $(mvl1obj)
@@ -23,6 +25,9 @@ eql1ito:
 
 cpml1:
 	$(nvnvcc) -c ../src/dev/CPML1.cu --std=c++11 -o $(cpml1obj)
+
+cpml1v2:
+	$(nvnvcc) -c ../src/dev/CPML1v2.cu --std=c++11 -o $(cpml1v2obj)
 
 cpml1ito:
 	nvcc -c ../src/dev/CPML1.cu --std=c++11 -o $(cpml1obj)
@@ -41,12 +46,18 @@ assign:
 cpml2: cpml1
 	$(nvmpicxx) -cuda -c ../src/CPML2.cpp --std=c++11 -o $(cpml2obj)
 
+cpml2v2: cpml1v2
+
 cpml2ito: cpml1ito
 	mpic++ -cuda -c ../src/CPML2.cpp --std=c++11 -o $(cpml2obj)
 
 cpmtest: cpml2 
 	$(nvmpicxx) -cuda -c cpmtest.cpp --std=c++11 -o bin/cpmtest.o
 	$(nvmpicxx) -cuda $(cpml1obj) $(cpml2obj) bin/cpmtest.o -o bin/cpmtest
+
+cpmtestv2: cpml2v2
+	$(nvmpicxx) -cuda -c cpmtestv2.cpp --std=c++11 -o bin/cpmtestv2.o
+	$(nvmpicxx) -cuda $(cpml1v2obj) $(cpml2v2obj) bin/cpmtestv2.o -o bin/cpmtestv2
 
 cpmtestito: cpml1ito cpml2ito
 	mpic++ -cuda -c cpmtest.cpp --std=c++11 -o bin/cpmtest.o
