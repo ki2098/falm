@@ -5,9 +5,10 @@
 
 #define Nx   25
 #define Ny   12
-#define Nz   12
+#define Nz   13
 
-#define USE_CUDA_AWARE_MPI false
+#define USE_CUDA_AWARE_MPI true
+#define THICK 2
 
 using namespace Falm;
 
@@ -125,7 +126,7 @@ int main(int argc, char **argv) {
     CPMOp<double> cpmop(cpm);
     printf("cpmop %d: %d %u\n", cpm.rank, cpmop.mpi_dtype == MPI_DOUBLE, cpmop.buffer_hdctype);
     CPML2_Barrier(MPI_COMM_WORLD);
-    unsigned int thick = 1;
+    unsigned int thick = THICK;
 
     x.sync(MCpType::Hst2Dev);
     if (cpm.size > 1) {
@@ -138,7 +139,7 @@ int main(int argc, char **argv) {
         cpmop.CPML2dev_IExchange6ColoredFace(x.dev.ptr, process, Color::Black, thick, 0);
         // cpmop.CPML2dev_IExchange6Face(x.dev.ptr, process, thick, 0);
         cpmop.CPML2_Wait6Face();
-        printf("%p\n", x.dev.ptr);
+        // printf("%p\n", x.dev.ptr);
         printf("%d sending complete\n", cpm.rank);
         cpmop.CPML2dev_PostExchange6ColoredFace();
         // cpmop.CPML2dev_PostExchange6Face();
@@ -229,7 +230,7 @@ int main(int argc, char **argv) {
             printf("Sending color %u...\n", Color::Black);
             fflush(stdout);
         }
-        printf("%u %p\n", x.hdctype, x.dev.ptr);
+        // printf("%u %p\n", x.hdctype, x.dev.ptr);
         CPML2_Barrier(MPI_COMM_WORLD);
         cpmop.CPML2dev_IExchange6ColoredFace(x.dev.ptr, process, Color::Black, thick, 0);
         // cpmop.CPML2dev_IExchange6Face(x.dev.ptr, process, thick, 0);
