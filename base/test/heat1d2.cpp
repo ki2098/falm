@@ -4,7 +4,7 @@
 
 using namespace Falm;
 
-#define USE_CUDA_AWARE_MPI true
+#define USE_CUDA_AWARE_MPI false
 
 #define Nx 100
 #define Ny 1
