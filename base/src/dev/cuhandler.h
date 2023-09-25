@@ -5,6 +5,7 @@
 #include <cuda_runtime.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
 #include "../flag.h"
 
 namespace Falm {

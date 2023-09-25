@@ -59,7 +59,9 @@ struct CPMBuffer {
         hdctype = _hdctype;
         color   = _color;
         unsigned int refcolor = (SUM3(_pdom.offset) + SUM3(map.offset)) % 2;
-        size = map.size / 2;
+        if (map.size % 2 == 1 && refcolor == color) {
+            size ++;
+        }
         if (hdctype == HDCType::Host) {
             ptr = falmHostMalloc(dwidth * size);
         } else if (hdctype == HDCType::Device) {

@@ -2,13 +2,13 @@
 #define FALM_STRUCTEQL2_H
 
 #include "structEqL1.h"
-#include "CPML2.h"
+#include "CPML2v2.h"
 
 namespace Falm {
 
-void devL2_Struct3d7p_MV(Matrix<double> &a, Matrix<double> &x, Matrix<double> &ax, Mapper &pdom, dim3 block_dim, CPM &cpm);
+void devL2_Struct3d7p_MV(Matrix<double> &a, Matrix<double> &x, Matrix<double> &ax, Mapper &pdom, dim3 block_dim, CPMBase &cpm);
 
-void devL2_Struct3d7p_Res(Matrix<double> &a, Matrix<double> &x, Matrix<double> &b, Matrix<double> &r, Mapper &pdom, dim3 block_dim, CPM &cpm);
+void devL2_Struct3d7p_Res(Matrix<double> &a, Matrix<double> &x, Matrix<double> &b, Matrix<double> &r, Mapper &pdom, dim3 block_dim, CPMBase &cpm);
 
 class L2EqSolver : public L1EqSolver {
 public:
@@ -16,10 +16,10 @@ public:
         L1EqSolver(_type, _maxit, _tol, _relax_factor, _pc_type, _pc_maxit, _pc_relax_factor) 
     {}
 
-    void devL2_Struct3d7p_Jacobi(Matrix<double> &a, Matrix<double> &x, Matrix<double> &b, Matrix<double> &r, Mapper &global, Mapper &pdom, dim3 block_dim, CPM &cpm);
-    void devL2_Struct3d7p_SOR(Matrix<double> &a, Matrix<double> &x, Matrix<double> &b, Matrix<double> &r, Mapper &global, Mapper &pdom, dim3 block_dim, CPM &cpm);
-    void devL2_Struct3d7p_PBiCGStab(Matrix<double> &a, Matrix<double> &x, Matrix<double> &b, Matrix<double> &r, Mapper &global, Mapper &pdom, dim3 block_dim, CPM &cpm);
-    void devL2_Struct3d7p_Solve(Matrix<double> &a, Matrix<double> &x, Matrix<double> &b, Matrix<double> &r, Mapper &global, Mapper &pdom, dim3 block_dim, CPM &cpm) {
+    void devL2_Struct3d7p_Jacobi(Matrix<double> &a, Matrix<double> &x, Matrix<double> &b, Matrix<double> &r, Mapper &global, Mapper &pdom, dim3 block_dim, CPMBase &cpm);
+    void devL2_Struct3d7p_SOR(Matrix<double> &a, Matrix<double> &x, Matrix<double> &b, Matrix<double> &r, Mapper &global, Mapper &pdom, dim3 block_dim, CPMBase &cpm);
+    void devL2_Struct3d7p_PBiCGStab(Matrix<double> &a, Matrix<double> &x, Matrix<double> &b, Matrix<double> &r, Mapper &global, Mapper &pdom, dim3 block_dim, CPMBase &cpm);
+    void devL2_Struct3d7p_Solve(Matrix<double> &a, Matrix<double> &x, Matrix<double> &b, Matrix<double> &r, Mapper &global, Mapper &pdom, dim3 block_dim, CPMBase &cpm) {
         if (type == SolverType::Jacobi) {
             devL2_Struct3d7p_Jacobi(a, x, b, r, global, pdom, block_dim, cpm);
         } else if (type == SolverType::SOR) {
@@ -30,9 +30,9 @@ public:
     }
 
 protected:
-    void devL2_Struct3d7p_JacobiPC(Matrix<double> &a, Matrix<double> &x, Matrix<double> &b, Mapper &pdom, dim3 block_dim, CPM &cpm);
-    void devL2_Struct3d7p_SORPC(Matrix<double> &a, Matrix<double> &x, Matrix<double> &b, Mapper &pdom, dim3 block_dim, CPM &cpm);
-    void devL2_Struct3d7p_Precondition(Matrix<double> &a, Matrix<double> &x, Matrix<double> &b, Mapper &pdom, dim3 block_dim, CPM &cpm) {
+    void devL2_Struct3d7p_JacobiPC(Matrix<double> &a, Matrix<double> &x, Matrix<double> &b, Mapper &pdom, dim3 block_dim, CPMBase &cpm);
+    void devL2_Struct3d7p_SORPC(Matrix<double> &a, Matrix<double> &x, Matrix<double> &b, Mapper &pdom, dim3 block_dim, CPMBase &cpm);
+    void devL2_Struct3d7p_Precondition(Matrix<double> &a, Matrix<double> &x, Matrix<double> &b, Mapper &pdom, dim3 block_dim, CPMBase &cpm) {
         if (pc_type == SolverType::Jacobi) {
             devL2_Struct3d7p_JacobiPC(a, x, b, pdom, block_dim, cpm);
         } else if (pc_type == SolverType::SOR) {
@@ -41,7 +41,7 @@ protected:
     }
 
 private:
-    void devL2_Struct3d7p_JacobiSweepBoundary(Matrix<double> &a, Matrix<double> &x, Matrix<double> &xp, Matrix<double> &b, Mapper &pdom, CPM &cpm, uint3 *boundary_shape, uint3 *boundary_offset) {
+    void devL2_Struct3d7p_JacobiSweepBoundary(Matrix<double> &a, Matrix<double> &x, Matrix<double> &xp, Matrix<double> &b, Mapper &pdom, CPMBase &cpm, uint3 *boundary_shape, uint3 *boundary_offset) {
         if (cpm.neighbour[0] >= 0) {
             Mapper emap(boundary_shape[0], boundary_offset[0]);
             devL0_Struct3d7p_JacobiSweep(a, x, xp, b, pdom, emap, dim3(1, 8, 8));
@@ -68,7 +68,7 @@ private:
         }
     }
 
-    void devL2_Struct3d7p_SORSweepBoundary(Matrix<double> &a, Matrix<double> &x, Matrix<double> &b, double omega, unsigned int color, Mapper &pdom, CPM &cpm, uint3 *boundary_shape, uint3 *boundary_offset) {
+    void devL2_Struct3d7p_SORSweepBoundary(Matrix<double> &a, Matrix<double> &x, Matrix<double> &b, double omega, unsigned int color, Mapper &pdom, CPMBase &cpm, uint3 *boundary_shape, uint3 *boundary_offset) {
         if (cpm.neighbour[0] >= 0) {
             Mapper emap(boundary_shape[0], boundary_offset[0]);
             devL0_Struct3d7p_SORSweep(a, x, b, omega, color, pdom, emap, dim3(1, 8, 8));

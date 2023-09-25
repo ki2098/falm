@@ -3,6 +3,8 @@
 
 #include "CPMBv2.h"
 
+#define CPMERR_NULLPTR -1
+
 namespace Falm {
 
 void CPML1dev_PackBuffer(CPMBuffer &buffer, double *src, Mapper &pdom, dim3 block_dim);

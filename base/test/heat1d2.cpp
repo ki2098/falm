@@ -4,6 +4,8 @@
 
 using namespace Falm;
 
+#define USE_CUDA_AWARE_MPI true
+
 #define Nx 100
 #define Ny 1
 #define Nz 1
@@ -39,7 +41,7 @@ void print_eq(Matrix<double> &a, Matrix<double> &b, uint3 shape) {
 }
 
 void print_result(Matrix<double> &x, Matrix<double> &r, uint3 shape) {
-    for (unsigned int i = Gd - 1; i < shape.x - Gd + 1; i ++) {
+    for (unsigned int i = Gd; i < shape.x - Gd; i ++) {
         for (unsigned int j = Gd; j < shape.y - Gd; j ++) {
             for (unsigned int k = Gd; k < shape.z - Gd; k ++) {
                 unsigned int idx = IDX(i, j, k, shape);
@@ -109,11 +111,12 @@ int main(int argc, char **argv) {
         gb(idx)    = bc;
     }
 
-    CPM cpm;
+    CPMBase cpm;
+    cpm.use_cuda_aware_mpi = USE_CUDA_AWARE_MPI;
     CPML2_GetRank(MPI_COMM_WORLD, cpm.rank);
     CPML2_GetSize(MPI_COMM_WORLD, cpm.size);
     cpm.shape = {(unsigned int)cpm.size, 1, 1};
-    cpm.init_neighbour();
+    cpm.initNeighbour();
     printf("%d(%u %u %u): E%2d W%2d N%2d S%2d T%2d B%2d\n", cpm.rank, cpm.idx.x, cpm.idx.y, cpm.idx.z, cpm.neighbour[0], cpm.neighbour[1], cpm.neighbour[2], cpm.neighbour[3], cpm.neighbour[4], cpm.neighbour[5]);
     fflush(stdout);
     CPML2_Barrier(MPI_COMM_WORLD);
@@ -205,7 +208,7 @@ int main(int argc, char **argv) {
         }
         CPML2_Barrier(MPI_COMM_WORLD);
     }
-    L2EqSolver solver(LSType::PBiCGStab, 10000, 1e-9, 1.2, LSType::SOR, 5, 1.5);
+    L2EqSolver solver(LSType::Jacobi, 10000, 1e-9, 1.2, LSType::SOR, 5, 1.5);
     solver.devL2_Struct3d7p_Solve(a, t, b, r, global, process, block_dim, cpm);
     t.sync(MCpType::Dev2Hst);
     r.sync(MCpType::Dev2Hst);

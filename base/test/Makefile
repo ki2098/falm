@@ -75,20 +75,20 @@ cpmtestv2ito: cpml2v2ito
 cpmtest2: 
 	$(nvmpicxx) -cuda cpmtest2.cpp -o bin/cpmtest2
 
-mvl2: mvl1
+mvl2: mvl1 cpml2v2
 
-mvl2ito: mvl1ito
+mvl2ito: mvl1ito cpml2v2ito
 
-eql2: eql1
+eql2: eql1 mvl2 cpml2v2
 	$(nvmpicxx) -cuda -c ../src/structEqL2.cpp --std=c++11 -o bin/structEqL2.o
 
-eql2ito: eql1ito
+eql2ito: eql1ito mvl2ito cpml2v2ito
 	mpic++ -cuda -c ../src/structEqL2.cpp --std=c++11 -o bin/structEqL2.o
 
-heat2: eql2 mvl2 cpml2
+heat2: eql2
 	$(nvmpicxx) -cuda -c heat1d2.cpp --std=c++11 -o bin/heat1d2.o
-	$(nvmpicxx) -cuda $(mvl1obj) $(mvl2obj) $(eql1obj) $(eql2obj) $(cpml1obj) $(cpml2obj) bin/heat1d2.o -o bin/heat1d2
+	$(nvmpicxx) -cuda $(mvl1obj) $(mvl2obj) $(eql1obj) $(eql2obj) $(cpml1v2obj) $(cpml2v2obj) bin/heat1d2.o -o bin/heat1d2
 
-heat2ito: eql2ito mvl2ito cpml2ito
+heat2ito: eql2ito
 	mpic++ -cuda -c heat1d2.cpp --std=c++11 -o bin/heat1d2.o
-	mpic++ -cuda $(mvl1obj) $(mvl2obj) $(eql1obj) $(eql2obj) $(cpml1obj) $(cpml2obj) bin/heat1d2.o -o bin/heat1d2
+	mpic++ -cuda $(mvl1obj) $(mvl2obj) $(eql1obj) $(eql2obj) $(cpml1v2obj) $(cpml2v2obj) bin/heat1d2.o -o bin/heat1d2

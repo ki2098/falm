@@ -3,11 +3,11 @@
 #include "../src/CPML2v2.h"
 #include "../src/matrix.h"
 
-#define Nx   15
+#define Nx   25
 #define Ny   12
-#define Nz   9
+#define Nz   12
 
-#define USE_CUDA_AWARE_MPI true
+#define USE_CUDA_AWARE_MPI false
 
 using namespace Falm;
 
@@ -125,7 +125,7 @@ int main(int argc, char **argv) {
     CPMOp<double> cpmop(cpm);
     printf("cpmop %d: %d %u\n", cpm.rank, cpmop.mpi_dtype == MPI_DOUBLE, cpmop.buffer_hdctype);
     CPML2_Barrier(MPI_COMM_WORLD);
-    unsigned int thick = 2;
+    unsigned int thick = 1;
 
     x.sync(MCpType::Hst2Dev);
     if (cpm.size > 1) {
@@ -133,10 +133,15 @@ int main(int argc, char **argv) {
             printf("Sending color %u...\n", Color::Black);
             fflush(stdout);
         }
+        // printf("%p\n", x.dev.ptr);
         CPML2_Barrier(MPI_COMM_WORLD);
         cpmop.CPML2dev_IExchange6ColoredFace(x.dev.ptr, process, Color::Black, thick, 0);
+        // cpmop.CPML2dev_IExchange6Face(x.dev.ptr, process, thick, 0);
         cpmop.CPML2_Wait6Face();
+        printf("%p\n", x.dev.ptr);
+        printf("%d sending complete\n", cpm.rank);
         cpmop.CPML2dev_PostExchange6ColoredFace();
+        // cpmop.CPML2dev_PostExchange6Face();
     }
     x.sync(MCpType::Dev2Hst);
     for (int i = 0; i < cpm.size; i ++) {
@@ -201,7 +206,7 @@ int main(int argc, char **argv) {
     for (int i = Gd; i < process.shape.x - Gd; i ++) {
         for (int j = Gd; j < process.shape.y - Gd; j ++) {
             for (int k = Gd; k < process.shape.z - Gd; k ++) {
-                x(IDX(i, j, k, process.shape)) = (i + j + k + SUM3(process.offset)) % 2 + cpm.rank * 10;
+                x(IDX(i, j, k, process.shape)) = (i + j + k + SUM3(process.offset)) % 2 + cpm.rank * 100;
             }
         }
     }
@@ -224,10 +229,13 @@ int main(int argc, char **argv) {
             printf("Sending color %u...\n", Color::Black);
             fflush(stdout);
         }
+        printf("%u %p\n", x.hdctype, x.dev.ptr);
         CPML2_Barrier(MPI_COMM_WORLD);
         cpmop.CPML2dev_IExchange6ColoredFace(x.dev.ptr, process, Color::Black, thick, 0);
+        // cpmop.CPML2dev_IExchange6Face(x.dev.ptr, process, thick, 0);
         cpmop.CPML2_Wait6Face();
         cpmop.CPML2dev_PostExchange6ColoredFace();
+        // cpmop.CPML2dev_PostExchange6Face();
     }
     x.sync(MCpType::Dev2Hst);
     for (int i = 0; i < cpm.size; i ++) {

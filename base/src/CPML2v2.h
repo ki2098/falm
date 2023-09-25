@@ -191,6 +191,17 @@ public:
             buffer_hdctype = HDCType::Host;
         }
     }
+    CPMOp(const CPMBase &_base, bool _use_cuda_aware_mpi) :
+        base(_base, _use_cuda_aware_mpi),
+        oringin_ptr(nullptr)
+    {
+        mpi_dtype = getMPIDtype<T>();
+        if (base.use_cuda_aware_mpi) {
+            buffer_hdctype = HDCType::Device;
+        } else {
+            buffer_hdctype = HDCType::Host;
+        }
+    }
 
     void CPML2_Wait6Face() {
         for (int i = 0; i < 6; i ++) {
