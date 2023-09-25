@@ -2,7 +2,7 @@
 #define FALM_STRUCTEQL2_H
 
 #include "structEqL1.h"
-#include "CPML2v2.h"
+#include "CPM.h"
 
 namespace Falm {
 
