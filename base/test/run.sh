@@ -12,4 +12,5 @@ module load nvhpc/nvhpc_20.11
 
 date
 
-mpirun -np 16 bin/cpmtestv2 2 4 2
+# mpirun -np 16 bin/cpmtestv2 2 4 2
+mpirun -np 16 --bind-to core --map-by ppr:2:socket --rank-by core bin/heat1d2
