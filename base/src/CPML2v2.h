@@ -34,11 +34,11 @@ template<typename T> MPI_Datatype getMPIDtype() {
 }
 
 static inline int CPML2_ISend(CPMBuffer &buffer, MPI_Datatype mpi_dtype, int dst, int tag, MPI_Comm mpi_comm, MPI_Request *mpi_req) {
-    return MPI_Isend(buffer.ptr, buffer.size, mpi_dtype, dst, tag, mpi_comm, mpi_req);
+    return MPI_Isend(buffer.ptr, buffer.count, mpi_dtype, dst, tag, mpi_comm, mpi_req);
 }
 
 static inline int CPML2_IRecv(CPMBuffer &buffer, MPI_Datatype mpi_dtype, int src, int tag, MPI_Comm mpi_comm, MPI_Request *mpi_req) {
-    return MPI_Irecv(buffer.ptr, buffer.size, mpi_dtype, src, tag, mpi_comm, mpi_req);
+    return MPI_Irecv(buffer.ptr, buffer.count, mpi_dtype, src, tag, mpi_comm, mpi_req);
 }
 
 static inline int CPML2_Wait(MPI_Request *mpi_req, MPI_Status *mpi_status) {

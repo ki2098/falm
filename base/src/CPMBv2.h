@@ -20,13 +20,13 @@ typedef CPMBufferType BufType;
 struct CPMBuffer {
     void            *ptr;
     Mapper           map;
-    int             size;
-    size_t        dwidth;
+    int            count;
+    size_t         width;
     unsigned int buftype;
     unsigned int hdctype;
     unsigned int   color;
 
-    CPMBuffer() : ptr(nullptr), size(0), buftype(BufType::Empty), hdctype(HDCType::Empty) {}
+    CPMBuffer() : ptr(nullptr), count(0), buftype(BufType::Empty), hdctype(HDCType::Empty) {}
     ~CPMBuffer() {
         if (hdctype == HDCType::Host) {
             falmHostFreePtr(ptr);
@@ -35,38 +35,38 @@ struct CPMBuffer {
         }
     }
 
-    void alloc(size_t _dwidth, uint3 _buf_shape, uint3 _buf_offset, unsigned int _buftype, unsigned int _hdctype) {
+    void alloc(size_t _width, uint3 _buf_shape, uint3 _buf_offset, unsigned int _buftype, unsigned int _hdctype) {
         assert(hdctype == HDCType::Empty);
         assert(buftype == BufType::Empty);
-        dwidth  = _dwidth;
+        width   = _width;
         map     = Mapper(_buf_shape, _buf_offset);
-        size    = PRODUCT3(_buf_shape);
+        count   = PRODUCT3(_buf_shape);
         buftype = _buftype;
         hdctype = _hdctype;
         if (hdctype == HDCType::Host) {
-            ptr = falmHostMalloc(dwidth * size);
+            ptr = falmHostMalloc(width * count);
         } else if (hdctype == HDCType::Device) {
-            ptr = falmDevMalloc(dwidth * size);
+            ptr = falmDevMalloc(width * count);
         }
     }
 
-    void alloc(size_t _dwidth, uint3 _buf_shape, uint3 _buf_offset, unsigned int _buftype, unsigned int _hdctype, Mapper &_pdom, unsigned int _color) {
+    void alloc(size_t _width, uint3 _buf_shape, uint3 _buf_offset, unsigned int _buftype, unsigned int _hdctype, Mapper &_pdom, unsigned int _color) {
         assert(hdctype == HDCType::Empty);
         assert(buftype == BufType::Empty);
-        dwidth  = _dwidth;
+        width   = _width;
         map     = Mapper(_buf_shape, _buf_offset);
         buftype = _buftype;
         hdctype = _hdctype;
         color   = _color;
         unsigned int refcolor = (SUM3(_pdom.offset) + SUM3(map.offset)) % 2;
-        size = map.size / 2;
+        count = map.size / 2;
         if (map.size % 2 == 1 && refcolor == color) {
-            size ++;
+            count ++;
         }
         if (hdctype == HDCType::Host) {
-            ptr = falmHostMalloc(dwidth * size);
+            ptr = falmHostMalloc(width * count);
         } else if (hdctype == HDCType::Device) {
-            ptr = falmDevMalloc(dwidth * size);
+            ptr = falmDevMalloc(width * count);
         }
     }
 
