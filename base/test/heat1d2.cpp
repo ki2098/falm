@@ -113,6 +113,7 @@ int main(int argc, char **argv) {
 
     CPMBase cpm;
     cpm.use_cuda_aware_mpi = USE_CUDA_AWARE_MPI;
+    printf("using cuda aware mpi: %d \n");
     CPML2_GetRank(MPI_COMM_WORLD, cpm.rank);
     CPML2_GetSize(MPI_COMM_WORLD, cpm.size);
     cpm.shape = {(unsigned int)cpm.size, 1, 1};
