@@ -1,9 +1,9 @@
 #!/usr/bin/bash
 #PJM -L "rscunit=ito-b"
-#PJM -L "rscgrp=ito-g-4"
-#PJM -L "vnode=1"
+#PJM -L "rscgrp=ito-g-16-dbg"
+#PJM -L "vnode=4"
 #PJM -L "vnode-core=36"
-#PJM -L "elapse=06:00:00"
+#PJM -L "elapse=00:05:00"
 #PJM -j
 #PJM -X
 #PJM -o "heat++.log"
