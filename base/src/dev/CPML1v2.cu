@@ -60,7 +60,7 @@ __global__ void kernel_CPM_UnpackColoredBuffer(double *buffer, uint3 buf_shape, 
     }
 }
 
-void CPML1dev_PackBuffer(CPMBuffer &buffer, double *src, Mapper &pdom, dim3 block_dim) {
+void CPML1Dev_PackBuffer(CPMBuffer &buffer, double *src, Mapper &pdom, dim3 block_dim) {
     Mapper &map = buffer.map;
     dim3 grid_dim(
         (map.shape.x + block_dim.x - 1) / block_dim.x,
@@ -77,7 +77,7 @@ void CPML1dev_PackBuffer(CPMBuffer &buffer, double *src, Mapper &pdom, dim3 bloc
     }
 }
 
-void CPML1dev_PackColoredBuffer(CPMBuffer &buffer, double *src, Mapper &pdom, dim3 block_dim) {
+void CPML1Dev_PackColoredBuffer(CPMBuffer &buffer, double *src, Mapper &pdom, dim3 block_dim) {
     Mapper &map = buffer.map;
     dim3 grid_dim(
         (map.shape.x + block_dim.x - 1) / block_dim.x,
@@ -94,7 +94,7 @@ void CPML1dev_PackColoredBuffer(CPMBuffer &buffer, double *src, Mapper &pdom, di
     }
 }
 
-void CPML1dev_UnpackBuffer(CPMBuffer &buffer, double *dst, Mapper &pdom, dim3 block_dim) {
+void CPML1Dev_UnpackBuffer(CPMBuffer &buffer, double *dst, Mapper &pdom, dim3 block_dim) {
     Mapper &map = buffer.map;
     dim3 grid_dim(
         (map.shape.x + block_dim.x - 1) / block_dim.x,
@@ -111,7 +111,7 @@ void CPML1dev_UnpackBuffer(CPMBuffer &buffer, double *dst, Mapper &pdom, dim3 bl
     }
 }
 
-void CPML1dev_UnpackColoredBuffer(CPMBuffer &buffer, double *dst, Mapper &pdom, dim3 block_dim) {
+void CPML1Dev_UnpackColoredBuffer(CPMBuffer &buffer, double *dst, Mapper &pdom, dim3 block_dim) {
     Mapper &map = buffer.map;
     dim3 grid_dim(
         (map.shape.x + block_dim.x - 1) / block_dim.x,

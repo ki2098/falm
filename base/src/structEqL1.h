@@ -6,18 +6,18 @@
 
 namespace Falm {
 
-void devL0_Struct3d7p_MV(Matrix<double> &a, Matrix<double> &x, Matrix<double> &ax, Mapper &pdom, Mapper &map, dim3 block_dim);
+void L0Dev_Struct3d7p_MV(Matrix<double> &a, Matrix<double> &x, Matrix<double> &ax, Mapper &pdom, Mapper &map, dim3 block_dim);
 
-void devL0_Struct3d7p_Res(Matrix<double> &a, Matrix<double> &x, Matrix<double> &b, Matrix<double> &r, Mapper &pdom, Mapper &map, dim3 block_dim);
+void L0Dev_Struct3d7p_Res(Matrix<double> &a, Matrix<double> &x, Matrix<double> &b, Matrix<double> &r, Mapper &pdom, Mapper &map, dim3 block_dim);
 
-static inline void devL1_Struct3d7p_MV(Matrix<double> &a, Matrix<double> &x, Matrix<double> &ax, Mapper &pdom, dim3 block_dim) {
+static inline void L1Dev_Struct3d7p_MV(Matrix<double> &a, Matrix<double> &x, Matrix<double> &ax, Mapper &pdom, dim3 block_dim) {
     Mapper map(pdom, Gd);
-    devL0_Struct3d7p_MV(a, x, ax, pdom, map, block_dim);
+    L0Dev_Struct3d7p_MV(a, x, ax, pdom, map, block_dim);
 }
 
-static inline void devL1_Struct3d7p_Res(Matrix<double> &a, Matrix<double> &x, Matrix<double> &b, Matrix<double> &r, Mapper &pdom, dim3 block_dim) {
+static inline void L1Dev_Struct3d7p_Res(Matrix<double> &a, Matrix<double> &x, Matrix<double> &b, Matrix<double> &r, Mapper &pdom, dim3 block_dim) {
     Mapper map(pdom, Gd);
-    devL0_Struct3d7p_Res(a, x, b, r, pdom, map, block_dim);
+    L0Dev_Struct3d7p_Res(a, x, b, r, pdom, map, block_dim);
 }
 
 class L1EqSolver {
@@ -46,33 +46,33 @@ public:
         pc_type(_pc_type), pc_maxit(_pc_maxit), pc_relax_factor(_pc_relax_factor) 
     {}
 
-    void devL1_Struct3d7p_Jacobi(Matrix<double> &a, Matrix<double> &x, Matrix<double> &b, Matrix<double> &r, Mapper &global, Mapper &pdom, dim3 block_dim);
-    void devL1_Struct3d7p_SOR(Matrix<double> &a, Matrix<double> &x, Matrix<double> &b, Matrix<double> &r, Mapper &global, Mapper &pdom, dim3 block_dim);
-    void devL1_Struct3d7p_PBiCGStab(Matrix<double> &a, Matrix<double> &x, Matrix<double> &b, Matrix<double> &r, Mapper &global, Mapper &pdom, dim3 block_dim);
-    void devL1_Struct3d7p_Solve(Matrix<double> &a, Matrix<double> &x, Matrix<double> &b, Matrix<double> &r, Mapper &global, Mapper &pdom, dim3 block_dim) {
+    void L1Dev_Struct3d7p_Jacobi(Matrix<double> &a, Matrix<double> &x, Matrix<double> &b, Matrix<double> &r, Mapper &global, Mapper &pdom, dim3 block_dim);
+    void L1Dev_Struct3d7p_SOR(Matrix<double> &a, Matrix<double> &x, Matrix<double> &b, Matrix<double> &r, Mapper &global, Mapper &pdom, dim3 block_dim);
+    void L1Dev_Struct3d7p_PBiCGStab(Matrix<double> &a, Matrix<double> &x, Matrix<double> &b, Matrix<double> &r, Mapper &global, Mapper &pdom, dim3 block_dim);
+    void L1Dev_Struct3d7p_Solve(Matrix<double> &a, Matrix<double> &x, Matrix<double> &b, Matrix<double> &r, Mapper &global, Mapper &pdom, dim3 block_dim) {
         if (type == SolverType::Jacobi) {
-            devL1_Struct3d7p_Jacobi(a, x, b, r, global, pdom, block_dim);
+            L1Dev_Struct3d7p_Jacobi(a, x, b, r, global, pdom, block_dim);
         } else if (type == SolverType::SOR) {
-            devL1_Struct3d7p_SOR(a, x, b, r, global, pdom, block_dim);
+            L1Dev_Struct3d7p_SOR(a, x, b, r, global, pdom, block_dim);
         } else if (type == SolverType::PBiCGStab) {
-            devL1_Struct3d7p_PBiCGStab(a, x, b, r, global, pdom, block_dim);
+            L1Dev_Struct3d7p_PBiCGStab(a, x, b, r, global, pdom, block_dim);
         }
     }
 
 protected:
-    void devL0_PBiCGStab1(Matrix<double> &p, Matrix<double> &q, Matrix<double> &r, double beta, double omega, Mapper &pdom, Mapper &map, dim3 block_dim);
-    void devL0_PBiCGStab2(Matrix<double> &s, Matrix<double> &q, Matrix<double> &r, double alpha, Mapper &pdom, Mapper &map, dim3 block_dim);
-    void devL0_PBiCGStab3(Matrix<double> &x, Matrix<double> &pp, Matrix<double> &ss, double alpha, double omega, Mapper &pdom, Mapper &map, dim3 block_dim);
-    void devL0_PBiCGStab4(Matrix<double> &r, Matrix<double> &s, Matrix<double> &t, double omega, Mapper &pdom, Mapper &map, dim3 block_dim);
-    void devL0_Struct3d7p_JacobiSweep(Matrix<double> &a, Matrix<double> &x, Matrix<double> &xp, Matrix<double> &b, Mapper &pdom, Mapper &map, dim3 block_dim);
-    void devL0_Struct3d7p_SORSweep(Matrix<double> &a, Matrix<double> &x, Matrix<double> &b, double omega, unsigned int color, Mapper &pdom, Mapper &map, dim3 block_dim);
-    void devL1_Struct3d7p_JAcobiPC(Matrix<double> &a, Matrix<double> &x, Matrix<double> &b, Mapper &pdom, dim3 block_dim);
-    void devL1_Struct3d7p_SORPC(Matrix<double> &a, Matrix<double> &x, Matrix<double> &b, Mapper &pdom, dim3 block_dim);
-    void devL1_Struct3d7p_Precondition(Matrix<double> &a, Matrix<double> &x, Matrix<double> &b, Mapper &pdom, dim3 block_dim) {
+    void L0Dev_PBiCGStab1(Matrix<double> &p, Matrix<double> &q, Matrix<double> &r, double beta, double omega, Mapper &pdom, Mapper &map, dim3 block_dim);
+    void L0Dev_PBiCGStab2(Matrix<double> &s, Matrix<double> &q, Matrix<double> &r, double alpha, Mapper &pdom, Mapper &map, dim3 block_dim);
+    void L0Dev_PBiCGStab3(Matrix<double> &x, Matrix<double> &pp, Matrix<double> &ss, double alpha, double omega, Mapper &pdom, Mapper &map, dim3 block_dim);
+    void L0Dev_PBiCGStab4(Matrix<double> &r, Matrix<double> &s, Matrix<double> &t, double omega, Mapper &pdom, Mapper &map, dim3 block_dim);
+    void L0Dev_Struct3d7p_JacobiSweep(Matrix<double> &a, Matrix<double> &x, Matrix<double> &xp, Matrix<double> &b, Mapper &pdom, Mapper &map, dim3 block_dim);
+    void L0Dev_Struct3d7p_SORSweep(Matrix<double> &a, Matrix<double> &x, Matrix<double> &b, double omega, unsigned int color, Mapper &pdom, Mapper &map, dim3 block_dim);
+    void L1Dev_Struct3d7p_JacobiPC(Matrix<double> &a, Matrix<double> &x, Matrix<double> &b, Mapper &pdom, dim3 block_dim);
+    void L1Dev_Struct3d7p_SORPC(Matrix<double> &a, Matrix<double> &x, Matrix<double> &b, Mapper &pdom, dim3 block_dim);
+    void L1Dev_Struct3d7p_Precondition(Matrix<double> &a, Matrix<double> &x, Matrix<double> &b, Mapper &pdom, dim3 block_dim) {
         if (pc_type == SolverType::Jacobi) {
-            devL1_Struct3d7p_JAcobiPC(a, x, b, pdom, block_dim);
+            L1Dev_Struct3d7p_JacobiPC(a, x, b, pdom, block_dim);
         } else if (pc_type == SolverType::SOR) {
-            devL1_Struct3d7p_SORPC(a, x, b, pdom, block_dim);
+            L1Dev_Struct3d7p_SORPC(a, x, b, pdom, block_dim);
         }
     }
 

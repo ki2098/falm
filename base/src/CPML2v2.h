@@ -211,13 +211,13 @@ public:
         }
     }
 
-    void CPML2dev_IExchange6Face(T *data, Mapper &pdom, unsigned int thick, int grp_tag);
-    void CPML2dev_IExchange6ColoredFace(T *data, Mapper &pdom, unsigned int color, unsigned int thick, int grp_tag);
-    void CPML2dev_PostExchange6Face();
-    void CPML2dev_PostExchange6ColoredFace();
+    void CPML2Dev_IExchange6Face(T *data, Mapper &pdom, unsigned int thick, int grp_tag);
+    void CPML2Dev_IExchange6ColoredFace(T *data, Mapper &pdom, unsigned int color, unsigned int thick, int grp_tag);
+    void CPML2Dev_PostExchange6Face();
+    void CPML2Dev_PostExchange6ColoredFace();
 };
 
-template<typename T> void CPMOp<T>::CPML2dev_IExchange6Face(T *data, Mapper &pdom, unsigned int thick, int grp_tag) {
+template<typename T> void CPMOp<T>::CPML2Dev_IExchange6Face(T *data, Mapper &pdom, unsigned int thick, int grp_tag) {
     assert(oringin_ptr == nullptr);
     oringin_ptr = data;
     oringin_data_domain = pdom;
@@ -268,14 +268,14 @@ template<typename T> void CPMOp<T>::CPML2dev_IExchange6Face(T *data, Mapper &pdo
                 BufType::In,
                 buffer_hdctype
             );
-            CPML1dev_PackBuffer(buffer[i*2], data, pdom, block_dim);
+            CPML1Dev_PackBuffer(buffer[i*2], data, pdom, block_dim);
             CPML2_ISend(buffer[i*2  ], mpi_dtype, neighbour[i], neighbour[i] + grp_tag, MPI_COMM_WORLD, &mpi_req[i*2  ]);
             CPML2_IRecv(buffer[i*2+1], mpi_dtype, neighbour[i], base.rank    + grp_tag, MPI_COMM_WORLD, &mpi_req[i*2+1]);
         }
     }
 }
 
-template<typename T> void CPMOp<T>::CPML2dev_IExchange6ColoredFace(T *data, Mapper &pdom, unsigned int color, unsigned int thick, int grp_tag) {
+template<typename T> void CPMOp<T>::CPML2Dev_IExchange6ColoredFace(T *data, Mapper &pdom, unsigned int color, unsigned int thick, int grp_tag) {
     assert(oringin_ptr == nullptr);
     oringin_ptr = data;
     oringin_data_domain = pdom;
@@ -328,14 +328,14 @@ template<typename T> void CPMOp<T>::CPML2dev_IExchange6ColoredFace(T *data, Mapp
                 buffer_hdctype,
                 pdom, color
             );
-            CPML1dev_PackColoredBuffer(buffer[i*2], data, pdom, block_dim);
+            CPML1Dev_PackColoredBuffer(buffer[i*2], data, pdom, block_dim);
             CPML2_ISend(buffer[i*2  ], mpi_dtype, neighbour[i], neighbour[i] + grp_tag, MPI_COMM_WORLD, &mpi_req[i*2  ]);
             CPML2_IRecv(buffer[i*2+1], mpi_dtype, neighbour[i], base.rank    + grp_tag, MPI_COMM_WORLD, &mpi_req[i*2+1]);
         }
     }
 }
 
-template<typename T> void CPMOp<T>::CPML2dev_PostExchange6Face() {
+template<typename T> void CPMOp<T>::CPML2Dev_PostExchange6Face() {
     assert(oringin_ptr != nullptr);
     int *neighbour = base.neighbour;
     for (int i = 0; i < 6; i ++) {
@@ -346,14 +346,14 @@ template<typename T> void CPMOp<T>::CPML2dev_PostExchange6Face() {
                 (i / 2 == 2)? 1U : 8U
             );
             buffer[i*2].release();
-            CPML1dev_UnpackBuffer(buffer[i*2+1], oringin_ptr, oringin_data_domain, block_dim);
+            CPML1Dev_UnpackBuffer(buffer[i*2+1], oringin_ptr, oringin_data_domain, block_dim);
             buffer[i*2+1].release();
         }
     }
     oringin_ptr = nullptr;
 }
 
-template<typename T> void CPMOp<T>::CPML2dev_PostExchange6ColoredFace() {
+template<typename T> void CPMOp<T>::CPML2Dev_PostExchange6ColoredFace() {
     assert(oringin_ptr != nullptr);
     int *neighbour = base.neighbour;
     for (int i = 0; i < 6; i ++) {
@@ -364,7 +364,7 @@ template<typename T> void CPMOp<T>::CPML2dev_PostExchange6ColoredFace() {
                 (i / 2 == 2)? 1U : 8U
             );
             buffer[i*2].release();
-            CPML1dev_UnpackColoredBuffer(buffer[i*2+1], oringin_ptr, oringin_data_domain, block_dim);
+            CPML1Dev_UnpackColoredBuffer(buffer[i*2+1], oringin_ptr, oringin_data_domain, block_dim);
             buffer[i*2+1].release();
         }
     }

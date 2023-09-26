@@ -8,6 +8,15 @@
 
 namespace Falm {
 
+typedef double       Real;
+typedef int          INT;
+typedef int3         INTx3;
+typedef int2         INTx2;
+typedef unsigned int UINT;
+typedef uint3        UINTx3;
+typedef uint2        UINTx2;
+
+typedef UINT           FLAG;
 
 }
 

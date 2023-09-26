@@ -36,7 +36,7 @@ __global__ void kernel_Struct3d7p_MV(MatrixFrame<double> &a, MatrixFrame<double>
     }
 }
 
-void devL0_Struct3d7p_MV(Matrix<double> &a, Matrix<double> &x, Matrix<double> &ax, Mapper &pdom, Mapper &map, dim3 block_dim) {
+void L0Dev_Struct3d7p_MV(Matrix<double> &a, Matrix<double> &x, Matrix<double> &ax, Mapper &pdom, Mapper &map, dim3 block_dim) {
     assert(
         a.shape.x == x.shape.x && a.shape.x == ax.shape.x &&
         a.shape.y == 7 && x.shape.y == 1 && ax.shape.y == 1
@@ -82,7 +82,7 @@ __global__ void kernel_Struct3d7p_Res(MatrixFrame<double> &a, MatrixFrame<double
     }
 }
 
-void devL0_Struct3d7p_Res(Matrix<double> &a, Matrix<double> &x, Matrix<double> &b, Matrix<double> &r, Mapper &pdom, Mapper &map, dim3 block_dim) {
+void L0Dev_Struct3d7p_Res(Matrix<double> &a, Matrix<double> &x, Matrix<double> &b, Matrix<double> &r, Mapper &pdom, Mapper &map, dim3 block_dim) {
     assert(
         a.shape.x == x.shape.x && a.shape.x == b.shape.x && a.shape.x == r.shape.x &&
         a.shape.y == 7 && x.shape.y == 1 && b.shape.y == 1 && r.shape.y == 1
@@ -128,7 +128,7 @@ __global__ void kernel_Struct3d7p_Jacobi(MatrixFrame<double> &a, MatrixFrame<dou
     }
 }
 
-void L1EqSolver::devL0_Struct3d7p_JacobiSweep(Matrix<double> &a, Matrix<double> &x, Matrix<double> &xp, Matrix<double> &b, Mapper &pdom, Mapper &map, dim3 block_dim) {
+void L1EqSolver::L0Dev_Struct3d7p_JacobiSweep(Matrix<double> &a, Matrix<double> &x, Matrix<double> &xp, Matrix<double> &b, Mapper &pdom, Mapper &map, dim3 block_dim) {
     dim3 grid_dim(
         (map.shape.x + block_dim.x - 1) / block_dim.x,
         (map.shape.y + block_dim.y - 1) / block_dim.y,
@@ -138,7 +138,7 @@ void L1EqSolver::devL0_Struct3d7p_JacobiSweep(Matrix<double> &a, Matrix<double> 
     kernel_Struct3d7p_Jacobi<<<grid_dim, block_dim, 0, 0>>>(*(a.devptr), *(x.devptr), *(xp.devptr), *(b.devptr), pdom.shape, map.shape, map.offset);
 }
 
-void L1EqSolver::devL1_Struct3d7p_Jacobi(Matrix<double> &a, Matrix<double> &x, Matrix<double> &b, Matrix<double> &r, Mapper &global, Mapper &pdom, dim3 block_dim) {
+void L1EqSolver::L1Dev_Struct3d7p_Jacobi(Matrix<double> &a, Matrix<double> &x, Matrix<double> &b, Matrix<double> &r, Mapper &global, Mapper &pdom, dim3 block_dim) {
     Mapper map(pdom, Gd);
     assert(
         a.shape.x == x.shape.x && a.shape.x == b.shape.x && a.shape.x == r.shape.x &&
@@ -149,20 +149,20 @@ void L1EqSolver::devL1_Struct3d7p_Jacobi(Matrix<double> &a, Matrix<double> &x, M
     it = 0;
     do {
         xp.cpy(x, HDCType::Device);
-        devL0_Struct3d7p_JacobiSweep(a, x, xp, b, pdom, map, block_dim);
-        devL0_Struct3d7p_Res(a, x, b, r, pdom, map, block_dim);
-        err = sqrt(devL0_Norm2Sq(r, pdom, map, block_dim)) / map.size;
+        L0Dev_Struct3d7p_JacobiSweep(a, x, xp, b, pdom, map, block_dim);
+        L0Dev_Struct3d7p_Res(a, x, b, r, pdom, map, block_dim);
+        err = sqrt(L0Dev_Norm2Sq(r, pdom, map, block_dim)) / map.size;
         it ++;
     } while (it < maxit && err > tol);
 }
 
-void L1EqSolver::devL1_Struct3d7p_JAcobiPC(Matrix<double> &a, Matrix<double> &x, Matrix<double> &b, Mapper &pdom, dim3 block_dim) {
+void L1EqSolver::L1Dev_Struct3d7p_JacobiPC(Matrix<double> &a, Matrix<double> &x, Matrix<double> &b, Mapper &pdom, dim3 block_dim) {
     Mapper map(pdom, Gd);
     Matrix<double> xp(x.shape.x, x.shape.y, HDCType::Device, x.label);
     int __it = 0;
     do {
         xp.cpy(x, HDCType::Device);
-        devL0_Struct3d7p_JacobiSweep(a, x, xp, b, pdom, map, block_dim);
+        L0Dev_Struct3d7p_JacobiSweep(a, x, xp, b, pdom, map, block_dim);
         __it ++;
     } while (__it < pc_maxit);
 }
@@ -204,7 +204,7 @@ __global__ void kernel_Struct3d7p_SOR(MatrixFrame<double> &a, MatrixFrame<double
     }
 }
 
-void L1EqSolver::devL0_Struct3d7p_SORSweep(Matrix<double> &a, Matrix<double> &x, Matrix<double> &b, double omega, unsigned int color, Mapper &pdom, Mapper &map, dim3 block_dim) {
+void L1EqSolver::L0Dev_Struct3d7p_SORSweep(Matrix<double> &a, Matrix<double> &x, Matrix<double> &b, double omega, unsigned int color, Mapper &pdom, Mapper &map, dim3 block_dim) {
     dim3 grid_dim(
         (map.shape.x + block_dim.x - 1) / block_dim.x,
         (map.shape.y + block_dim.y - 1) / block_dim.y,
@@ -214,7 +214,7 @@ void L1EqSolver::devL0_Struct3d7p_SORSweep(Matrix<double> &a, Matrix<double> &x,
     kernel_Struct3d7p_SOR<<<grid_dim, block_dim, 0, 0>>>(*(a.devptr), *(x.devptr), *(b.devptr), omega, color, pdom.shape, pdom.offset, map.shape, map.offset);
 }
 
-void L1EqSolver::devL1_Struct3d7p_SOR(Matrix<double> &a, Matrix<double> &x, Matrix<double> &b, Matrix<double> &r, Mapper &global, Mapper &pdom, dim3 block_dim) {
+void L1EqSolver::L1Dev_Struct3d7p_SOR(Matrix<double> &a, Matrix<double> &x, Matrix<double> &b, Matrix<double> &r, Mapper &global, Mapper &pdom, dim3 block_dim) {
     Mapper map(pdom, Gd);
     assert(
         a.shape.x == x.shape.x && a.shape.x == b.shape.x && a.shape.x == r.shape.x &&
@@ -223,20 +223,20 @@ void L1EqSolver::devL1_Struct3d7p_SOR(Matrix<double> &a, Matrix<double> &x, Matr
 
     it = 0;
     do {
-        devL0_Struct3d7p_SORSweep(a, x, b, relax_factor, Color::Black, pdom, map, block_dim);
-        devL0_Struct3d7p_SORSweep(a, x, b, relax_factor, Color::Red  , pdom, map, block_dim);
-        devL0_Struct3d7p_Res(a, x, b, r, pdom, map, block_dim);
-        err = sqrt(devL0_Norm2Sq(r, pdom, map, block_dim)) / map.size;
+        L0Dev_Struct3d7p_SORSweep(a, x, b, relax_factor, Color::Black, pdom, map, block_dim);
+        L0Dev_Struct3d7p_SORSweep(a, x, b, relax_factor, Color::Red  , pdom, map, block_dim);
+        L0Dev_Struct3d7p_Res(a, x, b, r, pdom, map, block_dim);
+        err = sqrt(L0Dev_Norm2Sq(r, pdom, map, block_dim)) / map.size;
         it ++;
     } while (it < maxit && err > tol);
 }
 
-void L1EqSolver::devL1_Struct3d7p_SORPC(Matrix<double> &a, Matrix<double> &x, Matrix<double> &b, Mapper &pdom, dim3 block_dim) {
+void L1EqSolver::L1Dev_Struct3d7p_SORPC(Matrix<double> &a, Matrix<double> &x, Matrix<double> &b, Mapper &pdom, dim3 block_dim) {
     Mapper map(pdom, Gd);
     int __it = 0;
     do {
-        devL0_Struct3d7p_SORSweep(a, x, b, pc_relax_factor, Color::Black, pdom, map, block_dim);
-        devL0_Struct3d7p_SORSweep(a, x, b, pc_relax_factor, Color::Red  , pdom, map, block_dim);
+        L0Dev_Struct3d7p_SORSweep(a, x, b, pc_relax_factor, Color::Black, pdom, map, block_dim);
+        L0Dev_Struct3d7p_SORSweep(a, x, b, pc_relax_factor, Color::Red  , pdom, map, block_dim);
          __it ++;
     } while (__it < pc_maxit);
 }
@@ -253,7 +253,7 @@ __global__ void kernel_PBiCGStab_1(MatrixFrame<double> &p, MatrixFrame<double> &
     }
 }
 
-void L1EqSolver::devL0_PBiCGStab1(Matrix<double> &p, Matrix<double> &q, Matrix<double> &r, double beta, double omega, Mapper &pdom, Mapper &map, dim3 block_dim) {
+void L1EqSolver::L0Dev_PBiCGStab1(Matrix<double> &p, Matrix<double> &q, Matrix<double> &r, double beta, double omega, Mapper &pdom, Mapper &map, dim3 block_dim) {
     dim3 grid_dim(
         (map.shape.x + block_dim.x - 1) / block_dim.x,
         (map.shape.y + block_dim.y - 1) / block_dim.y,
@@ -274,7 +274,7 @@ __global__ void kernel_PBiCGStab_2(MatrixFrame<double> &s, MatrixFrame<double> &
     }
 }
 
-void L1EqSolver::devL0_PBiCGStab2(Matrix<double> &s, Matrix<double> &q, Matrix<double> &r, double alpha, Mapper &pdom, Mapper &map, dim3 block_dim) {
+void L1EqSolver::L0Dev_PBiCGStab2(Matrix<double> &s, Matrix<double> &q, Matrix<double> &r, double alpha, Mapper &pdom, Mapper &map, dim3 block_dim) {
     dim3 grid_dim(
         (map.shape.x + block_dim.x - 1) / block_dim.x,
         (map.shape.y + block_dim.y - 1) / block_dim.y,
@@ -295,7 +295,7 @@ __global__ void kernel_PBiCGStab_3(MatrixFrame<double> &x, MatrixFrame<double> &
     }
 }
 
-void L1EqSolver::devL0_PBiCGStab3(Matrix<double> &x, Matrix<double> &pp, Matrix<double> &ss, double alpha, double omega, Mapper &pdom, Mapper &map, dim3 block_dim) {
+void L1EqSolver::L0Dev_PBiCGStab3(Matrix<double> &x, Matrix<double> &pp, Matrix<double> &ss, double alpha, double omega, Mapper &pdom, Mapper &map, dim3 block_dim) {
     dim3 grid_dim(
         (map.shape.x + block_dim.x - 1) / block_dim.x,
         (map.shape.y + block_dim.y - 1) / block_dim.y,
@@ -316,7 +316,7 @@ __global__ void kernel_PBiCGStab_4(MatrixFrame<double> &r, MatrixFrame<double> &
     }
 }
 
-void L1EqSolver::devL0_PBiCGStab4(Matrix<double> &r, Matrix<double> &s, Matrix<double> &t, double omega, Mapper &pdom, Mapper &map, dim3 block_dim) {
+void L1EqSolver::L0Dev_PBiCGStab4(Matrix<double> &r, Matrix<double> &s, Matrix<double> &t, double omega, Mapper &pdom, Mapper &map, dim3 block_dim) {
     dim3 grid_dim(
         (map.shape.x + block_dim.x - 1) / block_dim.x,
         (map.shape.y + block_dim.y - 1) / block_dim.y,
@@ -325,7 +325,7 @@ void L1EqSolver::devL0_PBiCGStab4(Matrix<double> &r, Matrix<double> &s, Matrix<d
     kernel_PBiCGStab_4<<<grid_dim, block_dim, 0, 0>>>(*(r.devptr), *(s.devptr), *(t.devptr), omega, pdom.shape, map.shape, map.offset);
 }
 
-void L1EqSolver::devL1_Struct3d7p_PBiCGStab(Matrix<double> &a, Matrix<double> &x, Matrix<double> &b, Matrix<double> &r, Mapper &global, Mapper &pdom, dim3 block_dim) {
+void L1EqSolver::L1Dev_Struct3d7p_PBiCGStab(Matrix<double> &a, Matrix<double> &x, Matrix<double> &b, Matrix<double> &r, Mapper &global, Mapper &pdom, dim3 block_dim) {
     Mapper map(pdom, Gd);
     assert(
         a.shape.x == x.shape.x && a.shape.x == b.shape.x && a.shape.x == r.shape.x &&
@@ -347,8 +347,8 @@ void L1EqSolver::devL1_Struct3d7p_PBiCGStab(Matrix<double> &a, Matrix<double> &x
 
     double rho, rrho, alpha, beta, omega;
 
-    devL0_Struct3d7p_Res(a, x, b, r, pdom, map, block_dim);
-    err = sqrt(devL0_Norm2Sq(r, pdom, map, block_dim)) / map.size;
+    L0Dev_Struct3d7p_Res(a, x, b, r, pdom, map, block_dim);
+    err = sqrt(L0Dev_Norm2Sq(r, pdom, map, block_dim)) / map.size;
     rr.cpy(r, HDCType::Device);
 
     rrho  = 1.0;
@@ -361,7 +361,7 @@ void L1EqSolver::devL1_Struct3d7p_PBiCGStab(Matrix<double> &a, Matrix<double> &x
             break;
         }
 
-        rho = devL0_DotProduct(r, rr, pdom, map, block_dim);
+        rho = L0Dev_DotProduct(r, rr, pdom, map, block_dim);
         if (fabs(rho) < __FLT_MIN__) {
             err = rho;
             break;
@@ -372,28 +372,28 @@ void L1EqSolver::devL1_Struct3d7p_PBiCGStab(Matrix<double> &a, Matrix<double> &x
         } else {
             beta = (rho * alpha) / (rrho * omega);
             // kernel_PBiCGStab_1<<<grid_dim, block_dim>>>(*(p.devptr), *(q.devptr), *(r.devptr), beta, omega, pdom.shape, map.shape, map.offset);
-            devL0_PBiCGStab1(p, q, r, beta, omega, pdom, map, block_dim);
+            L0Dev_PBiCGStab1(p, q, r, beta, omega, pdom, map, block_dim);
         }
         pp.clear(HDCType::Device);
-        devL1_Struct3d7p_Precondition(a, pp, p, pdom, block_dim);
-        devL0_Struct3d7p_MV(a, pp, q, pdom, map, block_dim);
-        alpha = rho / devL0_DotProduct(rr, q, pdom, map, block_dim);
+        L1Dev_Struct3d7p_Precondition(a, pp, p, pdom, block_dim);
+        L0Dev_Struct3d7p_MV(a, pp, q, pdom, map, block_dim);
+        alpha = rho / L0Dev_DotProduct(rr, q, pdom, map, block_dim);
 
         // kernel_PBiCGStab_2<<<grid_dim, block_dim>>>(*(s.devptr), *(q.devptr), *(r.devptr), alpha, pdom.shape, map.shape, map.offset);
-        devL0_PBiCGStab2(s, q, r, alpha, pdom, map, block_dim);
+        L0Dev_PBiCGStab2(s, q, r, alpha, pdom, map, block_dim);
         ss.clear(HDCType::Device);
-        devL1_Struct3d7p_Precondition(a, ss, s, pdom, block_dim);
-        devL0_Struct3d7p_MV(a, ss, t, pdom, map, block_dim);
-        omega = devL0_DotProduct(t, s, pdom, map, block_dim) / devL0_DotProduct(t, t, pdom, map, block_dim);
+        L1Dev_Struct3d7p_Precondition(a, ss, s, pdom, block_dim);
+        L0Dev_Struct3d7p_MV(a, ss, t, pdom, map, block_dim);
+        omega = L0Dev_DotProduct(t, s, pdom, map, block_dim) / L0Dev_DotProduct(t, t, pdom, map, block_dim);
 
         // kernel_PBiCGStab_3<<<grid_dim, block_dim, 0, 0>>>(*(x.devptr), *(pp.devptr), *(ss.devptr), alpha, omega, pdom.shape, map.shape, map.offset);
         // kernel_PBiCGStab_4<<<grid_dim, block_dim, 0, 0>>>(*(r.devptr), *(s.devptr), *(t.devptr), omega, pdom.shape, map.shape, map.offset);
-        devL0_PBiCGStab3(x, pp, ss, alpha, omega, pdom, map, block_dim);
-        devL0_PBiCGStab4(r, s, t, omega, pdom, map, block_dim);
+        L0Dev_PBiCGStab3(x, pp, ss, alpha, omega, pdom, map, block_dim);
+        L0Dev_PBiCGStab4(r, s, t, omega, pdom, map, block_dim);
 
         rrho = rho;
 
-        err = sqrt(devL0_Norm2Sq(r, pdom, map, block_dim)) / map.size;
+        err = sqrt(L0Dev_Norm2Sq(r, pdom, map, block_dim)) / map.size;
         it ++;
     } while (it < maxit && err > tol);
 }

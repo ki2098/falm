@@ -194,10 +194,10 @@ int main(int argc, char **argv) {
     a.sync(MCpType::Hst2Dev);
     b.sync(MCpType::Hst2Dev);
     dim3 block_dim(32, 1, 1);
-    double max_diag = devL2_MaxDiag(a, process, block_dim, cpm);
+    double max_diag = L2Dev_MaxDiag(a, process, block_dim, cpm);
     printf("%12lf\n", max_diag);
-    devL1_ScaleMatrix(a, max_diag, block_dim);
-    devL1_ScaleMatrix(b, max_diag, block_dim);
+    L1Dev_ScaleMatrix(a, max_diag, block_dim);
+    L1Dev_ScaleMatrix(b, max_diag, block_dim);
     a.sync(MCpType::Dev2Hst);
     b.sync(MCpType::Dev2Hst);
     for (int i = 0; i < cpm.size; i ++) {
@@ -210,7 +210,7 @@ int main(int argc, char **argv) {
         CPML2_Barrier(MPI_COMM_WORLD);
     }
     L2EqSolver solver(LSType::PBiCGStab, 10000, 1e-9, 1.2, LSType::SOR, 5, 1.5);
-    solver.devL2_Struct3d7p_Solve(a, t, b, r, global, process, block_dim, cpm);
+    solver.L2Dev_Struct3d7p_Solve(a, t, b, r, global, process, block_dim, cpm);
     t.sync(MCpType::Dev2Hst);
     r.sync(MCpType::Dev2Hst);
     for (int i = 0; i < cpm.size; i ++) {

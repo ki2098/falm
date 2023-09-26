@@ -11,25 +11,25 @@ namespace Falm {
 template<typename T>
 struct MatrixFrame {
     T               *ptr;
-    uint2          shape;
-    unsigned int    size;
-    unsigned int hdctype;
-    int            label;
-    __host__ __device__ T &operator()(unsigned int _idx) {return ptr[_idx];}
-    __host__ __device__ T &operator()(unsigned int _row, unsigned int _col) {return ptr[_row + _col * shape.x];}
+    INTx2          shape;
+    INT             size;
+    FLAG         hdctype;
+    INT            label;
+    __host__ __device__ T &operator()(INT _idx) {return ptr[_idx];}
+    __host__ __device__ T &operator()(INT _row, INT _col) {return ptr[_row + _col * shape.x];}
 
-    MatrixFrame() : ptr(nullptr), shape(uint2{0, 0}), size(0), hdctype(HDCType::Empty), label(0) {}
-    MatrixFrame(uint3 _dom, unsigned int _dim, unsigned int _hdctype, int _label);
-    MatrixFrame(unsigned int _row, unsigned int _col, unsigned int _hdctype, int _label);
+    MatrixFrame() : ptr(nullptr), shape(INTx2{0, 0}), size(0), hdctype(HDCType::Empty), label(0) {}
+    MatrixFrame(INTx3 _dom, INT _dim, FLAG _hdctype, INT _label);
+    MatrixFrame(INT _row, INT _col, FLAG _hdctype, INT _label);
     ~MatrixFrame();
 
-    void alloc(uint3 _dom, unsigned int _dim, unsigned int _hdctype, int _label);
-    void alloc(unsigned int _row, unsigned int _col, unsigned int _hdctype, int _label);
+    void alloc(INTx3 _dom, INT _dim, FLAG _hdctype, INT _label);
+    void alloc(INT _row, INT _col, FLAG _hdctype, INT _label);
     void release();
 };
 
-template<typename T> MatrixFrame<T>::MatrixFrame(uint3 _dom, unsigned int _dim, unsigned int _hdctype, int _label) :
-    shape(uint2{PRODUCT3(_dom), _dim}),
+template<typename T> MatrixFrame<T>::MatrixFrame(INTx3 _dom, INT _dim, FLAG _hdctype, INT _label) :
+    shape(INTx2{PRODUCT3(_dom), _dim}),
     size(PRODUCT3(_dom) * _dim),
     hdctype(_hdctype),
     label(_label)
@@ -43,8 +43,8 @@ template<typename T> MatrixFrame<T>::MatrixFrame(uint3 _dom, unsigned int _dim, 
     }
 }
 
-template<typename T> MatrixFrame<T>::MatrixFrame(unsigned int _row, unsigned int _col, unsigned int _hdctype, int _label) :
-    shape(uint2{_row, _col}),
+template<typename T> MatrixFrame<T>::MatrixFrame(INT _row, INT _col, FLAG _hdctype, INT _label) :
+    shape(INTx2{_row, _col}),
     size(_row * _col),
     hdctype(_hdctype),
     label(_label)
@@ -68,9 +68,9 @@ template<typename T> MatrixFrame<T>::~MatrixFrame() {
     hdctype = HDCType::Empty;
 }
 
-template<typename T> void MatrixFrame<T>::alloc(uint3 _dom, unsigned int _dim, unsigned int _hdctype, int _label) {
+template<typename T> void MatrixFrame<T>::alloc(INTx3 _dom, INT _dim, FLAG _hdctype, INT _label) {
     assert(hdctype == HDCType::Empty);
-    shape   = uint2{PRODUCT3(_dom), _dim};
+    shape   = INTx2{PRODUCT3(_dom), _dim};
     size    = PRODUCT3(_dom) * _dim;
     hdctype = _hdctype;
     label   = _label;
@@ -83,9 +83,9 @@ template<typename T> void MatrixFrame<T>::alloc(uint3 _dom, unsigned int _dim, u
     }
 }
 
-template<typename T> void MatrixFrame<T>::alloc(unsigned int _row, unsigned int _col, unsigned int _hdctype, int _label) {
+template<typename T> void MatrixFrame<T>::alloc(INT _row, INT _col, FLAG _hdctype, INT _label) {
     assert(hdctype == HDCType::Empty);
-    shape   = uint2{_row, _col};
+    shape   = INTx2{_row, _col};
     size    = _row * _col;
     hdctype = _hdctype;
     label   = _label;
@@ -114,17 +114,17 @@ struct Matrix {
     MatrixFrame<T>    host;
     MatrixFrame<T>     dev;
     MatrixFrame<T> *devptr;
-    uint2            shape;
-    unsigned int      size;
-    unsigned int   hdctype;
-    int              label;
+    INTx2            shape;
+    INT               size;
+    FLAG           hdctype;
+    INT              label;
 
-    __host__ __device__ T &operator()(unsigned int _idx) {return host(_idx);}
-    __host__ __device__ T &operator()(unsigned int _row, unsigned int _col) {return host(_row, _col);}
+    __host__ __device__ T &operator()(INT _idx) {return host(_idx);}
+    __host__ __device__ T &operator()(INT _row, INT _col) {return host(_row, _col);}
 
-    Matrix() : shape(uint2{0, 0}), size(0), hdctype(HDCType::Empty), label(0), devptr(nullptr) {}
-    Matrix(uint3 _dom, unsigned int _dim, unsigned int _hdctype, int _label);
-    Matrix(unsigned _row, unsigned int _col, unsigned int _hdctype, int _label);
+    Matrix() : shape(INTx2{0, 0}), size(0), hdctype(HDCType::Device), label(0), devptr(nullptr) {}
+    Matrix(INTx3 _dom, INT _dim, FLAG _hdctype, INT _label);
+    Matrix(INT _row, INT _col, FLAG _hdctype, INT _label);
     ~Matrix();
 
     void alloc(uint3 _dom, unsigned int _dim, unsigned int _hdctype, int _label);
@@ -136,10 +136,10 @@ struct Matrix {
     void clear(unsigned int _hdctype);
 };
 
-template<typename T> Matrix<T>::Matrix(uint3 _dom, unsigned int _dim, unsigned int _hdctype, int _label) :
+template<typename T> Matrix<T>::Matrix(INTx3 _dom, INT _dim, FLAG _hdctype, INT _label) :
     host(_dom, _dim, _hdctype & HDCType::Host, _label),
     dev(_dom, _dim, _hdctype & HDCType::Device, _label),
-    shape(uint2{PRODUCT3(_dom), _dim}),
+    shape(INTx2{PRODUCT3(_dom), _dim}),
     size(PRODUCT3(_dom) * _dim),
     hdctype(_hdctype),
     label(_label)
@@ -150,10 +150,10 @@ template<typename T> Matrix<T>::Matrix(uint3 _dom, unsigned int _dim, unsigned i
     }
 }
 
-template<typename T> Matrix<T>::Matrix(unsigned _row, unsigned int _col, unsigned int _hdctype, int _label) :
+template<typename T> Matrix<T>::Matrix(INT _row, INT _col, FLAG _hdctype, INT _label) :
     host(_row, _col, _hdctype & HDCType::Host, _label),
     dev(_row, _col, _hdctype & HDCType::Device, _label),
-    shape(uint2{_row, _col}),
+    shape(INTx2{_row, _col}),
     size(_row * _col),
     hdctype(_hdctype),
     label(_label)
