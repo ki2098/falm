@@ -58,7 +58,7 @@ void set_matrix_value(Matrix<double> &x, INTx3 range_shape, INTx3 range_offset, 
     }
 }
 
-INT_T main(INT_T argc, CHAR_T **argv) {
+int main(int argc, char **argv) {
     CPML2_Init(&argc, &argv);
 
     Mapper global(

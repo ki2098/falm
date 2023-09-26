@@ -33,60 +33,60 @@ template<typename T> MPI_Datatype getMPIDtype() {
     return MPI_DATATYPE_NULL;
 }
 
-static inline INT_T CPML2_ISend(CPMBuffer &buffer, MPI_Datatype mpi_dtype, INT_T dst, INT_T tag, MPI_Comm mpi_comm, MPI_Request *mpi_req) {
+static inline int CPML2_ISend(CPMBuffer &buffer, MPI_Datatype mpi_dtype, int dst, int tag, MPI_Comm mpi_comm, MPI_Request *mpi_req) {
     return MPI_Isend(buffer.ptr, buffer.count, mpi_dtype, dst, tag, mpi_comm, mpi_req);
 }
 
-static inline INT_T CPML2_IRecv(CPMBuffer &buffer, MPI_Datatype mpi_dtype, INT_T src, INT_T tag, MPI_Comm mpi_comm, MPI_Request *mpi_req) {
+static inline int CPML2_IRecv(CPMBuffer &buffer, MPI_Datatype mpi_dtype, int src, int tag, MPI_Comm mpi_comm, MPI_Request *mpi_req) {
     return MPI_Irecv(buffer.ptr, buffer.count, mpi_dtype, src, tag, mpi_comm, mpi_req);
 }
 
-static inline INT_T CPML2_Wait(MPI_Request *mpi_req, MPI_Status *mpi_status) {
+static inline int CPML2_Wait(MPI_Request *mpi_req, MPI_Status *mpi_status) {
     return MPI_Wait(mpi_req, mpi_status);
 }
 
-static inline INT_T CPML2_Waitall(INT_T count, MPI_Request *mpi_req, MPI_Status *mpi_status) {
+static inline int CPML2_Waitall(int count, MPI_Request *mpi_req, MPI_Status *mpi_status) {
     return MPI_Waitall(count, mpi_req, mpi_status);
 }
 
-static inline INT_T CPML2_Init(INT_T *argc, CHAR_T ***argv) {
+static inline int CPML2_Init(int *argc, char ***argv) {
     return MPI_Init(argc, argv);
 }
 
-static inline INT_T CPML2_Finalize() {
+static inline int CPML2_Finalize() {
     return MPI_Finalize();
 }
 
-static inline INT_T CPML2_GetRank(MPI_Comm mpi_comm, INT_T &mpi_rank) {
+static inline int CPML2_GetRank(MPI_Comm mpi_comm, int &mpi_rank) {
     return MPI_Comm_rank(mpi_comm, &mpi_rank);
 }
 
-static inline INT_T CPML2_GetSize(MPI_Comm mpi_comm, INT_T &mpi_size) {
+static inline int CPML2_GetSize(MPI_Comm mpi_comm, int &mpi_size) {
     return MPI_Comm_size(mpi_comm, &mpi_size);
 }
 
-static inline INT_T CPML2_Barrier(MPI_Comm mpi_comm) {
+static inline int CPML2_Barrier(MPI_Comm mpi_comm) {
     return MPI_Barrier(mpi_comm);
 }
 
-static inline INT_T CPML2_AllReduce(void *buffer, INT_T count, MPI_Datatype mpi_dtype, MPI_Op mpi_op, MPI_Comm mpi_comm) {
+static inline int CPML2_AllReduce(void *buffer, int count, MPI_Datatype mpi_dtype, MPI_Op mpi_op, MPI_Comm mpi_comm) {
     return MPI_Allreduce(MPI_IN_PLACE, buffer, count, mpi_dtype, mpi_op, mpi_comm);
 }
 
 class CPMBase {
 public:
-    INT_T         neighbour[6];
-    INTx3             shape;
-    INTx3               idx;
-    INT_T              rank;
-    INT_T              size;
+    int neighbour[6];
+    INTx3   shape;
+    INTx3     idx;
+    int      rank;
+    int      size;
     bool use_cuda_aware_mpi;
     CPMBase(bool _use_cuda_aware_mpi = false) : use_cuda_aware_mpi(_use_cuda_aware_mpi) {}
     CPMBase(const CPMBase &_cpmbase, bool _use_cuda_aware_mpi = false) : shape(_cpmbase.shape), idx(_cpmbase.idx), rank(_cpmbase.rank), size(_cpmbase.size), use_cuda_aware_mpi(_use_cuda_aware_mpi) {
-        memcpy(neighbour, _cpmbase.neighbour, sizeof(INT_T) * 6);
+        memcpy(neighbour, _cpmbase.neighbour, sizeof(int) * 6);
     }
     void initNeighbour() {
-        INT_T __rank = rank;
+        int __rank = rank;
         INT i, j, k;
         k = __rank / (shape.x * shape.y);
         __rank = __rank % (shape.x * shape.y);
@@ -211,17 +211,17 @@ public:
         }
     }
 
-    void CPML2Dev_IExchange6Face(T *data, Mapper &pdom, INT thick, INT_T grp_tag);
-    void CPML2Dev_IExchange6ColoredFace(T *data, Mapper &pdom, INT color, INT thick, INT_T grp_tag);
+    void CPML2Dev_IExchange6Face(T *data, Mapper &pdom, INT thick, int grp_tag);
+    void CPML2Dev_IExchange6ColoredFace(T *data, Mapper &pdom, INT color, INT thick, int grp_tag);
     void CPML2Dev_PostExchange6Face();
     void CPML2Dev_PostExchange6ColoredFace();
 };
 
-template<typename T> void CPMOp<T>::CPML2Dev_IExchange6Face(T *data, Mapper &pdom, INT thick, INT_T grp_tag) {
+template<typename T> void CPMOp<T>::CPML2Dev_IExchange6Face(T *data, Mapper &pdom, INT thick, int grp_tag) {
     assert(oringin_ptr == nullptr);
     oringin_ptr = data;
     oringin_data_domain = pdom;
-    INT_T *neighbour = base.neighbour;
+    int *neighbour = base.neighbour;
     for (INT i = 0; i < 6; i ++) {
         if (neighbour[i] >= 0) {
             dim3 block_dim(
@@ -275,11 +275,11 @@ template<typename T> void CPMOp<T>::CPML2Dev_IExchange6Face(T *data, Mapper &pdo
     }
 }
 
-template<typename T> void CPMOp<T>::CPML2Dev_IExchange6ColoredFace(T *data, Mapper &pdom, INT color, INT thick, INT_T grp_tag) {
+template<typename T> void CPMOp<T>::CPML2Dev_IExchange6ColoredFace(T *data, Mapper &pdom, INT color, INT thick, int grp_tag) {
     assert(oringin_ptr == nullptr);
     oringin_ptr = data;
     oringin_data_domain = pdom;
-    INT_T *neighbour = base.neighbour;
+    int *neighbour = base.neighbour;
     for (INT i = 0; i < 6; i ++) {
         if (neighbour[i] >= 0) {
             dim3 block_dim(
@@ -337,7 +337,7 @@ template<typename T> void CPMOp<T>::CPML2Dev_IExchange6ColoredFace(T *data, Mapp
 
 template<typename T> void CPMOp<T>::CPML2Dev_PostExchange6Face() {
     assert(oringin_ptr != nullptr);
-    INT_T *neighbour = base.neighbour;
+    int *neighbour = base.neighbour;
     for (INT i = 0; i < 6; i ++) {
         if (neighbour[i] >= 0) {
             dim3 block_dim(
@@ -355,7 +355,7 @@ template<typename T> void CPMOp<T>::CPML2Dev_PostExchange6Face() {
 
 template<typename T> void CPMOp<T>::CPML2Dev_PostExchange6ColoredFace() {
     assert(oringin_ptr != nullptr);
-    INT_T *neighbour = base.neighbour;
+    int *neighbour = base.neighbour;
     for (INT i = 0; i < 6; i ++) {
         if (neighbour[i] >= 0) {
             dim3 block_dim(

@@ -52,7 +52,7 @@ INT dim_division(INT dim_size, INT mpi_size, INT mpi_rank) {
     return p_dim_size;
 }
 
-INT_T main(INT_T argc, CHAR_T **argv) {
+int main(int argc, char **argv) {
     CPML2_Init(&argc, &argv);
 
     Mapper global(
@@ -77,7 +77,7 @@ INT_T main(INT_T argc, CHAR_T **argv) {
     fflush(stdout);
     CPML2_Barrier(MPI_COMM_WORLD);
 
-    INT_T gpu_count;
+    int gpu_count;
     cudaGetDeviceCount(&gpu_count);
     cudaSetDevice(cpm.rank % gpu_count);
     printf("process %d running no device %d\n", cpm.rank, cpm.rank % gpu_count);

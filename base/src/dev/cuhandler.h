@@ -8,21 +8,21 @@
 
 namespace Falm {
 
-static inline void *falmHostMalloc(SIZE_T size) {
+static inline void *falmHostMalloc(size_t size) {
     return malloc(size);
 }
 
-static inline void *falmDevMalloc(SIZE_T size) {
+static inline void *falmDevMalloc(size_t size) {
     void *ptr;
     cudaMalloc(&ptr, size);
     return ptr;
 }
 
-static inline void falmHostMemset(void *ptr, INT_T value, SIZE_T size) {
+static inline void falmHostMemset(void *ptr, int value, size_t size) {
     memset(ptr, value, size);
 }
 
-static inline void falmDevMemset(void *ptr, INT_T value, SIZE_T size) {
+static inline void falmDevMemset(void *ptr, int value, size_t size) {
     cudaMemset(ptr, value, size);
 }
 
@@ -34,7 +34,7 @@ static inline void falmDevFreePtr(void *ptr) {
     cudaFree(ptr);
 }
 
-static void falmMemcpy(void *dst, void *src, SIZE_T size, FLAG mcptype) {
+static void falmMemcpy(void *dst, void *src, size_t size, FLAG mcptype) {
     if (mcptype == MCpType::Hst2Hst) {
         memcpy(dst, src, size);
     } else if (mcptype == MCpType::Hst2Dev) {

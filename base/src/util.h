@@ -29,7 +29,7 @@ __host__ __device__ static inline INT SUM3(const dim3 &u) {
     return u.x + u.y + u.z;
 }
 
-__host__ __device__ static inline INT IDX(UINT_T i, UINT_T j, UINT_T k, const uint3 &shape) {
+__host__ __device__ static inline INT IDX(unsigned i, unsigned j, unsigned k, const uint3 &shape) {
     return i + j * shape.x + k * shape.x * shape.y;
 }
 
@@ -45,7 +45,7 @@ __host__ __device__ static inline INT IDX(INTx3 &idx, const INTx3 &shape) {
     return idx.x + idx.y * shape.x + idx.z * shape.x * shape.y;
 }
 
-__host__ __device__ static inline INT IDX(UINT_T i, UINT_T j, UINT_T k, const dim3 &shape) {
+__host__ __device__ static inline INT IDX(unsigned i, unsigned j, unsigned k, const dim3 &shape) {
     return i + j * shape.x + k * shape.x * shape.y;
 }
 

@@ -20,8 +20,8 @@ typedef CPMBufferType BufType;
 struct CPMBuffer {
     void       *ptr;
     Mapper      map;
-    INT       count;
-    INT       width;
+    int       count;
+    size_t    width;
     FLAG    buftype;
     FLAG    hdctype;
     FLAG      color;
@@ -35,7 +35,7 @@ struct CPMBuffer {
         }
     }
 
-    void alloc(INT _width, INTx3 _buf_shape, INTx3 _buf_offset, FLAG _buftype, FLAG _hdctype) {
+    void alloc(size_t _width, INTx3 _buf_shape, INTx3 _buf_offset, FLAG _buftype, FLAG _hdctype) {
         assert(hdctype == HDCType::Empty);
         assert(buftype == BufType::Empty);
         width   = _width;
@@ -50,7 +50,7 @@ struct CPMBuffer {
         }
     }
 
-    void alloc(INT _width, INTx3 _buf_shape, INTx3 _buf_offset, FLAG _buftype, FLAG _hdctype, Mapper &_pdom, INT _color) {
+    void alloc(size_t _width, INTx3 _buf_shape, INTx3 _buf_offset, FLAG _buftype, FLAG _hdctype, Mapper &_pdom, INT _color) {
         assert(hdctype == HDCType::Empty);
         assert(buftype == BufType::Empty);
         width   = _width;

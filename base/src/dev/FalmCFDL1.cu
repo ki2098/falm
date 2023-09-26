@@ -208,6 +208,29 @@ __global__ void kernel_Cartesian_UtoCU (
     }
 }
 
+__global__ void kernel_Cartesian_InterpolateCU(
+    MatrixFrame<REAL> &uu,
+    MatrixFrame<REAL> &uc,
+    INTx3              proc_shape,
+    INTx3              map_shap,
+    INTx3              map_offset
+) {
+    INT i, j, k;
+    GLOBAL_THREAD_IDX_3D(i, j, k);
+    if (i < map_shap.x && j < map_shap.y && k < map_shap.z) {
+        i += map_offset.x;
+        j += map_offset.y;
+        k += map_offset.z;
+        INT idxcc = IDX(i  , j  , k  , proc_shape);
+        INT idxe1 = IDX(i+1, j  , k  , proc_shape);
+        INT idxn1 = IDX(i  , j+1, k  , proc_shape);
+        INT idxt1 = IDX(i  , j  , k+1, proc_shape);
+        uu(idxcc, 0) = 0.5 * (uc(idxcc, 0) + uc(idxe1, 0));
+        uu(idxcc, 1) = 0.5 * (uc(idxcc, 1) + uc(idxn1, 1));
+        uu(idxcc, 2) = 0.5 * (uc(idxcc, 2) + uc(idxt1, 2));
+    }
+}
+
 void L1Explicit::L0Dev_Cartesian_FSCalcPseudoU(
     Matrix<REAL> &u,
     Matrix<REAL> &uu,
@@ -262,6 +285,27 @@ void L1Explicit::L0Dev_Cartesian_UtoCU(
         *(uc.devptr),
         *(kx.devptr),
         *(jac.devptr),
+        proc_domain.shape,
+        map.shape,
+        map.offset
+    );
+}
+
+void L1Explicit::L0Dev_Cartesian_InterpolateCU(
+    Matrix<REAL> &uu,
+    Matrix<REAL> &uc,
+    Mapper       &proc_domain,
+    Mapper       &map,
+    dim3          block_dim
+) {
+    dim3 grid_dim(
+        (map.shape.x + block_dim.x - 1) / block_dim.x,
+        (map.shape.y + block_dim.y - 1) / block_dim.y,
+        (map.shape.z + block_dim.z - 1) / block_dim.z
+    );
+    kernel_Cartesian_InterpolateCU<<<grid_dim, block_dim, 0, 0>>>(
+        *(uu.devptr),
+        *(uc.devptr),
         proc_domain.shape,
         map.shape,
         map.offset
