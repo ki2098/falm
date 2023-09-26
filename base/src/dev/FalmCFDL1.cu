@@ -5,81 +5,81 @@
 namespace Falm {
 
 __global__ void kernel_Cartesian_CalcPseudoU(
-    MatrixFrame<double> &u,
-    MatrixFrame<double> &uu,
-    MatrixFrame<double> &ua,
-    MatrixFrame<double> &nut,
-    MatrixFrame<double> &kx,
-    MatrixFrame<double> &g,
-    MatrixFrame<double> &jac,
-    MatrixFrame<double> &ff,
-    double               ReI,
-    double               dt,
-    uint3                proc_shape,
-    uint3                map_shap,
-    uint3                map_offset
+    MatrixFrame<REAL> &u,
+    MatrixFrame<REAL> &uu,
+    MatrixFrame<REAL> &ua,
+    MatrixFrame<REAL> &nut,
+    MatrixFrame<REAL> &kx,
+    MatrixFrame<REAL> &g,
+    MatrixFrame<REAL> &jac,
+    MatrixFrame<REAL> &ff,
+    REAL               ReI,
+    REAL               dt,
+    INTx3              proc_shape,
+    INTx3              map_shap,
+    INTx3              map_offset
 ) {
-    unsigned int i, j, k;
+    INT i, j, k;
     GLOBAL_THREAD_IDX_3D(i, j, k);
     if (i < map_shap.x && j < map_shap.y && k < map_shap.z) {
         i += map_offset.x;
         j += map_offset.y;
         k += map_offset.z;
-        unsigned int idxcc = IDX(i  , j  , k  , proc_shape);
-        unsigned int idxe1 = IDX(i+1, j  , k  , proc_shape);
-        unsigned int idxw1 = IDX(i-1, j  , k  , proc_shape);
-        unsigned int idxn1 = IDX(i  , j+1, k  , proc_shape);
-        unsigned int idxs1 = IDX(i  , j-1, k  , proc_shape);
-        unsigned int idxt1 = IDX(i  , j  , k+1, proc_shape);
-        unsigned int idxb1 = IDX(i  , j  , k-1, proc_shape);
-        unsigned int idxe2 = IDX(i+2, j  , k  , proc_shape);
-        unsigned int idxw2 = IDX(i-2, j  , k  , proc_shape);
-        unsigned int idxn2 = IDX(i  , j+2, k  , proc_shape);
-        unsigned int idxs2 = IDX(i  , j-2, k  , proc_shape);
-        unsigned int idxt2 = IDX(i  , j  , k+2, proc_shape);
-        unsigned int idxb2 = IDX(i  , j  , k-2, proc_shape);
-        unsigned int idxE  = idxcc;
-        unsigned int idxW  = idxw1;
-        unsigned int idxN  = idxcc;
-        unsigned int idxS  = idxs1;
-        unsigned int idxT  = idxcc;
-        unsigned int idxB  = idxb1;
-        double uc    = u(idxcc, 0);
-        double vc    = u(idxcc, 1);
-        double wc    = u(idxcc, 2);
-        double Uabs  = fabs(uc * kx(idxcc, 0));
-        double Vabs  = fabs(vc * kx(idxcc, 1));
-        double Wabs  = fabs(wc * kx(idxcc, 2));
-        double UE    = uu(idxE, 0);
-        double UW    = uu(idxW, 0);
-        double VN    = uu(idxN, 1);
-        double VS    = uu(idxS, 1);
-        double WT    = uu(idxT, 2);
-        double WB    = uu(idxB, 2);
-        double nutcc = nut(idxcc);
-        double nute1 = nut(idxe1);
-        double nutw1 = nut(idxw1);
-        double nutn1 = nut(idxn1);
-        double nuts1 = nut(idxs1);
-        double nutt1 = nut(idxt1);
-        double nutb1 = nut(idxb1);
-        double gxcc  = g(idxcc, 0);
-        double gxe1  = g(idxe1, 0);
-        double gxw1  = g(idxw1, 0);
-        double gycc  = g(idxcc, 1);
-        double gyn1  = g(idxn1, 1);
-        double gys1  = g(idxs1, 1);
-        double gzcc  = g(idxcc, 2);
-        double gzt1  = g(idxt1, 2);
-        double gzb1  = g(idxb1, 2);
-        double ja    = jac(idxcc);
+        INT idxcc = IDX(i  , j  , k  , proc_shape);
+        INT idxe1 = IDX(i+1, j  , k  , proc_shape);
+        INT idxw1 = IDX(i-1, j  , k  , proc_shape);
+        INT idxn1 = IDX(i  , j+1, k  , proc_shape);
+        INT idxs1 = IDX(i  , j-1, k  , proc_shape);
+        INT idxt1 = IDX(i  , j  , k+1, proc_shape);
+        INT idxb1 = IDX(i  , j  , k-1, proc_shape);
+        INT idxe2 = IDX(i+2, j  , k  , proc_shape);
+        INT idxw2 = IDX(i-2, j  , k  , proc_shape);
+        INT idxn2 = IDX(i  , j+2, k  , proc_shape);
+        INT idxs2 = IDX(i  , j-2, k  , proc_shape);
+        INT idxt2 = IDX(i  , j  , k+2, proc_shape);
+        INT idxb2 = IDX(i  , j  , k-2, proc_shape);
+        INT idxE  = idxcc;
+        INT idxW  = idxw1;
+        INT idxN  = idxcc;
+        INT idxS  = idxs1;
+        INT idxT  = idxcc;
+        INT idxB  = idxb1;
+        REAL uc    = u(idxcc, 0);
+        REAL vc    = u(idxcc, 1);
+        REAL wc    = u(idxcc, 2);
+        REAL Uabs  = fabs(uc * kx(idxcc, 0));
+        REAL Vabs  = fabs(vc * kx(idxcc, 1));
+        REAL Wabs  = fabs(wc * kx(idxcc, 2));
+        REAL UE    = uu(idxE, 0);
+        REAL UW    = uu(idxW, 0);
+        REAL VN    = uu(idxN, 1);
+        REAL VS    = uu(idxS, 1);
+        REAL WT    = uu(idxT, 2);
+        REAL WB    = uu(idxB, 2);
+        REAL nutcc = nut(idxcc);
+        REAL nute1 = nut(idxe1);
+        REAL nutw1 = nut(idxw1);
+        REAL nutn1 = nut(idxn1);
+        REAL nuts1 = nut(idxs1);
+        REAL nutt1 = nut(idxt1);
+        REAL nutb1 = nut(idxb1);
+        REAL gxcc  = g(idxcc, 0);
+        REAL gxe1  = g(idxe1, 0);
+        REAL gxw1  = g(idxw1, 0);
+        REAL gycc  = g(idxcc, 1);
+        REAL gyn1  = g(idxn1, 1);
+        REAL gys1  = g(idxs1, 1);
+        REAL gzcc  = g(idxcc, 2);
+        REAL gzt1  = g(idxt1, 2);
+        REAL gzb1  = g(idxb1, 2);
+        REAL ja    = jac(idxcc);
 
-        unsigned int d;
-        double ucc;
-        double ue1, ue2, uw1, uw2;
-        double un1, un2, us1, us2;
-        double ut1, ut2, ub1, ub2;
-        double adv, vis;
+        INT d;
+        REAL ucc;
+        REAL ue1, ue2, uw1, uw2;
+        REAL un1, un2, us1, us2;
+        REAL ut1, ut2, ub1, ub2;
+        REAL adv, vis;
 
         d = 0;
         ucc = uc;
@@ -186,22 +186,22 @@ __global__ void kernel_Cartesian_CalcPseudoU(
 }
 
 __global__ void kernel_Cartesian_UtoCU (
-    MatrixFrame<double> &u,
-    MatrixFrame<double> &uc,
-    MatrixFrame<double> &kx,
-    MatrixFrame<double> &jac,
-    uint3                proc_shape,
-    uint3                map_shap,
-    uint3                map_offset
+    MatrixFrame<REAL> &u,
+    MatrixFrame<REAL> &uc,
+    MatrixFrame<REAL> &kx,
+    MatrixFrame<REAL> &jac,
+    INTx3              proc_shape,
+    INTx3              map_shap,
+    INTx3              map_offset
 ) {
-    unsigned int i, j, k;
+    INT i, j, k;
     GLOBAL_THREAD_IDX_3D(i, j, k);
     if (i < map_shap.x && j < map_shap.y && k < map_shap.z) {
         i += map_offset.x;
         j += map_offset.y;
         k += map_offset.z;
-        unsigned int idx = IDX(i, j, k, proc_shape);
-        double ja = jac(idx);
+        INT idx = IDX(i, j, k, proc_shape);
+        REAL ja = jac(idx);
         uc(idx, 0) = ja * kx(idx, 0) * u(idx, 0);
         uc(idx, 1) = ja * kx(idx, 1) * u(idx, 1);
         uc(idx, 2) = ja * kx(idx, 2) * u(idx, 2);
@@ -209,14 +209,14 @@ __global__ void kernel_Cartesian_UtoCU (
 }
 
 void L1Explicit::L0Dev_Cartesian_FSCalcPseudoU(
-    Matrix<double> &u,
-    Matrix<double> &uu,
-    Matrix<double> &ua,
-    Matrix<double> &nut,
-    Matrix<double> &kx,
-    Matrix<double> &g,
-    Matrix<double> &jac,
-    Matrix<double> &ff,
+    Matrix<REAL> &u,
+    Matrix<REAL> &uu,
+    Matrix<REAL> &ua,
+    Matrix<REAL> &nut,
+    Matrix<REAL> &kx,
+    Matrix<REAL> &g,
+    Matrix<REAL> &jac,
+    Matrix<REAL> &ff,
     Mapper         &proc_domain,
     Mapper         &map,
     dim3            block_dim
@@ -244,10 +244,10 @@ void L1Explicit::L0Dev_Cartesian_FSCalcPseudoU(
 }
 
 void L1Explicit::L0Dev_Cartesian_UtoCU(
-    Matrix<double> &u,
-    Matrix<double> &uc,
-    Matrix<double> &kx,
-    Matrix<double> &jac,
+    Matrix<REAL> &u,
+    Matrix<REAL> &uc,
+    Matrix<REAL> &kx,
+    Matrix<REAL> &jac,
     Mapper         &proc_domain,
     Mapper         &map,
     dim3            block_dim

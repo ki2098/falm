@@ -4,39 +4,39 @@
 
 namespace Falm {
 
-__global__ void kernel_Struct3d7p_MV(MatrixFrame<double> &a, MatrixFrame<double> &x, MatrixFrame<double> &ax, uint3 pdom_shape, uint3 map_shape, uint3 map_offset) {
-    unsigned int i, j, k;
+__global__ void kernel_Struct3d7p_MV(MatrixFrame<REAL> &a, MatrixFrame<REAL> &x, MatrixFrame<REAL> &ax, INTx3 pdom_shape, INTx3 map_shape, INTx3 map_offset) {
+    INT i, j, k;
     GLOBAL_THREAD_IDX_3D(i, j, k);
     if (i < map_shape.x && j < map_shape.y && k < map_shape.z) {
         i += map_offset.x;
         j += map_offset.y;
         k += map_offset.z;
-        unsigned int idxc = IDX(i  , j  , k  , pdom_shape);
-        unsigned int idxe = IDX(i+1, j  , k  , pdom_shape);
-        unsigned int idxw = IDX(i-1, j  , k  , pdom_shape);
-        unsigned int idxn = IDX(i  , j+1, k  , pdom_shape);
-        unsigned int idxs = IDX(i  , j-1, k  , pdom_shape);
-        unsigned int idxt = IDX(i  , j  , k+1, pdom_shape);
-        unsigned int idxb = IDX(i  , j  , k-1, pdom_shape);
-        double ac = a(idxc, 0);
-        double ae = a(idxc, 1);
-        double aw = a(idxc, 2);
-        double an = a(idxc, 3);
-        double as = a(idxc, 4);
-        double at = a(idxc, 5);
-        double ab = a(idxc, 6);
-        double xc = x(idxc);
-        double xe = x(idxe);
-        double xw = x(idxw);
-        double xn = x(idxn);
-        double xs = x(idxs);
-        double xt = x(idxt);
-        double xb = x(idxb);
+        INT idxc = IDX(i  , j  , k  , pdom_shape);
+        INT idxe = IDX(i+1, j  , k  , pdom_shape);
+        INT idxw = IDX(i-1, j  , k  , pdom_shape);
+        INT idxn = IDX(i  , j+1, k  , pdom_shape);
+        INT idxs = IDX(i  , j-1, k  , pdom_shape);
+        INT idxt = IDX(i  , j  , k+1, pdom_shape);
+        INT idxb = IDX(i  , j  , k-1, pdom_shape);
+        REAL ac = a(idxc, 0);
+        REAL ae = a(idxc, 1);
+        REAL aw = a(idxc, 2);
+        REAL an = a(idxc, 3);
+        REAL as = a(idxc, 4);
+        REAL at = a(idxc, 5);
+        REAL ab = a(idxc, 6);
+        REAL xc = x(idxc);
+        REAL xe = x(idxe);
+        REAL xw = x(idxw);
+        REAL xn = x(idxn);
+        REAL xs = x(idxs);
+        REAL xt = x(idxt);
+        REAL xb = x(idxb);
         ax(idxc) = ac * xc + ae * xe + aw * xw + an * xn + as * xs + at * xt + ab * xb;
     }
 }
 
-void L0Dev_Struct3d7p_MV(Matrix<double> &a, Matrix<double> &x, Matrix<double> &ax, Mapper &pdom, Mapper &map, dim3 block_dim) {
+void L0Dev_Struct3d7p_MV(Matrix<REAL> &a, Matrix<REAL> &x, Matrix<REAL> &ax, Mapper &pdom, Mapper &map, dim3 block_dim) {
     assert(
         a.shape.x == x.shape.x && a.shape.x == ax.shape.x &&
         a.shape.y == 7 && x.shape.y == 1 && ax.shape.y == 1
@@ -50,39 +50,39 @@ void L0Dev_Struct3d7p_MV(Matrix<double> &a, Matrix<double> &x, Matrix<double> &a
     kernel_Struct3d7p_MV<<<grid_dim, block_dim, 0, 0>>>(*(a.devptr), *(x.devptr), *(ax.devptr), pdom.shape, map.shape, map.offset);
 }
 
-__global__ void kernel_Struct3d7p_Res(MatrixFrame<double> &a, MatrixFrame<double> &x, MatrixFrame<double> &b, MatrixFrame<double> &r, uint3 pdom_shape, uint3 map_shape, uint3 map_offset) {
-    unsigned int i, j, k;
+__global__ void kernel_Struct3d7p_Res(MatrixFrame<REAL> &a, MatrixFrame<REAL> &x, MatrixFrame<REAL> &b, MatrixFrame<REAL> &r, INTx3 pdom_shape, INTx3 map_shape, INTx3 map_offset) {
+    INT i, j, k;
     GLOBAL_THREAD_IDX_3D(i, j, k);
     if (i < map_shape.x && j < map_shape.y && k < map_shape.z) {
         i += map_offset.x;
         j += map_offset.y;
         k += map_offset.z;
-        unsigned int idxc = IDX(i  , j  , k  , pdom_shape);
-        unsigned int idxe = IDX(i+1, j  , k  , pdom_shape);
-        unsigned int idxw = IDX(i-1, j  , k  , pdom_shape);
-        unsigned int idxn = IDX(i  , j+1, k  , pdom_shape);
-        unsigned int idxs = IDX(i  , j-1, k  , pdom_shape);
-        unsigned int idxt = IDX(i  , j  , k+1, pdom_shape);
-        unsigned int idxb = IDX(i  , j  , k-1, pdom_shape);
-        double ac = a(idxc, 0);
-        double ae = a(idxc, 1);
-        double aw = a(idxc, 2);
-        double an = a(idxc, 3);
-        double as = a(idxc, 4);
-        double at = a(idxc, 5);
-        double ab = a(idxc, 6);
-        double xc = x(idxc);
-        double xe = x(idxe);
-        double xw = x(idxw);
-        double xn = x(idxn);
-        double xs = x(idxs);
-        double xt = x(idxt);
-        double xb = x(idxb);
+        INT idxc = IDX(i  , j  , k  , pdom_shape);
+        INT idxe = IDX(i+1, j  , k  , pdom_shape);
+        INT idxw = IDX(i-1, j  , k  , pdom_shape);
+        INT idxn = IDX(i  , j+1, k  , pdom_shape);
+        INT idxs = IDX(i  , j-1, k  , pdom_shape);
+        INT idxt = IDX(i  , j  , k+1, pdom_shape);
+        INT idxb = IDX(i  , j  , k-1, pdom_shape);
+        REAL ac = a(idxc, 0);
+        REAL ae = a(idxc, 1);
+        REAL aw = a(idxc, 2);
+        REAL an = a(idxc, 3);
+        REAL as = a(idxc, 4);
+        REAL at = a(idxc, 5);
+        REAL ab = a(idxc, 6);
+        REAL xc = x(idxc);
+        REAL xe = x(idxe);
+        REAL xw = x(idxw);
+        REAL xn = x(idxn);
+        REAL xs = x(idxs);
+        REAL xt = x(idxt);
+        REAL xb = x(idxb);
         r(idxc) = b(idxc) - (ac * xc + ae * xe + aw * xw + an * xn + as * xs + at * xt + ab * xb);
     }
 }
 
-void L0Dev_Struct3d7p_Res(Matrix<double> &a, Matrix<double> &x, Matrix<double> &b, Matrix<double> &r, Mapper &pdom, Mapper &map, dim3 block_dim) {
+void L0Dev_Struct3d7p_Res(Matrix<REAL> &a, Matrix<REAL> &x, Matrix<REAL> &b, Matrix<REAL> &r, Mapper &pdom, Mapper &map, dim3 block_dim) {
     assert(
         a.shape.x == x.shape.x && a.shape.x == b.shape.x && a.shape.x == r.shape.x &&
         a.shape.y == 7 && x.shape.y == 1 && b.shape.y == 1 && r.shape.y == 1
@@ -96,39 +96,39 @@ void L0Dev_Struct3d7p_Res(Matrix<double> &a, Matrix<double> &x, Matrix<double> &
     kernel_Struct3d7p_Res<<<grid_dim, block_dim, 0, 0>>>(*(a.devptr), *(x.devptr), *(b.devptr), *(r.devptr), pdom.shape, map.shape, map.offset);
 }
 
-__global__ void kernel_Struct3d7p_Jacobi(MatrixFrame<double> &a, MatrixFrame<double> &x, MatrixFrame<double> &xp, MatrixFrame<double> &b, uint3 pdom_shape, uint3 map_shape, uint3 map_offset) {
-    unsigned int i, j, k;
+__global__ void kernel_Struct3d7p_Jacobi(MatrixFrame<REAL> &a, MatrixFrame<REAL> &x, MatrixFrame<REAL> &xp, MatrixFrame<REAL> &b, INTx3 pdom_shape, INTx3 map_shape, INTx3 map_offset) {
+    INT i, j, k;
     GLOBAL_THREAD_IDX_3D(i, j, k);
     if (i < map_shape.x && j < map_shape.y && k < map_shape.z) {
         i += map_offset.x;
         j += map_offset.y;
         k += map_offset.z;
-        unsigned int idxc = IDX(i  , j  , k  , pdom_shape);
-        unsigned int idxe = IDX(i+1, j  , k  , pdom_shape);
-        unsigned int idxw = IDX(i-1, j  , k  , pdom_shape);
-        unsigned int idxn = IDX(i  , j+1, k  , pdom_shape);
-        unsigned int idxs = IDX(i  , j-1, k  , pdom_shape);
-        unsigned int idxt = IDX(i  , j  , k+1, pdom_shape);
-        unsigned int idxb = IDX(i  , j  , k-1, pdom_shape);
-        double ac =  a(idxc, 0);
-        double ae =  a(idxc, 1);
-        double aw =  a(idxc, 2);
-        double an =  a(idxc, 3);
-        double as =  a(idxc, 4);
-        double at =  a(idxc, 5);
-        double ab =  a(idxc, 6);
-        double xc = xp(idxc);
-        double xe = xp(idxe);
-        double xw = xp(idxw);
-        double xn = xp(idxn);
-        double xs = xp(idxs);
-        double xt = xp(idxt);
-        double xb = xp(idxb);
+        INT idxc = IDX(i  , j  , k  , pdom_shape);
+        INT idxe = IDX(i+1, j  , k  , pdom_shape);
+        INT idxw = IDX(i-1, j  , k  , pdom_shape);
+        INT idxn = IDX(i  , j+1, k  , pdom_shape);
+        INT idxs = IDX(i  , j-1, k  , pdom_shape);
+        INT idxt = IDX(i  , j  , k+1, pdom_shape);
+        INT idxb = IDX(i  , j  , k-1, pdom_shape);
+        REAL ac =  a(idxc, 0);
+        REAL ae =  a(idxc, 1);
+        REAL aw =  a(idxc, 2);
+        REAL an =  a(idxc, 3);
+        REAL as =  a(idxc, 4);
+        REAL at =  a(idxc, 5);
+        REAL ab =  a(idxc, 6);
+        REAL xc = xp(idxc);
+        REAL xe = xp(idxe);
+        REAL xw = xp(idxw);
+        REAL xn = xp(idxn);
+        REAL xs = xp(idxs);
+        REAL xt = xp(idxt);
+        REAL xb = xp(idxb);
         x(idxc) = xc + (b(idxc) - (ac * xc + ae * xe + aw * xw + an * xn + as * xs + at * xt + ab * xb)) / ac;
     }
 }
 
-void L1EqSolver::L0Dev_Struct3d7p_JacobiSweep(Matrix<double> &a, Matrix<double> &x, Matrix<double> &xp, Matrix<double> &b, Mapper &pdom, Mapper &map, dim3 block_dim) {
+void L1EqSolver::L0Dev_Struct3d7p_JacobiSweep(Matrix<REAL> &a, Matrix<REAL> &x, Matrix<REAL> &xp, Matrix<REAL> &b, Mapper &pdom, Mapper &map, dim3 block_dim) {
     dim3 grid_dim(
         (map.shape.x + block_dim.x - 1) / block_dim.x,
         (map.shape.y + block_dim.y - 1) / block_dim.y,
@@ -138,14 +138,14 @@ void L1EqSolver::L0Dev_Struct3d7p_JacobiSweep(Matrix<double> &a, Matrix<double> 
     kernel_Struct3d7p_Jacobi<<<grid_dim, block_dim, 0, 0>>>(*(a.devptr), *(x.devptr), *(xp.devptr), *(b.devptr), pdom.shape, map.shape, map.offset);
 }
 
-void L1EqSolver::L1Dev_Struct3d7p_Jacobi(Matrix<double> &a, Matrix<double> &x, Matrix<double> &b, Matrix<double> &r, Mapper &global, Mapper &pdom, dim3 block_dim) {
+void L1EqSolver::L1Dev_Struct3d7p_Jacobi(Matrix<REAL> &a, Matrix<REAL> &x, Matrix<REAL> &b, Matrix<REAL> &r, Mapper &global, Mapper &pdom, dim3 block_dim) {
     Mapper map(pdom, Gd);
     assert(
         a.shape.x == x.shape.x && a.shape.x == b.shape.x && a.shape.x == r.shape.x &&
         a.shape.y == 7 && x.shape.y == 1 && b.shape.y == 1 && r.shape.y == 1
     );
 
-    Matrix<double> xp(x.shape.x, x.shape.y, HDCType::Device, x.label);
+    Matrix<REAL> xp(x.shape.x, x.shape.y, HDCType::Device, x.label);
     it = 0;
     do {
         xp.cpy(x, HDCType::Device);
@@ -156,10 +156,10 @@ void L1EqSolver::L1Dev_Struct3d7p_Jacobi(Matrix<double> &a, Matrix<double> &x, M
     } while (it < maxit && err > tol);
 }
 
-void L1EqSolver::L1Dev_Struct3d7p_JacobiPC(Matrix<double> &a, Matrix<double> &x, Matrix<double> &b, Mapper &pdom, dim3 block_dim) {
+void L1EqSolver::L1Dev_Struct3d7p_JacobiPC(Matrix<REAL> &a, Matrix<REAL> &x, Matrix<REAL> &b, Mapper &pdom, dim3 block_dim) {
     Mapper map(pdom, Gd);
-    Matrix<double> xp(x.shape.x, x.shape.y, HDCType::Device, x.label);
-    int __it = 0;
+    Matrix<REAL> xp(x.shape.x, x.shape.y, HDCType::Device, x.label);
+    INT __it = 0;
     do {
         xp.cpy(x, HDCType::Device);
         L0Dev_Struct3d7p_JacobiSweep(a, x, xp, b, pdom, map, block_dim);
@@ -167,36 +167,36 @@ void L1EqSolver::L1Dev_Struct3d7p_JacobiPC(Matrix<double> &a, Matrix<double> &x,
     } while (__it < pc_maxit);
 }
 
-__global__ void kernel_Struct3d7p_SOR(MatrixFrame<double> &a, MatrixFrame<double> &x, MatrixFrame<double> &b, double omega, unsigned int color, uint3 pdom_shape, uint3 pdom_offset, uint3 map_shape, uint3 map_offset) {
-    unsigned int i, j, k;
+__global__ void kernel_Struct3d7p_SOR(MatrixFrame<REAL> &a, MatrixFrame<REAL> &x, MatrixFrame<REAL> &b, REAL omega, INT color, INTx3 pdom_shape, INTx3 pdom_offset, INTx3 map_shape, INTx3 map_offset) {
+    INT i, j, k;
     GLOBAL_THREAD_IDX_3D(i, j, k);
     if (i < map_shape.x && j < map_shape.y && k < map_shape.z) {
         i += map_offset.x;
         j += map_offset.y;
         k += map_offset.z;
-        unsigned int idxc = IDX(i  , j  , k  , pdom_shape);
-        unsigned int idxe = IDX(i+1, j  , k  , pdom_shape);
-        unsigned int idxw = IDX(i-1, j  , k  , pdom_shape);
-        unsigned int idxn = IDX(i  , j+1, k  , pdom_shape);
-        unsigned int idxs = IDX(i  , j-1, k  , pdom_shape);
-        unsigned int idxt = IDX(i  , j  , k+1, pdom_shape);
-        unsigned int idxb = IDX(i  , j  , k-1, pdom_shape);
-        double ac = a(idxc, 0);
-        double ae = a(idxc, 1);
-        double aw = a(idxc, 2);
-        double an = a(idxc, 3);
-        double as = a(idxc, 4);
-        double at = a(idxc, 5);
-        double ab = a(idxc, 6);
-        double xc = x(idxc);
-        double xe = x(idxe);
-        double xw = x(idxw);
-        double xn = x(idxn);
-        double xs = x(idxs);
-        double xt = x(idxt);
-        double xb = x(idxb);
-        double bc = b(idxc);
-        double cc = 0;
+        INT idxc = IDX(i  , j  , k  , pdom_shape);
+        INT idxe = IDX(i+1, j  , k  , pdom_shape);
+        INT idxw = IDX(i-1, j  , k  , pdom_shape);
+        INT idxn = IDX(i  , j+1, k  , pdom_shape);
+        INT idxs = IDX(i  , j-1, k  , pdom_shape);
+        INT idxt = IDX(i  , j  , k+1, pdom_shape);
+        INT idxb = IDX(i  , j  , k-1, pdom_shape);
+        REAL ac = a(idxc, 0);
+        REAL ae = a(idxc, 1);
+        REAL aw = a(idxc, 2);
+        REAL an = a(idxc, 3);
+        REAL as = a(idxc, 4);
+        REAL at = a(idxc, 5);
+        REAL ab = a(idxc, 6);
+        REAL xc = x(idxc);
+        REAL xe = x(idxe);
+        REAL xw = x(idxw);
+        REAL xn = x(idxn);
+        REAL xs = x(idxs);
+        REAL xt = x(idxt);
+        REAL xb = x(idxb);
+        REAL bc = b(idxc);
+        REAL cc = 0;
         if ((i + j + k + SUM3(pdom_offset)) % 2 == color) {
             cc = (bc - (ac * xc + ae * xe + aw * xw + an * xn + as * xs + at * xt + ab * xb)) / ac;
         }
@@ -204,7 +204,7 @@ __global__ void kernel_Struct3d7p_SOR(MatrixFrame<double> &a, MatrixFrame<double
     }
 }
 
-void L1EqSolver::L0Dev_Struct3d7p_SORSweep(Matrix<double> &a, Matrix<double> &x, Matrix<double> &b, double omega, unsigned int color, Mapper &pdom, Mapper &map, dim3 block_dim) {
+void L1EqSolver::L0Dev_Struct3d7p_SORSweep(Matrix<REAL> &a, Matrix<REAL> &x, Matrix<REAL> &b, REAL omega, INT color, Mapper &pdom, Mapper &map, dim3 block_dim) {
     dim3 grid_dim(
         (map.shape.x + block_dim.x - 1) / block_dim.x,
         (map.shape.y + block_dim.y - 1) / block_dim.y,
@@ -214,7 +214,7 @@ void L1EqSolver::L0Dev_Struct3d7p_SORSweep(Matrix<double> &a, Matrix<double> &x,
     kernel_Struct3d7p_SOR<<<grid_dim, block_dim, 0, 0>>>(*(a.devptr), *(x.devptr), *(b.devptr), omega, color, pdom.shape, pdom.offset, map.shape, map.offset);
 }
 
-void L1EqSolver::L1Dev_Struct3d7p_SOR(Matrix<double> &a, Matrix<double> &x, Matrix<double> &b, Matrix<double> &r, Mapper &global, Mapper &pdom, dim3 block_dim) {
+void L1EqSolver::L1Dev_Struct3d7p_SOR(Matrix<REAL> &a, Matrix<REAL> &x, Matrix<REAL> &b, Matrix<REAL> &r, Mapper &global, Mapper &pdom, dim3 block_dim) {
     Mapper map(pdom, Gd);
     assert(
         a.shape.x == x.shape.x && a.shape.x == b.shape.x && a.shape.x == r.shape.x &&
@@ -231,9 +231,9 @@ void L1EqSolver::L1Dev_Struct3d7p_SOR(Matrix<double> &a, Matrix<double> &x, Matr
     } while (it < maxit && err > tol);
 }
 
-void L1EqSolver::L1Dev_Struct3d7p_SORPC(Matrix<double> &a, Matrix<double> &x, Matrix<double> &b, Mapper &pdom, dim3 block_dim) {
+void L1EqSolver::L1Dev_Struct3d7p_SORPC(Matrix<REAL> &a, Matrix<REAL> &x, Matrix<REAL> &b, Mapper &pdom, dim3 block_dim) {
     Mapper map(pdom, Gd);
-    int __it = 0;
+    INT __it = 0;
     do {
         L0Dev_Struct3d7p_SORSweep(a, x, b, pc_relax_factor, Color::Black, pdom, map, block_dim);
         L0Dev_Struct3d7p_SORSweep(a, x, b, pc_relax_factor, Color::Red  , pdom, map, block_dim);
@@ -241,19 +241,19 @@ void L1EqSolver::L1Dev_Struct3d7p_SORPC(Matrix<double> &a, Matrix<double> &x, Ma
     } while (__it < pc_maxit);
 }
 
-__global__ void kernel_PBiCGStab_1(MatrixFrame<double> &p, MatrixFrame<double> &q, MatrixFrame<double> &r, double beta, double omega, uint3 pdom_shape, uint3 map_shape, uint3 map_offset) {
-    unsigned int i, j, k;
+__global__ void kernel_PBiCGStab_1(MatrixFrame<REAL> &p, MatrixFrame<REAL> &q, MatrixFrame<REAL> &r, REAL beta, REAL omega, INTx3 pdom_shape, INTx3 map_shape, INTx3 map_offset) {
+    INT i, j, k;
     GLOBAL_THREAD_IDX_3D(i, j, k);
     if (i < map_shape.x && j < map_shape.y && k < map_shape.z) {
         i += map_offset.x;
         j += map_offset.y;
         k += map_offset.z;
-        unsigned int idx = IDX(i, j, k, pdom_shape);
+        INT idx = IDX(i, j, k, pdom_shape);
         p(idx) = r(idx) + beta * (p(idx) - omega * q(idx));
     }
 }
 
-void L1EqSolver::L0Dev_PBiCGStab1(Matrix<double> &p, Matrix<double> &q, Matrix<double> &r, double beta, double omega, Mapper &pdom, Mapper &map, dim3 block_dim) {
+void L1EqSolver::L0Dev_PBiCGStab1(Matrix<REAL> &p, Matrix<REAL> &q, Matrix<REAL> &r, REAL beta, REAL omega, Mapper &pdom, Mapper &map, dim3 block_dim) {
     dim3 grid_dim(
         (map.shape.x + block_dim.x - 1) / block_dim.x,
         (map.shape.y + block_dim.y - 1) / block_dim.y,
@@ -262,19 +262,19 @@ void L1EqSolver::L0Dev_PBiCGStab1(Matrix<double> &p, Matrix<double> &q, Matrix<d
     kernel_PBiCGStab_1<<<grid_dim, block_dim, 0, 0>>>(*(p.devptr), *(q.devptr), *(r.devptr), beta, omega, pdom.shape, map.shape, map.offset);
 }
 
-__global__ void kernel_PBiCGStab_2(MatrixFrame<double> &s, MatrixFrame<double> &q, MatrixFrame<double> &r, double alpha, uint3 pdom_shape, uint3 map_shape, uint3 map_offset) {
-    unsigned int i, j, k;
+__global__ void kernel_PBiCGStab_2(MatrixFrame<REAL> &s, MatrixFrame<REAL> &q, MatrixFrame<REAL> &r, REAL alpha, INTx3 pdom_shape, INTx3 map_shape, INTx3 map_offset) {
+    INT i, j, k;
     GLOBAL_THREAD_IDX_3D(i, j, k);
     if (i < map_shape.x && j < map_shape.y && k < map_shape.z) {
         i += map_offset.x;
         j += map_offset.y;
         k += map_offset.z;
-        unsigned int idx = IDX(i, j, k, pdom_shape);
+        INT idx = IDX(i, j, k, pdom_shape);
         s(idx) = r(idx) - alpha * q(idx);
     }
 }
 
-void L1EqSolver::L0Dev_PBiCGStab2(Matrix<double> &s, Matrix<double> &q, Matrix<double> &r, double alpha, Mapper &pdom, Mapper &map, dim3 block_dim) {
+void L1EqSolver::L0Dev_PBiCGStab2(Matrix<REAL> &s, Matrix<REAL> &q, Matrix<REAL> &r, REAL alpha, Mapper &pdom, Mapper &map, dim3 block_dim) {
     dim3 grid_dim(
         (map.shape.x + block_dim.x - 1) / block_dim.x,
         (map.shape.y + block_dim.y - 1) / block_dim.y,
@@ -283,19 +283,19 @@ void L1EqSolver::L0Dev_PBiCGStab2(Matrix<double> &s, Matrix<double> &q, Matrix<d
     kernel_PBiCGStab_2<<<grid_dim, block_dim, 0, 0>>>(*(s.devptr), *(q.devptr), *(r.devptr), alpha, pdom.shape, map.shape, map.offset);
 }
 
-__global__ void kernel_PBiCGStab_3(MatrixFrame<double> &x, MatrixFrame<double> &pp, MatrixFrame<double> &ss, double alpha, double omega, uint3 pdom_shape, uint3 map_shape, uint3 map_offset) {
-    unsigned int i, j, k;
+__global__ void kernel_PBiCGStab_3(MatrixFrame<REAL> &x, MatrixFrame<REAL> &pp, MatrixFrame<REAL> &ss, REAL alpha, REAL omega, INTx3 pdom_shape, INTx3 map_shape, INTx3 map_offset) {
+    INT i, j, k;
     GLOBAL_THREAD_IDX_3D(i, j, k);
     if (i < map_shape.x && j < map_shape.y && k < map_shape.z) {
         i += map_offset.x;
         j += map_offset.y;
         k += map_offset.z;
-        unsigned int idx = IDX(i, j, k, pdom_shape);
+        INT idx = IDX(i, j, k, pdom_shape);
         x(idx) += alpha * pp(idx) + omega * ss(idx);
     }
 }
 
-void L1EqSolver::L0Dev_PBiCGStab3(Matrix<double> &x, Matrix<double> &pp, Matrix<double> &ss, double alpha, double omega, Mapper &pdom, Mapper &map, dim3 block_dim) {
+void L1EqSolver::L0Dev_PBiCGStab3(Matrix<REAL> &x, Matrix<REAL> &pp, Matrix<REAL> &ss, REAL alpha, REAL omega, Mapper &pdom, Mapper &map, dim3 block_dim) {
     dim3 grid_dim(
         (map.shape.x + block_dim.x - 1) / block_dim.x,
         (map.shape.y + block_dim.y - 1) / block_dim.y,
@@ -304,19 +304,19 @@ void L1EqSolver::L0Dev_PBiCGStab3(Matrix<double> &x, Matrix<double> &pp, Matrix<
     kernel_PBiCGStab_3<<<grid_dim, block_dim, 0, 0>>>(*(x.devptr), *(pp.devptr), *(ss.devptr), alpha, omega, pdom.shape, map.shape, map.offset);
 } 
 
-__global__ void kernel_PBiCGStab_4(MatrixFrame<double> &r, MatrixFrame<double> &s, MatrixFrame<double> &t, double omega, uint3 pdom_shape, uint3 map_shape, uint3 map_offset) {
-    unsigned int i, j, k;
+__global__ void kernel_PBiCGStab_4(MatrixFrame<REAL> &r, MatrixFrame<REAL> &s, MatrixFrame<REAL> &t, REAL omega, INTx3 pdom_shape, INTx3 map_shape, INTx3 map_offset) {
+    INT i, j, k;
     GLOBAL_THREAD_IDX_3D(i, j, k);
     if (i < map_shape.x && j < map_shape.y && k < map_shape.z) {
         i += map_offset.x;
         j += map_offset.y;
         k += map_offset.z;
-        unsigned int idx = IDX(i, j, k, pdom_shape);
+        INT idx = IDX(i, j, k, pdom_shape);
         r(idx) = s(idx) - omega * t(idx);
     }
 }
 
-void L1EqSolver::L0Dev_PBiCGStab4(Matrix<double> &r, Matrix<double> &s, Matrix<double> &t, double omega, Mapper &pdom, Mapper &map, dim3 block_dim) {
+void L1EqSolver::L0Dev_PBiCGStab4(Matrix<REAL> &r, Matrix<REAL> &s, Matrix<REAL> &t, REAL omega, Mapper &pdom, Mapper &map, dim3 block_dim) {
     dim3 grid_dim(
         (map.shape.x + block_dim.x - 1) / block_dim.x,
         (map.shape.y + block_dim.y - 1) / block_dim.y,
@@ -325,7 +325,7 @@ void L1EqSolver::L0Dev_PBiCGStab4(Matrix<double> &r, Matrix<double> &s, Matrix<d
     kernel_PBiCGStab_4<<<grid_dim, block_dim, 0, 0>>>(*(r.devptr), *(s.devptr), *(t.devptr), omega, pdom.shape, map.shape, map.offset);
 }
 
-void L1EqSolver::L1Dev_Struct3d7p_PBiCGStab(Matrix<double> &a, Matrix<double> &x, Matrix<double> &b, Matrix<double> &r, Mapper &global, Mapper &pdom, dim3 block_dim) {
+void L1EqSolver::L1Dev_Struct3d7p_PBiCGStab(Matrix<REAL> &a, Matrix<REAL> &x, Matrix<REAL> &b, Matrix<REAL> &r, Mapper &global, Mapper &pdom, dim3 block_dim) {
     Mapper map(pdom, Gd);
     assert(
         a.shape.x == x.shape.x && a.shape.x == b.shape.x && a.shape.x == r.shape.x &&
@@ -337,15 +337,15 @@ void L1EqSolver::L1Dev_Struct3d7p_PBiCGStab(Matrix<double> &a, Matrix<double> &x
         (map.shape.z + block_dim.z - 1) / block_dim.z
     );
 
-    Matrix<double> rr(pdom.shape, 1, HDCType::Device, 101);
-    Matrix<double>  p(pdom.shape, 1, HDCType::Device, 102);
-    Matrix<double>  q(pdom.shape, 1, HDCType::Device, 103);
-    Matrix<double>  s(pdom.shape, 1, HDCType::Device, 104);
-    Matrix<double> pp(pdom.shape, 1, HDCType::Device, 105);
-    Matrix<double> ss(pdom.shape, 1, HDCType::Device, 106);
-    Matrix<double>  t(pdom.shape, 1, HDCType::Device, 107);
+    Matrix<REAL> rr(pdom.shape, 1, HDCType::Device, 101);
+    Matrix<REAL>  p(pdom.shape, 1, HDCType::Device, 102);
+    Matrix<REAL>  q(pdom.shape, 1, HDCType::Device, 103);
+    Matrix<REAL>  s(pdom.shape, 1, HDCType::Device, 104);
+    Matrix<REAL> pp(pdom.shape, 1, HDCType::Device, 105);
+    Matrix<REAL> ss(pdom.shape, 1, HDCType::Device, 106);
+    Matrix<REAL>  t(pdom.shape, 1, HDCType::Device, 107);
 
-    double rho, rrho, alpha, beta, omega;
+    REAL rho, rrho, alpha, beta, omega;
 
     L0Dev_Struct3d7p_Res(a, x, b, r, pdom, map, block_dim);
     err = sqrt(L0Dev_Norm2Sq(r, pdom, map, block_dim)) / map.size;

@@ -5,19 +5,19 @@
 
 namespace Falm {
 
-__host__ __device__ static double Riam3rdUpwind(
-    double ucc,
-    double ue1, double ue2, double uw1, double uw2,
-    double un1, double un2, double us1, double us2,
-    double ut1, double ut2, double ub1, double ub2,
-    double Uabs, double Vabs, double Wabs,
-    double UE, double UW,
-    double VN, double VS,
-    double WT, double WB,
-    double jacobian
+__host__ __device__ static REAL Riam3rdUpwind(
+    REAL ucc,
+    REAL ue1, REAL ue2, REAL uw1, REAL uw2,
+    REAL un1, REAL un2, REAL us1, REAL us2,
+    REAL ut1, REAL ut2, REAL ub1, REAL ub2,
+    REAL Uabs, REAL Vabs, REAL Wabs,
+    REAL UE, REAL UW,
+    REAL VN, REAL VS,
+    REAL WT, REAL WB,
+    REAL jacobian
 ) {
-    double adv = 0.0;
-    double jx2 = 2 * jacobian;
+    REAL adv = 0.0;
+    REAL jx2 = 2 * jacobian;
     adv += UE * (- ue2 + 27 * ue1 - 27 * ucc + uw1) / jx2;
     adv += UW * (- ue1 + 27 * ucc - 27 * uw1 + uw2) / jx2;
     adv += Uabs * (ue2 - 4 * ue1 + 6 * ucc - 4 * uw1 + uw2);
@@ -31,22 +31,22 @@ __host__ __device__ static double Riam3rdUpwind(
     return adv;
 }
 
-__host__ __device__ static double Diffusion(
-    double ReI,
-    double ucc,
-    double ue1, double uw1,
-    double un1, double us1,
-    double ut1, double ub1,
-    double nutcc,
-    double nute1, double nutw1,
-    double nutn1, double nuts1,
-    double nutt1, double nutb1,
-    double gxcc, double gxe1, double gxw1,
-    double gycc, double gyn1, double gys1,
-    double gzcc, double gzt1, double gzb1,
-    double jacobian
+__host__ __device__ static REAL Diffusion(
+    REAL ReI,
+    REAL ucc,
+    REAL ue1, REAL uw1,
+    REAL un1, REAL us1,
+    REAL ut1, REAL ub1,
+    REAL nutcc,
+    REAL nute1, REAL nutw1,
+    REAL nutn1, REAL nuts1,
+    REAL nutt1, REAL nutb1,
+    REAL gxcc, REAL gxe1, REAL gxw1,
+    REAL gycc, REAL gyn1, REAL gys1,
+    REAL gzcc, REAL gzt1, REAL gzb1,
+    REAL jacobian
 ) {
-    double vis = 0.0;
+    REAL vis = 0.0;
     vis += (gxcc + gxe1) * (ReI + 0.5 * (nutcc + nute1)) * (ue1 - ucc);
     vis -= (gxcc + gxw1) * (ReI + 0.5 * (nutcc + nutw1)) * (ucc - uw1);
     vis += (gycc + gyn1) * (ReI + 0.5 * (nutcc + nutn1)) * (un1 - ucc);

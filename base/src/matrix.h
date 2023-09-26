@@ -2,8 +2,6 @@
 #define FALM_MATRIX_H
 
 #include <assert.h>
-#include "typedef.h"
-#include "flag.h"
 #include "util.h"
 
 namespace Falm {
@@ -122,18 +120,18 @@ struct Matrix {
     __host__ __device__ T &operator()(INT _idx) {return host(_idx);}
     __host__ __device__ T &operator()(INT _row, INT _col) {return host(_row, _col);}
 
-    Matrix() : shape(INTx2{0, 0}), size(0), hdctype(HDCType::Device), label(0), devptr(nullptr) {}
+    Matrix() : shape(INTx2{0, 0}), size(0), hdctype(HDCType::Empty), label(0), devptr(nullptr) {}
     Matrix(INTx3 _dom, INT _dim, FLAG _hdctype, INT _label);
     Matrix(INT _row, INT _col, FLAG _hdctype, INT _label);
     ~Matrix();
 
-    void alloc(uint3 _dom, unsigned int _dim, unsigned int _hdctype, int _label);
-    void alloc(unsigned _row, unsigned int _col, unsigned int _hdctype, int _label);
-    void release(unsigned int _hdctype);
-    void sync(unsigned int _mcptype);
+    void alloc(INTx3 _dom, INT _dim, FLAG _hdctype, INT _label);
+    void alloc(INT _row, INT _col, FLAG _hdctype, INT _label);
+    void release(FLAG _hdctype);
+    void sync(FLAG _mcptype);
 
-    void cpy(Matrix<T> &src, unsigned int _hdctype);
-    void clear(unsigned int _hdctype);
+    void cpy(Matrix<T> &src, FLAG _hdctype);
+    void clear(FLAG _hdctype);
 };
 
 template<typename T> Matrix<T>::Matrix(INTx3 _dom, INT _dim, FLAG _hdctype, INT _label) :
@@ -172,11 +170,11 @@ template<typename T> Matrix<T>::~Matrix() {
     hdctype = HDCType::Empty;
 }
 
-template<typename T> void Matrix<T>::alloc(uint3 _dom, unsigned int _dim, unsigned int _hdctype, int _label) {
+template<typename T> void Matrix<T>::alloc(INTx3 _dom, INT _dim, FLAG _hdctype, INT _label) {
     assert(hdctype == HDCType::Empty);
     host.alloc(_dom, _dim, _hdctype & HDCType::Host, _label);
     dev.alloc(_dom, _dim, _hdctype & HDCType::Device, _label);
-    shape   = uint2{PRODUCT3(_dom), _dim};
+    shape   = INTx2{PRODUCT3(_dom), _dim};
     size    = PRODUCT3(_dom) * _dim;
     hdctype = _hdctype;
     label   = _label;
@@ -186,11 +184,11 @@ template<typename T> void Matrix<T>::alloc(uint3 _dom, unsigned int _dim, unsign
     }
 }
 
-template<typename T> void Matrix<T>::alloc(unsigned _row, unsigned int _col, unsigned int _hdctype, int _label) {
+template<typename T> void Matrix<T>::alloc(INT _row, INT _col, FLAG _hdctype, INT _label) {
     assert(hdctype == HDCType::Empty);
     host.alloc(_row, _col, _hdctype & HDCType::Host, _label);
     dev.alloc(_row, _col, _hdctype & HDCType::Device, _label);
-    shape   = uint2{_row, _col};
+    shape   = INTx2{_row, _col};
     size    = _row * _col;
     hdctype = _hdctype;
     label   = _label;
@@ -200,7 +198,7 @@ template<typename T> void Matrix<T>::alloc(unsigned _row, unsigned int _col, uns
     }
 }
 
-template<typename T> void Matrix<T>::release(unsigned int _hdctype) {
+template<typename T> void Matrix<T>::release(FLAG _hdctype) {
     if (_hdctype & HDCType::Host) {
         assert(hdctype & HDCType::Host);
         host.release();
@@ -215,7 +213,7 @@ template<typename T> void Matrix<T>::release(unsigned int _hdctype) {
     }
 }
 
-template<typename T> void Matrix<T>::sync(unsigned int _mcptype) {
+template<typename T> void Matrix<T>::sync(FLAG _mcptype) {
     if (_mcptype == MCpType::Hst2Dev) {
         assert(hdctype & HDCType::Host);
         if (hdctype & HDCType::Device) {
@@ -239,7 +237,7 @@ template<typename T> void Matrix<T>::sync(unsigned int _mcptype) {
     }
 }
 
-template<typename T> void Matrix<T>::cpy(Matrix<T> &src, unsigned int _hdctype) {
+template<typename T> void Matrix<T>::cpy(Matrix<T> &src, FLAG _hdctype) {
     if (_hdctype & HDCType::Host) {
         assert((hdctype & src.hdctype & HDCType::Host) && (size == src.size));
         falmMemcpy(host.ptr, src.host.ptr, sizeof(T) * size, MCpType::Hst2Hst);
@@ -250,7 +248,7 @@ template<typename T> void Matrix<T>::cpy(Matrix<T> &src, unsigned int _hdctype) 
     }
 }
 
-template<typename T> void Matrix<T>::clear(unsigned int _hdctype) {
+template<typename T> void Matrix<T>::clear(FLAG _hdctype) {
     if (_hdctype & HDCType::Host) {
         assert(hdctype & HDCType::Host);
         falmHostMemset(host.ptr, 0, sizeof(T) * size);

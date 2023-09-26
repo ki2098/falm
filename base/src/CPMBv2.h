@@ -9,22 +9,22 @@ namespace Falm {
 
 class CPMBufferType {
 public:
-    static const unsigned int Empty = 0;
-    static const unsigned int In    = 1;
-    static const unsigned int Out   = 2;
-    static const unsigned int InOut = In | Out;
+    static const FLAG Empty = 0;
+    static const FLAG In    = 1;
+    static const FLAG Out   = 2;
+    static const FLAG InOut = In | Out;
 };
 
 typedef CPMBufferType BufType;
 
 struct CPMBuffer {
-    void            *ptr;
-    Mapper           map;
-    int            count;
-    size_t         width;
-    unsigned int buftype;
-    unsigned int hdctype;
-    unsigned int   color;
+    void       *ptr;
+    Mapper      map;
+    INT       count;
+    INT       width;
+    FLAG    buftype;
+    FLAG    hdctype;
+    FLAG      color;
 
     CPMBuffer() : ptr(nullptr), count(0), buftype(BufType::Empty), hdctype(HDCType::Empty) {}
     ~CPMBuffer() {
@@ -35,7 +35,7 @@ struct CPMBuffer {
         }
     }
 
-    void alloc(size_t _width, uint3 _buf_shape, uint3 _buf_offset, unsigned int _buftype, unsigned int _hdctype) {
+    void alloc(INT _width, INTx3 _buf_shape, INTx3 _buf_offset, FLAG _buftype, FLAG _hdctype) {
         assert(hdctype == HDCType::Empty);
         assert(buftype == BufType::Empty);
         width   = _width;
@@ -50,7 +50,7 @@ struct CPMBuffer {
         }
     }
 
-    void alloc(size_t _width, uint3 _buf_shape, uint3 _buf_offset, unsigned int _buftype, unsigned int _hdctype, Mapper &_pdom, unsigned int _color) {
+    void alloc(INT _width, INTx3 _buf_shape, INTx3 _buf_offset, FLAG _buftype, FLAG _hdctype, Mapper &_pdom, INT _color) {
         assert(hdctype == HDCType::Empty);
         assert(buftype == BufType::Empty);
         width   = _width;
@@ -58,7 +58,7 @@ struct CPMBuffer {
         buftype = _buftype;
         hdctype = _hdctype;
         color   = _color;
-        unsigned int refcolor = (SUM3(_pdom.offset) + SUM3(map.offset)) % 2;
+        INT refcolor = (SUM3(_pdom.offset) + SUM3(map.offset)) % 2;
         count = map.size / 2;
         if (map.size % 2 == 1 && refcolor == color) {
             count ++;

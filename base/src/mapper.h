@@ -1,7 +1,6 @@
 #ifndef FALM_MAPPER_H
 #define FALM_MAPPER_H
 
-#include "typedef.h"
 #include "util.h"
 
 namespace Falm {

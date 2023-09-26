@@ -9,30 +9,30 @@ namespace Falm {
 
 class CPMBufferType {
 public:
-    static const UINT Empty = 0;
-    static const UINT In    = 1;
-    static const UINT Out   = 2;
-    static const UINT InOut = In | Out;
+    static const FLAG Empty = 0;
+    static const FLAG In    = 1;
+    static const FLAG Out   = 2;
+    static const FLAG InOut = In | Out;
 };
 
 typedef CPMBufferType BufType;
 
 template<typename T>
 struct CPMBuffer {
-    T               *ptr;
-    Mapper           map;
-    UINT    size;
-    UINT buftype;
-    UINT hdctype;
-    UINT   color;
+    T       *ptr;
+    Mapper   map;
+    INT     size;
+    FLAG buftype;
+    FLAG hdctype;
+    INT    color;
 
     CPMBuffer() : ptr(nullptr), size(0), buftype(BufType::Empty), hdctype(HDCType::Empty) {}
-    CPMBuffer(uint3 _buf_shape, uint3 _buf_offset, UINT _buftype, UINT _hdctype);
-    CPMBuffer(uint3 _buf_shape, uint3 _buf_offset, UINT _buftype, UINT _hdctype, Mapper &_pdom, UINT _color);
+    CPMBuffer(INTx3 _buf_shape, INTx3 _buf_offset, FLAG _buftype, FLAG _hdctype);
+    CPMBuffer(INTx3 _buf_shape, INTx3 _buf_offset, FLAG _buftype, FLAG _hdctype, Mapper &_pdom, INT _color);
     ~CPMBuffer();
 
-    void alloc(uint3 _buf_shape, uint3 _buf_offset, UINT _buftype, UINT _hdctype);
-    void alloc(uint3 _buf_shape, uint3 _buf_offset, UINT _buftype, UINT _hdctype, Mapper &_pdom, UINT _color);
+    void alloc(INTx3 _buf_shape, INTx3 _buf_offset, FLAG _buftype, FLAG _hdctype);
+    void alloc(INTx3 _buf_shape, INTx3 _buf_offset, FLAG _buftype, FLAG _hdctype, Mapper &_pdom, INT _color);
     void release();
 
     void clear() {
@@ -44,7 +44,7 @@ struct CPMBuffer {
     }
 };
 
-template<typename T> CPMBuffer<T>::CPMBuffer(uint3 _buf_shape, uint3 _buf_offset, UINT _buftype, UINT _hdctype) :
+template<typename T> CPMBuffer<T>::CPMBuffer(INTx3 _buf_shape, INTx3 _buf_offset, FLAG _buftype, FLAG _hdctype) :
     map(_buf_shape, _buf_offset),
     size(PRODUCT3(_buf_shape)),
     buftype(_buftype),
@@ -57,13 +57,13 @@ template<typename T> CPMBuffer<T>::CPMBuffer(uint3 _buf_shape, uint3 _buf_offset
     }
 }
 
-template<typename T> CPMBuffer<T>::CPMBuffer(uint3 _buf_shape, uint3 _buf_offset, UINT _buftype, UINT _hdctype, Mapper &_pdom, UINT _color) :
+template<typename T> CPMBuffer<T>::CPMBuffer(INTx3 _buf_shape, INTx3 _buf_offset, FLAG _buftype, FLAG _hdctype, Mapper &_pdom, INT _color) :
     map(_buf_shape, _buf_offset),
     buftype(_buftype),
     hdctype(_hdctype),
     color(_color)
 {
-    UINT refcolor = (SUM3(_pdom.offset) + SUM3(map.offset)) % 2;
+    INT refcolor = (SUM3(_pdom.offset) + SUM3(map.offset)) % 2;
     size = map.size / 2;
     if (map.size % 2 == 1 && refcolor == color) {
         size ++;
@@ -83,7 +83,7 @@ template<typename T> CPMBuffer<T>::~CPMBuffer() {
     }
 }
 
-template<typename T> void CPMBuffer<T>::alloc(uint3 _buf_shape, uint3 _buf_offset, UINT _buftype, UINT _hdctype) {
+template<typename T> void CPMBuffer<T>::alloc(INTx3 _buf_shape, INTx3 _buf_offset, FLAG _buftype, FLAG _hdctype) {
     assert(hdctype == HDCType::Empty);
     assert(buftype == BufType::Empty);
     
@@ -98,14 +98,14 @@ template<typename T> void CPMBuffer<T>::alloc(uint3 _buf_shape, uint3 _buf_offse
     }
 }
 
-template<typename T> void CPMBuffer<T>::alloc(uint3 _buf_shape, uint3 _buf_offset, UINT _buftype, UINT _hdctype, Mapper &_pdom, UINT _color) {
+template<typename T> void CPMBuffer<T>::alloc(INTx3 _buf_shape, INTx3 _buf_offset, FLAG _buftype, FLAG _hdctype, Mapper &_pdom, INT _color) {
     assert(hdctype == HDCType::Empty);
     assert(buftype == BufType::Empty);
     map     = Mapper(_buf_shape, _buf_offset);
     buftype = _buftype;
     hdctype = _hdctype;
     color   = _color;
-    UINT refcolor = (SUM3(_pdom.offset) + SUM3(map.offset)) % 2;
+    INT refcolor = (SUM3(_pdom.offset) + SUM3(map.offset)) % 2;
     size = map.size / 2;
     if (map.size % 2 == 1 && refcolor == color) {
         size ++;
