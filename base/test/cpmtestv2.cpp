@@ -7,7 +7,7 @@
 #define Ny   12
 #define Nz   13
 
-#define USE_CUDA_AWARE_MPI false
+#define USE_CUDA_AWARE_MPI true
 #define THICK 2
 
 using namespace Falm;
