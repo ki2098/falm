@@ -12,5 +12,5 @@ module load nvhpc/nvhpc_20.11
 
 date
 
-# mpirun -np 16 --bind-to core --map-by ppr:2:socket --rank-by core  --report-bindings --mca plm_rsh_agent /bin/pjrsh -machinefile ${PJM_O_NODEINF} bin/cpmtestv2 2 4 2
-mpirun -np 16 --bind-to core --map-by ppr:2:socket --rank-by core  --report-bindings --mca plm_rsh_agent /bin/pjrsh -machinefile ${PJM_O_NODEINF} bin/heat1d2
+mpirun -np 16 --bind-to core --map-by ppr:2:socket --rank-by core  --report-bindings --mca plm_rsh_agent /bin/pjrsh -machinefile ${PJM_O_NODEINF} bin/cpmtestv2 2 4 2
+# mpirun -np 16 --bind-to core --map-by ppr:2:socket --rank-by core  --report-bindings --mca plm_rsh_agent /bin/pjrsh -machinefile ${PJM_O_NODEINF} bin/heat1d2
