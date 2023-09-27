@@ -5,7 +5,32 @@
 
 namespace Falm {
 
-__host__ __device__ static REAL Riam3rdUpwind(
+__host__ __device__ static inline REAL UpwindFlux1st(REAL ul, REAL ur, REAL UF) {
+    return 0.5 * (UF * (ur + ul) - fabs(UF) * (ur - ul));
+}
+
+__host__ __device__ static REAL Upwind1st(
+    REAL ucc,
+    REAL ue1, REAL uw1,
+    REAL un1, REAL us1,
+    REAL ut1, REAL ub1,
+    REAL UE, REAL UW,
+    REAL VN, REAL VS,
+    REAL WT, REAL WB,
+    REAL jacobian
+) {
+    REAL adv = 0.0;
+    adv += UpwindFlux1st(ucc, ue1, UE);
+    adv -= UpwindFlux1st(uw1, ucc, UW);
+    adv += UpwindFlux1st(ucc, un1, VN);
+    adv -= UpwindFlux1st(us1, ucc, VS);
+    adv += UpwindFlux1st(ucc, ut1, WT);
+    adv -= UpwindFlux1st(ub1, ucc, WB);
+    adv /= jacobian;
+    return adv;
+} 
+
+__host__ __device__ static REAL Upwind3rd(
     REAL ucc,
     REAL ue1, REAL ue2, REAL uw1, REAL uw2,
     REAL un1, REAL un2, REAL us1, REAL us2,

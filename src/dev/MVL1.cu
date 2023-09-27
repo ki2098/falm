@@ -184,7 +184,7 @@ __global__ void kernel_ScaleMatrix(MatrixFrame<REAL> &a, REAL scale) {
     INT bsize = PRODUCT3(blockDim);
     INT gtidx = tidx + bidx * bsize;
     if (gtidx < a.size) {
-        a(gtidx) /= scale;
+        a(gtidx) *= scale;
     }
 }
 

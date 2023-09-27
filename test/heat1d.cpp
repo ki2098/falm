@@ -13,8 +13,8 @@ using namespace Falm;
 
 int main() {
     Mapper global(
-        uint3{Nx + 2 * Gd, Ny + 2 * Gd, Nz + 2 * Gd},
-        uint3{0, 0, 0}
+        INTx3{Nx + 2 * Gd, Ny + 2 * Gd, Nz + 2 * Gd},
+        INTx3{0, 0, 0}
     );
     Mapper pdom(global.shape, global.offset);
     Matrix<double> a, t, b, r;
@@ -52,8 +52,8 @@ int main() {
     dim3 block_dim(32, 1, 1);
     double max_diag = L1Dev_MaxDiag(a, pdom, block_dim);
     printf("%12lf\n", max_diag);
-    L1Dev_ScaleMatrix(a, max_diag, block_dim);
-    L1Dev_ScaleMatrix(b, max_diag, block_dim);
+    L1Dev_ScaleMatrix(a, 1.0 / max_diag, block_dim);
+    L1Dev_ScaleMatrix(b, 1.0 / max_diag, block_dim);
     a.sync(MCpType::Dev2Hst);
     b.sync(MCpType::Dev2Hst);
 

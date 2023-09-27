@@ -21,8 +21,8 @@ int main() {
         for (int j = 0; j < 12; j ++) {
             for (int k = 0; k < 12; k ++) {
                 unsigned int idx = IDX(i, j, k, pdom.shape);
-                a(idx, 0) = 300 - SQR(i - 7) - SQR(j - 2) - SQR(k - 5);
-                b(idx, 0) = 150 - SQR(i - 0) - SQR(j - 1) - SQR(k - 1);
+                a(idx, 0) = 300 - SQ(i - 7) - SQ(j - 2) - SQ(k - 5);
+                b(idx, 0) = 150 - SQ(i - 0) - SQ(j - 1) - SQ(k - 1);
             }
         }
     }

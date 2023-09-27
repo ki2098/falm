@@ -9,11 +9,11 @@
 
 namespace Falm {
 
-typedef double         REAL;
-typedef uint32_t       FLAG;
-typedef int32_t         INT;
-struct INTx3 {INT x, y, z;};
-struct __attribute__((aligned(8))) INTx2 {INT x, y;};
+typedef double    REAL;
+typedef unsigned  FLAG;
+typedef int        INT;
+typedef int3     INTx3;
+typedef int2     INTx2;
 
 // typedef int           INT_T;
 // typedef char         CHAR_T;

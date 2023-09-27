@@ -196,8 +196,8 @@ int main(int argc, char **argv) {
     dim3 block_dim(32, 1, 1);
     REAL max_diag = L2Dev_MaxDiag(a, process, block_dim, cpm);
     printf("%12lf\n", max_diag);
-    L1Dev_ScaleMatrix(a, max_diag, block_dim);
-    L1Dev_ScaleMatrix(b, max_diag, block_dim);
+    L1Dev_ScaleMatrix(a, 1.0 / max_diag, block_dim);
+    L1Dev_ScaleMatrix(b, 1.0 / max_diag, block_dim);
     a.sync(MCpType::Dev2Hst);
     b.sync(MCpType::Dev2Hst);
     for (INT i = 0; i < cpm.size; i ++) {
