@@ -4,7 +4,7 @@
 
 using namespace Falm;
 
-#define USE_CUDA_AWARE_MPI true
+#define USE_CUDA_AWARE_MPI false
 
 #define Nx 100
 #define Ny 1
@@ -27,6 +27,7 @@ void set_matrix_value(Matrix<REAL> &x, INTx3 range_shape, INTx3 range_offset, IN
 }
 
 void print_eq(Matrix<REAL> &a, Matrix<REAL> &b, INTx3 shape) {
+    printf("%s = %s\n", a.cname(), b.cname());
     for (INT i = Gd; i < shape.x - Gd; i ++) {
         for (INT j = Gd; j < shape.y - Gd; j ++) {
             for (INT k = Gd; k < shape.z - Gd; k ++) {
@@ -81,10 +82,10 @@ int main(int argc, char **argv) {
         INTx3{0, 0, 0}
     );
     Matrix<REAL> ga, gt, gb, gr;
-    ga.alloc(global.shape, 7, HDCType::Host  , 0);
-    gt.alloc(global.shape, 1, HDCType::Device, 1);
-    gb.alloc(global.shape, 1, HDCType::Host  , 2);
-    gr.alloc(global.shape, 1, HDCType::Device, 3);
+    ga.alloc(global.shape, 7, HDCType::Host  , "global a");
+    gt.alloc(global.shape, 1, HDCType::Device, "global t");
+    gb.alloc(global.shape, 1, HDCType::Host  , "global b");
+    gr.alloc(global.shape, 1, HDCType::Device, "global r");
     const REAL dx = Lx / Nx;
     for (INT i = Gd; i < Gd + Nx; i ++) {
         REAL ac, ae, aw, bc;
@@ -151,10 +152,10 @@ int main(int argc, char **argv) {
     }
 
     Matrix<REAL> a, t, b, r;
-    a.alloc(process.shape, 7, HDCType::Host  , 0);
-    t.alloc(process.shape, 1, HDCType::Device, 1);
-    b.alloc(process.shape, 1, HDCType::Host  , 2);
-    r.alloc(process.shape, 1, HDCType::Device, 3);
+    a.alloc(process.shape, 7, HDCType::Host  , "a");
+    t.alloc(process.shape, 1, HDCType::Device, "t");
+    b.alloc(process.shape, 1, HDCType::Host  , "b");
+    r.alloc(process.shape, 1, HDCType::Device, "r");
     for (INT i = Gd; i < process.shape.x - Gd; i ++) {
         for (INT j = Gd; j < process.shape.y - Gd; j ++) {
             for (INT k = Gd; k < process.shape.z - Gd; k ++) {
@@ -173,7 +174,7 @@ int main(int argc, char **argv) {
 
     INTx3 inner_shape, inner_offset, boundary_shape[6], boundary_offset[6];
     cpm.setRegions(inner_shape, inner_offset, boundary_shape, boundary_offset, 1, process);
-    Matrix<REAL> region(process.shape, 1, HDCType::Host, -1);
+    Matrix<REAL> region(process.shape, 1, HDCType::Host, "region");
     set_matrix_value(region, inner_shape, inner_offset, process.shape, cpm.rank * 10);
     for (INT i = 0; i < 6; i ++) {
         if (cpm.neighbour[i] >= 0) {

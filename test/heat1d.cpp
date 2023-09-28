@@ -18,10 +18,10 @@ int main() {
     );
     Mapper pdom(global.shape, global.offset);
     Matrix<double> a, t, b, r;
-    a.alloc(pdom.shape, 7, HDCType::Host  , 0);
-    t.alloc(pdom.shape, 1, HDCType::Device, 1);
-    b.alloc(pdom.shape, 1, HDCType::Host  , 2);
-    r.alloc(pdom.shape, 1, HDCType::Device, 3);
+    a.alloc(pdom.shape, 7, HDCType::Host  , "a");
+    t.alloc(pdom.shape, 1, HDCType::Device, "t");
+    b.alloc(pdom.shape, 1, HDCType::Host  , "b");
+    r.alloc(pdom.shape, 1, HDCType::Device, "r");
     const double dx = Lx / Nx;
     for (unsigned int i = Gd; i < Gd + Nx; i ++) {
         double ac, ae, aw, bc;

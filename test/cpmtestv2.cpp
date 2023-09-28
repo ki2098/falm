@@ -7,7 +7,7 @@
 #define Ny   12
 #define Nz   13
 
-#define USE_CUDA_AWARE_MPI true
+#define USE_CUDA_AWARE_MPI false
 #define THICK 2
 
 using namespace Falm;
@@ -101,7 +101,7 @@ int main(int argc, char **argv) {
     fflush(stdout);
     CPML2_Barrier(MPI_COMM_WORLD);
 
-    Matrix<REAL> x(process.shape, 1, HDCType::Host, 0);
+    Matrix<REAL> x(process.shape, 1, HDCType::Host, "x");
     for (INT i = Gd; i < process.shape.x - Gd; i ++) {
         for (INT j = Gd; j < process.shape.y - Gd; j ++) {
             for (INT k = Gd; k < process.shape.z - Gd; k ++) {
@@ -203,7 +203,7 @@ int main(int argc, char **argv) {
     fflush(stdout);
     CPML2_Barrier(MPI_COMM_WORLD);
 
-    x.alloc(process.shape, 1, HDCType::Host, 0);
+    x.alloc(process.shape, 1, HDCType::Host);
     for (INT i = Gd; i < process.shape.x - Gd; i ++) {
         for (INT j = Gd; j < process.shape.y - Gd; j ++) {
             for (INT k = Gd; k < process.shape.z - Gd; k ++) {

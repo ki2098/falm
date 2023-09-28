@@ -88,7 +88,7 @@ void L2EqSolver::L2Dev_Struct3d7p_Jacobi(Matrix<REAL> &a, Matrix<REAL> &x, Matri
 
     Mapper inner_map(inner_shape, inner_offset);
 
-    Matrix<REAL> xp(x.shape.x, x.shape.y, HDCType::Device, x.label);
+    Matrix<REAL> xp(x.shape.x, x.shape.y, HDCType::Device, "Jacobi" + x.name + "Previous");
     it = 0;
     do {
         xp.cpy(x, HDCType::Device);
@@ -114,7 +114,7 @@ void L2EqSolver::L2Dev_Struct3d7p_JacobiPC(Matrix<REAL> &a, Matrix<REAL> &x, Mat
 
     Mapper inner_map(inner_shape, inner_offset);
 
-    Matrix<REAL> xp(x.shape.x, x.shape.y, HDCType::Device, x.label);
+    Matrix<REAL> xp(x.shape.x, x.shape.y, HDCType::Device, "Jacobi" + x.name + "Previous");
     INT __it = 0;
     do {
         xp.cpy(x, HDCType::Device);
@@ -188,13 +188,13 @@ void L2EqSolver::L2Dev_Struct3d7p_PBiCGStab(Matrix<REAL> &a, Matrix<REAL> &x, Ma
     Mapper gmap(global, Gd);
     Mapper map(pdom, Gd);
 
-    Matrix<REAL> rr(pdom.shape, 1, HDCType::Device, 101);
-    Matrix<REAL>  p(pdom.shape, 1, HDCType::Device, 102);
-    Matrix<REAL>  q(pdom.shape, 1, HDCType::Device, 103);
-    Matrix<REAL>  s(pdom.shape, 1, HDCType::Device, 104);
-    Matrix<REAL> pp(pdom.shape, 1, HDCType::Device, 105);
-    Matrix<REAL> ss(pdom.shape, 1, HDCType::Device, 106);
-    Matrix<REAL>  t(pdom.shape, 1, HDCType::Device, 107);
+    Matrix<REAL> rr(pdom.shape, 1, HDCType::Device, "PBiCGStab rr");
+    Matrix<REAL>  p(pdom.shape, 1, HDCType::Device, "PBiCGStab  p");
+    Matrix<REAL>  q(pdom.shape, 1, HDCType::Device, "PBiCGStab  q");
+    Matrix<REAL>  s(pdom.shape, 1, HDCType::Device, "PBiCGStab  s");
+    Matrix<REAL> pp(pdom.shape, 1, HDCType::Device, "PBiCGStab pp");
+    Matrix<REAL> ss(pdom.shape, 1, HDCType::Device, "PBiCGStab ss");
+    Matrix<REAL>  t(pdom.shape, 1, HDCType::Device, "PBiCGStab  t");
     REAL rho, rrho, alpha, beta, omega;
 
     L2Dev_Struct3d7p_Res(a, x, b, r, pdom, block_dim, cpm);
