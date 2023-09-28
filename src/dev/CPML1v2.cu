@@ -60,108 +60,72 @@ __global__ void kernel_CPM_UnpackColoredBuffer(REAL *buffer, INTx3 buf_shape, IN
     }
 }
 
-// void CPML1Dev_PackBuffer(CPMBuffer &buffer, REAL *src, Mapper &pdom, dim3 block_dim) {
-//     Mapper &map = buffer.map;
-//     dim3 grid_dim(
-//         (map.shape.x + block_dim.x - 1) / block_dim.x,
-//         (map.shape.y + block_dim.y - 1) / block_dim.y,
-//         (map.shape.z + block_dim.z - 1) / block_dim.z
-//     );
-//     if (buffer.hdctype == HDCType::Device) {
-//         kernel_CPM_PackBuffer<<<grid_dim, block_dim, 0, 0>>>((REAL*)buffer.ptr, buffer.map.shape, buffer.map.offset, src, pdom.shape);
-//     } else if (buffer.hdctype == HDCType::Host) {
-//         REAL *ptr = (REAL*)falmDevMalloc(sizeof(REAL) * buffer.count);
-//         kernel_CPM_PackBuffer<<<grid_dim, block_dim, 0, 0>>>(ptr, buffer.map.shape, buffer.map.offset, src, pdom.shape);
-//         falmMemcpy(buffer.ptr, ptr, sizeof(REAL) * buffer.count, MCpType::Dev2Hst);
-//         falmDevFreePtr(ptr);
-//     }
-// }
-
-// void CPML1Dev_PackColoredBuffer(CPMBuffer &buffer, REAL *src, Mapper &pdom, dim3 block_dim) {
-//     Mapper &map = buffer.map;
-//     dim3 grid_dim(
-//         (map.shape.x + block_dim.x - 1) / block_dim.x,
-//         (map.shape.y + block_dim.y - 1) / block_dim.y,
-//         (map.shape.z + block_dim.z - 1) / block_dim.z
-//     );
-//     if (buffer.hdctype == HDCType::Device) {
-//         kernel_CPM_PackColoredBuffer<<<grid_dim, block_dim, 0, 0>>>((REAL*)buffer.ptr, buffer.map.shape, buffer.map.offset, buffer.color, src, pdom.shape, pdom.offset);
-//     } else if (buffer.hdctype == HDCType::Host) {
-//         REAL *ptr = (REAL*)falmDevMalloc(sizeof(REAL) * buffer.count);
-//         kernel_CPM_PackColoredBuffer<<<grid_dim, block_dim, 0, 0>>>(ptr, buffer.map.shape, buffer.map.offset, buffer.color, src, pdom.shape, pdom.offset);
-//         falmMemcpy(buffer.ptr, ptr, sizeof(REAL) * buffer.count, MCpType::Dev2Hst);
-//         falmDevFreePtr(ptr);
-//     }
-// }
-
-// void CPML1Dev_UnpackBuffer(CPMBuffer &buffer, REAL *dst, Mapper &pdom, dim3 block_dim) {
-//     Mapper &map = buffer.map;
-//     dim3 grid_dim(
-//         (map.shape.x + block_dim.x - 1) / block_dim.x,
-//         (map.shape.y + block_dim.y - 1) / block_dim.y,
-//         (map.shape.z + block_dim.z - 1) / block_dim.z
-//     );
-//     if (buffer.hdctype == HDCType::Device) {
-//         kernel_CPM_UnpackBuffer<<<grid_dim, block_dim, 0, 0>>>((REAL*)buffer.ptr, buffer.map.shape, buffer.map.offset, dst, pdom.shape);
-//     } else if (buffer.hdctype == HDCType::Host) {
-//         REAL *ptr = (REAL*)falmDevMalloc(sizeof(REAL) * buffer.count);
-//         falmMemcpy(ptr, buffer.ptr, sizeof(REAL) * buffer.count, MCpType::Hst2Dev);
-//         kernel_CPM_UnpackBuffer<<<grid_dim, block_dim, 0, 0>>>(ptr, buffer.map.shape, buffer.map.offset, dst, pdom.shape);
-//         falmDevFreePtr(ptr);
-//     }
-// }
-
-// void CPML1Dev_UnpackColoredBuffer(CPMBuffer &buffer, REAL *dst, Mapper &pdom, dim3 block_dim) {
-//     Mapper &map = buffer.map;
-//     dim3 grid_dim(
-//         (map.shape.x + block_dim.x - 1) / block_dim.x,
-//         (map.shape.y + block_dim.y - 1) / block_dim.y,
-//         (map.shape.z + block_dim.z - 1) / block_dim.z
-//     );
-//     if (buffer.hdctype == HDCType::Device) {
-//         kernel_CPM_UnpackColoredBuffer<<<grid_dim, block_dim, 0, 0>>>((REAL*)buffer.ptr, buffer.map.shape, buffer.map.offset, buffer.color, dst, pdom.shape, pdom.offset);
-//     } else if (buffer.hdctype == HDCType::Host) {
-//         REAL *ptr = (REAL*)falmDevMalloc(sizeof(REAL) * buffer.count);
-//         falmMemcpy(ptr, buffer.ptr, sizeof(REAL) * buffer.count, MCpType::Hst2Dev);
-//         kernel_CPM_UnpackColoredBuffer<<<grid_dim, block_dim, 0, 0>>>(ptr, buffer.map.shape, buffer.map.offset, buffer.color, dst, pdom.shape, pdom.offset);
-//         falmDevFreePtr(ptr);
-//     }
-// }
-
-void CPML0Dev_PackBuffer(REAL *buffer, Mapper &map, REAL *src, Mapper &proc, dim3 block_dim, STREAM stream) {
+void CPML1Dev_PackBuffer(CPMBuffer &buffer, REAL *src, Mapper &pdom, dim3 block_dim) {
+    Mapper &map = buffer.map;
     dim3 grid_dim(
         (map.shape.x + block_dim.x - 1) / block_dim.x,
         (map.shape.y + block_dim.y - 1) / block_dim.y,
         (map.shape.z + block_dim.z - 1) / block_dim.z
     );
-    kernel_CPM_PackBuffer<<<grid_dim, block_dim, 0, stream>>>(buffer, map.shape, map.offset, src, proc.shape);
+    if (buffer.hdctype == HDCType::Device) {
+        kernel_CPM_PackBuffer<<<grid_dim, block_dim, 0, 0>>>((REAL*)buffer.ptr, buffer.map.shape, buffer.map.offset, src, pdom.shape);
+    } else if (buffer.hdctype == HDCType::Host) {
+        REAL *ptr = (REAL*)falmDevMalloc(sizeof(REAL) * buffer.count);
+        kernel_CPM_PackBuffer<<<grid_dim, block_dim, 0, 0>>>(ptr, buffer.map.shape, buffer.map.offset, src, pdom.shape);
+        falmMemcpy(buffer.ptr, ptr, sizeof(REAL) * buffer.count, MCpType::Dev2Hst);
+        falmDevFreePtr(ptr);
+    }
 }
 
-void CPML0Dev_PackColoredBuffer(REAL *buffer, Mapper &map, INT color, REAL *src, Mapper &proc, dim3 block_dim, STREAM stream) {
+void CPML1Dev_PackColoredBuffer(CPMBuffer &buffer, REAL *src, Mapper &pdom, dim3 block_dim) {
+    Mapper &map = buffer.map;
     dim3 grid_dim(
         (map.shape.x + block_dim.x - 1) / block_dim.x,
         (map.shape.y + block_dim.y - 1) / block_dim.y,
         (map.shape.z + block_dim.z - 1) / block_dim.z
     );
-    kernel_CPM_PackColoredBuffer<<<grid_dim, block_dim, 0, stream>>>(buffer, map.shape, map.offset, color, src, proc.shape, proc.offset);
+    if (buffer.hdctype == HDCType::Device) {
+        kernel_CPM_PackColoredBuffer<<<grid_dim, block_dim, 0, 0>>>((REAL*)buffer.ptr, buffer.map.shape, buffer.map.offset, buffer.color, src, pdom.shape, pdom.offset);
+    } else if (buffer.hdctype == HDCType::Host) {
+        REAL *ptr = (REAL*)falmDevMalloc(sizeof(REAL) * buffer.count);
+        kernel_CPM_PackColoredBuffer<<<grid_dim, block_dim, 0, 0>>>(ptr, buffer.map.shape, buffer.map.offset, buffer.color, src, pdom.shape, pdom.offset);
+        falmMemcpy(buffer.ptr, ptr, sizeof(REAL) * buffer.count, MCpType::Dev2Hst);
+        falmDevFreePtr(ptr);
+    }
 }
 
-void CPML0Dev_UnpackBuffer(REAL *buffer, Mapper &map, REAL *dst, Mapper &proc, dim3 block_dim, STREAM stream) {
+void CPML1Dev_UnpackBuffer(CPMBuffer &buffer, REAL *dst, Mapper &pdom, dim3 block_dim) {
+    Mapper &map = buffer.map;
     dim3 grid_dim(
         (map.shape.x + block_dim.x - 1) / block_dim.x,
         (map.shape.y + block_dim.y - 1) / block_dim.y,
         (map.shape.z + block_dim.z - 1) / block_dim.z
     );
-    kernel_CPM_UnpackBuffer<<<grid_dim, block_dim, 0, stream>>>(buffer, map.shape, map.offset, dst, proc.shape);
+    if (buffer.hdctype == HDCType::Device) {
+        kernel_CPM_UnpackBuffer<<<grid_dim, block_dim, 0, 0>>>((REAL*)buffer.ptr, buffer.map.shape, buffer.map.offset, dst, pdom.shape);
+    } else if (buffer.hdctype == HDCType::Host) {
+        REAL *ptr = (REAL*)falmDevMalloc(sizeof(REAL) * buffer.count);
+        falmMemcpy(ptr, buffer.ptr, sizeof(REAL) * buffer.count, MCpType::Hst2Dev);
+        kernel_CPM_UnpackBuffer<<<grid_dim, block_dim, 0, 0>>>(ptr, buffer.map.shape, buffer.map.offset, dst, pdom.shape);
+        falmDevFreePtr(ptr);
+    }
 }
 
-void CPML0Dev_UnpackColoredBuffer(REAL *buffer, Mapper &map, INT color, REAL *dst, Mapper &proc, dim3 block_dim, STREAM stream) {
+void CPML1Dev_UnpackColoredBuffer(CPMBuffer &buffer, REAL *dst, Mapper &pdom, dim3 block_dim) {
+    Mapper &map = buffer.map;
     dim3 grid_dim(
         (map.shape.x + block_dim.x - 1) / block_dim.x,
         (map.shape.y + block_dim.y - 1) / block_dim.y,
         (map.shape.z + block_dim.z - 1) / block_dim.z
     );
-    kernel_CPM_UnpackColoredBuffer<<<grid_dim, block_dim, 0, stream>>>(buffer, map.shape, map.offset, color, dst, proc.shape, proc.offset);
+    if (buffer.hdctype == HDCType::Device) {
+        kernel_CPM_UnpackColoredBuffer<<<grid_dim, block_dim, 0, 0>>>((REAL*)buffer.ptr, buffer.map.shape, buffer.map.offset, buffer.color, dst, pdom.shape, pdom.offset);
+    } else if (buffer.hdctype == HDCType::Host) {
+        REAL *ptr = (REAL*)falmDevMalloc(sizeof(REAL) * buffer.count);
+        falmMemcpy(ptr, buffer.ptr, sizeof(REAL) * buffer.count, MCpType::Hst2Dev);
+        kernel_CPM_UnpackColoredBuffer<<<grid_dim, block_dim, 0, 0>>>(ptr, buffer.map.shape, buffer.map.offset, buffer.color, dst, pdom.shape, pdom.offset);
+        falmDevFreePtr(ptr);
+    }
 }
 
 }

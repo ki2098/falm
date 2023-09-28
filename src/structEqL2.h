@@ -4,8 +4,6 @@
 #include "structEqL1.h"
 #include "CPM.h"
 
-extern Falm::STREAM boundaryStream[6];
-
 namespace Falm {
 
 void L2Dev_Struct3d7p_MV(Matrix<REAL> &a, Matrix<REAL> &x, Matrix<REAL> &ax, Mapper &pdom, dim3 block_dim, CPMBase &cpm);
@@ -44,46 +42,56 @@ protected:
 
 private:
     void L2Dev_Struct3d7p_JacobiSweepBoundary(Matrix<REAL> &a, Matrix<REAL> &x, Matrix<REAL> &xp, Matrix<REAL> &b, Mapper &pdom, CPMBase &cpm, INTx3 *boundary_shape, INTx3 *boundary_offset) {
-        
-        for (INT fid = 0; fid < 6; fid ++) {
-            if (cpm.neighbour[fid] >= 0) {
-                dim3 block_dim(
-                    (fid / 2 == 0)? 1U : 8U,
-                    (fid / 2 == 1)? 1U : 8U,
-                    (fid / 2 == 2)? 1U : 8U
-                );
-                Mapper map(boundary_shape[fid], boundary_offset[fid]);
-                // falmCreateStream(&boundaryStream[fid]);
-                L0Dev_Struct3d7p_JacobiSweep(a, x, xp, b, pdom, map, block_dim, boundaryStream[fid]);
-            }
+        if (cpm.neighbour[0] >= 0) {
+            Mapper emap(boundary_shape[0], boundary_offset[0]);
+            L0Dev_Struct3d7p_JacobiSweep(a, x, xp, b, pdom, emap, dim3(1, 8, 8));
         }
-        for (INT fid = 0; fid < 6; fid ++) {
-            if (cpm.neighbour[fid] >= 0) {
-                falmStreamSync(boundaryStream[fid]);
-                // falmDestroyStream(boundaryStream[fid]);
-            }
+        if (cpm.neighbour[1] >= 0) {
+            Mapper wmap(boundary_shape[1], boundary_offset[1]);
+            L0Dev_Struct3d7p_JacobiSweep(a, x, xp, b, pdom, wmap, dim3(1, 8, 8));
+        }
+        if (cpm.neighbour[2] >= 0) {
+            Mapper nmap(boundary_shape[2], boundary_offset[2]);
+            L0Dev_Struct3d7p_JacobiSweep(a, x, xp, b, pdom, nmap, dim3(8, 1, 8));
+        }
+        if (cpm.neighbour[3] >= 0) {
+            Mapper smap(boundary_shape[3], boundary_offset[3]);
+            L0Dev_Struct3d7p_JacobiSweep(a, x, xp, b, pdom, smap, dim3(8, 1 ,8));
+        }
+        if (cpm.neighbour[4] >= 0) {
+            Mapper tmap(boundary_shape[4], boundary_offset[4]);
+            L0Dev_Struct3d7p_JacobiSweep(a, x, xp, b, pdom, tmap, dim3(8, 8, 1));
+        }
+        if (cpm.neighbour[5] >= 0) {
+            Mapper bmap(boundary_shape[5], boundary_offset[5]);
+            L0Dev_Struct3d7p_JacobiSweep(a, x, xp, b, pdom, bmap, dim3(8, 8, 1));
         }
     }
 
     void L2Dev_Struct3d7p_SORSweepBoundary(Matrix<REAL> &a, Matrix<REAL> &x, Matrix<REAL> &b, REAL omega, FLAG color, Mapper &pdom, CPMBase &cpm, INTx3 *boundary_shape, INTx3 *boundary_offset) {
-        
-        for (INT fid = 0; fid < 6; fid ++) {
-            if (cpm.neighbour[fid] >= 0) {
-                dim3 block_dim(
-                    (fid / 2 == 0)? 1U : 8U,
-                    (fid / 2 == 1)? 1U : 8U,
-                    (fid / 2 == 2)? 1U : 8U
-                );
-                Mapper map(boundary_shape[fid], boundary_offset[fid]);
-                // falmCreateStream(&boundaryStream[fid]);
-                L0Dev_Struct3d7p_SORSweep(a, x, b, omega, color, pdom, map, block_dim, boundaryStream[fid]);
-            }
+        if (cpm.neighbour[0] >= 0) {
+            Mapper emap(boundary_shape[0], boundary_offset[0]);
+            L0Dev_Struct3d7p_SORSweep(a, x, b, omega, color, pdom, emap, dim3(1, 8, 8));
         }
-        for (INT fid = 0; fid < 6; fid ++) {
-            if (cpm.neighbour[fid] >= 0) {
-                falmStreamSync(boundaryStream[fid]);
-                // falmDestroyStream(boundaryStream[fid]);
-            }
+        if (cpm.neighbour[1] >= 0) {
+            Mapper wmap(boundary_shape[1], boundary_offset[1]);
+            L0Dev_Struct3d7p_SORSweep(a, x, b, omega, color, pdom, wmap, dim3(1, 8, 8));
+        }
+        if (cpm.neighbour[2] >= 0) {
+            Mapper nmap(boundary_shape[2], boundary_offset[2]);
+            L0Dev_Struct3d7p_SORSweep(a, x, b, omega, color, pdom, nmap, dim3(8, 1, 8));
+        }
+        if (cpm.neighbour[3] >= 0) {
+            Mapper smap(boundary_shape[3], boundary_offset[3]);
+            L0Dev_Struct3d7p_SORSweep(a, x, b, omega, color, pdom, smap, dim3(8, 1, 8));
+        }
+        if (cpm.neighbour[4] >= 0) {
+            Mapper tmap(boundary_shape[4], boundary_offset[4]);
+            L0Dev_Struct3d7p_SORSweep(a, x, b, omega, color, pdom, tmap, dim3(8, 8, 1));
+        }
+        if (cpm.neighbour[5] >= 0) {
+            Mapper bmap(boundary_shape[5], boundary_offset[5]);
+            L0Dev_Struct3d7p_SORSweep(a, x, b, omega, color, pdom, bmap, dim3(8, 8, 1));
         }
     }
 };

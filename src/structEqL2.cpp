@@ -11,31 +11,35 @@ void L2Dev_Struct3d7p_MV(Matrix<REAL> &a, Matrix<REAL> &x, Matrix<REAL> &ax, Map
     cpm.setRegions(inner_shape, inner_offset, boundary_shape, boundary_offset, 1, pdom);
 
     Mapper inner_map(inner_shape, inner_offset);
-    L0Dev_Struct3d7p_MV(a, x, ax, pdom, inner_map, block_dim, cudaStreamPerThread);
+    L0Dev_Struct3d7p_MV(a, x, ax, pdom, inner_map, block_dim);
 
     cpmop.CPML2_Wait6Face();
     cpmop.CPML2Dev_PostExchange6Face();
 
-    
-    for (INT fid = 0; fid < 6; fid ++) {
-        if (cpm.neighbour[fid] >= 0) {
-            dim3 block_dim(
-                (fid / 2 == 0)? 1U : 8U,
-                (fid / 2 == 1)? 1U : 8U,
-                (fid / 2 == 2)? 1U : 8U
-            );
-            Mapper map(boundary_shape[fid], boundary_offset[fid]);
-            // falmCreateStream(&boundaryStream[fid]);
-            L0Dev_Struct3d7p_MV(a, x, ax, pdom, map, block_dim, boundaryStream[fid]);
-        }
+    if (cpm.neighbour[0] >= 0) {
+        Mapper emap(boundary_shape[0], boundary_offset[0]);
+        L0Dev_Struct3d7p_MV(a, x, ax, pdom, emap, dim3(1, 8, 8));
     }
-    for (INT fid = 0; fid < 6; fid ++) {
-        if (cpm.neighbour[fid] >= 0) {
-            falmStreamSync(boundaryStream[fid]);
-            // falmDestroyStream(boundaryStream[fid]);
-        }
+    if (cpm.neighbour[1] >= 0) {
+        Mapper wmap(boundary_shape[1], boundary_offset[1]);
+        L0Dev_Struct3d7p_MV(a, x, ax, pdom, wmap, dim3(1, 8, 8));
     }
-    falmStreamSync(cudaStreamPerThread);
+    if (cpm.neighbour[2] >= 0) {
+        Mapper nmap(boundary_shape[2], boundary_offset[2]);
+        L0Dev_Struct3d7p_MV(a, x, ax, pdom, nmap, dim3(8, 1, 8));
+    }
+    if (cpm.neighbour[3] >= 0) {
+        Mapper smap(boundary_shape[3], boundary_offset[3]);
+        L0Dev_Struct3d7p_MV(a, x, ax, pdom, smap, dim3(8, 1 ,8));
+    }
+    if (cpm.neighbour[4] >= 0) {
+        Mapper tmap(boundary_shape[4], boundary_offset[4]);
+        L0Dev_Struct3d7p_MV(a, x, ax, pdom, tmap, dim3(8, 8, 1));
+    }
+    if (cpm.neighbour[5] >= 0) {
+        Mapper bmap(boundary_shape[5], boundary_offset[5]);
+        L0Dev_Struct3d7p_MV(a, x, ax, pdom, bmap, dim3(8, 8, 1));
+    }
 }
 
 void L2Dev_Struct3d7p_Res(Matrix<REAL> &a, Matrix<REAL> &x, Matrix<REAL> &b, Matrix<REAL> &r, Mapper &pdom, dim3 block_dim, CPMBase &cpm) {
@@ -50,26 +54,30 @@ void L2Dev_Struct3d7p_Res(Matrix<REAL> &a, Matrix<REAL> &x, Matrix<REAL> &b, Mat
     cpmop.CPML2_Wait6Face();
     cpmop.CPML2Dev_PostExchange6Face();
 
-    
-    for (INT fid = 0; fid < 6; fid ++) {
-        if (cpm.neighbour[fid] >= 0) {
-            dim3 block_dim(
-                (fid / 2 == 0)? 1U : 8U,
-                (fid / 2 == 1)? 1U : 8U,
-                (fid / 2 == 2)? 1U : 8U
-            );
-            Mapper map(boundary_shape[fid], boundary_offset[fid]);
-            // falmCreateStream(&boundaryStream[fid]);
-            L0Dev_Struct3d7p_Res(a, x, b, r, pdom, map, block_dim, boundaryStream[fid]);
-        }
+    if (cpm.neighbour[0] >= 0) {
+        Mapper emap(boundary_shape[0], boundary_offset[0]);
+        L0Dev_Struct3d7p_Res(a, x, b, r, pdom, emap, dim3(1, 8, 8));
     }
-    for (INT fid = 0; fid < 6; fid ++) {
-        if (cpm.neighbour[fid] >= 0) {
-            falmStreamSync(boundaryStream[fid]);
-            // falmDestroyStream(boundaryStream[fid]);
-        }
+    if (cpm.neighbour[1] >= 0) {
+        Mapper wmap(boundary_shape[1], boundary_offset[1]);
+        L0Dev_Struct3d7p_Res(a, x, b, r, pdom, wmap, dim3(1, 8, 8));
     }
-    falmStreamSync(cudaStreamPerThread);
+    if (cpm.neighbour[2] >= 0) {
+        Mapper nmap(boundary_shape[2], boundary_offset[2]);
+        L0Dev_Struct3d7p_Res(a, x, b, r, pdom, nmap, dim3(8, 1, 8));
+    }
+    if (cpm.neighbour[3] >= 0) {
+        Mapper smap(boundary_shape[3], boundary_offset[3]);
+        L0Dev_Struct3d7p_Res(a, x, b, r, pdom, smap, dim3(8, 1 ,8));
+    }
+    if (cpm.neighbour[4] >= 0) {
+        Mapper tmap(boundary_shape[4], boundary_offset[4]);
+        L0Dev_Struct3d7p_Res(a, x, b, r, pdom, tmap, dim3(8, 8, 1));
+    }
+    if (cpm.neighbour[5] >= 0) {
+        Mapper bmap(boundary_shape[5], boundary_offset[5]);
+        L0Dev_Struct3d7p_Res(a, x, b, r, pdom, bmap, dim3(8, 8, 1));
+    }
 }
 
 void L2EqSolver::L2Dev_Struct3d7p_Jacobi(Matrix<REAL> &a, Matrix<REAL> &x, Matrix<REAL> &b, Matrix<REAL> &r, Mapper &global, Mapper &pdom, dim3 block_dim, CPMBase &cpm) {
@@ -80,7 +88,7 @@ void L2EqSolver::L2Dev_Struct3d7p_Jacobi(Matrix<REAL> &a, Matrix<REAL> &x, Matri
 
     Mapper inner_map(inner_shape, inner_offset);
 
-    Matrix<REAL> xp(x.shape.x, x.shape.y, HDCType::Device, x.name + " previous");
+    Matrix<REAL> xp(x.shape.x, x.shape.y, HDCType::Device, x.label);
     it = 0;
     do {
         xp.cpy(x, HDCType::Device);
@@ -92,7 +100,6 @@ void L2EqSolver::L2Dev_Struct3d7p_Jacobi(Matrix<REAL> &a, Matrix<REAL> &x, Matri
         cpmop.CPML2Dev_PostExchange6Face();
 
         L2Dev_Struct3d7p_JacobiSweepBoundary(a, x, xp, b, pdom, cpm, boundary_shape, boundary_offset);
-        falmStreamSync(cudaStreamPerThread);
 
         L2Dev_Struct3d7p_Res(a, x, b, r, pdom, block_dim, cpm);
         err = sqrt(L2Dev_Norm2Sq(r, pdom, block_dim, cpm)) / gmap.size;
@@ -107,7 +114,7 @@ void L2EqSolver::L2Dev_Struct3d7p_JacobiPC(Matrix<REAL> &a, Matrix<REAL> &x, Mat
 
     Mapper inner_map(inner_shape, inner_offset);
 
-    Matrix<REAL> xp(x.shape.x, x.shape.y, HDCType::Device, x.name + " previous");
+    Matrix<REAL> xp(x.shape.x, x.shape.y, HDCType::Device, x.label);
     INT __it = 0;
     do {
         xp.cpy(x, HDCType::Device);
@@ -119,7 +126,6 @@ void L2EqSolver::L2Dev_Struct3d7p_JacobiPC(Matrix<REAL> &a, Matrix<REAL> &x, Mat
         cpmop.CPML2Dev_PostExchange6Face();
 
         L2Dev_Struct3d7p_JacobiSweepBoundary(a, x, xp, b, pdom, cpm, boundary_shape, boundary_offset);
-        falmStreamSync(cudaStreamPerThread);
         
         __it ++;
     } while (__it < pc_maxit);
@@ -140,14 +146,12 @@ void L2EqSolver::L2Dev_Struct3d7p_SOR(Matrix<REAL> &a, Matrix<REAL> &x, Matrix<R
         cpmop.CPML2_Wait6Face();
         cpmop.CPML2Dev_PostExchange6ColoredFace();
         L2Dev_Struct3d7p_SORSweepBoundary(a, x, b, relax_factor, Color::Black, pdom, cpm, boundary_shape, boundary_offset);
-        falmStreamSync(cudaStreamPerThread);
 
         cpmop.CPML2Dev_IExchange6ColoredFace(x.dev.ptr, pdom, Color::Black, 1, 0);
         L0Dev_Struct3d7p_SORSweep(a, x, b, relax_factor, Color::Red, pdom, inner_map, block_dim);
         cpmop.CPML2_Wait6Face();
         cpmop.CPML2Dev_PostExchange6ColoredFace();
         L2Dev_Struct3d7p_SORSweepBoundary(a, x, b, relax_factor, Color::Red, pdom, cpm, boundary_shape, boundary_offset);
-        falmStreamSync(cudaStreamPerThread);
 
         L2Dev_Struct3d7p_Res(a, x, b, r, pdom, block_dim, cpm);
         err = sqrt(L2Dev_Norm2Sq(r, pdom, block_dim, cpm)) / gmap.size;
@@ -165,18 +169,16 @@ void L2EqSolver::L2Dev_Struct3d7p_SORPC(Matrix<REAL> &a, Matrix<REAL> &x, Matrix
     INT __it = 0;
     do {
         cpmop.CPML2Dev_IExchange6ColoredFace(x.dev.ptr, pdom, Color::Red, 1, 0);
-        L0Dev_Struct3d7p_SORSweep(a, x, b, pc_relax_factor, Color::Black, pdom, inner_map, block_dim, cudaStreamPerThread);
+        L0Dev_Struct3d7p_SORSweep(a, x, b, pc_relax_factor, Color::Black, pdom, inner_map, block_dim);
         cpmop.CPML2_Wait6Face();
         cpmop.CPML2Dev_PostExchange6ColoredFace();
         L2Dev_Struct3d7p_SORSweepBoundary(a, x, b, pc_relax_factor, Color::Black, pdom, cpm, boundary_shape, boundary_offset);
-        // falmStreamSync(cudaStreamPerThread);
 
         cpmop.CPML2Dev_IExchange6ColoredFace(x.dev.ptr, pdom, Color::Black, 1, 0);
-        L0Dev_Struct3d7p_SORSweep(a, x, b, pc_relax_factor, Color::Red, pdom, inner_map, block_dim, cudaStreamPerThread);
+        L0Dev_Struct3d7p_SORSweep(a, x, b, pc_relax_factor, Color::Red, pdom, inner_map, block_dim);
         cpmop.CPML2_Wait6Face();
         cpmop.CPML2Dev_PostExchange6ColoredFace();
         L2Dev_Struct3d7p_SORSweepBoundary(a, x, b, pc_relax_factor, Color::Red, pdom, cpm, boundary_shape, boundary_offset);
-        // falmStreamSync(cudaStreamPerThread);
 
         __it ++;
     } while (__it < pc_maxit);
@@ -186,13 +188,13 @@ void L2EqSolver::L2Dev_Struct3d7p_PBiCGStab(Matrix<REAL> &a, Matrix<REAL> &x, Ma
     Mapper gmap(global, Gd);
     Mapper map(pdom, Gd);
 
-    Matrix<REAL> rr(pdom.shape, 1, HDCType::Device, "PBiCGStab rr");
-    Matrix<REAL>  p(pdom.shape, 1, HDCType::Device, "PBiCGStab p" );
-    Matrix<REAL>  q(pdom.shape, 1, HDCType::Device, "PBiCGStab q" );
-    Matrix<REAL>  s(pdom.shape, 1, HDCType::Device, "PBiCGStab s" );
-    Matrix<REAL> pp(pdom.shape, 1, HDCType::Device, "PBiCGStab pp");
-    Matrix<REAL> ss(pdom.shape, 1, HDCType::Device, "PBiCGStab ss");
-    Matrix<REAL>  t(pdom.shape, 1, HDCType::Device, "PBiCGStab t" );
+    Matrix<REAL> rr(pdom.shape, 1, HDCType::Device, 101);
+    Matrix<REAL>  p(pdom.shape, 1, HDCType::Device, 102);
+    Matrix<REAL>  q(pdom.shape, 1, HDCType::Device, 103);
+    Matrix<REAL>  s(pdom.shape, 1, HDCType::Device, 104);
+    Matrix<REAL> pp(pdom.shape, 1, HDCType::Device, 105);
+    Matrix<REAL> ss(pdom.shape, 1, HDCType::Device, 106);
+    Matrix<REAL>  t(pdom.shape, 1, HDCType::Device, 107);
     REAL rho, rrho, alpha, beta, omega;
 
     L2Dev_Struct3d7p_Res(a, x, b, r, pdom, block_dim, cpm);

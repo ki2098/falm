@@ -9,13 +9,11 @@
 
 namespace Falm {
 
-typedef double         REAL;
-typedef unsigned       FLAG;
-typedef int             INT;
-typedef int3          INTx3;
-typedef int2          INTx2;
-typedef int           ERROR;
-typedef cudaStream_t STREAM;
+typedef double    REAL;
+typedef unsigned  FLAG;
+typedef int        INT;
+typedef int3     INTx3;
+typedef int2     INTx2;
 
 // typedef int           INT_T;
 // typedef char         CHAR_T;
