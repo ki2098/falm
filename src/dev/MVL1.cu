@@ -42,8 +42,8 @@ REAL L0Dev_DotProduct(Matrix<REAL> &a, Matrix<REAL> &b, Mapper &pdom, Mapper &ma
     );
     INT n_blocks = PRODUCT3(grid_dim);
     INT n_threads = PRODUCT3(block_dim);
-    REAL *partial_sum = (REAL*)falmHostMalloc(sizeof(REAL) * n_blocks);
-    REAL *partial_sum_dev = (REAL*)falmDevMalloc(sizeof(REAL) * n_blocks);
+    REAL *partial_sum = (REAL*)falmMallocPinned(sizeof(REAL) * n_blocks);
+    REAL *partial_sum_dev = (REAL*)falmMallocDevice(sizeof(REAL) * n_blocks);
     size_t shared_size = n_threads * sizeof(REAL);
 
     kernel_DotProduct<<<grid_dim, block_dim, shared_size, 0>>>(*(a.devptr), *(b.devptr), partial_sum_dev, pdom.shape, map.shape, map.offset);
@@ -54,8 +54,8 @@ REAL L0Dev_DotProduct(Matrix<REAL> &a, Matrix<REAL> &b, Mapper &pdom, Mapper &ma
         sum += partial_sum[i];
     }
 
-    falmHostFreePtr(partial_sum);
-    falmDevFreePtr(partial_sum_dev);
+    falmFreePinned(partial_sum);
+    falmFreeDevice(partial_sum_dev);
 
     return sum;
 }
@@ -99,8 +99,8 @@ REAL L0Dev_Norm2Sq(Matrix<REAL> &a, Mapper &pdom, Mapper &map, dim3 block_dim) {
     );
     INT n_blocks = PRODUCT3(grid_dim);
     INT n_threads = PRODUCT3(block_dim);
-    REAL *partial_sum = (REAL*)falmHostMalloc(sizeof(REAL) * n_blocks);
-    REAL *partial_sum_dev = (REAL*)falmDevMalloc(sizeof(REAL) * n_blocks);
+    REAL *partial_sum = (REAL*)falmMallocPinned(sizeof(REAL) * n_blocks);
+    REAL *partial_sum_dev = (REAL*)falmMallocDevice(sizeof(REAL) * n_blocks);
     size_t shared_size = n_threads * sizeof(REAL);
 
     kernel_Norm2Sq<<<grid_dim, block_dim, shared_size, 0>>>(*(a.devptr), partial_sum_dev, pdom.shape, map.shape, map.offset);
@@ -111,8 +111,8 @@ REAL L0Dev_Norm2Sq(Matrix<REAL> &a, Mapper &pdom, Mapper &map, dim3 block_dim) {
         sum += partial_sum[i];
     }
 
-    falmHostFreePtr(partial_sum);
-    falmDevFreePtr(partial_sum_dev);
+    falmFreePinned(partial_sum);
+    falmFreeDevice(partial_sum_dev);
 
     return sum;
 }
@@ -158,8 +158,8 @@ REAL L0Dev_MaxDiag(Matrix<REAL> &a, Mapper &pdom, Mapper &map, dim3 block_dim) {
     );
     INT n_blocks = PRODUCT3(grid_dim);
     INT n_threads = PRODUCT3(block_dim);
-    REAL *partial_max = (REAL*)falmHostMalloc(sizeof(REAL) * n_blocks);
-    REAL *partial_max_dev = (REAL*)falmDevMalloc(sizeof(REAL) * n_blocks);
+    REAL *partial_max = (REAL*)falmMallocPinned(sizeof(REAL) * n_blocks);
+    REAL *partial_max_dev = (REAL*)falmMallocDevice(sizeof(REAL) * n_blocks);
     size_t shared_size = n_threads * sizeof(REAL);
 
     kernel_MaxDiag<<<grid_dim, block_dim, shared_size, 0>>>(*(a.devptr), partial_max_dev, pdom.shape, map.shape, map.offset);
@@ -172,8 +172,8 @@ REAL L0Dev_MaxDiag(Matrix<REAL> &a, Mapper &pdom, Mapper &map, dim3 block_dim) {
         }
     }
 
-    falmHostFreePtr(partial_max);
-    falmDevFreePtr(partial_max_dev);
+    falmFreePinned(partial_max);
+    falmFreeDevice(partial_max_dev);
 
     return maximum;
 }

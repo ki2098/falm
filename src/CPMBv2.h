@@ -29,9 +29,9 @@ struct CPMBuffer {
     CPMBuffer() : ptr(nullptr), count(0), buftype(BufType::Empty), hdctype(HDCType::Empty) {}
     ~CPMBuffer() {
         if (hdctype == HDCType::Host) {
-            falmHostFreePtr(ptr);
+            falmFreePinned(ptr);
         } else if (hdctype == HDCType::Device) {
-            falmDevFreePtr(ptr);
+            falmFreeDevice(ptr);
         }
     }
 
@@ -44,9 +44,9 @@ struct CPMBuffer {
         buftype = _buftype;
         hdctype = _hdctype;
         if (hdctype == HDCType::Host) {
-            ptr = falmHostMalloc(width * count);
+            ptr = falmMallocPinned(width * count);
         } else if (hdctype == HDCType::Device) {
-            ptr = falmDevMalloc(width * count);
+            ptr = falmMallocDevice(width * count);
         }
     }
 
@@ -64,17 +64,17 @@ struct CPMBuffer {
             count ++;
         }
         if (hdctype == HDCType::Host) {
-            ptr = falmHostMalloc(width * count);
+            ptr = falmMallocPinned(width * count);
         } else if (hdctype == HDCType::Device) {
-            ptr = falmDevMalloc(width * count);
+            ptr = falmMallocDevice(width * count);
         }
     }
 
     void release() {
         if (hdctype == HDCType::Host) {
-            falmHostFreePtr(ptr);
+            falmFreePinned(ptr);
         } else if (hdctype == HDCType::Device) {
-            falmDevFreePtr(ptr);
+            falmFreeDevice(ptr);
         }
         hdctype = HDCType::Empty;
         buftype = BufType::Empty;

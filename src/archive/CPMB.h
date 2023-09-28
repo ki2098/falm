@@ -51,7 +51,7 @@ template<typename T> CPMBuffer<T>::CPMBuffer(INTx3 _buf_shape, INTx3 _buf_offset
     hdctype(_hdctype)
 {
     if (hdctype == HDCType::Host) {
-        ptr = (T*)falmHostMalloc(sizeof(T) * size);
+        ptr = (T*)falmHostMallocPinned(sizeof(T) * size);
     } else if (hdctype == HDCType::Device) {
         ptr = (T*)falmDevMalloc(sizeof(T) * size);
     }
@@ -69,7 +69,7 @@ template<typename T> CPMBuffer<T>::CPMBuffer(INTx3 _buf_shape, INTx3 _buf_offset
         size ++;
     }
     if (hdctype == HDCType::Host) {
-        ptr = (T*)falmHostMalloc(sizeof(T) * size);
+        ptr = (T*)falmHostMallocPinned(sizeof(T) * size);
     } else if (hdctype == HDCType::Device) {
         ptr = (T*)falmDevMalloc(sizeof(T) * size);
     }
@@ -92,7 +92,7 @@ template<typename T> void CPMBuffer<T>::alloc(INTx3 _buf_shape, INTx3 _buf_offse
     buftype = _buftype;
     hdctype = _hdctype;
     if (hdctype == HDCType::Host) {
-        ptr = (T*)falmHostMalloc(sizeof(T) * size);
+        ptr = (T*)falmHostMallocPinned(sizeof(T) * size);
     } else if (hdctype == HDCType::Device) {
         ptr = (T*)falmDevMalloc(sizeof(T) * size);
     }
@@ -111,7 +111,7 @@ template<typename T> void CPMBuffer<T>::alloc(INTx3 _buf_shape, INTx3 _buf_offse
         size ++;
     }
     if (hdctype == HDCType::Host) {
-        ptr = (T*)falmHostMalloc(sizeof(T) * size);
+        ptr = (T*)falmHostMallocPinned(sizeof(T) * size);
     } else if (hdctype == HDCType::Device) {
         ptr = (T*)falmDevMalloc(sizeof(T) * size);
     }

@@ -11,7 +11,7 @@
 using namespace Falm;
 
 void print_buffer_dev(CPMBuffer<double> &buffer) {
-    double *ptr = (double *)falmHostMalloc(sizeof(double) * buffer.size);
+    double *ptr = (double *)falmMallocPinned(sizeof(double) * buffer.size);
     falmMemcpy(ptr, buffer.ptr, sizeof(double) * buffer.size, MCpType::Dev2Hst);
     for (int i = 0; i < buffer.size; i ++) {
         printf("%-3.0lf ", ptr[i]);
