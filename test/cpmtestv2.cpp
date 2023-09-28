@@ -7,7 +7,7 @@
 #define Ny   12
 #define Nz   13
 
-#define USE_CUDA_AWARE_MPI true
+#define USE_CUDA_AWARE_MPI false
 #define THICK 2
 
 using namespace Falm;
@@ -76,6 +76,9 @@ int main(int argc, char **argv) {
     printf("%d(%u %u %u): E%2d W%2d N%2d S%2d T%2d B%2d\n", cpm.rank, cpm.idx.x, cpm.idx.y, cpm.idx.z, cpm.neighbour[0], cpm.neighbour[1], cpm.neighbour[2], cpm.neighbour[3], cpm.neighbour[4], cpm.neighbour[5]);
     fflush(stdout);
     CPML2_Barrier(MPI_COMM_WORLD);
+    cpm.use_cuda_aware_mpi = USE_CUDA_AWARE_MPI;
+    CPMOp<REAL> cpmop(cpm);
+    printf("cpmop %d: %d %u\n", cpm.rank, cpmop.mpi_dtype == MPI_DOUBLE, cpmop.buffer_hdctype);
 
     int gpu_count;
     cudaGetDeviceCount(&gpu_count);
@@ -101,7 +104,7 @@ int main(int argc, char **argv) {
     fflush(stdout);
     CPML2_Barrier(MPI_COMM_WORLD);
 
-    Matrix<REAL> x(process.shape, 1, HDCType::Host, 0);
+    Matrix<REAL> x(process.shape, 1, HDCType::Host, "0");
     for (INT i = Gd; i < process.shape.x - Gd; i ++) {
         for (INT j = Gd; j < process.shape.y - Gd; j ++) {
             for (INT k = Gd; k < process.shape.z - Gd; k ++) {
@@ -122,9 +125,6 @@ int main(int argc, char **argv) {
         CPML2_Barrier(MPI_COMM_WORLD);
     }
 
-    cpm.use_cuda_aware_mpi = USE_CUDA_AWARE_MPI;
-    CPMOp<REAL> cpmop(cpm);
-    printf("cpmop %d: %d %u\n", cpm.rank, cpmop.mpi_dtype == MPI_DOUBLE, cpmop.buffer_hdctype);
     CPML2_Barrier(MPI_COMM_WORLD);
     INT thick = THICK;
 
@@ -140,7 +140,6 @@ int main(int argc, char **argv) {
         // cpmop.CPML2dev_IExchange6Face(x.dev.ptr, process, thick, 0);
         cpmop.CPML2_Wait6Face();
         // printf("%p\n", x.dev.ptr);
-        printf("%d sending complete\n", cpm.rank);
         cpmop.CPML2Dev_PostExchange6ColoredFace();
         // cpmop.CPML2dev_PostExchange6Face();
     }
@@ -203,7 +202,7 @@ int main(int argc, char **argv) {
     fflush(stdout);
     CPML2_Barrier(MPI_COMM_WORLD);
 
-    x.alloc(process.shape, 1, HDCType::Host, 0);
+    x.alloc(process.shape, 1, HDCType::Host);
     for (INT i = Gd; i < process.shape.x - Gd; i ++) {
         for (INT j = Gd; j < process.shape.y - Gd; j ++) {
             for (INT k = Gd; k < process.shape.z - Gd; k ++) {

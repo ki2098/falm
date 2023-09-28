@@ -2,6 +2,8 @@ nvmpicxx = /opt/nvidia/hpc_sdk/Linux_x86_64/23.3/comm_libs/mpi/bin/mpic++
 nvnvcxx = /opt/nvidia/hpc_sdk/Linux_x86_64/23.3/compilers/bin/nvc++
 nvnvcc = /opt/nvidia/hpc_sdk/Linux_x86_64/23.3/cuda/bin/nvcc
 
+cuflag = --default-stream per-thread
+
 mvl1obj    = bin/MVL1.o
 mvl2obj    = 
 eql1obj    = bin/structEqL1.o
@@ -16,36 +18,36 @@ eqobj      = $(eql1obj) $(eql2obj)
 cpmobj     = $(cpml1v2obj) $(cpml2v2obj)
 
 mvl1:
-	$(nvnvcc) -c ../src/dev/MVL1.cu --std=c++11 -o $(mvl1obj)
+	$(nvnvcc) -c ../src/dev/MVL1.cu $(cuflag) --std=c++11 -o $(mvl1obj)
 
 mvl1ito:
-	nvcc -c ../src/dev/MVL1.cu --std=c++11 -o $(mvl1obj)
+	nvcc -c ../src/dev/MVL1.cu $(cuflag) --std=c++11 -o $(mvl1obj)
 
 eql1:
-	$(nvnvcc) -c ../src/dev/structEqL1.cu --std=c++11 -o $(eql1obj)
+	$(nvnvcc) -c ../src/dev/structEqL1.cu $(cuflag) --std=c++11 -o $(eql1obj)
 
 eql1ito:
-	nvcc -c ../src/dev/structEqL1.cu --std=c++11 -o $(eql1obj)
+	nvcc -c ../src/dev/structEqL1.cu $(cuflag) --std=c++11 -o $(eql1obj)
 
 cpml1:
-	$(nvnvcc) -c ../src/dev/CPML1.cu --std=c++11 -o $(cpml1obj)
+	$(nvnvcc) -c ../src/dev/CPML1.cu $(cuflag) --std=c++11 -o $(cpml1obj)
 
 cpml1v2:
-	$(nvnvcc) -c ../src/dev/CPML1v2.cu --std=c++11 -o $(cpml1v2obj)
+	$(nvnvcc) -c ../src/dev/CPML1v2.cu $(cuflag) --std=c++11 -o $(cpml1v2obj)
 
 cpml1ito:
-	nvcc -c ../src/dev/CPML1.cu --std=c++11 -o $(cpml1obj)
+	nvcc -c ../src/dev/CPML1.cu $(cuflag) --std=c++11 -o $(cpml1obj)
 
 cpml1v2ito:
-	nvcc -c ../src/dev/CPML1v2.cu --std=c++11 -o $(cpml1v2obj)
+	nvcc -c ../src/dev/CPML1v2.cu $(cuflag) --std=c++11 -o $(cpml1v2obj)
 
 cpml2: cpml1
-	$(nvmpicxx) -cuda -c ../src/CPML2.cpp --std=c++11 -o $(cpml2obj)
+	$(nvmpicxx) -cuda -c ../src/CPML2.cpp $(cuflag) --std=c++11 -o $(cpml2obj)
 
 cpml2v2: cpml1v2
 
 cpml2ito: cpml1ito
-	mpic++ -cuda -c ../src/CPML2.cpp --std=c++11 -o $(cpml2obj)
+	mpic++ -cuda -c ../src/CPML2.cpp $(cuflag) --std=c++11 -o $(cpml2obj)
 
 cpml2v2ito: cpml1v2ito
 

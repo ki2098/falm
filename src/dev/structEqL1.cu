@@ -36,7 +36,7 @@ __global__ void kernel_Struct3d7p_MV(MatrixFrame<REAL> &a, MatrixFrame<REAL> &x,
     }
 }
 
-void L0Dev_Struct3d7p_MV(Matrix<REAL> &a, Matrix<REAL> &x, Matrix<REAL> &ax, Mapper &pdom, Mapper &map, dim3 block_dim) {
+void L0Dev_Struct3d7p_MV(Matrix<REAL> &a, Matrix<REAL> &x, Matrix<REAL> &ax, Mapper &pdom, Mapper &map, dim3 block_dim, STREAM stream) {
     assert(
         a.shape.x == x.shape.x && a.shape.x == ax.shape.x &&
         a.shape.y == 7 && x.shape.y == 1 && ax.shape.y == 1
@@ -82,7 +82,7 @@ __global__ void kernel_Struct3d7p_Res(MatrixFrame<REAL> &a, MatrixFrame<REAL> &x
     }
 }
 
-void L0Dev_Struct3d7p_Res(Matrix<REAL> &a, Matrix<REAL> &x, Matrix<REAL> &b, Matrix<REAL> &r, Mapper &pdom, Mapper &map, dim3 block_dim) {
+void L0Dev_Struct3d7p_Res(Matrix<REAL> &a, Matrix<REAL> &x, Matrix<REAL> &b, Matrix<REAL> &r, Mapper &pdom, Mapper &map, dim3 block_dim, STREAM stream) {
     assert(
         a.shape.x == x.shape.x && a.shape.x == b.shape.x && a.shape.x == r.shape.x &&
         a.shape.y == 7 && x.shape.y == 1 && b.shape.y == 1 && r.shape.y == 1
@@ -128,7 +128,7 @@ __global__ void kernel_Struct3d7p_Jacobi(MatrixFrame<REAL> &a, MatrixFrame<REAL>
     }
 }
 
-void L1EqSolver::L0Dev_Struct3d7p_JacobiSweep(Matrix<REAL> &a, Matrix<REAL> &x, Matrix<REAL> &xp, Matrix<REAL> &b, Mapper &pdom, Mapper &map, dim3 block_dim) {
+void L1EqSolver::L0Dev_Struct3d7p_JacobiSweep(Matrix<REAL> &a, Matrix<REAL> &x, Matrix<REAL> &xp, Matrix<REAL> &b, Mapper &pdom, Mapper &map, dim3 block_dim, STREAM stream) {
     dim3 grid_dim(
         (map.shape.x + block_dim.x - 1) / block_dim.x,
         (map.shape.y + block_dim.y - 1) / block_dim.y,
@@ -145,7 +145,7 @@ void L1EqSolver::L1Dev_Struct3d7p_Jacobi(Matrix<REAL> &a, Matrix<REAL> &x, Matri
         a.shape.y == 7 && x.shape.y == 1 && b.shape.y == 1 && r.shape.y == 1
     );
 
-    Matrix<REAL> xp(x.shape.x, x.shape.y, HDCType::Device, x.label);
+    Matrix<REAL> xp(x.shape.x, x.shape.y, HDCType::Device, x.name + " previous");
     it = 0;
     do {
         xp.cpy(x, HDCType::Device);
@@ -158,7 +158,7 @@ void L1EqSolver::L1Dev_Struct3d7p_Jacobi(Matrix<REAL> &a, Matrix<REAL> &x, Matri
 
 void L1EqSolver::L1Dev_Struct3d7p_JacobiPC(Matrix<REAL> &a, Matrix<REAL> &x, Matrix<REAL> &b, Mapper &pdom, dim3 block_dim) {
     Mapper map(pdom, Gd);
-    Matrix<REAL> xp(x.shape.x, x.shape.y, HDCType::Device, x.label);
+    Matrix<REAL> xp(x.shape.x, x.shape.y, HDCType::Device, x.name + " previous");
     INT __it = 0;
     do {
         xp.cpy(x, HDCType::Device);
@@ -204,7 +204,7 @@ __global__ void kernel_Struct3d7p_SOR(MatrixFrame<REAL> &a, MatrixFrame<REAL> &x
     }
 }
 
-void L1EqSolver::L0Dev_Struct3d7p_SORSweep(Matrix<REAL> &a, Matrix<REAL> &x, Matrix<REAL> &b, REAL omega, INT color, Mapper &pdom, Mapper &map, dim3 block_dim) {
+void L1EqSolver::L0Dev_Struct3d7p_SORSweep(Matrix<REAL> &a, Matrix<REAL> &x, Matrix<REAL> &b, REAL omega, INT color, Mapper &pdom, Mapper &map, dim3 block_dim, STREAM stream) {
     dim3 grid_dim(
         (map.shape.x + block_dim.x - 1) / block_dim.x,
         (map.shape.y + block_dim.y - 1) / block_dim.y,
@@ -337,13 +337,13 @@ void L1EqSolver::L1Dev_Struct3d7p_PBiCGStab(Matrix<REAL> &a, Matrix<REAL> &x, Ma
         (map.shape.z + block_dim.z - 1) / block_dim.z
     );
 
-    Matrix<REAL> rr(pdom.shape, 1, HDCType::Device, 101);
-    Matrix<REAL>  p(pdom.shape, 1, HDCType::Device, 102);
-    Matrix<REAL>  q(pdom.shape, 1, HDCType::Device, 103);
-    Matrix<REAL>  s(pdom.shape, 1, HDCType::Device, 104);
-    Matrix<REAL> pp(pdom.shape, 1, HDCType::Device, 105);
-    Matrix<REAL> ss(pdom.shape, 1, HDCType::Device, 106);
-    Matrix<REAL>  t(pdom.shape, 1, HDCType::Device, 107);
+    Matrix<REAL> rr(pdom.shape, 1, HDCType::Device, "PBiCGStab rr");
+    Matrix<REAL>  p(pdom.shape, 1, HDCType::Device, "PBiCGStab p" );
+    Matrix<REAL>  q(pdom.shape, 1, HDCType::Device, "PBiCGStab q" );
+    Matrix<REAL>  s(pdom.shape, 1, HDCType::Device, "PBiCGStab s" );
+    Matrix<REAL> pp(pdom.shape, 1, HDCType::Device, "PBiCGStab pp");
+    Matrix<REAL> ss(pdom.shape, 1, HDCType::Device, "PBiCGStab ss");
+    Matrix<REAL>  t(pdom.shape, 1, HDCType::Device, "PBiCGStab t" );
 
     REAL rho, rrho, alpha, beta, omega;
 

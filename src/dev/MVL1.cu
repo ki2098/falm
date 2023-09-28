@@ -46,7 +46,7 @@ REAL L0Dev_DotProduct(Matrix<REAL> &a, Matrix<REAL> &b, Mapper &pdom, Mapper &ma
     REAL *partial_sum_dev = (REAL*)falmDevMalloc(sizeof(REAL) * n_blocks);
     size_t shared_size = n_threads * sizeof(REAL);
 
-    kernel_DotProduct<<<grid_dim, block_dim, shared_size, 0>>>(*(a.devptr), *(b.devptr), partial_sum_dev, pdom.shape, map.shape, map.offset);
+    kernel_DotProduct<<<grid_dim, block_dim, shared_size, cudaStreamPerThread>>>(*(a.devptr), *(b.devptr), partial_sum_dev, pdom.shape, map.shape, map.offset);
 
     falmMemcpy(partial_sum, partial_sum_dev, sizeof(REAL) * n_blocks, MCpType::Dev2Hst);
     REAL sum = partial_sum[0];
@@ -103,7 +103,7 @@ REAL L0Dev_Norm2Sq(Matrix<REAL> &a, Mapper &pdom, Mapper &map, dim3 block_dim) {
     REAL *partial_sum_dev = (REAL*)falmDevMalloc(sizeof(REAL) * n_blocks);
     size_t shared_size = n_threads * sizeof(REAL);
 
-    kernel_Norm2Sq<<<grid_dim, block_dim, shared_size, 0>>>(*(a.devptr), partial_sum_dev, pdom.shape, map.shape, map.offset);
+    kernel_Norm2Sq<<<grid_dim, block_dim, shared_size, cudaStreamPerThread>>>(*(a.devptr), partial_sum_dev, pdom.shape, map.shape, map.offset);
 
     falmMemcpy(partial_sum, partial_sum_dev, sizeof(REAL) * n_blocks, MCpType::Dev2Hst);
     REAL sum = partial_sum[0];
@@ -162,7 +162,7 @@ REAL L0Dev_MaxDiag(Matrix<REAL> &a, Mapper &pdom, Mapper &map, dim3 block_dim) {
     REAL *partial_max_dev = (REAL*)falmDevMalloc(sizeof(REAL) * n_blocks);
     size_t shared_size = n_threads * sizeof(REAL);
 
-    kernel_MaxDiag<<<grid_dim, block_dim, shared_size, 0>>>(*(a.devptr), partial_max_dev, pdom.shape, map.shape, map.offset);
+    kernel_MaxDiag<<<grid_dim, block_dim, shared_size, cudaStreamPerThread>>>(*(a.devptr), partial_max_dev, pdom.shape, map.shape, map.offset);
 
     falmMemcpy(partial_max, partial_max_dev, sizeof(REAL) * n_blocks, MCpType::Dev2Hst);
     REAL maximum = partial_max[0];
@@ -191,7 +191,7 @@ __global__ void kernel_ScaleMatrix(MatrixFrame<REAL> &a, REAL scale) {
 void L1Dev_ScaleMatrix(Matrix<REAL> &a, REAL scale, dim3 block_dim) {
     INT n_threads = PRODUCT3(block_dim);
     INT n_blocks = (a.size + n_threads - 1) / n_threads;
-    kernel_ScaleMatrix<<<n_blocks, n_threads, 0, 0>>>(*(a.devptr), scale);
+    kernel_ScaleMatrix<<<n_blocks, n_threads, 0, cudaStreamPerThread>>>(*(a.devptr), scale);
 }
 
 }

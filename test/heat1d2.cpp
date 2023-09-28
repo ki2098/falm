@@ -5,6 +5,7 @@
 using namespace Falm;
 
 #define USE_CUDA_AWARE_MPI true
+#define CNAME(x) (x.name.c_str())
 
 #define Nx 100
 #define Ny 1
@@ -12,6 +13,9 @@ using namespace Falm;
 #define Lx 1.0
 #define TW 0.0
 #define TE 100.0
+
+STREAM packStream[6];
+STREAM boundaryStream[6];
 
 void set_matrix_value(Matrix<REAL> &x, INTx3 range_shape, INTx3 range_offset, INTx3 pshape, REAL value) {
     for (INT i = 0; i < range_shape.x; i ++) {
@@ -27,6 +31,7 @@ void set_matrix_value(Matrix<REAL> &x, INTx3 range_shape, INTx3 range_offset, IN
 }
 
 void print_eq(Matrix<REAL> &a, Matrix<REAL> &b, INTx3 shape) {
+    printf("%s = %s\n", CNAME(a), CNAME(b));
     for (INT i = Gd; i < shape.x - Gd; i ++) {
         for (INT j = Gd; j < shape.y - Gd; j ++) {
             for (INT k = Gd; k < shape.z - Gd; k ++) {
@@ -41,6 +46,7 @@ void print_eq(Matrix<REAL> &a, Matrix<REAL> &b, INTx3 shape) {
 }
 
 void print_result(Matrix<REAL> &x, Matrix<REAL> &r, INTx3 shape) {
+    printf("%s %s\n", x.cname(), r.cname());
     for (INT i = Gd; i < shape.x - Gd; i ++) {
         for (INT j = Gd; j < shape.y - Gd; j ++) {
             for (INT k = Gd; k < shape.z - Gd; k ++) {
@@ -60,6 +66,7 @@ INT dim_division(INT dim_size, INT mpi_size, INT mpi_rank) {
 }
 
 void print_xy_slice(Matrix<REAL> &x, INTx3 domain_shape, INT slice_at_z) {
+    printf("%s %s\n", CNAME(x));
     for (INT j = domain_shape.y - 1; j >= 0; j --) {
         for (INT i = 0; i < domain_shape.x; i ++) {
             REAL value = x(IDX(i, j, slice_at_z, domain_shape));
@@ -81,10 +88,10 @@ int main(int argc, char **argv) {
         INTx3{0, 0, 0}
     );
     Matrix<REAL> ga, gt, gb, gr;
-    ga.alloc(global.shape, 7, HDCType::Host  , 0);
-    gt.alloc(global.shape, 1, HDCType::Device, 1);
-    gb.alloc(global.shape, 1, HDCType::Host  , 2);
-    gr.alloc(global.shape, 1, HDCType::Device, 3);
+    ga.alloc(global.shape, 7, HDCType::Host  , "Global a");
+    gt.alloc(global.shape, 1, HDCType::Device, "Global t");
+    gb.alloc(global.shape, 1, HDCType::Host  , "Global b");
+    gr.alloc(global.shape, 1, HDCType::Device, "Global r");
     const REAL dx = Lx / Nx;
     for (INT i = Gd; i < Gd + Nx; i ++) {
         REAL ac, ae, aw, bc;
@@ -151,10 +158,10 @@ int main(int argc, char **argv) {
     }
 
     Matrix<REAL> a, t, b, r;
-    a.alloc(process.shape, 7, HDCType::Host  , 0);
-    t.alloc(process.shape, 1, HDCType::Device, 1);
-    b.alloc(process.shape, 1, HDCType::Host  , 2);
-    r.alloc(process.shape, 1, HDCType::Device, 3);
+    a.alloc(process.shape, 7, HDCType::Host  , "coeffient matrix");
+    t.alloc(process.shape, 1, HDCType::Device, "temperature");
+    b.alloc(process.shape, 1, HDCType::Host  , "RHS");
+    r.alloc(process.shape, 1, HDCType::Device, "residual");
     for (INT i = Gd; i < process.shape.x - Gd; i ++) {
         for (INT j = Gd; j < process.shape.y - Gd; j ++) {
             for (INT k = Gd; k < process.shape.z - Gd; k ++) {
@@ -170,10 +177,14 @@ int main(int argc, char **argv) {
             }
         }
     }
+    for (int fid = 0; fid < 6; fid ++) {
+        falmCreateStream(&packStream[fid]);
+        falmCreateStream(&boundaryStream[fid]);
+    }
 
     INTx3 inner_shape, inner_offset, boundary_shape[6], boundary_offset[6];
     cpm.setRegions(inner_shape, inner_offset, boundary_shape, boundary_offset, 1, process);
-    Matrix<REAL> region(process.shape, 1, HDCType::Host, -1);
+    Matrix<REAL> region(process.shape, 1, HDCType::Host, "regions");
     set_matrix_value(region, inner_shape, inner_offset, process.shape, cpm.rank * 10);
     for (INT i = 0; i < 6; i ++) {
         if (cpm.neighbour[i] >= 0) {
@@ -223,6 +234,11 @@ int main(int argc, char **argv) {
         CPML2_Barrier(MPI_COMM_WORLD);
     }
     printf("%d %.12lf\n", solver.it, solver.err);
+
+    for (int fid = 0; fid < 6; fid ++) {
+        falmDestroyStream(packStream[fid]);
+        falmDestroyStream(boundaryStream[fid]);
+    }
 
     return CPML2_Finalize();
 }
