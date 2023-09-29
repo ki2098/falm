@@ -24,7 +24,7 @@ static inline void *falmMallocDevice(size_t size) {
     return ptr;
 }
 
-static inline void falmMallocDeviceAsync(void **ptr, size_t size, STREAM stream) {
+static inline void falmMallocDeviceAsync(void **ptr, size_t size, STREAM stream = (STREAM)0) {
     cudaMallocAsync(ptr, size, stream);
 }
 
@@ -36,7 +36,7 @@ static inline void falmMemsetDevice(void *ptr, int value, size_t size) {
     cudaMemset(ptr, value, size);
 }
 
-static inline void falmMemsetDeviceAsync(void *ptr, int value, size_t size, STREAM stream) {
+static inline void falmMemsetDeviceAsync(void *ptr, int value, size_t size, STREAM stream = (STREAM)0) {
     cudaMemsetAsync(ptr, value, size, stream);
 }
 
@@ -52,7 +52,7 @@ static inline void falmFreeDevice(void *ptr) {
     cudaFree(ptr);
 }
 
-static inline void falmFreeDeviceAsync(void *ptr, STREAM stream) {
+static inline void falmFreeDeviceAsync(void *ptr, STREAM stream = (STREAM)0) {
     cudaFreeAsync(ptr, stream);
 }
 
@@ -68,7 +68,7 @@ static void falmMemcpy(void *dst, void *src, size_t size, FLAG mcptype) {
     }
 }
 
-static void falmMemcpyAsync(void *dst, void *src, size_t size, FLAG mcptype, STREAM stream) {
+static void falmMemcpyAsync(void *dst, void *src, size_t size, FLAG mcptype, STREAM stream = (STREAM)0) {
     if (mcptype == MCpType::Hst2Hst) {
         cudaMemcpyAsync(dst, src, size, cudaMemcpyHostToHost, stream);
     } else if (mcptype == MCpType::Hst2Dev) {
@@ -78,6 +78,10 @@ static void falmMemcpyAsync(void *dst, void *src, size_t size, FLAG mcptype, STR
     } else if (mcptype == MCpType::Dev2Dev) {
         cudaMemcpyAsync(dst, src, size, cudaMemcpyDeviceToDevice, stream);
     }
+}
+
+static inline void falmWaitStream(STREAM stream = (STREAM)0) {
+    cudaStreamSynchronize(stream);
 }
 
 }

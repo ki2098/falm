@@ -18,7 +18,7 @@ __global__ void kernel_Cartesian_CalcPseudoU(
     MatrixFrame<REAL> &ff,
     REAL               ReI,
     REAL               dt,
-    INTx3              proc_shape,
+    INTx3              pdm_shape,
     INTx3              map_shap,
     INTx3              map_offset
 ) {
@@ -28,19 +28,19 @@ __global__ void kernel_Cartesian_CalcPseudoU(
         i += map_offset.x;
         j += map_offset.y;
         k += map_offset.z;
-        INT idxcc = IDX(i  , j  , k  , proc_shape);
-        INT idxe1 = IDX(i+1, j  , k  , proc_shape);
-        INT idxw1 = IDX(i-1, j  , k  , proc_shape);
-        INT idxn1 = IDX(i  , j+1, k  , proc_shape);
-        INT idxs1 = IDX(i  , j-1, k  , proc_shape);
-        INT idxt1 = IDX(i  , j  , k+1, proc_shape);
-        INT idxb1 = IDX(i  , j  , k-1, proc_shape);
-        INT idxe2 = IDX(i+2, j  , k  , proc_shape);
-        INT idxw2 = IDX(i-2, j  , k  , proc_shape);
-        INT idxn2 = IDX(i  , j+2, k  , proc_shape);
-        INT idxs2 = IDX(i  , j-2, k  , proc_shape);
-        INT idxt2 = IDX(i  , j  , k+2, proc_shape);
-        INT idxb2 = IDX(i  , j  , k-2, proc_shape);
+        INT idxcc = IDX(i  , j  , k  , pdm_shape);
+        INT idxe1 = IDX(i+1, j  , k  , pdm_shape);
+        INT idxw1 = IDX(i-1, j  , k  , pdm_shape);
+        INT idxn1 = IDX(i  , j+1, k  , pdm_shape);
+        INT idxs1 = IDX(i  , j-1, k  , pdm_shape);
+        INT idxt1 = IDX(i  , j  , k+1, pdm_shape);
+        INT idxb1 = IDX(i  , j  , k-1, pdm_shape);
+        INT idxe2 = IDX(i+2, j  , k  , pdm_shape);
+        INT idxw2 = IDX(i-2, j  , k  , pdm_shape);
+        INT idxn2 = IDX(i  , j+2, k  , pdm_shape);
+        INT idxs2 = IDX(i  , j-2, k  , pdm_shape);
+        INT idxt2 = IDX(i  , j  , k+2, pdm_shape);
+        INT idxb2 = IDX(i  , j  , k-2, pdm_shape);
         INT idxE  = idxcc;
         INT idxW  = idxw1;
         INT idxN  = idxcc;
@@ -193,7 +193,7 @@ __global__ void kernel_Cartesian_UtoCU (
     MatrixFrame<REAL> &uc,
     MatrixFrame<REAL> &kx,
     MatrixFrame<REAL> &ja,
-    INTx3              proc_shape,
+    INTx3              pdm_shape,
     INTx3              map_shap,
     INTx3              map_offset
 ) {
@@ -203,7 +203,7 @@ __global__ void kernel_Cartesian_UtoCU (
         i += map_offset.x;
         j += map_offset.y;
         k += map_offset.z;
-        INT idx = IDX(i, j, k, proc_shape);
+        INT idx = IDX(i, j, k, pdm_shape);
         REAL jacob = ja(idx);
         uc(idx, 0) = jacob * kx(idx, 0) * u(idx, 0);
         uc(idx, 1) = jacob * kx(idx, 1) * u(idx, 1);
@@ -214,7 +214,7 @@ __global__ void kernel_Cartesian_UtoCU (
 __global__ void kernel_Cartesian_InterpolateCU(
     MatrixFrame<REAL> &uu,
     MatrixFrame<REAL> &uc,
-    INTx3              proc_shape,
+    INTx3              pdm_shape,
     INTx3              map_shap,
     INTx3              map_offset
 ) {
@@ -224,10 +224,10 @@ __global__ void kernel_Cartesian_InterpolateCU(
         i += map_offset.x;
         j += map_offset.y;
         k += map_offset.z;
-        INT idxcc = IDX(i  , j  , k  , proc_shape);
-        INT idxe1 = IDX(i+1, j  , k  , proc_shape);
-        INT idxn1 = IDX(i  , j+1, k  , proc_shape);
-        INT idxt1 = IDX(i  , j  , k+1, proc_shape);
+        INT idxcc = IDX(i  , j  , k  , pdm_shape);
+        INT idxe1 = IDX(i+1, j  , k  , pdm_shape);
+        INT idxn1 = IDX(i  , j+1, k  , pdm_shape);
+        INT idxt1 = IDX(i  , j  , k+1, pdm_shape);
         uu(idxcc, 0) = 0.5 * (uc(idxcc, 0) + uc(idxe1, 0));
         uu(idxcc, 1) = 0.5 * (uc(idxcc, 1) + uc(idxn1, 1));
         uu(idxcc, 2) = 0.5 * (uc(idxcc, 2) + uc(idxt1, 2));
@@ -240,7 +240,7 @@ __global__ void kernel_Cartesian_ProjectPGrid(
     MatrixFrame<REAL> &p,
     MatrixFrame<REAL> &kx,
     REAL               dt,
-    INTx3              proc_shape,
+    INTx3              pdm_shape,
     INTx3              map_shap,
     INTx3              map_offset
 ) {
@@ -250,10 +250,10 @@ __global__ void kernel_Cartesian_ProjectPGrid(
         i += map_offset.x;
         j += map_offset.y;
         k += map_offset.z;
-        INT idxcc = IDX(i, j, k, proc_shape);
-        REAL dpx = 0.5 * kx(idxcc, 0) * (p(IDX(i+1, j  , k  , proc_shape)) - p(IDX(i-1, j  , k  , proc_shape)));
-        REAL dpy = 0.5 * kx(idxcc, 1) * (p(IDX(i  , j+1, k  , proc_shape)) - p(IDX(i  , j-1, k  , proc_shape)));
-        REAL dpz = 0.5 * kx(idxcc, 2) * (p(IDX(i  , j  , k+1, proc_shape)) - p(IDX(i  , j  , k-1, proc_shape)));
+        INT idxcc = IDX(i, j, k, pdm_shape);
+        REAL dpx = 0.5 * kx(idxcc, 0) * (p(IDX(i+1, j  , k  , pdm_shape)) - p(IDX(i-1, j  , k  , pdm_shape)));
+        REAL dpy = 0.5 * kx(idxcc, 1) * (p(IDX(i  , j+1, k  , pdm_shape)) - p(IDX(i  , j-1, k  , pdm_shape)));
+        REAL dpz = 0.5 * kx(idxcc, 2) * (p(IDX(i  , j  , k+1, pdm_shape)) - p(IDX(i  , j  , k-1, pdm_shape)));
         u(idxcc, 0) = ua(idxcc, 0) - dt * dpx;
         u(idxcc, 1) = ua(idxcc, 1) - dt * dpy;
         u(idxcc, 2) = ua(idxcc, 2) - dt * dpz;
@@ -266,7 +266,7 @@ __global__ void kernel_Cartesian_ProjectPFace(
     MatrixFrame<REAL> &p,
     MatrixFrame<REAL> &g,
     REAL               dt,
-    INTx3              proc_shape,
+    INTx3              pdm_shape,
     INTx3              map_shap,
     INTx3              map_offset
 ) {
@@ -276,10 +276,10 @@ __global__ void kernel_Cartesian_ProjectPFace(
         i += map_offset.x;
         j += map_offset.y;
         k += map_offset.z;
-        INT idxcc = IDX(i  , j  , k  , proc_shape);
-        INT idxe1 = IDX(i+1, j  , k  , proc_shape);
-        INT idxn1 = IDX(i  , j+1, k  , proc_shape);
-        INT idxt1 = IDX(i  , j  , k+1, proc_shape);
+        INT idxcc = IDX(i  , j  , k  , pdm_shape);
+        INT idxe1 = IDX(i+1, j  , k  , pdm_shape);
+        INT idxn1 = IDX(i  , j+1, k  , pdm_shape);
+        INT idxt1 = IDX(i  , j  , k+1, pdm_shape);
         REAL pcc = p(idxcc);
         REAL dpx = 0.5 * (g(idxcc, 0) + g(idxe1, 0)) * (p(idxe1) - pcc);
         REAL dpy = 0.5 * (g(idxcc, 1) + g(idxn1, 1)) * (p(idxn1) - pcc);
@@ -297,7 +297,7 @@ __global__ void kernel_Cartesian_Smagorinsky(
     MatrixFrame<REAL> &kx,
     MatrixFrame<REAL> &ja,
     REAL               Cs,
-    INTx3              proc_shape,
+    INTx3              pdm_shape,
     INTx3              map_shap,
     INTx3              map_offset            
 ) {
@@ -307,13 +307,13 @@ __global__ void kernel_Cartesian_Smagorinsky(
         i += map_offset.x;
         j += map_offset.y;
         k += map_offset.z;
-        INT idxcc = IDX(i  , j  , k  , proc_shape);
-        INT idxe1 = IDX(i+1, j  , k  , proc_shape);
-        INT idxw1 = IDX(i-1, j  , k  , proc_shape);
-        INT idxn1 = IDX(i  , j+1, k  , proc_shape);
-        INT idxs1 = IDX(i  , j-1, k  , proc_shape);
-        INT idxt1 = IDX(i  , j  , k+1, proc_shape);
-        INT idxb1 = IDX(i  , j  , k-1, proc_shape);
+        INT idxcc = IDX(i  , j  , k  , pdm_shape);
+        INT idxe1 = IDX(i+1, j  , k  , pdm_shape);
+        INT idxw1 = IDX(i-1, j  , k  , pdm_shape);
+        INT idxn1 = IDX(i  , j+1, k  , pdm_shape);
+        INT idxs1 = IDX(i  , j-1, k  , pdm_shape);
+        INT idxt1 = IDX(i  , j  , k+1, pdm_shape);
+        INT idxb1 = IDX(i  , j  , k-1, pdm_shape);
         REAL kxx = kx(idxcc, 0);
         REAL kxy = kx(idxcc, 1);
         REAL kxz = kx(idxcc, 2);
@@ -364,7 +364,7 @@ __global__ void kernel_Cartesian_CSM(
     MatrixFrame<REAL> &x,
     MatrixFrame<REAL> &kx,
     MatrixFrame<REAL> &ja,
-    INTx3              proc_shape,
+    INTx3              pdm_shape,
     INTx3              map_shap,
     INTx3              map_offset   
 ) {
@@ -374,13 +374,13 @@ __global__ void kernel_Cartesian_CSM(
         i += map_offset.x;
         j += map_offset.y;
         k += map_offset.z;
-        INT idxcc = IDX(i  , j  , k  , proc_shape);
-        INT idxe1 = IDX(i+1, j  , k  , proc_shape);
-        INT idxw1 = IDX(i-1, j  , k  , proc_shape);
-        INT idxn1 = IDX(i  , j+1, k  , proc_shape);
-        INT idxs1 = IDX(i  , j-1, k  , proc_shape);
-        INT idxt1 = IDX(i  , j  , k+1, proc_shape);
-        INT idxb1 = IDX(i  , j  , k-1, proc_shape);
+        INT idxcc = IDX(i  , j  , k  , pdm_shape);
+        INT idxe1 = IDX(i+1, j  , k  , pdm_shape);
+        INT idxw1 = IDX(i-1, j  , k  , pdm_shape);
+        INT idxn1 = IDX(i  , j+1, k  , pdm_shape);
+        INT idxs1 = IDX(i  , j-1, k  , pdm_shape);
+        INT idxt1 = IDX(i  , j  , k+1, pdm_shape);
+        INT idxb1 = IDX(i  , j  , k-1, pdm_shape);
         REAL kxx = kx(idxcc, 0);
         REAL kxy = kx(idxcc, 1);
         REAL kxz = kx(idxcc, 2);
@@ -440,7 +440,7 @@ __global__ void kernel_Cartesian_Divergence(
     MatrixFrame<REAL> &uu,
     MatrixFrame<REAL> &div,
     MatrixFrame<REAL> &ja,
-    INTx3              proc_shap,
+    INTx3              pdm_shap,
     INTx3              map_shap,
     INTx3              map_offset
 ) {
@@ -450,13 +450,13 @@ __global__ void kernel_Cartesian_Divergence(
         i += map_offset.x;
         j += map_offset.y;
         k += map_offset.z;
-        INT idxc = IDX(i, j, k, proc_shap);
+        INT idxc = IDX(i, j, k, pdm_shap);
         REAL UE = uu(idxc                     , 0);
-        REAL UW = uu(IDX(i-1, j, k, proc_shap), 0);
+        REAL UW = uu(IDX(i-1, j, k, pdm_shap), 0);
         REAL VN = uu(idxc                     , 1);
-        REAL VS = uu(IDX(i, j-1, k, proc_shap), 1);
+        REAL VS = uu(IDX(i, j-1, k, pdm_shap), 1);
         REAL WT = uu(idxc                     , 2);
-        REAL WB = uu(IDX(i, j, k-1, proc_shap), 2);
+        REAL WB = uu(IDX(i, j, k-1, pdm_shap), 2);
         div(idxc) = (UE - UW + VN - VS + WT - WB) / ja(idxc);
     }
 }
@@ -470,9 +470,9 @@ void L1CFD::L0Dev_Cartesian_FSCalcPseudoU(
     Matrix<REAL> &g,
     Matrix<REAL> &ja,
     Matrix<REAL> &ff,
-    Mapper         &proc_domain,
-    Mapper         &map,
-    dim3            block_dim
+    Mapper       &pdm,
+    Mapper       &map,
+    dim3          block_dim
 ) {
     dim3 grid_dim(
         (map.shape.x + block_dim.x - 1) / block_dim.x,
@@ -490,7 +490,7 @@ void L1CFD::L0Dev_Cartesian_FSCalcPseudoU(
         *(ff.devptr),
         ReI,
         dt,
-        proc_domain.shape,
+        pdm.shape,
         map.shape,
         map.offset
     );
@@ -501,9 +501,9 @@ void L1CFD::L0Dev_Cartesian_UtoCU(
     Matrix<REAL> &uc,
     Matrix<REAL> &kx,
     Matrix<REAL> &ja,
-    Mapper         &proc_domain,
-    Mapper         &map,
-    dim3            block_dim
+    Mapper       &pdm,
+    Mapper       &map,
+    dim3          block_dim
 ) {
     dim3 grid_dim(
         (map.shape.x + block_dim.x - 1) / block_dim.x,
@@ -515,7 +515,7 @@ void L1CFD::L0Dev_Cartesian_UtoCU(
         *(uc.devptr),
         *(kx.devptr),
         *(ja.devptr),
-        proc_domain.shape,
+        pdm.shape,
         map.shape,
         map.offset
     );
@@ -524,7 +524,7 @@ void L1CFD::L0Dev_Cartesian_UtoCU(
 void L1CFD::L0Dev_Cartesian_InterpolateCU(
     Matrix<REAL> &uu,
     Matrix<REAL> &uc,
-    Mapper       &proc_domain,
+    Mapper       &pdm,
     Mapper       &map,
     dim3          block_dim
 ) {
@@ -536,7 +536,7 @@ void L1CFD::L0Dev_Cartesian_InterpolateCU(
     kernel_Cartesian_InterpolateCU<<<grid_dim, block_dim, 0, 0>>>(
         *(uu.devptr),
         *(uc.devptr),
-        proc_domain.shape,
+        pdm.shape,
         map.shape,
         map.offset
     );
@@ -547,7 +547,7 @@ void L1CFD::L0Dev_Cartesian_ProjectPGrid(
     Matrix<REAL> &ua,
     Matrix<REAL> &p,
     Matrix<REAL> &kx,
-    Mapper       &proc_domain,
+    Mapper       &pdm,
     Mapper       &map,
     dim3          block_dim
 ) {
@@ -562,7 +562,7 @@ void L1CFD::L0Dev_Cartesian_ProjectPGrid(
         *(p.devptr),
         *(kx.devptr),
         dt,
-        proc_domain.shape,
+        pdm.shape,
         map.shape,
         map.offset
     );
@@ -573,7 +573,7 @@ void L1CFD::L0Dev_Cartesian_ProjectPFace(
     Matrix<REAL> &uua,
     Matrix<REAL> &p,
     Matrix<REAL> &g,
-    Mapper       &proc_domain,
+    Mapper       &pdm,
     Mapper       &map,
     dim3          block_dim
 ) {
@@ -588,7 +588,7 @@ void L1CFD::L0Dev_Cartesian_ProjectPFace(
         *(p.devptr),
         *(g.devptr),
         dt,
-        proc_domain.shape,
+        pdm.shape,
         map.shape,
         map.offset
     );
@@ -600,7 +600,7 @@ void L1CFD::L0Dev_Cartesian_SGS(
     Matrix<REAL> &x,
     Matrix<REAL> &kx,
     Matrix<REAL> &ja,
-    Mapper       &proc_domain,
+    Mapper       &pdm,
     Mapper       &map,
     dim3          block_dim
 ) {
@@ -617,7 +617,7 @@ void L1CFD::L0Dev_Cartesian_SGS(
             *(kx.devptr),
             *(ja.devptr),
             CSmagorinsky,
-            proc_domain.shape,
+            pdm.shape,
             map.shape,
             map.offset
         );
@@ -628,7 +628,7 @@ void L1CFD::L0Dev_Cartesian_SGS(
             *(x.devptr),
             *(kx.devptr),
             *(ja.devptr),
-            proc_domain.shape,
+            pdm.shape,
             map.shape,
             map.offset
         );
@@ -639,7 +639,7 @@ void L1CFD::L0Dev_Cartesian_Divergence(
     Matrix<REAL> &uu,
     Matrix<REAL> &div,
     Matrix<REAL> &ja,
-    Mapper       &proc_domain,
+    Mapper       &pdm,
     Mapper       &map,
     dim3          block_dim
 ) {
@@ -652,7 +652,7 @@ void L1CFD::L0Dev_Cartesian_Divergence(
         *(uu.devptr),
         *(div.devptr),
         *(ja.devptr),
-        proc_domain.shape,
+        pdm.shape,
         map.shape,
         map.offset
     );

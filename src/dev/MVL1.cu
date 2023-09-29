@@ -3,7 +3,7 @@
 
 namespace Falm {
 
-__global__ void kernel_DotProduct(MatrixFrame<REAL> &a, MatrixFrame<REAL> &b, REAL *partial_sum_dev, INTx3 pdom_shape, INTx3 map_shape, INTx3 map_offset) {
+__global__ void kernel_DotProduct(MatrixFrame<REAL> &a, MatrixFrame<REAL> &b, REAL *partial_sum_dev, INTx3 pdm_shape, INTx3 map_shape, INTx3 map_offset) {
     extern __shared__ REAL cache[];
     INT i, j, k;
     GLOBAL_THREAD_IDX_3D(i, j, k);
@@ -13,7 +13,7 @@ __global__ void kernel_DotProduct(MatrixFrame<REAL> &a, MatrixFrame<REAL> &b, RE
         i += map_offset.x;
         j += map_offset.y;
         k += map_offset.z;
-        INT idx = IDX(i, j, k, pdom_shape);
+        INT idx = IDX(i, j, k, pdm_shape);
         tmp = a(idx) * b(idx);
     }
     cache[tidx] = tmp;
@@ -34,7 +34,7 @@ __global__ void kernel_DotProduct(MatrixFrame<REAL> &a, MatrixFrame<REAL> &b, RE
     }
 }
 
-REAL L0Dev_DotProduct(Matrix<REAL> &a, Matrix<REAL> &b, Mapper &pdom, Mapper &map, dim3 block_dim) {
+REAL L0Dev_DotProduct(Matrix<REAL> &a, Matrix<REAL> &b, Mapper &pdm, Mapper &map, dim3 block_dim) {
     dim3 grid_dim(
         (map.shape.x + block_dim.x - 1) / block_dim.x,
         (map.shape.y + block_dim.y - 1) / block_dim.y,
@@ -46,7 +46,7 @@ REAL L0Dev_DotProduct(Matrix<REAL> &a, Matrix<REAL> &b, Mapper &pdom, Mapper &ma
     REAL *partial_sum_dev = (REAL*)falmMallocDevice(sizeof(REAL) * n_blocks);
     size_t shared_size = n_threads * sizeof(REAL);
 
-    kernel_DotProduct<<<grid_dim, block_dim, shared_size, 0>>>(*(a.devptr), *(b.devptr), partial_sum_dev, pdom.shape, map.shape, map.offset);
+    kernel_DotProduct<<<grid_dim, block_dim, shared_size>>>(*(a.devptr), *(b.devptr), partial_sum_dev, pdm.shape, map.shape, map.offset);
 
     falmMemcpy(partial_sum, partial_sum_dev, sizeof(REAL) * n_blocks, MCpType::Dev2Hst);
     REAL sum = partial_sum[0];
@@ -60,7 +60,7 @@ REAL L0Dev_DotProduct(Matrix<REAL> &a, Matrix<REAL> &b, Mapper &pdom, Mapper &ma
     return sum;
 }
 
-__global__ void kernel_Norm2Sq(MatrixFrame<REAL> &a, REAL *partial_sum_dev, INTx3 pdom_shape, INTx3 map_shape, INTx3 map_offset) {
+__global__ void kernel_Norm2Sq(MatrixFrame<REAL> &a, REAL *partial_sum_dev, INTx3 pdm_shape, INTx3 map_shape, INTx3 map_offset) {
     extern __shared__ REAL cache[];
     INT i, j, k;
     GLOBAL_THREAD_IDX_3D(i, j, k);
@@ -70,7 +70,7 @@ __global__ void kernel_Norm2Sq(MatrixFrame<REAL> &a, REAL *partial_sum_dev, INTx
         i += map_offset.x;
         j += map_offset.y;
         k += map_offset.z;
-        INT idx = IDX(i, j, k, pdom_shape);
+        INT idx = IDX(i, j, k, pdm_shape);
         tmp = a(idx) * a(idx);
     }
     cache[tidx] = tmp;
@@ -91,7 +91,7 @@ __global__ void kernel_Norm2Sq(MatrixFrame<REAL> &a, REAL *partial_sum_dev, INTx
     }
 }
 
-REAL L0Dev_Norm2Sq(Matrix<REAL> &a, Mapper &pdom, Mapper &map, dim3 block_dim) {
+REAL L0Dev_Norm2Sq(Matrix<REAL> &a, Mapper &pdm, Mapper &map, dim3 block_dim) {
     dim3 grid_dim(
         (map.shape.x + block_dim.x - 1) / block_dim.x,
         (map.shape.y + block_dim.y - 1) / block_dim.y,
@@ -103,7 +103,7 @@ REAL L0Dev_Norm2Sq(Matrix<REAL> &a, Mapper &pdom, Mapper &map, dim3 block_dim) {
     REAL *partial_sum_dev = (REAL*)falmMallocDevice(sizeof(REAL) * n_blocks);
     size_t shared_size = n_threads * sizeof(REAL);
 
-    kernel_Norm2Sq<<<grid_dim, block_dim, shared_size, 0>>>(*(a.devptr), partial_sum_dev, pdom.shape, map.shape, map.offset);
+    kernel_Norm2Sq<<<grid_dim, block_dim, shared_size>>>(*(a.devptr), partial_sum_dev, pdm.shape, map.shape, map.offset);
 
     falmMemcpy(partial_sum, partial_sum_dev, sizeof(REAL) * n_blocks, MCpType::Dev2Hst);
     REAL sum = partial_sum[0];
@@ -117,7 +117,7 @@ REAL L0Dev_Norm2Sq(Matrix<REAL> &a, Mapper &pdom, Mapper &map, dim3 block_dim) {
     return sum;
 }
 
-__global__ void kernel_MaxDiag(MatrixFrame<REAL> &a, REAL *partial_max_dev, INTx3 pdom_shape, INTx3 map_shape, INTx3 map_offset) {
+__global__ void kernel_MaxDiag(MatrixFrame<REAL> &a, REAL *partial_max_dev, INTx3 pdm_shape, INTx3 map_shape, INTx3 map_offset) {
     extern __shared__ REAL cache[];
     INT i, j, k;
     GLOBAL_THREAD_IDX_3D(i, j, k);
@@ -127,7 +127,7 @@ __global__ void kernel_MaxDiag(MatrixFrame<REAL> &a, REAL *partial_max_dev, INTx
         i += map_offset.x;
         j += map_offset.y;
         k += map_offset.z;
-        INT idx = IDX(i, j, k, pdom_shape);
+        INT idx = IDX(i, j, k, pdm_shape);
         tmp = fabs(a(idx));
     }
     cache[tidx] = tmp;
@@ -150,7 +150,7 @@ __global__ void kernel_MaxDiag(MatrixFrame<REAL> &a, REAL *partial_max_dev, INTx
     }
 }
 
-REAL L0Dev_MaxDiag(Matrix<REAL> &a, Mapper &pdom, Mapper &map, dim3 block_dim) {
+REAL L0Dev_MaxDiag(Matrix<REAL> &a, Mapper &pdm, Mapper &map, dim3 block_dim) {
     dim3 grid_dim(
         (map.shape.x + block_dim.x - 1) / block_dim.x,
         (map.shape.y + block_dim.y - 1) / block_dim.y,
@@ -162,7 +162,7 @@ REAL L0Dev_MaxDiag(Matrix<REAL> &a, Mapper &pdom, Mapper &map, dim3 block_dim) {
     REAL *partial_max_dev = (REAL*)falmMallocDevice(sizeof(REAL) * n_blocks);
     size_t shared_size = n_threads * sizeof(REAL);
 
-    kernel_MaxDiag<<<grid_dim, block_dim, shared_size, 0>>>(*(a.devptr), partial_max_dev, pdom.shape, map.shape, map.offset);
+    kernel_MaxDiag<<<grid_dim, block_dim, shared_size>>>(*(a.devptr), partial_max_dev, pdm.shape, map.shape, map.offset);
 
     falmMemcpy(partial_max, partial_max_dev, sizeof(REAL) * n_blocks, MCpType::Dev2Hst);
     REAL maximum = partial_max[0];
@@ -192,6 +192,7 @@ void L1Dev_ScaleMatrix(Matrix<REAL> &a, REAL scale, dim3 block_dim) {
     INT n_threads = PRODUCT3(block_dim);
     INT n_blocks = (a.size + n_threads - 1) / n_threads;
     kernel_ScaleMatrix<<<n_blocks, n_threads, 0, 0>>>(*(a.devptr), scale);
+    falmWaitStream(0);
 }
 
 }

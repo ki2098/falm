@@ -48,11 +48,11 @@ public:
         Matrix<REAL> &g,
         Matrix<REAL> &ja,
         Matrix<REAL> &ff,
-        Mapper       &proc_domain,
+        Mapper       &pdm,
         dim3          block_dim
     ) {
-        Mapper map(proc_domain, Gd);
-        L0Dev_Cartesian_FSCalcPseudoU(u, uu, ua, nut, kx, g, ja, ff, proc_domain, map, block_dim);
+        Mapper map(pdm, Gd);
+        L0Dev_Cartesian_FSCalcPseudoU(u, uu, ua, nut, kx, g, ja, ff, pdm, map, block_dim);
     }
 
     void L1Dev_Cartesian_UtoCU(
@@ -60,25 +60,25 @@ public:
         Matrix<REAL> &uc,
         Matrix<REAL> &kx,
         Matrix<REAL> &ja,
-        Mapper       &proc_domain,
+        Mapper       &pdm,
         dim3          block_dim
     ) {
-        Mapper map(proc_domain, Gd);
-        L0Dev_Cartesian_UtoCU(u, uc, kx, ja, proc_domain, map, block_dim);
+        Mapper map(pdm, Gd);
+        L0Dev_Cartesian_UtoCU(u, uc, kx, ja, pdm, map, block_dim);
     }
 
     void L1Dev_Cartesian_InterpolateCU(
         Matrix<REAL> &uu,
         Matrix<REAL> &uc,
-        Mapper       &proc_domain,
+        Mapper       &pdm,
         dim3          block_dim
     ) {
-        Mapper map(proc_domain, Gd);
+        Mapper map(pdm, Gd);
         map = map.transform(
             INTx3{ 1,  1,  1},
             INTx3{-1, -1, -1}
         );
-        L0Dev_Cartesian_InterpolateCU(uu, uc, proc_domain, map, block_dim);
+        L0Dev_Cartesian_InterpolateCU(uu, uc, pdm, map, block_dim);
     }
 
     void L1Dev_Cartesian_ProjectPGrid(
@@ -86,11 +86,11 @@ public:
         Matrix<REAL> &ua,
         Matrix<REAL> &p,
         Matrix<REAL> &kx,
-        Mapper       &proc_domain,
+        Mapper       &pdm,
         dim3          block_dim
     ) {
-        Mapper map(proc_domain, Gd);
-        L0Dev_Cartesian_ProjectPGrid(u, ua, p, kx, proc_domain, map, block_dim);
+        Mapper map(pdm, Gd);
+        L0Dev_Cartesian_ProjectPGrid(u, ua, p, kx, pdm, map, block_dim);
     }
 
     void L1Dev_Cartesian_SGS(
@@ -99,35 +99,35 @@ public:
         Matrix<REAL> &x,
         Matrix<REAL> &kx,
         Matrix<REAL> &ja,
-        Mapper       &proc_domain,
+        Mapper       &pdm,
         dim3          block_dim
     ) {
         if (SGSModel == SGSType::Empty) {
             return;
         }
-        Mapper map(proc_domain, Gd);
-        L0Dev_Cartesian_SGS(u, nut, x, kx, ja, proc_domain, map, block_dim);
+        Mapper map(pdm, Gd);
+        L0Dev_Cartesian_SGS(u, nut, x, kx, ja, pdm, map, block_dim);
     }
 
     void L1Dev_Cartesian_Divergence(
         Matrix<REAL> &uu,
         Matrix<REAL> &div,
         Matrix<REAL> &ja,
-        Mapper       &proc_domain,
+        Mapper       &pdm,
         dim3          block_dim
     ) {
-        Mapper map(proc_domain, Gd);
-        L0Dev_Cartesian_Divergence(uu, div, ja, proc_domain, map, block_dim);
+        Mapper map(pdm, Gd);
+        L0Dev_Cartesian_Divergence(uu, div, ja, pdm, map, block_dim);
     }
 
     void L1Dev_Cartesian_MACCalcPoissonRHS(
         Matrix<REAL> &uu,
         Matrix<REAL> &rhs,
         Matrix<REAL> &ja,
-        Mapper       &proc_domain,
+        Mapper       &pdm,
         dim3          block_dim
     ) {
-        L1Dev_Cartesian_Divergence(uu, rhs, ja, proc_domain, block_dim);
+        L1Dev_Cartesian_Divergence(uu, rhs, ja, pdm, block_dim);
         L1Dev_ScaleMatrix(rhs, 1.0 / dt, block_dim);
     }
 
@@ -141,7 +141,7 @@ protected:
         Matrix<REAL> &g,
         Matrix<REAL> &ja,
         Matrix<REAL> &ff,
-        Mapper       &proc_domain,
+        Mapper       &pdm,
         Mapper       &map,
         dim3          block_dim
     );
@@ -150,14 +150,14 @@ protected:
         Matrix<REAL> &uc,
         Matrix<REAL> &kx,
         Matrix<REAL> &ja,
-        Mapper       &proc_domain,
+        Mapper       &pdm,
         Mapper       &map,
         dim3          block_dim
     );
     void L0Dev_Cartesian_InterpolateCU(
         Matrix<REAL> &uu,
         Matrix<REAL> &uc,
-        Mapper       &proc_domain,
+        Mapper       &pdm,
         Mapper       &map,
         dim3          block_dim
     );
@@ -166,7 +166,7 @@ protected:
         Matrix<REAL> &ua,
         Matrix<REAL> &p,
         Matrix<REAL> &kx,
-        Mapper       &proc_domain,
+        Mapper       &pdm,
         Mapper       &map,
         dim3          block_dim
     );
@@ -175,7 +175,7 @@ protected:
         Matrix<REAL> &uua,
         Matrix<REAL> &p,
         Matrix<REAL> &g,
-        Mapper       &proc_domain,
+        Mapper       &pdm,
         Mapper       &map,
         dim3          block_dim
     );
@@ -185,7 +185,7 @@ protected:
         Matrix<REAL> &x,
         Matrix<REAL> &kx,
         Matrix<REAL> &ja,
-        Mapper       &proc_domain,
+        Mapper       &pdm,
         Mapper       &map,
         dim3          block_dim
     );
@@ -193,7 +193,7 @@ protected:
         Matrix<REAL> &uu,
         Matrix<REAL> &div,
         Matrix<REAL> &ja,
-        Mapper       &proc_domain,
+        Mapper       &pdm,
         Mapper       &map,
         dim3          block_dim
     );

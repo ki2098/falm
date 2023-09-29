@@ -16,12 +16,12 @@ int main() {
         INTx3{Nx + 2 * Gd, Ny + 2 * Gd, Nz + 2 * Gd},
         INTx3{0, 0, 0}
     );
-    Mapper pdom(global.shape, global.offset);
+    Mapper pdm(global.shape, global.offset);
     Matrix<double> a, t, b, r;
-    a.alloc(pdom.shape, 7, HDCType::Host  , "a");
-    t.alloc(pdom.shape, 1, HDCType::Device, "t");
-    b.alloc(pdom.shape, 1, HDCType::Host  , "b");
-    r.alloc(pdom.shape, 1, HDCType::Device, "r");
+    a.alloc(pdm.shape, 7, HDCType::Host  , "a");
+    t.alloc(pdm.shape, 1, HDCType::Device, "t");
+    b.alloc(pdm.shape, 1, HDCType::Host  , "b");
+    r.alloc(pdm.shape, 1, HDCType::Device, "r");
     const double dx = Lx / Nx;
     for (unsigned int i = Gd; i < Gd + Nx; i ++) {
         double ac, ae, aw, bc;
@@ -41,7 +41,7 @@ int main() {
             ac = - (ae + aw);
             bc = 0.0;
         }
-        unsigned int idx = IDX(i, Gd, Gd, pdom.shape);
+        unsigned int idx = IDX(i, Gd, Gd, pdm.shape);
         a(idx, 0) = ac;
         a(idx, 1) = ae;
         a(idx, 2) = aw;
@@ -50,7 +50,7 @@ int main() {
     a.sync(MCpType::Hst2Dev);
     b.sync(MCpType::Hst2Dev);
     dim3 block_dim(32, 1, 1);
-    double max_diag = L1Dev_MaxDiag(a, pdom, block_dim);
+    double max_diag = L1Dev_MaxDiag(a, pdm, block_dim);
     printf("%12lf\n", max_diag);
     L1Dev_ScaleMatrix(a, 1.0 / max_diag, block_dim);
     L1Dev_ScaleMatrix(b, 1.0 / max_diag, block_dim);
@@ -58,7 +58,7 @@ int main() {
     b.sync(MCpType::Dev2Hst);
 
     for (unsigned int i = Gd; i < Gd + Nx; i ++) {
-        unsigned int idx = IDX(i, Gd, Gd, pdom.shape);
+        unsigned int idx = IDX(i, Gd, Gd, pdm.shape);
         for (unsigned int j = 0; j < 7; j ++) {
             printf("%12lf ", a(idx, j));
         }
@@ -66,11 +66,11 @@ int main() {
     }
 
     L1EqSolver solver(LSType::PBiCGStab, 10000, 1e-9, 1.5, LSType::Jacobi, 5, 1.0);
-    solver.L1Dev_Struct3d7p_Solve(a, t, b, r, global, pdom, block_dim);
+    solver.L1Dev_Struct3d7p_Solve(a, t, b, r, global, pdm, block_dim);
     t.sync(MCpType::Dev2Hst);
     r.sync(MCpType::Dev2Hst);
     for (unsigned int i = Gd; i < Gd + Nx; i ++) {
-        unsigned int idx = IDX(i, Gd, Gd, pdom.shape);
+        unsigned int idx = IDX(i, Gd, Gd, pdm.shape);
         printf("%12.4lf %12.4lf\n", t(idx), r(idx));
     }
     printf("%d %.12lf\n", solver.it, solver.err);

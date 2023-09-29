@@ -28,11 +28,11 @@ struct CPMBuffer {
 
     CPMBuffer() : ptr(nullptr), size(0), buftype(BufType::Empty), hdctype(HDCType::Empty) {}
     CPMBuffer(INTx3 _buf_shape, INTx3 _buf_offset, FLAG _buftype, FLAG _hdctype);
-    CPMBuffer(INTx3 _buf_shape, INTx3 _buf_offset, FLAG _buftype, FLAG _hdctype, Mapper &_pdom, INT _color);
+    CPMBuffer(INTx3 _buf_shape, INTx3 _buf_offset, FLAG _buftype, FLAG _hdctype, Mapper &_pdm, INT _color);
     ~CPMBuffer();
 
     void alloc(INTx3 _buf_shape, INTx3 _buf_offset, FLAG _buftype, FLAG _hdctype);
-    void alloc(INTx3 _buf_shape, INTx3 _buf_offset, FLAG _buftype, FLAG _hdctype, Mapper &_pdom, INT _color);
+    void alloc(INTx3 _buf_shape, INTx3 _buf_offset, FLAG _buftype, FLAG _hdctype, Mapper &_pdm, INT _color);
     void release();
 
     void clear() {
@@ -57,13 +57,13 @@ template<typename T> CPMBuffer<T>::CPMBuffer(INTx3 _buf_shape, INTx3 _buf_offset
     }
 }
 
-template<typename T> CPMBuffer<T>::CPMBuffer(INTx3 _buf_shape, INTx3 _buf_offset, FLAG _buftype, FLAG _hdctype, Mapper &_pdom, INT _color) :
+template<typename T> CPMBuffer<T>::CPMBuffer(INTx3 _buf_shape, INTx3 _buf_offset, FLAG _buftype, FLAG _hdctype, Mapper &_pdm, INT _color) :
     map(_buf_shape, _buf_offset),
     buftype(_buftype),
     hdctype(_hdctype),
     color(_color)
 {
-    INT refcolor = (SUM3(_pdom.offset) + SUM3(map.offset)) % 2;
+    INT refcolor = (SUM3(_pdm.offset) + SUM3(map.offset)) % 2;
     size = map.size / 2;
     if (map.size % 2 == 1 && refcolor == color) {
         size ++;
@@ -98,14 +98,14 @@ template<typename T> void CPMBuffer<T>::alloc(INTx3 _buf_shape, INTx3 _buf_offse
     }
 }
 
-template<typename T> void CPMBuffer<T>::alloc(INTx3 _buf_shape, INTx3 _buf_offset, FLAG _buftype, FLAG _hdctype, Mapper &_pdom, INT _color) {
+template<typename T> void CPMBuffer<T>::alloc(INTx3 _buf_shape, INTx3 _buf_offset, FLAG _buftype, FLAG _hdctype, Mapper &_pdm, INT _color) {
     assert(hdctype == HDCType::Empty);
     assert(buftype == BufType::Empty);
     map     = Mapper(_buf_shape, _buf_offset);
     buftype = _buftype;
     hdctype = _hdctype;
     color   = _color;
-    INT refcolor = (SUM3(_pdom.offset) + SUM3(map.offset)) % 2;
+    INT refcolor = (SUM3(_pdm.offset) + SUM3(map.offset)) % 2;
     size = map.size / 2;
     if (map.size % 2 == 1 && refcolor == color) {
         size ++;

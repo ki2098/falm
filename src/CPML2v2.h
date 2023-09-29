@@ -121,11 +121,11 @@ public:
         }
     }
 
-    void setRegions(INTx3 &inner_shape, INTx3 &inner_offset, INTx3 *boundary_shape, INTx3 *boundary_offset, INT thick, Mapper &pdom) {
+    void setRegions(INTx3 &inner_shape, INTx3 &inner_offset, INTx3 *boundary_shape, INTx3 *boundary_offset, INT thick, Mapper &pdm) {
         inner_shape = {
-            pdom.shape.x - Gdx2,
-            pdom.shape.y - Gdx2,
-            pdom.shape.z - Gdx2
+            pdm.shape.x - Gdx2,
+            pdm.shape.y - Gdx2,
+            pdm.shape.z - Gdx2
         };
         inner_offset = {Gd, Gd, Gd};
         if (neighbour[0] >= 0) {
@@ -176,7 +176,7 @@ public:
     MPI_Datatype      mpi_dtype;
     T              *oringin_ptr;
     Mapper  oringin_data_domain;
-    FLAG buffer_hdctype;
+    FLAG         buffer_hdctype;
     
 
     CPMOp() : oringin_ptr(nullptr) {}
@@ -211,162 +211,487 @@ public:
         }
     }
 
-    void CPML2Dev_IExchange6Face(T *data, Mapper &pdom, INT thick, int grp_tag);
-    void CPML2Dev_IExchange6ColoredFace(T *data, Mapper &pdom, INT color, INT thick, int grp_tag);
-    void CPML2Dev_PostExchange6Face();
-    void CPML2Dev_PostExchange6ColoredFace();
+    // void CPML2Dev_IExchange6Face(T *data, Mapper &pdm, INT thick, int grp_tag);
+    // void CPML2Dev_IExchange6ColoredFace(T *data, Mapper &pdm, INT color, INT thick, int grp_tag);
+    // void CPML2Dev_PostExchange6Face();
+    // void CPML2Dev_PostExchange6ColoredFace();
+    void CPML2Dev_IExchange6Face(T *data, Mapper &pdm, INT thick, int grp_tag, STREAM *stream = nullptr);
+    void CPML2Dev_IExchange6ColoredFace(T *data, Mapper &pdm, INT color, INT thick, int grp_tag, STREAM *stream = nullptr);
+    void CPML2Dev_PostExchange6Face(STREAM *stream = nullptr);
+    void CPML2Dev_PostExchange6ColoredFace(STREAM *stream = nullptr);
+
+protected:
+    void makeBufferShapeOffset(Mapper &pdm, INT thick) {
+        for (INT fid = 0; fid < 6; fid ++) {
+            if (base.neighbour[fid] >= 0) {
+                INT __s = fid*2, __r = fid*2+1;
+                INTx3 buffer_shape {
+                    (fid / 2 == 0)? thick : pdm.shape.x - Gdx2,
+                    (fid / 2 == 1)? thick : pdm.shape.y - Gdx2,
+                    (fid / 2 == 2)? thick : pdm.shape.z - Gdx2
+                };
+                INTx3 sendbuffer_offset, recvbuffer_offset;
+                if (fid == 0) {
+                    sendbuffer_offset = {pdm.shape.x - Gd - thick, Gd, Gd};
+                    recvbuffer_offset = {pdm.shape.x - Gd        , Gd, Gd};
+                } else if (fid == 1) {
+                    sendbuffer_offset = {               Gd        , Gd, Gd};
+                    recvbuffer_offset = {               Gd - thick, Gd, Gd};
+                } else if (fid == 2) {
+                    sendbuffer_offset = {Gd, pdm.shape.y - Gd - thick, Gd};
+                    recvbuffer_offset = {Gd, pdm.shape.y - Gd        , Gd};
+                } else if (fid == 3) {
+                    sendbuffer_offset = {Gd,                Gd        , Gd};
+                    recvbuffer_offset = {Gd,                Gd - thick, Gd};
+                } else if (fid == 4) {
+                    sendbuffer_offset = {Gd, Gd, pdm.shape.z - Gd - thick};
+                    recvbuffer_offset = {Gd, Gd, pdm.shape.z - Gd        };
+                } else if (fid == 5) {
+                    sendbuffer_offset = {Gd, Gd,                Gd        };
+                    recvbuffer_offset = {Gd, Gd,                Gd - thick};
+                }
+                buffer[__s].map = Mapper(buffer_shape, sendbuffer_offset);
+                buffer[__r].map = Mapper(buffer_shape, recvbuffer_offset);
+            }
+        }
+    }
+
 };
 
-template<typename T> void CPMOp<T>::CPML2Dev_IExchange6Face(T *data, Mapper &pdom, INT thick, int grp_tag) {
+// template<typename T> void CPMOp<T>::CPML2Dev_IExchange6Face(T *data, Mapper &pdm, INT thick, int grp_tag) {
+//     assert(oringin_ptr == nullptr);
+//     oringin_ptr = data;
+//     oringin_data_domain = pdm;
+//     int *neighbour = base.neighbour;
+//     for (INT i = 0; i < 6; i ++) {
+//         if (neighbour[i] >= 0) {
+//             dim3 block_dim(
+//                 (i / 2 == 0)? 1U : 8U,
+//                 (i / 2 == 1)? 1U : 8U,
+//                 (i / 2 == 2)? 1U : 8U
+//             );
+//             INTx3 buffer_shape {
+//                 (i / 2 == 0)? thick : pdm.shape.x - Gdx2,
+//                 (i / 2 == 1)? thick : pdm.shape.y - Gdx2,
+//                 (i / 2 == 2)? thick : pdm.shape.z - Gdx2
+//             };
+//             INTx3 sendbuffer_offset, recvbuffer_offset;
+//             if (i == 0) {
+//                 sendbuffer_offset = {pdm.shape.x - Gd - thick, Gd, Gd};
+//                 recvbuffer_offset = {pdm.shape.x - Gd        , Gd, Gd};
+//             } else if (i == 1) {
+//                 sendbuffer_offset = {               Gd        , Gd, Gd};
+//                 recvbuffer_offset = {               Gd - thick, Gd, Gd};
+//             } else if (i == 2) {
+//                 sendbuffer_offset = {Gd, pdm.shape.y - Gd - thick, Gd};
+//                 recvbuffer_offset = {Gd, pdm.shape.y - Gd        , Gd};
+//             } else if (i == 3) {
+//                 sendbuffer_offset = {Gd,                Gd        , Gd};
+//                 recvbuffer_offset = {Gd,                Gd - thick, Gd};
+//             } else if (i == 4) {
+//                 sendbuffer_offset = {Gd, Gd, pdm.shape.z - Gd - thick};
+//                 recvbuffer_offset = {Gd, Gd, pdm.shape.z - Gd        };
+//             } else if (i == 5) {
+//                 sendbuffer_offset = {Gd, Gd,                Gd        };
+//                 recvbuffer_offset = {Gd, Gd,                Gd - thick};
+//             }
+//             buffer[i*2].alloc(
+//                 sizeof(T),
+//                 Mapper(buffer_shape, sendbuffer_offset),
+//                 BufType::Out,
+//                 buffer_hdctype
+//             );
+//             buffer[i*2+1].alloc(
+//                 sizeof(T),
+//                 Mapper(buffer_shape, recvbuffer_offset),
+//                 BufType::In,
+//                 buffer_hdctype
+//             );
+//             CPML1Dev_PackBuffer(buffer[i*2], data, pdm, block_dim);
+//             CPML2_ISend(buffer[i*2  ], mpi_dtype, neighbour[i], neighbour[i] + grp_tag, MPI_COMM_WORLD, &mpi_req[i*2  ]);
+//             CPML2_IRecv(buffer[i*2+1], mpi_dtype, neighbour[i], base.rank    + grp_tag, MPI_COMM_WORLD, &mpi_req[i*2+1]);
+//         }
+//     }
+// }
+
+// template<typename T> void CPMOp<T>::CPML2Dev_IExchange6ColoredFace(T *data, Mapper &pdm, INT color, INT thick, int grp_tag) {
+//     assert(oringin_ptr == nullptr);
+//     oringin_ptr = data;
+//     oringin_data_domain = pdm;
+//     int *neighbour = base.neighbour;
+//     for (INT i = 0; i < 6; i ++) {
+//         if (neighbour[i] >= 0) {
+//             dim3 block_dim(
+//                 (i / 2 == 0)? 1U : 8U,
+//                 (i / 2 == 1)? 1U : 8U,
+//                 (i / 2 == 2)? 1U : 8U
+//             );
+//             INTx3 buffer_shape {
+//                 (i / 2 == 0)? thick : pdm.shape.x - Gdx2,
+//                 (i / 2 == 1)? thick : pdm.shape.y - Gdx2,
+//                 (i / 2 == 2)? thick : pdm.shape.z - Gdx2
+//             };
+//             INTx3 sendbuffer_offset, recvbuffer_offset;
+//             if (i == 0) {
+//                 sendbuffer_offset = {pdm.shape.x - Gd - thick, Gd, Gd};
+//                 recvbuffer_offset = {pdm.shape.x - Gd        , Gd, Gd};
+//             } else if (i == 1) {
+//                 sendbuffer_offset = {               Gd        , Gd, Gd};
+//                 recvbuffer_offset = {               Gd - thick, Gd, Gd};
+//             } else if (i == 2) {
+//                 sendbuffer_offset = {Gd, pdm.shape.y - Gd - thick, Gd};
+//                 recvbuffer_offset = {Gd, pdm.shape.y - Gd        , Gd};
+//             } else if (i == 3) {
+//                 sendbuffer_offset = {Gd,                Gd        , Gd};
+//                 recvbuffer_offset = {Gd,                Gd - thick, Gd};
+//             } else if (i == 4) {
+//                 sendbuffer_offset = {Gd, Gd, pdm.shape.z - Gd - thick};
+//                 recvbuffer_offset = {Gd, Gd, pdm.shape.z - Gd        };
+//             } else if (i == 5) {
+//                 sendbuffer_offset = {Gd, Gd,                Gd        };
+//                 recvbuffer_offset = {Gd, Gd,                Gd - thick};
+//             }
+//             buffer[i*2].allocColored(
+//                 sizeof(T),
+//                 Mapper(buffer_shape, sendbuffer_offset),
+//                 BufType::Out,
+//                 buffer_hdctype,
+//                 pdm, color
+//             );
+//             buffer[i*2+1].allocColored(
+//                 sizeof(T),
+//                 Mapper(buffer_shape, recvbuffer_offset),
+//                 recvbuffer_offset,
+//                 BufType::In,
+//                 buffer_hdctype,
+//                 pdm, color
+//             );
+//             CPML1Dev_PackColoredBuffer(buffer[i*2], data, pdm, block_dim);
+//             CPML2_ISend(buffer[i*2  ], mpi_dtype, neighbour[i], neighbour[i] + grp_tag, MPI_COMM_WORLD, &mpi_req[i*2  ]);
+//             CPML2_IRecv(buffer[i*2+1], mpi_dtype, neighbour[i], base.rank    + grp_tag, MPI_COMM_WORLD, &mpi_req[i*2+1]);
+//         }
+//     }
+// }
+
+template<typename T> void CPMOp<T>::CPML2Dev_IExchange6Face(T *data, Mapper &pdm, INT thick, int grp_tag, STREAM *stream) {
     assert(oringin_ptr == nullptr);
     oringin_ptr = data;
-    oringin_data_domain = pdom;
+    oringin_data_domain = pdm;
     int *neighbour = base.neighbour;
-    for (INT i = 0; i < 6; i ++) {
-        if (neighbour[i] >= 0) {
-            dim3 block_dim(
-                (i / 2 == 0)? 1U : 8U,
-                (i / 2 == 1)? 1U : 8U,
-                (i / 2 == 2)? 1U : 8U
-            );
-            INTx3 buffer_shape {
-                (i / 2 == 0)? thick : pdom.shape.x - Gdx2,
-                (i / 2 == 1)? thick : pdom.shape.y - Gdx2,
-                (i / 2 == 2)? thick : pdom.shape.z - Gdx2
-            };
-            INTx3 sendbuffer_offset, recvbuffer_offset;
-            if (i == 0) {
-                sendbuffer_offset = {pdom.shape.x - Gd - thick, Gd, Gd};
-                recvbuffer_offset = {pdom.shape.x - Gd        , Gd, Gd};
-            } else if (i == 1) {
-                sendbuffer_offset = {               Gd        , Gd, Gd};
-                recvbuffer_offset = {               Gd - thick, Gd, Gd};
-            } else if (i == 2) {
-                sendbuffer_offset = {Gd, pdom.shape.y - Gd - thick, Gd};
-                recvbuffer_offset = {Gd, pdom.shape.y - Gd        , Gd};
-            } else if (i == 3) {
-                sendbuffer_offset = {Gd,                Gd        , Gd};
-                recvbuffer_offset = {Gd,                Gd - thick, Gd};
-            } else if (i == 4) {
-                sendbuffer_offset = {Gd, Gd, pdom.shape.z - Gd - thick};
-                recvbuffer_offset = {Gd, Gd, pdom.shape.z - Gd        };
-            } else if (i == 5) {
-                sendbuffer_offset = {Gd, Gd,                Gd        };
-                recvbuffer_offset = {Gd, Gd,                Gd - thick};
+    Mapper map;
+    void *ptr[6];
+    makeBufferShapeOffset(pdm, thick);
+    if (stream) { // stream ordered version
+        for (INT fid = 0; fid < 6; fid ++) {
+            if (neighbour[fid] >= 0) {
+                CPMBuffer &sbuf = buffer[fid*2], &rbuf = buffer[fid*2+1];
+                sbuf.allocAsync(sizeof(T), sbuf.map, BufType::Out, buffer_hdctype, stream[fid]);
+                rbuf.allocAsync(sizeof(T), rbuf.map, BufType::In , buffer_hdctype, stream[fid]);
+                if (buffer_hdctype == HDCType::Host) {
+                    falmMallocDeviceAsync(&ptr[fid], sizeof(T) * sbuf.count, stream[fid]);
+                }
             }
-            buffer[i*2].alloc(
-                sizeof(T),
-                buffer_shape,
-                sendbuffer_offset,
-                BufType::Out,
-                buffer_hdctype
-            );
-            buffer[i*2+1].alloc(
-                sizeof(T),
-                buffer_shape,
-                recvbuffer_offset,
-                BufType::In,
-                buffer_hdctype
-            );
-            CPML1Dev_PackBuffer(buffer[i*2], data, pdom, block_dim);
-            CPML2_ISend(buffer[i*2  ], mpi_dtype, neighbour[i], neighbour[i] + grp_tag, MPI_COMM_WORLD, &mpi_req[i*2  ]);
-            CPML2_IRecv(buffer[i*2+1], mpi_dtype, neighbour[i], base.rank    + grp_tag, MPI_COMM_WORLD, &mpi_req[i*2+1]);
+        }
+        for (INT fid = 0; fid < 6; fid ++) {
+            if (neighbour[fid] >= 0) {
+                dim3 block_dim(
+                    (fid / 2 == 0)? 1U : 8U,
+                    (fid / 2 == 1)? 1U : 8U,
+                    (fid / 2 == 2)? 1U : 8U
+                );
+                CPMBuffer &sbuf = buffer[fid*2];
+                if (buffer_hdctype == HDCType::Device) {
+                    CPML0Dev_PackBuffer((T*)sbuf.ptr, sbuf.map, oringin_ptr, oringin_data_domain, block_dim, stream[fid]);
+                } else if (buffer_hdctype == HDCType::Host) {
+                    CPML0Dev_PackBuffer((T*)ptr[fid], sbuf.map, oringin_ptr, oringin_data_domain, block_dim, stream[fid]);
+                    falmMemcpyAsync(sbuf.ptr, ptr[fid], sizeof(T) * sbuf.count, MCpType::Dev2Hst, stream[fid]);
+                    falmFreeDeviceAsync(ptr[fid], stream[fid]);
+                }
+            }
+        }
+        for (INT fid = 0; fid < 6; fid ++) {
+            if (neighbour[fid] >= 0) {
+                INT __s = fid*2, __r = fid*2+1;
+                CPMBuffer   &sbuf =  buffer[__s], &rbuf =  buffer[__r];
+                MPI_Request &sreq = mpi_req[__s], &rreq = mpi_req[__r];
+                falmWaitStream(stream[fid]);
+                CPML2_ISend(sbuf, mpi_dtype, neighbour[fid], neighbour[fid] + grp_tag, MPI_COMM_WORLD, &sreq);
+                CPML2_IRecv(rbuf, mpi_dtype, neighbour[fid], base.rank      + grp_tag, MPI_COMM_WORLD, &rreq);
+            }
+        }
+    } else { // all in default stream version
+        for (INT fid = 0; fid < 6; fid ++) {
+            if (neighbour[fid] >= 0) {
+                CPMBuffer &sbuf = buffer[fid*2], &rbuf = buffer[fid*2+1];
+                dim3 block_dim(
+                    (fid / 2 == 0)? 1U : 8U,
+                    (fid / 2 == 1)? 1U : 8U,
+                    (fid / 2 == 2)? 1U : 8U
+                );
+                sbuf.allocAsync(sizeof(T), sbuf.map, BufType::Out, buffer_hdctype);
+                rbuf.allocAsync(sizeof(T), rbuf.map, BufType::In , buffer_hdctype);
+                if (buffer_hdctype == HDCType::Device) {
+                    CPML0Dev_PackBuffer((T*)sbuf.ptr, sbuf.map, oringin_ptr, oringin_data_domain, block_dim);
+                } else if (buffer_hdctype == HDCType::Host) {
+                    falmMallocDeviceAsync(&ptr[fid], sizeof(T) * sbuf.count);
+                    CPML0Dev_PackBuffer((T*)ptr[fid], sbuf.map, oringin_ptr, oringin_data_domain, block_dim);
+                    falmMemcpyAsync(sbuf.ptr, ptr[fid], sizeof(T) * sbuf.count, MCpType::Dev2Hst);
+                    falmFreeDeviceAsync(ptr[fid]);
+                }
+            }
+        }
+        falmWaitStream();
+        for (INT fid = 0; fid < 6; fid ++) {
+            if (neighbour[fid] >= 0) {
+                INT __s = fid*2, __r = fid*2+1;
+                CPMBuffer   &sbuf =  buffer[__s], &rbuf =  buffer[__r];
+                MPI_Request &sreq = mpi_req[__s], &rreq = mpi_req[__r];
+                CPML2_ISend(sbuf, mpi_dtype, neighbour[fid], neighbour[fid] + grp_tag, MPI_COMM_WORLD, &sreq);
+                CPML2_IRecv(rbuf, mpi_dtype, neighbour[fid], base.rank      + grp_tag, MPI_COMM_WORLD, &rreq);
+            }
         }
     }
 }
 
-template<typename T> void CPMOp<T>::CPML2Dev_IExchange6ColoredFace(T *data, Mapper &pdom, INT color, INT thick, int grp_tag) {
+template<typename T> void CPMOp<T>::CPML2Dev_IExchange6ColoredFace(T *data, Mapper &pdm, INT color, INT thick, int grp_tag, STREAM *stream) {
     assert(oringin_ptr == nullptr);
     oringin_ptr = data;
-    oringin_data_domain = pdom;
+    oringin_data_domain = pdm;
     int *neighbour = base.neighbour;
-    for (INT i = 0; i < 6; i ++) {
-        if (neighbour[i] >= 0) {
-            dim3 block_dim(
-                (i / 2 == 0)? 1U : 8U,
-                (i / 2 == 1)? 1U : 8U,
-                (i / 2 == 2)? 1U : 8U
-            );
-            INTx3 buffer_shape {
-                (i / 2 == 0)? thick : pdom.shape.x - Gdx2,
-                (i / 2 == 1)? thick : pdom.shape.y - Gdx2,
-                (i / 2 == 2)? thick : pdom.shape.z - Gdx2
-            };
-            INTx3 sendbuffer_offset, recvbuffer_offset;
-            if (i == 0) {
-                sendbuffer_offset = {pdom.shape.x - Gd - thick, Gd, Gd};
-                recvbuffer_offset = {pdom.shape.x - Gd        , Gd, Gd};
-            } else if (i == 1) {
-                sendbuffer_offset = {               Gd        , Gd, Gd};
-                recvbuffer_offset = {               Gd - thick, Gd, Gd};
-            } else if (i == 2) {
-                sendbuffer_offset = {Gd, pdom.shape.y - Gd - thick, Gd};
-                recvbuffer_offset = {Gd, pdom.shape.y - Gd        , Gd};
-            } else if (i == 3) {
-                sendbuffer_offset = {Gd,                Gd        , Gd};
-                recvbuffer_offset = {Gd,                Gd - thick, Gd};
-            } else if (i == 4) {
-                sendbuffer_offset = {Gd, Gd, pdom.shape.z - Gd - thick};
-                recvbuffer_offset = {Gd, Gd, pdom.shape.z - Gd        };
-            } else if (i == 5) {
-                sendbuffer_offset = {Gd, Gd,                Gd        };
-                recvbuffer_offset = {Gd, Gd,                Gd - thick};
+    Mapper map;
+    void *ptr[6];
+    makeBufferShapeOffset(pdm, thick);
+    if (stream) { // stream ordered version
+        for (INT fid = 0; fid < 6; fid ++) {
+            if (neighbour[fid] >= 0) {
+                CPMBuffer &sbuf = buffer[fid*2], &rbuf = buffer[fid*2+1];
+                sbuf.allocColoredAsync(sizeof(T), sbuf.map, BufType::Out, buffer_hdctype, pdm, color, stream[fid]);
+                rbuf.allocColoredAsync(sizeof(T), rbuf.map, BufType::In , buffer_hdctype, pdm, color, stream[fid]);
+                if (buffer_hdctype == HDCType::Host) {
+                    falmMallocDeviceAsync(&ptr[fid], sizeof(T) * sbuf.count, stream[fid]);
+                }
             }
-            buffer[i*2].alloc(
-                sizeof(T),
-                buffer_shape,
-                sendbuffer_offset,
-                BufType::Out,
-                buffer_hdctype,
-                pdom, color
-            );
-            buffer[i*2+1].alloc(
-                sizeof(T),
-                buffer_shape,
-                recvbuffer_offset,
-                BufType::In,
-                buffer_hdctype,
-                pdom, color
-            );
-            CPML1Dev_PackColoredBuffer(buffer[i*2], data, pdom, block_dim);
-            CPML2_ISend(buffer[i*2  ], mpi_dtype, neighbour[i], neighbour[i] + grp_tag, MPI_COMM_WORLD, &mpi_req[i*2  ]);
-            CPML2_IRecv(buffer[i*2+1], mpi_dtype, neighbour[i], base.rank    + grp_tag, MPI_COMM_WORLD, &mpi_req[i*2+1]);
+        }
+        for (INT fid = 0; fid < 6; fid ++) {
+            if (neighbour[fid] >= 0) {
+                dim3 block_dim(
+                    (fid / 2 == 0)? 1U : 8U,
+                    (fid / 2 == 1)? 1U : 8U,
+                    (fid / 2 == 2)? 1U : 8U
+                );
+                CPMBuffer &sbuf = buffer[fid*2];
+                if (buffer_hdctype == HDCType::Device) {
+                    CPML0Dev_PackColoredBuffer((T*)sbuf.ptr, sbuf.map, sbuf.color, oringin_ptr, oringin_data_domain, block_dim, stream[fid]);
+                } else if (buffer_hdctype == HDCType::Host) {
+                    CPML0Dev_PackColoredBuffer((T*)ptr[fid], sbuf.map, sbuf.color, oringin_ptr, oringin_data_domain, block_dim, stream[fid]);
+                    falmMemcpyAsync(sbuf.ptr, ptr[fid], sizeof(T) * sbuf.count, MCpType::Dev2Hst, stream[fid]);
+                    falmFreeDeviceAsync(ptr[fid], stream[fid]);
+                }
+            }
+        }
+        for (INT fid = 0; fid < 6; fid ++) {
+            if (neighbour[fid] >= 0) {
+                INT __s = fid*2, __r = fid*2+1;
+                CPMBuffer   &sbuf =  buffer[__s], &rbuf =  buffer[__r];
+                MPI_Request &sreq = mpi_req[__s], &rreq = mpi_req[__r];
+                falmWaitStream(stream[fid]);
+                CPML2_ISend(sbuf, mpi_dtype, neighbour[fid], neighbour[fid] + grp_tag, MPI_COMM_WORLD, &sreq);
+                CPML2_IRecv(rbuf, mpi_dtype, neighbour[fid], base.rank      + grp_tag, MPI_COMM_WORLD, &rreq);
+            }
+        }
+    } else { // all in default stream version
+        for (INT fid = 0; fid < 6; fid ++) {
+            if (neighbour[fid] >= 0) {
+                CPMBuffer &sbuf = buffer[fid*2], &rbuf = buffer[fid*2+1];
+                dim3 block_dim(
+                    (fid / 2 == 0)? 1U : 8U,
+                    (fid / 2 == 1)? 1U : 8U,
+                    (fid / 2 == 2)? 1U : 8U
+                );
+                sbuf.allocColoredAsync(sizeof(T), sbuf.map, BufType::Out, buffer_hdctype, pdm, color);
+                rbuf.allocColoredAsync(sizeof(T), rbuf.map, BufType::In , buffer_hdctype, pdm, color);
+                if (buffer_hdctype == HDCType::Device) {
+                    CPML0Dev_PackColoredBuffer((T*)sbuf.ptr, sbuf.map, sbuf.color, oringin_ptr, oringin_data_domain, block_dim);
+                } else if (buffer_hdctype == HDCType::Host) {
+                    falmMallocDeviceAsync(&ptr[fid], sizeof(T) * sbuf.count);
+                    CPML0Dev_PackColoredBuffer((T*)ptr[fid], sbuf.map, sbuf.color, oringin_ptr, oringin_data_domain, block_dim);
+                    falmMemcpyAsync(sbuf.ptr, ptr[fid], sizeof(T) * sbuf.count, MCpType::Dev2Hst);
+                    falmFreeDeviceAsync(ptr[fid]);
+                }
+            }
+        }
+        falmWaitStream();
+        for (INT fid = 0; fid < 6; fid ++) {
+            if (neighbour[fid] >= 0) {
+                INT __s = fid*2, __r = fid*2+1;
+                CPMBuffer   &sbuf =  buffer[__s], &rbuf =  buffer[__r];
+                MPI_Request &sreq = mpi_req[__s], &rreq = mpi_req[__r];
+                CPML2_ISend(sbuf, mpi_dtype, neighbour[fid], neighbour[fid] + grp_tag, MPI_COMM_WORLD, &sreq);
+                CPML2_IRecv(rbuf, mpi_dtype, neighbour[fid], base.rank      + grp_tag, MPI_COMM_WORLD, &rreq);
+            }
         }
     }
 }
 
-template<typename T> void CPMOp<T>::CPML2Dev_PostExchange6Face() {
+// template<typename T> void CPMOp<T>::CPML2Dev_PostExchange6Face() {
+//     assert(oringin_ptr != nullptr);
+//     int *neighbour = base.neighbour;
+//     for (INT i = 0; i < 6; i ++) {
+//         if (neighbour[i] >= 0) {
+//             dim3 block_dim(
+//                 (i / 2 == 0)? 1U : 8U,
+//                 (i / 2 == 1)? 1U : 8U,
+//                 (i / 2 == 2)? 1U : 8U
+//             );
+//             buffer[i*2].release();
+//             CPML1Dev_UnpackBuffer(buffer[i*2+1], oringin_ptr, oringin_data_domain, block_dim);
+//             buffer[i*2+1].release();
+//         }
+//     }
+//     oringin_ptr = nullptr;
+// }
+
+// template<typename T> void CPMOp<T>::CPML2Dev_PostExchange6ColoredFace() {
+//     assert(oringin_ptr != nullptr);
+//     int *neighbour = base.neighbour;
+//     void *ptr[6];
+//     for (INT i = 0; i < 6; i ++) {
+//         if (neighbour[i] >= 0) {
+//             dim3 block_dim(
+//                 (i / 2 == 0)? 1U : 8U,
+//                 (i / 2 == 1)? 1U : 8U,
+//                 (i / 2 == 2)? 1U : 8U
+//             );
+//             buffer[i*2].release();
+//             CPML1Dev_UnpackColoredBuffer(buffer[i*2+1], oringin_ptr, oringin_data_domain, block_dim);
+//             buffer[i*2+1].release();
+//         }
+//     }
+//     oringin_ptr = nullptr;
+// }
+
+template<typename T> void CPMOp<T>::CPML2Dev_PostExchange6Face(STREAM *stream) {
     assert(oringin_ptr != nullptr);
     int *neighbour = base.neighbour;
-    for (INT i = 0; i < 6; i ++) {
-        if (neighbour[i] >= 0) {
-            dim3 block_dim(
-                (i / 2 == 0)? 1U : 8U,
-                (i / 2 == 1)? 1U : 8U,
-                (i / 2 == 2)? 1U : 8U
-            );
-            buffer[i*2].release();
-            CPML1Dev_UnpackBuffer(buffer[i*2+1], oringin_ptr, oringin_data_domain, block_dim);
-            buffer[i*2+1].release();
+    void *ptr[6];
+    if (stream) { // stream ordered version
+        for (INT fid = 0; fid < 6; fid ++) {
+            if (neighbour[fid] >= 0) {
+                CPMBuffer &rbuf = buffer[fid*2+1];
+                if (buffer_hdctype == HDCType::Host) {
+                    falmMallocDeviceAsync(&ptr[fid], sizeof(T) * rbuf.count, stream[fid]);
+                }
+            }
         }
+        for (INT fid = 0; fid < 6; fid ++) {
+            if (neighbour[fid] >= 0) {
+                CPMBuffer &sbuf = buffer[fid*2], &rbuf = buffer[fid*2+1];
+                dim3 block_dim(
+                    (fid / 2 == 0)? 1U : 8U,
+                    (fid / 2 == 1)? 1U : 8U,
+                    (fid / 2 == 2)? 1U : 8U
+                );
+                if (buffer_hdctype == HDCType::Device) {
+                    CPML0Dev_UnpackBuffer((T*)rbuf.ptr, rbuf.map, oringin_ptr, oringin_data_domain, block_dim, stream[fid]);
+                } else if (buffer_hdctype == HDCType::Host) {
+                    falmMemcpyAsync(ptr[fid], rbuf.ptr, sizeof(T) * rbuf.count, MCpType::Hst2Dev, stream[fid]);
+                    CPML0Dev_UnpackBuffer((T*)ptr[fid], rbuf.map, oringin_ptr, oringin_data_domain, block_dim, stream[fid]);
+                    falmFreeDeviceAsync(ptr[fid], stream[fid]);
+                }
+                sbuf.releaseAsync(stream[fid]);
+                rbuf.releaseAsync(stream[fid]);
+            }
+        }
+        for (INT fid = 0; fid < 6; fid ++) {
+            if (neighbour[fid] >= 0) {
+                falmWaitStream(stream[fid]);
+            }
+        }
+    } else { // all in default stream version
+        for (INT fid = 0; fid < 6; fid ++) {
+            if (neighbour[fid] >= 0) {
+                CPMBuffer &sbuf = buffer[fid*2], &rbuf = buffer[fid*2+1];
+                dim3 block_dim(
+                    (fid / 2 == 0)? 1U : 8U,
+                    (fid / 2 == 1)? 1U : 8U,
+                    (fid / 2 == 2)? 1U : 8U
+                );
+                if (buffer_hdctype == HDCType::Device) {
+                    CPML0Dev_UnpackBuffer((T*)rbuf.ptr, rbuf.map, oringin_ptr, oringin_data_domain, block_dim);
+                } else if (buffer_hdctype == HDCType::Host) {
+                    falmMallocDeviceAsync(&ptr[fid], sizeof(T) * rbuf.count);
+                    falmMemcpyAsync(ptr[fid], rbuf.ptr, sizeof(T) * rbuf.count, MCpType::Hst2Dev);
+                    CPML0Dev_UnpackBuffer((T*)ptr[fid], rbuf.map, oringin_ptr, oringin_data_domain, block_dim);
+                    falmFreeDeviceAsync(ptr[fid]);
+                }
+                sbuf.releaseAsync();
+                rbuf.releaseAsync();
+            }
+        }
+        falmWaitStream();
     }
     oringin_ptr = nullptr;
 }
 
-template<typename T> void CPMOp<T>::CPML2Dev_PostExchange6ColoredFace() {
+template<typename T> void CPMOp<T>::CPML2Dev_PostExchange6ColoredFace(STREAM *stream) {
     assert(oringin_ptr != nullptr);
     int *neighbour = base.neighbour;
-    for (INT i = 0; i < 6; i ++) {
-        if (neighbour[i] >= 0) {
-            dim3 block_dim(
-                (i / 2 == 0)? 1U : 8U,
-                (i / 2 == 1)? 1U : 8U,
-                (i / 2 == 2)? 1U : 8U
-            );
-            buffer[i*2].release();
-            CPML1Dev_UnpackColoredBuffer(buffer[i*2+1], oringin_ptr, oringin_data_domain, block_dim);
-            buffer[i*2+1].release();
+    void *ptr[6];
+    if (stream) { // stream ordered version
+        for (INT fid = 0; fid < 6; fid ++) {
+            if (neighbour[fid] >= 0) {
+                CPMBuffer &rbuf = buffer[fid*2+1];
+                if (buffer_hdctype == HDCType::Host) {
+                    falmMallocDeviceAsync(&ptr[fid], sizeof(T) * rbuf.count, stream[fid]);
+                }
+            }
         }
+        for (INT fid = 0; fid < 6; fid ++) {
+            if (neighbour[fid] >= 0) {
+                CPMBuffer &sbuf = buffer[fid*2], &rbuf = buffer[fid*2+1];
+                dim3 block_dim(
+                    (fid / 2 == 0)? 1U : 8U,
+                    (fid / 2 == 1)? 1U : 8U,
+                    (fid / 2 == 2)? 1U : 8U
+                );
+                if (buffer_hdctype == HDCType::Device) {
+                    CPML0Dev_UnpackColoredBuffer((T*)rbuf.ptr, rbuf.map, rbuf.color, oringin_ptr, oringin_data_domain, block_dim, stream[fid]);
+                } else if (buffer_hdctype == HDCType::Host) {
+                    falmMemcpyAsync(ptr[fid], rbuf.ptr, sizeof(T) * rbuf.count, MCpType::Hst2Dev, stream[fid]);
+                    CPML0Dev_UnpackColoredBuffer((T*)ptr[fid], rbuf.map, rbuf.color, oringin_ptr, oringin_data_domain, block_dim, stream[fid]);
+                    falmFreeDeviceAsync(ptr[fid], stream[fid]);
+                }
+                sbuf.releaseAsync(stream[fid]);
+                rbuf.releaseAsync(stream[fid]);
+            }
+        }
+        for (INT fid = 0; fid < 6; fid ++) {
+            if (neighbour[fid] >= 0) {
+                falmWaitStream(stream[fid]);
+            }
+        }
+    } else { // all in default stream version
+        for (INT fid = 0; fid < 6; fid ++) {
+            if (neighbour[fid] >= 0) {
+                CPMBuffer &sbuf = buffer[fid*2], &rbuf = buffer[fid*2+1];
+                dim3 block_dim(
+                    (fid / 2 == 0)? 1U : 8U,
+                    (fid / 2 == 1)? 1U : 8U,
+                    (fid / 2 == 2)? 1U : 8U
+                );
+                if (buffer_hdctype == HDCType::Device) {
+                    CPML0Dev_UnpackColoredBuffer((T*)rbuf.ptr, rbuf.map, rbuf.color, oringin_ptr, oringin_data_domain, block_dim);
+                } else if (buffer_hdctype == HDCType::Host) {
+                    falmMallocDeviceAsync(&ptr[fid], sizeof(T) * rbuf.count);
+                    falmMemcpyAsync(ptr[fid], rbuf.ptr, sizeof(T) * rbuf.count, MCpType::Hst2Dev);
+                    CPML0Dev_UnpackColoredBuffer((T*)ptr[fid], rbuf.map, rbuf.color, oringin_ptr, oringin_data_domain, block_dim);
+                    falmFreeDeviceAsync(ptr[fid]);
+                }
+                sbuf.releaseAsync();
+                rbuf.releaseAsync();
+            }
+        }
+        falmWaitStream();
     }
     oringin_ptr = nullptr;
 }

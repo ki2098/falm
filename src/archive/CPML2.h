@@ -95,17 +95,17 @@ public:
         }
     }
 
-    void CPML2dev_IExchange6Face(double *data, Mapper &pdom, unsigned int thick, int grp_tag, CPMBuffer<double> *&buffer, unsigned int buf_hdctype, MPI_Request *&req);
-    void CPML2dev_IExchange6ColoredFace(double *data, Mapper &pdom, unsigned int color, unsigned int thick, int grp_tag, CPMBuffer<double> *&buffer, unsigned int buf_hdctype, MPI_Request *&req);
-    void CPML2dev_PostExchange6Face(double *data, Mapper &pdom, CPMBuffer<double> *&buffer, MPI_Request *&req);
-    void CPML2dev_PostExchange6ColoredFace(double *data, Mapper &pdom, unsigned int color, CPMBuffer<double> *&buffer, MPI_Request *&req);
+    void CPML2dev_IExchange6Face(double *data, Mapper &pdm, unsigned int thick, int grp_tag, CPMBuffer<double> *&buffer, unsigned int buf_hdctype, MPI_Request *&req);
+    void CPML2dev_IExchange6ColoredFace(double *data, Mapper &pdm, unsigned int color, unsigned int thick, int grp_tag, CPMBuffer<double> *&buffer, unsigned int buf_hdctype, MPI_Request *&req);
+    void CPML2dev_PostExchange6Face(double *data, Mapper &pdm, CPMBuffer<double> *&buffer, MPI_Request *&req);
+    void CPML2dev_PostExchange6ColoredFace(double *data, Mapper &pdm, unsigned int color, CPMBuffer<double> *&buffer, MPI_Request *&req);
     void CPML2_Wait6Face(MPI_Request *req);
 
-    void setRegions(uint3 &inner_shape, uint3 &inner_offset, uint3 *boundary_shape, uint3 *boundary_offset, unsigned int thick, Mapper &pdom) {
+    void setRegions(uint3 &inner_shape, uint3 &inner_offset, uint3 *boundary_shape, uint3 *boundary_offset, unsigned int thick, Mapper &pdm) {
         inner_shape = {
-            pdom.shape.x - Gdx2,
-            pdom.shape.y - Gdx2,
-            pdom.shape.z - Gdx2
+            pdm.shape.x - Gdx2,
+            pdm.shape.y - Gdx2,
+            pdm.shape.z - Gdx2
         };
         inner_offset = {Gd, Gd, Gd};
         if (neighbour[0] >= 0) {
