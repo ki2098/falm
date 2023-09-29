@@ -24,9 +24,9 @@ static inline void *falmMallocDevice(size_t size) {
     return ptr;
 }
 
-static inline void falmMallocDeviceAsync(void **ptr, size_t size, STREAM stream = (STREAM)0) {
-    cudaMallocAsync(ptr, size, stream);
-}
+// static inline void falmMallocDeviceAsync(void **ptr, size_t size, STREAM stream = (STREAM)0) {
+//     cudaMallocAsync(ptr, size, stream);
+// }
 
 static inline void falmMemset(void *ptr, int value, size_t size) {
     memset(ptr, value, size);
@@ -52,9 +52,9 @@ static inline void falmFreeDevice(void *ptr) {
     cudaFree(ptr);
 }
 
-static inline void falmFreeDeviceAsync(void *ptr, STREAM stream = (STREAM)0) {
-    cudaFreeAsync(ptr, stream);
-}
+// static inline void falmFreeDeviceAsync(void *ptr, STREAM stream = (STREAM)0) {
+//     cudaFreeAsync(ptr, stream);
+// }
 
 static void falmMemcpy(void *dst, void *src, size_t size, FLAG mcptype) {
     if (mcptype == MCpType::Hst2Hst) {
