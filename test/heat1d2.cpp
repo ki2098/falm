@@ -4,7 +4,7 @@
 
 using namespace Falm;
 
-#define USE_CUDA_AWARE_MPI false
+#define USE_CUDA_AWARE_MPI true
 
 #define Nx 100
 #define Ny 1
@@ -210,8 +210,12 @@ int main(int argc, char **argv) {
         }
         CPML2_Barrier(MPI_COMM_WORLD);
     }
+    STREAM faceStream[6];
+    for (int fid = 0; fid < 6; fid ++) {
+        cudaStreamCreate(&faceStream[fid]);
+    }
     L2EqSolver solver(LSType::PBiCGStab, 1000, 1e-9, 1.2, LSType::SOR, 5, 1.5);
-    solver.L2Dev_Struct3d7p_Solve(a, t, b, r, global, process, block_dim, cpm);
+    solver.L2Dev_Struct3d7p_Solve(a, t, b, r, global, process, block_dim, cpm, faceStream);
     t.sync(MCpType::Dev2Hst);
     r.sync(MCpType::Dev2Hst);
     for (INT i = 0; i < cpm.size; i ++) {
@@ -224,6 +228,9 @@ int main(int argc, char **argv) {
         CPML2_Barrier(MPI_COMM_WORLD);
     }
     printf("%d %.12lf\n", solver.it, solver.err);
+    for (int fid = 0; fid < 6; fid ++) {
+        cudaStreamDestroy(faceStream[fid]);
+    }
 
     return CPML2_Finalize();
 }

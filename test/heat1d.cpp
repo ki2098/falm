@@ -65,7 +65,7 @@ int main() {
         printf("= %12lf\n", b(idx));
     }
 
-    L1EqSolver solver(LSType::PBiCGStab, 10000, 1e-9, 1.5, LSType::Jacobi, 5, 1.0);
+    L1EqSolver solver(LSType::PBiCGStab, 10000, 1e-9, 1.5, LSType::SOR, 5, 1.5);
     solver.L1Dev_Struct3d7p_Solve(a, t, b, r, global, pdm, block_dim);
     t.sync(MCpType::Dev2Hst);
     r.sync(MCpType::Dev2Hst);

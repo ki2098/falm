@@ -36,7 +36,7 @@ __global__ void kernel_Struct3d7p_MV(MatrixFrame<REAL> &a, MatrixFrame<REAL> &x,
     }
 }
 
-void L0Dev_Struct3d7p_MV(Matrix<REAL> &a, Matrix<REAL> &x, Matrix<REAL> &ax, Mapper &pdm, Mapper &map, dim3 block_dim) {
+void L0Dev_Struct3d7p_MV(Matrix<REAL> &a, Matrix<REAL> &x, Matrix<REAL> &ax, Mapper &pdm, Mapper &map, dim3 block_dim, STREAM stream) {
     assert(
         a.shape.x == x.shape.x && a.shape.x == ax.shape.x &&
         a.shape.y == 7 && x.shape.y == 1 && ax.shape.y == 1
@@ -47,7 +47,7 @@ void L0Dev_Struct3d7p_MV(Matrix<REAL> &a, Matrix<REAL> &x, Matrix<REAL> &ax, Map
         (map.shape.z + block_dim.z - 1) / block_dim.z
     );
 
-    kernel_Struct3d7p_MV<<<grid_dim, block_dim, 0, 0>>>(*(a.devptr), *(x.devptr), *(ax.devptr), pdm.shape, map.shape, map.offset);
+    kernel_Struct3d7p_MV<<<grid_dim, block_dim, 0, stream>>>(*(a.devptr), *(x.devptr), *(ax.devptr), pdm.shape, map.shape, map.offset);
 }
 
 __global__ void kernel_Struct3d7p_Res(MatrixFrame<REAL> &a, MatrixFrame<REAL> &x, MatrixFrame<REAL> &b, MatrixFrame<REAL> &r, INTx3 pdm_shape, INTx3 map_shape, INTx3 map_offset) {
@@ -82,7 +82,7 @@ __global__ void kernel_Struct3d7p_Res(MatrixFrame<REAL> &a, MatrixFrame<REAL> &x
     }
 }
 
-void L0Dev_Struct3d7p_Res(Matrix<REAL> &a, Matrix<REAL> &x, Matrix<REAL> &b, Matrix<REAL> &r, Mapper &pdm, Mapper &map, dim3 block_dim) {
+void L0Dev_Struct3d7p_Res(Matrix<REAL> &a, Matrix<REAL> &x, Matrix<REAL> &b, Matrix<REAL> &r, Mapper &pdm, Mapper &map, dim3 block_dim, STREAM stream) {
     assert(
         a.shape.x == x.shape.x && a.shape.x == b.shape.x && a.shape.x == r.shape.x &&
         a.shape.y == 7 && x.shape.y == 1 && b.shape.y == 1 && r.shape.y == 1
@@ -93,7 +93,7 @@ void L0Dev_Struct3d7p_Res(Matrix<REAL> &a, Matrix<REAL> &x, Matrix<REAL> &b, Mat
         (map.shape.z + block_dim.z - 1) / block_dim.z
     );
 
-    kernel_Struct3d7p_Res<<<grid_dim, block_dim, 0, 0>>>(*(a.devptr), *(x.devptr), *(b.devptr), *(r.devptr), pdm.shape, map.shape, map.offset);
+    kernel_Struct3d7p_Res<<<grid_dim, block_dim, 0, stream>>>(*(a.devptr), *(x.devptr), *(b.devptr), *(r.devptr), pdm.shape, map.shape, map.offset);
 }
 
 __global__ void kernel_Struct3d7p_Jacobi(MatrixFrame<REAL> &a, MatrixFrame<REAL> &x, MatrixFrame<REAL> &xp, MatrixFrame<REAL> &b, INTx3 pdm_shape, INTx3 map_shape, INTx3 map_offset) {
@@ -128,14 +128,14 @@ __global__ void kernel_Struct3d7p_Jacobi(MatrixFrame<REAL> &a, MatrixFrame<REAL>
     }
 }
 
-void L1EqSolver::L0Dev_Struct3d7p_JacobiSweep(Matrix<REAL> &a, Matrix<REAL> &x, Matrix<REAL> &xp, Matrix<REAL> &b, Mapper &pdm, Mapper &map, dim3 block_dim) {
+void L1EqSolver::L0Dev_Struct3d7p_JacobiSweep(Matrix<REAL> &a, Matrix<REAL> &x, Matrix<REAL> &xp, Matrix<REAL> &b, Mapper &pdm, Mapper &map, dim3 block_dim, STREAM stream) {
     dim3 grid_dim(
         (map.shape.x + block_dim.x - 1) / block_dim.x,
         (map.shape.y + block_dim.y - 1) / block_dim.y,
         (map.shape.z + block_dim.z - 1) / block_dim.z
     );
 
-    kernel_Struct3d7p_Jacobi<<<grid_dim, block_dim, 0, 0>>>(*(a.devptr), *(x.devptr), *(xp.devptr), *(b.devptr), pdm.shape, map.shape, map.offset);
+    kernel_Struct3d7p_Jacobi<<<grid_dim, block_dim, 0, stream>>>(*(a.devptr), *(x.devptr), *(xp.devptr), *(b.devptr), pdm.shape, map.shape, map.offset);
 }
 
 void L1EqSolver::L1Dev_Struct3d7p_Jacobi(Matrix<REAL> &a, Matrix<REAL> &x, Matrix<REAL> &b, Matrix<REAL> &r, Mapper &global, Mapper &pdm, dim3 block_dim) {
@@ -204,14 +204,14 @@ __global__ void kernel_Struct3d7p_SOR(MatrixFrame<REAL> &a, MatrixFrame<REAL> &x
     }
 }
 
-void L1EqSolver::L0Dev_Struct3d7p_SORSweep(Matrix<REAL> &a, Matrix<REAL> &x, Matrix<REAL> &b, REAL omega, INT color, Mapper &pdm, Mapper &map, dim3 block_dim) {
+void L1EqSolver::L0Dev_Struct3d7p_SORSweep(Matrix<REAL> &a, Matrix<REAL> &x, Matrix<REAL> &b, REAL omega, INT color, Mapper &pdm, Mapper &map, dim3 block_dim, STREAM stream) {
     dim3 grid_dim(
         (map.shape.x + block_dim.x - 1) / block_dim.x,
         (map.shape.y + block_dim.y - 1) / block_dim.y,
         (map.shape.z + block_dim.z - 1) / block_dim.z
     );
 
-    kernel_Struct3d7p_SOR<<<grid_dim, block_dim, 0, 0>>>(*(a.devptr), *(x.devptr), *(b.devptr), omega, color, pdm.shape, pdm.offset, map.shape, map.offset);
+    kernel_Struct3d7p_SOR<<<grid_dim, block_dim, 0, stream>>>(*(a.devptr), *(x.devptr), *(b.devptr), omega, color, pdm.shape, pdm.offset, map.shape, map.offset);
 }
 
 void L1EqSolver::L1Dev_Struct3d7p_SOR(Matrix<REAL> &a, Matrix<REAL> &x, Matrix<REAL> &b, Matrix<REAL> &r, Mapper &global, Mapper &pdm, dim3 block_dim) {

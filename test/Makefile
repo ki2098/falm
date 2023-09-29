@@ -2,7 +2,7 @@ nvmpicxx = /opt/nvidia/hpc_sdk/Linux_x86_64/23.3/comm_libs/mpi/bin/mpic++
 nvnvcxx = /opt/nvidia/hpc_sdk/Linux_x86_64/23.3/compilers/bin/nvc++
 nvnvcc = /opt/nvidia/hpc_sdk/Linux_x86_64/23.3/cuda/bin/nvcc
 
-cudaflag = --default-stream per-thread
+cudaflag = 
 
 mvl1obj    = bin/MVL1.o
 mvl2obj    = 
