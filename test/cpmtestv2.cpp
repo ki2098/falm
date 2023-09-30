@@ -1,16 +1,18 @@
 #include <stdio.h>
 #include <typeinfo>
+#include <cuda_profiler_api.h>
 #include "../src/CPML2v2.h"
 #include "../src/matrix.h"
 
 #define Nx   25
-#define Ny   12
-#define Nz   13
+#define Ny   22
+#define Nz   24
 
 #define USE_CUDA_AWARE_MPI true
 #define THICK 2
 
-#define FACESTREAM nullptr
+Falm::STREAM faceStream[6];
+#define FACESTREAM faceStream
 
 using namespace Falm;
 
@@ -129,11 +131,11 @@ int main(int argc, char **argv) {
     printf("cpmop %d: %d %u\n", cpm.rank, cpmop.mpi_dtype == MPI_DOUBLE, cpmop.buffer_hdctype);
     CPML2_Barrier(MPI_COMM_WORLD);
     INT thick = THICK;
-    STREAM faceStream[6];
+    
     for (int fid = 0; fid < 6; fid ++) {
         cudaStreamCreate(&faceStream[fid]);
     }
-
+    
     x.sync(MCpType::Hst2Dev);
     if (cpm.size > 1) {
         if (cpm.rank == 0) {

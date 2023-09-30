@@ -6,7 +6,7 @@ using namespace Falm;
 
 #define USE_CUDA_AWARE_MPI true
 
-#define Nx 100
+#define Nx 1000
 #define Ny 1
 #define Nz 1
 #define Lx 1.0

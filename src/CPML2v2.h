@@ -290,7 +290,7 @@ template<typename T> void CPMOp<T>::CPML2Dev_IExchange6Face(T *data, Mapper &pdm
             if (buffer_hdctype == HDCType::Device) {
                 CPML0Dev_PackBuffer((T*)sbuf.ptr, sbuf.map, data, pdm, block_dim, fstream);
             } else if (buffer_hdctype == HDCType::Host) {
-                CPML0Dev_PackBuffer((T*)packerptr[fid], sbuf.map, data, pdm, block_dim, fstream);
+                CPML0Dev_PackBuffer((T*)(packerptr[fid]), sbuf.map, data, pdm, block_dim, fstream);
                 falmMemcpyAsync(sbuf.ptr, packerptr[fid], sizeof(T) * sbuf.count, MCpType::Dev2Hst, fstream);
             }
         }
@@ -341,7 +341,7 @@ template<typename T> void CPMOp<T>::CPML2Dev_IExchange6ColoredFace(T *data, Mapp
             if (buffer_hdctype == HDCType::Device) {
                 CPML0Dev_PackColoredBuffer((T*)sbuf.ptr, sbuf.map, color, data, pdm, block_dim, fstream);
             } else if (buffer_hdctype == HDCType::Host) {
-                CPML0Dev_PackColoredBuffer((T*)packerptr[fid], sbuf.map, color, data, pdm, block_dim, fstream);
+                CPML0Dev_PackColoredBuffer((T*)(packerptr[fid]), sbuf.map, color, data, pdm, block_dim, fstream);
                 falmMemcpyAsync(sbuf.ptr, packerptr[fid], sizeof(T) * sbuf.count, MCpType::Dev2Hst, fstream);
             }
         }
@@ -355,8 +355,9 @@ template<typename T> void CPMOp<T>::CPML2Dev_IExchange6ColoredFace(T *data, Mapp
                 falmWaitStream(stream[fid]);
             }
             if (buffer_hdctype == HDCType::Host) {
-                falmFree(packerptr[fid]);
+                falmFreeDevice(packerptr[fid]);
             }
+            fflush(stdout);
             CPMBuffer   &sbuf =  buffer[fid * 2], &rbuf =  buffer[fid * 2 + 1];
             MPI_Request &sreq = mpi_req[fid * 2], &rreq = mpi_req[fid * 2 + 1];
             CPML2_ISend(sbuf, mpi_dtype, base.neighbour[fid], base.neighbour[fid] + grp_tag, MPI_COMM_WORLD, &sreq);
@@ -388,7 +389,7 @@ template<typename T> void CPMOp<T>::CPML2Dev_PostExchange6Face(STREAM *stream) {
                 CPML0Dev_UnpackBuffer((T*)rbuf.ptr, rbuf.map, origin_ptr, origin_domain, block_dim, fstream);
             } else if (buffer_hdctype == HDCType::Host) {
                 falmMemcpyAsync(packerptr[fid], rbuf.ptr, sizeof(T) * rbuf.count, MCpType::Hst2Dev, fstream);
-                CPML0Dev_UnpackBuffer((T*)packerptr[fid], rbuf.map, origin_ptr, origin_domain, block_dim, fstream);
+                CPML0Dev_UnpackBuffer((T*)(packerptr[fid]), rbuf.map, origin_ptr, origin_domain, block_dim, fstream);
             }
         }
     }
@@ -434,7 +435,7 @@ template<typename T> void CPMOp<T>::CPML2Dev_PostExchange6ColoredFace(STREAM *st
                 CPML0Dev_UnpackColoredBuffer((T*)rbuf.ptr, rbuf.map, rbuf.color, origin_ptr, origin_domain, block_dim, fstream);
             } else if (buffer_hdctype == HDCType::Host) {
                 falmMemcpyAsync(packerptr[fid], rbuf.ptr, sizeof(T) * rbuf.count, MCpType::Hst2Dev, fstream);
-                CPML0Dev_UnpackColoredBuffer((T*)packerptr[fid], rbuf.map, rbuf.color, origin_ptr, origin_domain, block_dim, fstream);
+                CPML0Dev_UnpackColoredBuffer((T*)(packerptr[fid]), rbuf.map, rbuf.color, origin_ptr, origin_domain, block_dim, fstream);
             }
         }
     }
