@@ -461,7 +461,7 @@ __global__ void kernel_Cartesian_Divergence(
     }
 }
 
-void L1CFD::L0Dev_Cartesian_FSCalcPseudoU(
+void L1CFD::L0Dev_Cartesian3d_FSCalcPseudoU(
     Matrix<REAL> &u,
     Matrix<REAL> &uu,
     Matrix<REAL> &ua,
@@ -496,7 +496,7 @@ void L1CFD::L0Dev_Cartesian_FSCalcPseudoU(
     );
 }
 
-void L1CFD::L0Dev_Cartesian_UtoCU(
+void L1CFD::L0Dev_Cartesian3d_UtoCU(
     Matrix<REAL> &u,
     Matrix<REAL> &uc,
     Matrix<REAL> &kx,
@@ -521,7 +521,7 @@ void L1CFD::L0Dev_Cartesian_UtoCU(
     );
 }
 
-void L1CFD::L0Dev_Cartesian_InterpolateCU(
+void L1CFD::L0Dev_Cartesian3d_InterpolateCU(
     Matrix<REAL> &uu,
     Matrix<REAL> &uc,
     Mapper       &pdm,
@@ -542,7 +542,7 @@ void L1CFD::L0Dev_Cartesian_InterpolateCU(
     );
 }
 
-void L1CFD::L0Dev_Cartesian_ProjectPGrid(
+void L1CFD::L0Dev_Cartesian3d_ProjectPGrid(
     Matrix<REAL> &u,
     Matrix<REAL> &ua,
     Matrix<REAL> &p,
@@ -568,7 +568,7 @@ void L1CFD::L0Dev_Cartesian_ProjectPGrid(
     );
 }
 
-void L1CFD::L0Dev_Cartesian_ProjectPFace(
+void L1CFD::L0Dev_Cartesian3d_ProjectPFace(
     Matrix<REAL> &uu,
     Matrix<REAL> &uua,
     Matrix<REAL> &p,
@@ -594,7 +594,7 @@ void L1CFD::L0Dev_Cartesian_ProjectPFace(
     );
 }
 
-void L1CFD::L0Dev_Cartesian_SGS(
+void L1CFD::L0Dev_Cartesian3d_SGS(
     Matrix<REAL> &u,
     Matrix<REAL> &nut,
     Matrix<REAL> &x,
@@ -635,7 +635,7 @@ void L1CFD::L0Dev_Cartesian_SGS(
     }
 }
 
-void L1CFD::L0Dev_Cartesian_Divergence(
+void L1CFD::L0Dev_Cartesian3d_Divergence(
     Matrix<REAL> &uu,
     Matrix<REAL> &div,
     Matrix<REAL> &ja,

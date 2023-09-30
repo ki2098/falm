@@ -24,6 +24,13 @@ struct MatrixFrame {
     void alloc(INTx3 _dom, INT _dim, FLAG _hdctype);
     void alloc(INT _row, INT _col, FLAG _hdctype);
     void release();
+    void clear() {
+        if (hdctype == HDCType::Host) {
+            falmMemset(ptr, 0, sizeof(T) * size);
+        } else if (hdctype == HDCType::Device) {
+            falmMemsetDevice(ptr, 0, sizeof(T) * size);
+        }
+    }
 };
 
 template<typename T> MatrixFrame<T>::MatrixFrame(INTx3 _dom, INT _dim, FLAG _hdctype) :
@@ -255,11 +262,13 @@ template<typename T> void Matrix<T>::cpy(Matrix<T> &src, FLAG _hdctype) {
 template<typename T> void Matrix<T>::clear(FLAG _hdctype) {
     if (_hdctype & HDCType::Host) {
         assert(hdctype & HDCType::Host);
-        falmMemset(host.ptr, 0, sizeof(T) * size);
+        // falmMemset(host.ptr, 0, sizeof(T) * size);
+        host.clear();
     }
     if (_hdctype & HDCType::Device) {
         assert(hdctype & HDCType::Device);
-        falmMemsetDevice(dev.ptr, 0, sizeof(T) * size);
+        // falmMemsetDevice(dev.ptr, 0, sizeof(T) * size);
+        dev.clear();
     }
 }
 

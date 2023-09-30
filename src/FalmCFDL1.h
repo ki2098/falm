@@ -39,7 +39,7 @@ public:
         CSmagorinsky(_CSmagorinsky) 
     {}
 
-    void L1Dev_Cartesian_FSCalcPseudoU(
+    void L1Dev_Cartesian3d_FSCalcPseudoU(
         Matrix<REAL> &u,
         Matrix<REAL> &uu,
         Matrix<REAL> &ua,
@@ -52,10 +52,10 @@ public:
         dim3          block_dim
     ) {
         Mapper map(pdm, Gd);
-        L0Dev_Cartesian_FSCalcPseudoU(u, uu, ua, nut, kx, g, ja, ff, pdm, map, block_dim);
+        L0Dev_Cartesian3d_FSCalcPseudoU(u, uu, ua, nut, kx, g, ja, ff, pdm, map, block_dim);
     }
 
-    void L1Dev_Cartesian_UtoCU(
+    void L1Dev_Cartesian3d_UtoCU(
         Matrix<REAL> &u,
         Matrix<REAL> &uc,
         Matrix<REAL> &kx,
@@ -64,10 +64,10 @@ public:
         dim3          block_dim
     ) {
         Mapper map(pdm, Gd);
-        L0Dev_Cartesian_UtoCU(u, uc, kx, ja, pdm, map, block_dim);
+        L0Dev_Cartesian3d_UtoCU(u, uc, kx, ja, pdm, map, block_dim);
     }
 
-    void L1Dev_Cartesian_InterpolateCU(
+    void L1Dev_Cartesian3d_InterpolateCU(
         Matrix<REAL> &uu,
         Matrix<REAL> &uc,
         Mapper       &pdm,
@@ -78,10 +78,10 @@ public:
             INTx3{ 1,  1,  1},
             INTx3{-1, -1, -1}
         );
-        L0Dev_Cartesian_InterpolateCU(uu, uc, pdm, map, block_dim);
+        L0Dev_Cartesian3d_InterpolateCU(uu, uc, pdm, map, block_dim);
     }
 
-    void L1Dev_Cartesian_ProjectPGrid(
+    void L1Dev_Cartesian3d_ProjectPGrid(
         Matrix<REAL> &u,
         Matrix<REAL> &ua,
         Matrix<REAL> &p,
@@ -90,10 +90,10 @@ public:
         dim3          block_dim
     ) {
         Mapper map(pdm, Gd);
-        L0Dev_Cartesian_ProjectPGrid(u, ua, p, kx, pdm, map, block_dim);
+        L0Dev_Cartesian3d_ProjectPGrid(u, ua, p, kx, pdm, map, block_dim);
     }
 
-    void L1Dev_Cartesian_SGS(
+    void L1Dev_Cartesian3d_SGS(
         Matrix<REAL> &u,
         Matrix<REAL> &nut,
         Matrix<REAL> &x,
@@ -106,10 +106,10 @@ public:
             return;
         }
         Mapper map(pdm, Gd);
-        L0Dev_Cartesian_SGS(u, nut, x, kx, ja, pdm, map, block_dim);
+        L0Dev_Cartesian3d_SGS(u, nut, x, kx, ja, pdm, map, block_dim);
     }
 
-    void L1Dev_Cartesian_Divergence(
+    void L1Dev_Cartesian3d_Divergence(
         Matrix<REAL> &uu,
         Matrix<REAL> &div,
         Matrix<REAL> &ja,
@@ -117,22 +117,22 @@ public:
         dim3          block_dim
     ) {
         Mapper map(pdm, Gd);
-        L0Dev_Cartesian_Divergence(uu, div, ja, pdm, map, block_dim);
+        L0Dev_Cartesian3d_Divergence(uu, div, ja, pdm, map, block_dim);
     }
 
-    void L1Dev_Cartesian_MACCalcPoissonRHS(
+    void L1Dev_Cartesian3d_MACCalcPoissonRHS(
         Matrix<REAL> &uu,
         Matrix<REAL> &rhs,
         Matrix<REAL> &ja,
         Mapper       &pdm,
         dim3          block_dim
     ) {
-        L1Dev_Cartesian_Divergence(uu, rhs, ja, pdm, block_dim);
+        L1Dev_Cartesian3d_Divergence(uu, rhs, ja, pdm, block_dim);
         L1Dev_ScaleMatrix(rhs, 1.0 / dt, block_dim);
     }
 
 protected:
-    void L0Dev_Cartesian_FSCalcPseudoU(
+    void L0Dev_Cartesian3d_FSCalcPseudoU(
         Matrix<REAL> &u,
         Matrix<REAL> &uu,
         Matrix<REAL> &ua,
@@ -145,7 +145,7 @@ protected:
         Mapper       &map,
         dim3          block_dim
     );
-    void L0Dev_Cartesian_UtoCU(
+    void L0Dev_Cartesian3d_UtoCU(
         Matrix<REAL> &u,
         Matrix<REAL> &uc,
         Matrix<REAL> &kx,
@@ -154,14 +154,14 @@ protected:
         Mapper       &map,
         dim3          block_dim
     );
-    void L0Dev_Cartesian_InterpolateCU(
+    void L0Dev_Cartesian3d_InterpolateCU(
         Matrix<REAL> &uu,
         Matrix<REAL> &uc,
         Mapper       &pdm,
         Mapper       &map,
         dim3          block_dim
     );
-    void L0Dev_Cartesian_ProjectPGrid(
+    void L0Dev_Cartesian3d_ProjectPGrid(
         Matrix<REAL> &u,
         Matrix<REAL> &ua,
         Matrix<REAL> &p,
@@ -170,7 +170,7 @@ protected:
         Mapper       &map,
         dim3          block_dim
     );
-    void L0Dev_Cartesian_ProjectPFace(
+    void L0Dev_Cartesian3d_ProjectPFace(
         Matrix<REAL> &uu,
         Matrix<REAL> &uua,
         Matrix<REAL> &p,
@@ -179,7 +179,7 @@ protected:
         Mapper       &map,
         dim3          block_dim
     );
-    void L0Dev_Cartesian_SGS(
+    void L0Dev_Cartesian3d_SGS(
         Matrix<REAL> &u,
         Matrix<REAL> &nut,
         Matrix<REAL> &x,
@@ -189,7 +189,7 @@ protected:
         Mapper       &map,
         dim3          block_dim
     );
-    void L0Dev_Cartesian_Divergence(
+    void L0Dev_Cartesian3d_Divergence(
         Matrix<REAL> &uu,
         Matrix<REAL> &div,
         Matrix<REAL> &ja,
