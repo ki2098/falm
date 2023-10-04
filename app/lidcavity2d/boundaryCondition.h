@@ -18,6 +18,12 @@ void velocityBC(
     Falm::STREAM             *streamptr = nullptr
 );
 
+void forceFaceVelocityZero(
+    Falm::Matrix<Falm::REAL> &uu,
+    Falm::Mapper             &pdm,
+    Falm::STREAM             *streamptr = nullptr
+);
+
 void copyZ5(
     Falm::Matrix<Falm::REAL> &field,
     Falm::Mapper             &pdm,

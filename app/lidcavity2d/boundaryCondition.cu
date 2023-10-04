@@ -75,7 +75,7 @@ void pressureBC(
     kernel_pressureBC_W<<<grid_dim_ew, block_dim_ew, 0, stream_w>>>(*(p.devptr), pdm.shape);
 
     dim3 grid_dim_ns((pdm.shape.x - Gdx2 + 7) / 8, 1, (pdm.shape.z - Gdx2 + 7) / 8);
-    dim3 block_dim_ns(1, 8, 8);
+    dim3 block_dim_ns(8, 1, 8);
     STREAM stream_n = (streamptr)? streamptr[2] : (STREAM)0;
     kernel_pressureBC_N<<<grid_dim_ns, block_dim_ns, 0, stream_n>>>(*(p.devptr), pdm.shape);
     STREAM stream_s = (streamptr)? streamptr[3] : (STREAM)0;
@@ -100,15 +100,11 @@ __global__ void kernel_velocityBC_E(
         i += pdm_shape.x - Gd;
         j += Gd;
         k += Gd;
-        INT idxc = IDX(i  , j, k, pdm_shape);
-        INT idxe = IDX(i+1, j, k, pdm_shape);
-        INT idxw = IDX(i-1, j, k, pdm_shape);
-        u(idxc, 0) = 0;
-        u(idxc, 1) = 0;
-        u(idxc, 2) = 0;
-        u(idxe, 0) = - u(idxw, 0);
-        u(idxe, 1) = - u(idxw, 1);
-        u(idxe, 2) = - u(idxw, 2);
+        REAL uboundary[] = {0.0, 0.0, 0.0};
+        for (INT d = 0; d < 3; d ++) {
+            u(IDX(i  , j, k, pdm_shape), d) = 2 * uboundary[d] - u(IDX(i-1, j, k, pdm_shape), d);
+            u(IDX(i+1, j, k, pdm_shape), d) = 2 * uboundary[d] - u(IDX(i-2, j, k, pdm_shape), d);
+        }
     }
 }
 
@@ -122,15 +118,11 @@ __global__ void kernel_velocityBC_W(
         i += Gd - 1;
         j += Gd;
         k += Gd;
-        INT idxc = IDX(i  , j, k, pdm_shape);
-        INT idxe = IDX(i+1, j, k, pdm_shape);
-        INT idxw = IDX(i-1, j, k, pdm_shape);
-        u(idxc, 0) = 0.0;
-        u(idxc, 1) = 0.0;
-        u(idxc, 2) = 0.0;
-        u(idxw, 0) = - u(idxe, 0);
-        u(idxw, 1) = - u(idxe, 1);
-        u(idxw, 2) = - u(idxe, 2);
+        REAL uboundary[] = {0.0, 0.0, 0.0};
+        for (INT d = 0; d < 3; d ++) {
+            u(IDX(i  , j, k, pdm_shape), d) = 2 * uboundary[d] - u(IDX(i+1, j, k, pdm_shape), d);
+            u(IDX(i-1, j, k, pdm_shape), d) = 2 * uboundary[d] - u(IDX(i+2, j, k, pdm_shape), d);
+        }
     }
 }
 
@@ -144,15 +136,11 @@ __global__ void kernel_velocityBC_N(
         i += Gd;
         j += pdm_shape.y - Gd;
         k += Gd;
-        INT idxc = IDX(i, j  , k, pdm_shape);
-        INT idxn = IDX(i, j+1, k, pdm_shape);
-        INT idxs = IDX(i, j-1, k, pdm_shape);
-        u(idxc, 0) = 1.0;
-        u(idxc, 1) = 0.0;
-        u(idxc, 2) = 0.0;
-        u(idxn, 0) = - u(idxs, 0) + 2.0;
-        u(idxn, 1) = - u(idxs, 1);
-        u(idxn, 2) = - u(idxs, 2);
+        REAL uboundary[] = {1.0, 0.0, 0.0};
+        for (INT d = 0; d < 3; d ++) {
+            u(IDX(i, j  , k, pdm_shape), d) = 2 * uboundary[d] - u(IDX(i, j-1, k, pdm_shape), d);
+            u(IDX(i, j+1, k, pdm_shape), d) = 2 * uboundary[d] - u(IDX(i, j-2, k, pdm_shape), d);
+        }
     }
 }
 
@@ -166,15 +154,11 @@ __global__ void kernel_velocityBC_S(
         i += Gd;
         j += Gd - 1;
         k += Gd;
-        INT idxc = IDX(i, j  , k, pdm_shape);
-        INT idxn = IDX(i, j+1, k, pdm_shape);
-        INT idxs = IDX(i, j-1, k, pdm_shape);
-        u(idxc, 0) = 0.0;
-        u(idxc, 1) = 0.0;
-        u(idxc, 2) = 0.0;
-        u(idxs, 0) = - u(idxn, 0);
-        u(idxs, 1) = - u(idxn, 1);
-        u(idxs, 2) = - u(idxn, 2);
+        REAL uboundary[] = {0.0, 0.0, 0.0};
+        for (INT d = 0; d < 3; d ++) {
+            u(IDX(i, j  , k, pdm_shape), d) = 2 * uboundary[d] - u(IDX(i, j+1, k, pdm_shape), d);
+            u(IDX(i, j-1, k, pdm_shape), d) = 2 * uboundary[d] - u(IDX(i, j+2, k, pdm_shape), d);
+        }
     }
 }
 
@@ -191,11 +175,95 @@ void velocityBC(
     kernel_velocityBC_W<<<grid_dim_ew, block_dim_ew, 0, stream_w>>>(*(u.devptr), pdm.shape);
 
     dim3 grid_dim_ns((pdm.shape.x - Gdx2 + 7) / 8, 1, (pdm.shape.z - Gdx2 + 7) / 8);
-    dim3 block_dim_ns(1, 8, 8);
+    dim3 block_dim_ns(8, 1, 8);
     STREAM stream_n = (streamptr)? streamptr[2] : (STREAM)0;
     kernel_velocityBC_N<<<grid_dim_ns, block_dim_ns, 0, stream_n>>>(*(u.devptr), pdm.shape);
     STREAM stream_s = (streamptr)? streamptr[3] : (STREAM)0;
     kernel_velocityBC_S<<<grid_dim_ns, block_dim_ns, 0, stream_s>>>(*(u.devptr), pdm.shape);
+
+    if (streamptr) {
+        for (INT fid = 0; fid < 4; fid ++) {
+            falmWaitStream(streamptr[fid]);
+        }
+    } else {
+        falmWaitStream();
+    }
+}
+
+__global__ void kernel_forceFaceVelocityZero_E(
+    MatrixFrame<REAL> &uu,
+    INTx3              pdm_shape
+) {
+    INT i, j, k;
+    GLOBAL_THREAD_IDX_3D(i, j, k);
+    if (i < 1 && j < pdm_shape.y - Gdx2 && k < pdm_shape.z - Gdx2) {
+        i += pdm_shape.x - Gd - 1;
+        j += Gd;
+        k += Gd;
+        uu(IDX(i, j, k, pdm_shape), 0) = 0;
+    }
+}
+
+__global__ void kernel_forceFaceVelocityZero_W(
+    MatrixFrame<REAL> &uu,
+    INTx3              pdm_shape
+) {
+    INT i, j, k;
+    GLOBAL_THREAD_IDX_3D(i, j, k);
+    if (i < 1 && j < pdm_shape.y - Gdx2 && k < pdm_shape.z - Gdx2) {
+        i += Gd - 1;
+        j += Gd;
+        k += Gd;
+        uu(IDX(i, j, k, pdm_shape), 0) = 0;
+    }
+}
+
+__global__ void kernel_forceFaceVelocityZero_N(
+    MatrixFrame<REAL> &uu,
+    INTx3              pdm_shape
+) {
+    INT i, j, k;
+    GLOBAL_THREAD_IDX_3D(i, j, k);
+    if (i < pdm_shape.x - Gdx2 && j < 1 && k < pdm_shape.z - Gdx2) {
+        i += Gd;
+        j += pdm_shape.y - Gd - 1;
+        k += Gd;
+        uu(IDX(i, j, k, pdm_shape), 1) = 0;
+    }
+}
+
+__global__ void kernel_forceFaceVelocityZero_S(
+    MatrixFrame<REAL> &uu,
+    INTx3              pdm_shape
+) {
+    INT i, j, k;
+    GLOBAL_THREAD_IDX_3D(i, j, k);
+    if (i < pdm_shape.x - Gdx2 && j < 1 && k < pdm_shape.z - Gdx2) {
+        i += Gd;
+        j += Gd - 1;
+        k += Gd;
+        uu(IDX(i, j, k, pdm_shape), 1) = 0;
+    }
+}
+
+void forceFaceVelocityZero(
+    Matrix<REAL> &uu,
+    Mapper       &pdm,
+    STREAM       *streamptr
+) {
+    dim3 grid_dim_ew(1, (pdm.shape.y - Gdx2 + 7) / 8, (pdm.shape.z - Gdx2 + 7) / 8);
+    dim3 block_dim_ew(1, 8, 8);
+    STREAM stream_e = (streamptr)? streamptr[0] : (STREAM)0;
+    kernel_forceFaceVelocityZero_E<<<grid_dim_ew, block_dim_ew, 0, stream_e>>>(*(uu.devptr), pdm.shape);
+    STREAM stream_w = (streamptr)? streamptr[1] : (STREAM)0;
+    kernel_forceFaceVelocityZero_W<<<grid_dim_ew, block_dim_ew, 0, stream_w>>>(*(uu.devptr), pdm.shape);
+
+    dim3 grid_dim_ns((pdm.shape.x - Gdx2 + 7) / 8, 1, (pdm.shape.z - Gdx2 + 7) / 8);
+    dim3 block_dim_ns(8, 1, 8);
+    STREAM stream_n = (streamptr)? streamptr[2] : (STREAM)0;
+    kernel_forceFaceVelocityZero_N<<<grid_dim_ns, block_dim_ns, 0, stream_n>>>(*(uu.devptr), pdm.shape);
+    STREAM stream_s = (streamptr)? streamptr[3] : (STREAM)0;
+    kernel_forceFaceVelocityZero_S<<<grid_dim_ns, block_dim_ns, 0, stream_s>>>(*(uu.devptr), pdm.shape);
 
     if (streamptr) {
         for (INT fid = 0; fid < 4; fid ++) {

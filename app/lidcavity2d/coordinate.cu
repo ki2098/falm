@@ -23,9 +23,9 @@ __global__ void kernel_setCoord(
         REAL pitch = side_lenth / side_n_cell;
         REAL dkdx = 1.0 / pitch;
         REAL vol = pitch * pitch * pitch;
-        x(idx, 0) = (i + 1 - Gd) * pitch;
-        x(idx, 1) = (j + 1 - Gd) * pitch;
-        x(idx, 2) = (k     - Gd) * pitch;
+        x(idx, 0) = (i - Gd + 0.5) * pitch;
+        x(idx, 1) = (j - Gd + 0.5) * pitch;
+        x(idx, 2) = (k - Gd      ) * pitch;
         h(idx, 0) = h(idx, 1) = h(idx, 2) = pitch;
         kx(idx, 0) = kx(idx, 1) = kx(idx, 2) = dkdx;
         ja(idx) = vol;
@@ -45,7 +45,7 @@ void setCoord(
     dim3          block_dim
 ) {
     pdm = Mapper(
-        INTx3{side_n_cell - 1 + Gdx2, side_n_cell - 1 + Gdx2, 1 + Gdx2},
+        INTx3{side_n_cell + Gdx2, side_n_cell + Gdx2, 1 + Gdx2},
         INTx3{0, 0, 0}
     );
     x.alloc(pdm.shape, 3, HDCType::Device);

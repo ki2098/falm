@@ -15,7 +15,7 @@ void setCoord(
     Falm::Matrix<Falm::REAL> &kx,
     Falm::Matrix<Falm::REAL> &g,
     Falm::Matrix<Falm::REAL> &ja,
-    dim3                     block_dim = dim3{8, 8, 8}
+    dim3                      block_dim = dim3{8, 8, 1}
 );
 
 }

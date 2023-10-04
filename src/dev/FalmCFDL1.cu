@@ -348,9 +348,9 @@ __global__ void kernel_Cartesian_Smagorinsky(
         REAL d1 = 2 * SQ(dux);
         REAL d2 = 2 * SQ(dvy);
         REAL d3 = 2 * SQ(dwz);
-        REAL d4 = 2 * SQ(duy + dvx);
-        REAL d5 = 2 * SQ(dvz + dwy);
-        REAL d6 = 2 * SQ(duz + dwx);
+        REAL d4 = SQ(duy + dvx);
+        REAL d5 = SQ(dvz + dwy);
+        REAL d6 = SQ(duz + dwx);
         REAL Du = sqrt(d1 + d2 + d3 + d4 + d5 + d6);
         REAL De = cbrt(ja(idxcc));
         REAL lc = Cs * De;
@@ -415,9 +415,9 @@ __global__ void kernel_Cartesian_CSM(
         REAL d1 = 2 * SQ(dux);
         REAL d2 = 2 * SQ(dvy);
         REAL d3 = 2 * SQ(dwz);
-        REAL d4 = 2 * SQ(duy + dvx);
-        REAL d5 = 2 * SQ(dvz + dwy);
-        REAL d6 = 2 * SQ(duz + dwx);
+        REAL d4 = SQ(duy + dvx);
+        REAL d5 = SQ(dvz + dwy);
+        REAL d6 = SQ(duz + dwx);
         REAL Du = sqrt(d1 + d2 + d3 + d4 + d5 + d6);
         REAL De = cbrt(ja(idxcc));
         REAL e, q;
@@ -451,11 +451,11 @@ __global__ void kernel_Cartesian_Divergence(
         j += map_offset.y;
         k += map_offset.z;
         INT idxc = IDX(i, j, k, pdm_shap);
-        REAL UE = uu(idxc                     , 0);
+        REAL UE = uu(idxc                    , 0);
         REAL UW = uu(IDX(i-1, j, k, pdm_shap), 0);
-        REAL VN = uu(idxc                     , 1);
+        REAL VN = uu(idxc                    , 1);
         REAL VS = uu(IDX(i, j-1, k, pdm_shap), 1);
-        REAL WT = uu(idxc                     , 2);
+        REAL WT = uu(idxc                    , 2);
         REAL WB = uu(IDX(i, j, k-1, pdm_shap), 2);
         div(idxc) = (UE - UW + VN - VS + WT - WB) / ja(idxc);
     }

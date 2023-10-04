@@ -17,6 +17,7 @@ __global__ void kernel_DotProduct(MatrixFrame<REAL> &a, MatrixFrame<REAL> &b, RE
         tmp = a(idx) * b(idx);
     }
     cache[tidx] = tmp;
+    __syncthreads();
 
     INT length = PRODUCT3(blockDim);
     while (length > 1) {
@@ -74,6 +75,7 @@ __global__ void kernel_Norm2Sq(MatrixFrame<REAL> &a, REAL *partial_sum_dev, INTx
         tmp = a(idx) * a(idx);
     }
     cache[tidx] = tmp;
+    __syncthreads();
 
     INT length = PRODUCT3(blockDim);
     while (length > 1) {
@@ -128,9 +130,10 @@ __global__ void kernel_MaxDiag(MatrixFrame<REAL> &a, REAL *partial_max_dev, INTx
         j += map_offset.y;
         k += map_offset.z;
         INT idx = IDX(i, j, k, pdm_shape);
-        tmp = fabs(a(idx));
+        tmp = fabs(a(idx, 0));
     }
     cache[tidx] = tmp;
+    __syncthreads();
 
     INT length = PRODUCT3(blockDim);
     while (length > 1) {

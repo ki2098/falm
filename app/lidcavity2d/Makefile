@@ -1,14 +1,20 @@
-nvnvcc = /opt/nvidia/hpc_sdk/Linux_x86_64/23.3/cuda/bin/nvcc
-cudaflag = --default-stream per-thread
+falm = ../..
+include $(falm)/src/Makefile
+
+cuflag = $(flag) --default-stream per-thread
 
 bcobj = bin/bc.o
 bc:
-	$(nvnvcc) -c boundaryCondition.cu $(cudaflag) --std=c++11 -o $(bcobj)
+	$(nvnvcc) -c boundaryCondition.cu $(cuflag) -o $(bcobj)
 
 coordobj = bin/coord.o
 coord:
-	$(nvnvcc) -c coordinate.cu $(cudaflag) --std=c++11 -o $(coordobj)
+	$(nvnvcc) -c coordinate.cu $(cuflag) -o $(coordobj)
 
-lc2d: bc coord
-	$(nvnvcc) -c main.cpp --std=c++11 -o bin/lc2d.o
-	$(nvnvcc) $(bcobj) $(coordobj) bin/lc2d.o -o bin/lc2d
+poissonobj = bin/poisson.o
+poisson:
+	$(nvnvcc) -c poisson.cu $(cuflag) -o $(poissonobj)
+
+lc2d: bc coord cfdl1 eql1 poisson
+	$(nvnvcc) -c main.cpp $(flag) -o bin/lc2d.o
+	$(nvnvcc) $(bcobj) $(coordobj) $(eql1obj) $(mvl1obj) $(cfdl1obj) $(poissonobj) bin/lc2d.o -o bin/lc2d

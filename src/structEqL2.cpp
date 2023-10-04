@@ -313,9 +313,9 @@ void L2EqSolver::L2Dev_Struct3d7p_PBiCGStab(Matrix<REAL> &a, Matrix<REAL> &x, Ma
 
     it = 0;
     do {
-        if (err < tol) {
-            break;
-        }
+        // if (err < tol) {
+        //     break;
+        // }
 
         rho = L2Dev_DotProduct(r, rr, pdm, block_dim, cpm);
         if (fabs(rho) < __FLT_MIN__) {

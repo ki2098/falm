@@ -63,7 +63,7 @@ public:
         Mapper       &pdm,
         dim3          block_dim
     ) {
-        Mapper map(pdm, Gd);
+        Mapper map(pdm, Gd - 1);
         L0Dev_Cartesian3d_UtoCU(u, uc, kx, ja, pdm, map, block_dim);
     }
 
@@ -91,6 +91,22 @@ public:
     ) {
         Mapper map(pdm, Gd);
         L0Dev_Cartesian3d_ProjectPGrid(u, ua, p, kx, pdm, map, block_dim);
+    }
+
+    void L1Dev_Cartesian3d_ProjectPFace(
+        Matrix<REAL> &uu,
+        Matrix<REAL> &uua,
+        Matrix<REAL> &p,
+        Matrix<REAL> &g,
+        Mapper       &pdm,
+        dim3          block_dim
+    ) {
+        Mapper map(pdm, Gd);
+        map = map.transform(
+            INTx3{ 1,  1,  1},
+            INTx3{-1, -1, -1}
+        );
+        L0Dev_Cartesian3d_ProjectPFace(uu, uua, p, g, pdm, map, block_dim);
     }
 
     void L1Dev_Cartesian3d_SGS(
@@ -125,10 +141,11 @@ public:
         Matrix<REAL> &rhs,
         Matrix<REAL> &ja,
         Mapper       &pdm,
-        dim3          block_dim
+        dim3          block_dim,
+        REAL          maxdiag = 1.0
     ) {
         L1Dev_Cartesian3d_Divergence(uu, rhs, ja, pdm, block_dim);
-        L1Dev_ScaleMatrix(rhs, 1.0 / dt, block_dim);
+        L1Dev_ScaleMatrix(rhs, 1.0 / (dt * maxdiag), block_dim);
     }
 
 protected:
