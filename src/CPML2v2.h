@@ -121,13 +121,9 @@ public:
         }
     }
 
-    void setRegions(INTx3 &inner_shape, INTx3 &inner_offset, INTx3 *boundary_shape, INTx3 *boundary_offset, INT thick, Mapper &pdm) {
-        inner_shape = {
-            pdm.shape.x - Gdx2,
-            pdm.shape.y - Gdx2,
-            pdm.shape.z - Gdx2
-        };
-        inner_offset = {Gd, Gd, Gd};
+    void set6Region(INTx3 &inner_shape, INTx3 &inner_offset, INTx3 *boundary_shape, INTx3 *boundary_offset, INT thick, const Mapper &map) {
+        inner_shape = map.shape;
+        inner_offset = map.offset;
         if (neighbour[0] >= 0) {
             boundary_shape[0]  = {thick, inner_shape.y, inner_shape.z};
             boundary_offset[0] = {inner_offset.x + inner_shape.x - thick, inner_offset.y, inner_offset.z};
@@ -162,6 +158,11 @@ public:
             inner_offset.z += thick;
         }
     }
+
+    // void setDefaultRegions(INTx3 &inner_shape, INTx3 &inner_offset, INTx3 *boundary_shape, INTx3 *boundary_offset, INT thick, Mapper &pdm) {
+    //     Mapper __map(pdm, Gd);
+    //     setNonDefaultRegions(inner_shape, inner_offset, boundary_shape, boundary_offset, thick, __map);
+    // }
 
     bool validNeighbour(INT fid) {
         return (neighbour[fid] >= 0);
@@ -308,8 +309,8 @@ template<typename T> void CPMOp<T>::CPML2Dev_IExchange6Face(T *data, Mapper &pdm
             }
             CPMBuffer   &sbuf =  buffer[fid * 2], &rbuf =  buffer[fid * 2 + 1];
             MPI_Request &sreq = mpi_req[fid * 2], &rreq = mpi_req[fid * 2 + 1];
-            CPML2_ISend(sbuf, mpi_dtype, base.neighbour[fid], base.neighbour[fid] + grp_tag, MPI_COMM_WORLD, &sreq);
-            CPML2_IRecv(rbuf, mpi_dtype, base.neighbour[fid], base.rank           + grp_tag, MPI_COMM_WORLD, &rreq);
+            CPML2_ISend(sbuf, mpi_dtype, base.neighbour[fid], base.neighbour[fid] + grp_tag * 12, MPI_COMM_WORLD, &sreq);
+            CPML2_IRecv(rbuf, mpi_dtype, base.neighbour[fid], base.rank           + grp_tag * 12, MPI_COMM_WORLD, &rreq);
         }
     }
 }
@@ -360,8 +361,8 @@ template<typename T> void CPMOp<T>::CPML2Dev_IExchange6ColoredFace(T *data, Mapp
             fflush(stdout);
             CPMBuffer   &sbuf =  buffer[fid * 2], &rbuf =  buffer[fid * 2 + 1];
             MPI_Request &sreq = mpi_req[fid * 2], &rreq = mpi_req[fid * 2 + 1];
-            CPML2_ISend(sbuf, mpi_dtype, base.neighbour[fid], base.neighbour[fid] + grp_tag, MPI_COMM_WORLD, &sreq);
-            CPML2_IRecv(rbuf, mpi_dtype, base.neighbour[fid], base.rank           + grp_tag, MPI_COMM_WORLD, &rreq);
+            CPML2_ISend(sbuf, mpi_dtype, base.neighbour[fid], base.neighbour[fid] + grp_tag * 12, MPI_COMM_WORLD, &sreq);
+            CPML2_IRecv(rbuf, mpi_dtype, base.neighbour[fid], base.rank           + grp_tag * 12, MPI_COMM_WORLD, &rreq);
         }
     }
 }

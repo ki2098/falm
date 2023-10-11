@@ -11,7 +11,7 @@ struct Mapper {
     INT   size;
     Mapper() : shape(INTx3{0, 0, 0}), offset(INTx3{0, 0, 0}), size(0) {}
     Mapper(INTx3 _shape, INTx3 _offset) : shape(_shape), offset(_offset), size(PRODUCT3(_shape)) {}
-    Mapper(Mapper &omap, INT guide) : Mapper(INTx3{omap.shape.x - guide * 2, omap.shape.y - guide * 2, omap.shape.z - guide * 2}, INTx3{guide, guide, guide}) {}
+    Mapper(const Mapper &omap, INT guide) : Mapper(INTx3{omap.shape.x - guide * 2, omap.shape.y - guide * 2, omap.shape.z - guide * 2}, INTx3{guide, guide, guide}) {}
 
     Mapper transform(INTx3 shape_trans, INTx3 offset_trans) {
         INTx3 new_shape = {

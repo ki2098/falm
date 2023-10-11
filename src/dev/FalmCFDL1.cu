@@ -8,6 +8,7 @@
 namespace Falm {
 
 __global__ void kernel_Cartesian_CalcPseudoU(
+    MatrixFrame<REAL> &un,
     MatrixFrame<REAL> &u,
     MatrixFrame<REAL> &uu,
     MatrixFrame<REAL> &ua,
@@ -116,7 +117,7 @@ __global__ void kernel_Cartesian_CalcPseudoU(
             gzcc, gzt1, gzb1,
             jacob
         );
-        ua(idxcc, d) = ucc + dt * (- adv + vis + ff(idxcc, d));
+        ua(idxcc, d) = un(idxcc, d) + dt * (- adv + vis + ff(idxcc, d));
 
         d = 1;
         ucc = vc;
@@ -150,7 +151,7 @@ __global__ void kernel_Cartesian_CalcPseudoU(
             gzcc, gzt1, gzb1,
             jacob
         );
-        ua(idxcc, d) = ucc + dt * (- adv + vis + ff(idxcc, d));
+        ua(idxcc, d) = un(idxcc, d) + dt * (- adv + vis + ff(idxcc, d));
 
         d = 2;
         ucc = wc;
@@ -184,7 +185,7 @@ __global__ void kernel_Cartesian_CalcPseudoU(
             gzcc, gzt1, gzb1,
             jacob
         );
-        ua(idxcc, d) = ucc + dt * (- adv + vis + ff(idxcc, d));
+        ua(idxcc, d) = un(idxcc, d) + dt * (- adv + vis + ff(idxcc, d));
     }
 }
 
@@ -462,6 +463,7 @@ __global__ void kernel_Cartesian_Divergence(
 }
 
 void L1CFD::L0Dev_Cartesian3d_FSCalcPseudoU(
+    Matrix<REAL> &un,
     Matrix<REAL> &u,
     Matrix<REAL> &uu,
     Matrix<REAL> &ua,
@@ -471,15 +473,17 @@ void L1CFD::L0Dev_Cartesian3d_FSCalcPseudoU(
     Matrix<REAL> &ja,
     Matrix<REAL> &ff,
     Mapper       &pdm,
-    Mapper       &map,
-    dim3          block_dim
+    const Mapper &map,
+    dim3          block_dim,
+    STREAM        stream
 ) {
     dim3 grid_dim(
         (map.shape.x + block_dim.x - 1) / block_dim.x,
         (map.shape.y + block_dim.y - 1) / block_dim.y,
         (map.shape.z + block_dim.z - 1) / block_dim.z
     );
-    kernel_Cartesian_CalcPseudoU<<<grid_dim, block_dim, 0, 0>>>(
+    kernel_Cartesian_CalcPseudoU<<<grid_dim, block_dim, 0, stream>>>(
+        *(un.devptr),
         *(u.devptr),
         *(uu.devptr),
         *(ua.devptr),
@@ -502,15 +506,16 @@ void L1CFD::L0Dev_Cartesian3d_UtoCU(
     Matrix<REAL> &kx,
     Matrix<REAL> &ja,
     Mapper       &pdm,
-    Mapper       &map,
-    dim3          block_dim
+    const Mapper &map,
+    dim3          block_dim,
+    STREAM        stream
 ) {
     dim3 grid_dim(
         (map.shape.x + block_dim.x - 1) / block_dim.x,
         (map.shape.y + block_dim.y - 1) / block_dim.y,
         (map.shape.z + block_dim.z - 1) / block_dim.z
     );
-    kernel_Cartesian_UtoCU<<<grid_dim, block_dim, 0, 0>>>(
+    kernel_Cartesian_UtoCU<<<grid_dim, block_dim, 0, stream>>>(
         *(u.devptr),
         *(uc.devptr),
         *(kx.devptr),
@@ -525,15 +530,16 @@ void L1CFD::L0Dev_Cartesian3d_InterpolateCU(
     Matrix<REAL> &uu,
     Matrix<REAL> &uc,
     Mapper       &pdm,
-    Mapper       &map,
-    dim3          block_dim
+    const Mapper &map,
+    dim3          block_dim,
+    STREAM        stream
 ) {
     dim3 grid_dim(
         (map.shape.x + block_dim.x - 1) / block_dim.x,
         (map.shape.y + block_dim.y - 1) / block_dim.y,
         (map.shape.z + block_dim.z - 1) / block_dim.z
     );
-    kernel_Cartesian_InterpolateCU<<<grid_dim, block_dim, 0, 0>>>(
+    kernel_Cartesian_InterpolateCU<<<grid_dim, block_dim, 0, stream>>>(
         *(uu.devptr),
         *(uc.devptr),
         pdm.shape,
@@ -548,15 +554,16 @@ void L1CFD::L0Dev_Cartesian3d_ProjectPGrid(
     Matrix<REAL> &p,
     Matrix<REAL> &kx,
     Mapper       &pdm,
-    Mapper       &map,
-    dim3          block_dim
+    const Mapper &map,
+    dim3          block_dim,
+    STREAM        stream
 ) {
     dim3 grid_dim(
         (map.shape.x + block_dim.x - 1) / block_dim.x,
         (map.shape.y + block_dim.y - 1) / block_dim.y,
         (map.shape.z + block_dim.z - 1) / block_dim.z
     );
-    kernel_Cartesian_ProjectPGrid<<<grid_dim, block_dim>>>(
+    kernel_Cartesian_ProjectPGrid<<<grid_dim, block_dim, 0, stream>>>(
         *(u.devptr),
         *(ua.devptr),
         *(p.devptr),
@@ -574,15 +581,16 @@ void L1CFD::L0Dev_Cartesian3d_ProjectPFace(
     Matrix<REAL> &p,
     Matrix<REAL> &g,
     Mapper       &pdm,
-    Mapper       &map,
-    dim3          block_dim
+    const Mapper &map,
+    dim3          block_dim,
+    STREAM        stream
 ) {
     dim3 grid_dim(
         (map.shape.x + block_dim.x - 1) / block_dim.x,
         (map.shape.y + block_dim.y - 1) / block_dim.y,
         (map.shape.z + block_dim.z - 1) / block_dim.z
     );
-    kernel_Cartesian_ProjectPFace<<<grid_dim, block_dim, 0, 0>>>(
+    kernel_Cartesian_ProjectPFace<<<grid_dim, block_dim, 0, stream>>>(
         *(uu.devptr),
         *(uua.devptr),
         *(p.devptr),
@@ -601,8 +609,9 @@ void L1CFD::L0Dev_Cartesian3d_SGS(
     Matrix<REAL> &kx,
     Matrix<REAL> &ja,
     Mapper       &pdm,
-    Mapper       &map,
-    dim3          block_dim
+    const Mapper &map,
+    dim3          block_dim,
+    STREAM        stream
 ) {
     dim3 grid_dim(
         (map.shape.x + block_dim.x - 1) / block_dim.x,
@@ -610,7 +619,7 @@ void L1CFD::L0Dev_Cartesian3d_SGS(
         (map.shape.z + block_dim.z - 1) / block_dim.z
     );
     if (SGSModel == SGSType::Smagorinsky) {
-        kernel_Cartesian_Smagorinsky<<<grid_dim, block_dim, 0, 0>>>(
+        kernel_Cartesian_Smagorinsky<<<grid_dim, block_dim, 0, stream>>>(
             *(u.devptr),
             *(nut.devptr),
             *(x.devptr),
@@ -622,7 +631,7 @@ void L1CFD::L0Dev_Cartesian3d_SGS(
             map.offset
         );
     } else if (SGSModel == SGSType::CSM) {
-        kernel_Cartesian_CSM<<<grid_dim, block_dim, 0, 0>>>(
+        kernel_Cartesian_CSM<<<grid_dim, block_dim, 0, stream>>>(
             *(u.devptr),
             *(nut.devptr),
             *(x.devptr),
@@ -640,15 +649,16 @@ void L1CFD::L0Dev_Cartesian3d_Divergence(
     Matrix<REAL> &div,
     Matrix<REAL> &ja,
     Mapper       &pdm,
-    Mapper       &map,
-    dim3          block_dim
+    const Mapper &map,
+    dim3          block_dim,
+    STREAM        stream
 ) {
     dim3 grid_dim(
         (map.shape.x + block_dim.x - 1) / block_dim.x,
         (map.shape.y + block_dim.y - 1) / block_dim.y,
         (map.shape.z + block_dim.z - 1) / block_dim.z
     );
-    kernel_Cartesian_Divergence<<<grid_dim, block_dim, 0, 0>>>(
+    kernel_Cartesian_Divergence<<<grid_dim, block_dim, 0, stream>>>(
         *(uu.devptr),
         *(div.devptr),
         *(ja.devptr),

@@ -9,3 +9,7 @@ heat: eql1
 heat2: eq
 	$(nvmpicxx) -cuda -c heat1d2.cpp $(flag) -o bin/heat1d2.o
 	$(nvmpicxx) -cuda $(mvobj) $(eqobj) $(cpmobj) bin/heat1d2.o -o bin/heat1d2
+
+cpmtest2: cpm
+	$(nvmpicxx) -cuda -c cpmtest2.cpp $(flag) -o bin/cpmtest2.o
+	$(nvmpicxx) -cuda $(cpmobj) bin/cpmtest2.o -o bin/cpmtets2

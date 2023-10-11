@@ -35,7 +35,7 @@ struct CPMBuffer {
         }
     }
 
-    void alloc(size_t _width, Mapper _map, FLAG _buftype, FLAG _hdctype) {
+    void alloc(size_t _width, const Mapper &_map, FLAG _buftype, FLAG _hdctype) {
         assert(hdctype == HDCType::Empty);
         assert(buftype == BufType::Empty);
         width   = _width;
@@ -50,7 +50,7 @@ struct CPMBuffer {
         }
     }
 
-    void allocColored(size_t _width, Mapper _map, INT _color, FLAG _buftype, FLAG _hdctype, Mapper &_pdm) {
+    void allocColored(size_t _width, const Mapper &_map, INT _color, FLAG _buftype, FLAG _hdctype, Mapper &_pdm) {
         assert(hdctype == HDCType::Empty);
         assert(buftype == BufType::Empty);
         width   = _width;

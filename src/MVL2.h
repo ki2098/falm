@@ -15,9 +15,9 @@ static REAL L2Dev_DotProduct(Matrix<REAL> &a, Matrix<REAL> &b, Mapper &pdm, dim3
     return r;
 }
 
-static REAL L2Dev_Norm2Sq(Matrix<REAL> &a, Mapper &pdm, dim3 block_dim, CPMBase &cpm) {
+static REAL L2Dev_EuclideanNormSq(Matrix<REAL> &a, Mapper &pdm, dim3 block_dim, CPMBase &cpm) {
     Mapper map(pdm, Gd);
-    REAL r = L0Dev_Norm2Sq(a, pdm, map, block_dim);
+    REAL r = L0Dev_EuclideanNormSq(a, pdm, map, block_dim);
     if (cpm.size > 1) {
         CPML2_AllReduce(&r, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
     }

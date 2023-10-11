@@ -6,7 +6,7 @@ using namespace Falm;
 
 #define USE_CUDA_AWARE_MPI true
 
-#define Nx 1000
+#define Nx 100
 #define Ny 1
 #define Nz 1
 #define Lx 1.0
@@ -173,7 +173,7 @@ int main(int argc, char **argv) {
     }
 
     INTx3 inner_shape, inner_offset, boundary_shape[6], boundary_offset[6];
-    cpm.setRegions(inner_shape, inner_offset, boundary_shape, boundary_offset, 1, process);
+    cpm.set6Region(inner_shape, inner_offset, boundary_shape, boundary_offset, 1, Mapper(process, Gd));
     Matrix<REAL> region(process.shape, 1, HDCType::Host, "region");
     set_matrix_value(region, inner_shape, inner_offset, process.shape, cpm.rank * 10);
     for (INT i = 0; i < 6; i ++) {

@@ -103,8 +103,8 @@ int main(int argc, char **argv) {
 
     INTx3 inner_shape, inner_offset;
     INTx3 boundary_shape[6], boundary_offset[6];
-    cpm.setRegions(inner_shape, inner_offset, boundary_shape, boundary_offset, 1, process);
-    Matrix<double> x(process.shape, 1, HDCType::Host, 0);
+    cpm.set6Region(inner_shape, inner_offset, boundary_shape, boundary_offset, 1, Mapper(process, Gd));
+    Matrix<double> x(process.shape, 1, HDCType::Host);
     set_matrix_value(x, inner_shape, inner_offset, process.shape, cpm.rank * 10);
     for (INT i = 0; i < 6; i ++) {
         if (cpm.neighbour[i] >= 0) {

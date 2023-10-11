@@ -30,7 +30,7 @@ int main() {
     b.sync(MCpType::Hst2Dev);
     dim3 block(4, 4, 2);
     double dot  = L0Dev_DotProduct(a, b, pdm, map, block);
-    double norm = L0Dev_Norm2Sq(a, pdm, map, block);
+    double norm = L0Dev_EuclideanNormSq(a, pdm, map, block);
     printf("%.0lf %.0lf\n", dot, norm);
 
     double a_max = L0Dev_MaxDiag(a, pdm, map, block);

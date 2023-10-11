@@ -40,6 +40,7 @@ public:
     {}
 
     void L1Dev_Cartesian3d_FSCalcPseudoU(
+        Matrix<REAL> &un,
         Matrix<REAL> &u,
         Matrix<REAL> &uu,
         Matrix<REAL> &ua,
@@ -52,7 +53,7 @@ public:
         dim3          block_dim
     ) {
         Mapper map(pdm, Gd);
-        L0Dev_Cartesian3d_FSCalcPseudoU(u, uu, ua, nut, kx, g, ja, ff, pdm, map, block_dim);
+        L0Dev_Cartesian3d_FSCalcPseudoU(un, u, uu, ua, nut, kx, g, ja, ff, pdm, map, block_dim);
     }
 
     void L1Dev_Cartesian3d_UtoCU(
@@ -150,6 +151,7 @@ public:
 
 protected:
     void L0Dev_Cartesian3d_FSCalcPseudoU(
+        Matrix<REAL> &un,
         Matrix<REAL> &u,
         Matrix<REAL> &uu,
         Matrix<REAL> &ua,
@@ -159,8 +161,9 @@ protected:
         Matrix<REAL> &ja,
         Matrix<REAL> &ff,
         Mapper       &pdm,
-        Mapper       &map,
-        dim3          block_dim
+        const Mapper &map,
+        dim3          block_dim,
+        STREAM        stream = (STREAM)0
     );
     void L0Dev_Cartesian3d_UtoCU(
         Matrix<REAL> &u,
@@ -168,15 +171,17 @@ protected:
         Matrix<REAL> &kx,
         Matrix<REAL> &ja,
         Mapper       &pdm,
-        Mapper       &map,
-        dim3          block_dim
+        const Mapper &map,
+        dim3          block_dim,
+        STREAM        stream = (STREAM)0
     );
     void L0Dev_Cartesian3d_InterpolateCU(
         Matrix<REAL> &uu,
         Matrix<REAL> &uc,
         Mapper       &pdm,
-        Mapper       &map,
-        dim3          block_dim
+        const Mapper &map,
+        dim3          block_dim,
+        STREAM        stream = (STREAM)0
     );
     void L0Dev_Cartesian3d_ProjectPGrid(
         Matrix<REAL> &u,
@@ -184,8 +189,9 @@ protected:
         Matrix<REAL> &p,
         Matrix<REAL> &kx,
         Mapper       &pdm,
-        Mapper       &map,
-        dim3          block_dim
+        const Mapper &map,
+        dim3          block_dim,
+        STREAM        stream = (STREAM)0
     );
     void L0Dev_Cartesian3d_ProjectPFace(
         Matrix<REAL> &uu,
@@ -193,8 +199,9 @@ protected:
         Matrix<REAL> &p,
         Matrix<REAL> &g,
         Mapper       &pdm,
-        Mapper       &map,
-        dim3          block_dim
+        const Mapper &map,
+        dim3          block_dim,
+        STREAM        stream = (STREAM)0
     );
     void L0Dev_Cartesian3d_SGS(
         Matrix<REAL> &u,
@@ -203,16 +210,18 @@ protected:
         Matrix<REAL> &kx,
         Matrix<REAL> &ja,
         Mapper       &pdm,
-        Mapper       &map,
-        dim3          block_dim
+        const Mapper &map,
+        dim3          block_dim,
+        STREAM        stream = (STREAM)0
     );
     void L0Dev_Cartesian3d_Divergence(
         Matrix<REAL> &uu,
         Matrix<REAL> &div,
         Matrix<REAL> &ja,
         Mapper       &pdm,
-        Mapper       &map,
-        dim3          block_dim
+        const Mapper &map,
+        dim3          block_dim,
+        STREAM        stream = (STREAM)0
     );
 };
 
