@@ -6,7 +6,7 @@ namespace Falm {
 
 void L2Dev_Struct3d7p_MV(Matrix<REAL> &a, Matrix<REAL> &x, Matrix<REAL> &ax, Mapper &pdm, dim3 block_dim, CPMBase &cpm, STREAM *stream) {
     CPMOp<REAL> cpmop(cpm);
-    cpmop.CPML2Dev_IExchange6Face(x.dev.ptr, pdm, 1, 0);
+    cpmop.CPML2Dev_IExchange6Face(x.dev.ptr, pdm, 1, 0, 0);
     INTx3 inner_shape, inner_offset, boundary_shape[6], boundary_offset[6];
     cpm.set6Region(inner_shape, inner_offset, boundary_shape, boundary_offset, 1, Mapper(pdm, Gd));
 
@@ -40,7 +40,7 @@ void L2Dev_Struct3d7p_MV(Matrix<REAL> &a, Matrix<REAL> &x, Matrix<REAL> &ax, Map
 
 void L2Dev_Struct3d7p_Res(Matrix<REAL> &a, Matrix<REAL> &x, Matrix<REAL> &b, Matrix<REAL> &r, Mapper &pdm, dim3 block_dim, CPMBase &cpm, STREAM *stream) {
     CPMOp<REAL> cpmop(cpm);
-    cpmop.CPML2Dev_IExchange6Face(x.dev.ptr, pdm, 1, 0);
+    cpmop.CPML2Dev_IExchange6Face(x.dev.ptr, pdm, 1, 0, 0);
     INTx3 inner_shape, inner_offset, boundary_shape[6], boundary_offset[6];
     cpm.set6Region(inner_shape, inner_offset, boundary_shape, boundary_offset, 1, Mapper(pdm, Gd));
 
@@ -84,7 +84,7 @@ void L2EqSolver::L2Dev_Struct3d7p_Jacobi(Matrix<REAL> &a, Matrix<REAL> &x, Matri
     it = 0;
     do {
         xp.cpy(x, HDCType::Device);
-        cpmop.CPML2Dev_IExchange6Face(xp.dev.ptr, pdm, 1, 0);
+        cpmop.CPML2Dev_IExchange6Face(xp.dev.ptr, pdm, 1, 0, 0);
 
         L0Dev_Struct3d7p_JacobiSweep(a, x, xp, b, pdm, inner_map, block_dim);
 
@@ -129,7 +129,7 @@ void L2EqSolver::L2Dev_Struct3d7p_JacobiPC(Matrix<REAL> &a, Matrix<REAL> &x, Mat
     INT __it = 0;
     do {
         xp.cpy(x, HDCType::Device);
-        cpmop.CPML2Dev_IExchange6Face(xp.dev.ptr, pdm, 1, 0);
+        cpmop.CPML2Dev_IExchange6Face(xp.dev.ptr, pdm, 1, 0, 0);
 
         L0Dev_Struct3d7p_JacobiSweep(a, x, xp, b, pdm, inner_map, block_dim);
 
@@ -171,7 +171,7 @@ void L2EqSolver::L2Dev_Struct3d7p_SOR(Matrix<REAL> &a, Matrix<REAL> &x, Matrix<R
 
     it = 0;
     do {
-        cpmop.CPML2Dev_IExchange6ColoredFace(x.dev.ptr, pdm, Color::Red, 1, 0);
+        cpmop.CPML2Dev_IExchange6ColoredFace(x.dev.ptr, pdm, Color::Red, 1, 0, 0);
         L0Dev_Struct3d7p_SORSweep(a, x, b, relax_factor, Color::Black, pdm, inner_map, block_dim);
         cpmop.CPML2_Wait6Face();
         cpmop.CPML2Dev_PostExchange6ColoredFace();
@@ -196,7 +196,7 @@ void L2EqSolver::L2Dev_Struct3d7p_SOR(Matrix<REAL> &a, Matrix<REAL> &x, Matrix<R
         }
         falmWaitStream();
 
-        cpmop.CPML2Dev_IExchange6ColoredFace(x.dev.ptr, pdm, Color::Black, 1, 0);
+        cpmop.CPML2Dev_IExchange6ColoredFace(x.dev.ptr, pdm, Color::Black, 1, 0, 0);
         L0Dev_Struct3d7p_SORSweep(a, x, b, relax_factor, Color::Red, pdm, inner_map, block_dim);
         cpmop.CPML2_Wait6Face();
         cpmop.CPML2Dev_PostExchange6ColoredFace();
@@ -236,7 +236,7 @@ void L2EqSolver::L2Dev_Struct3d7p_SORPC(Matrix<REAL> &a, Matrix<REAL> &x, Matrix
 
     INT __it = 0;
     do {
-        cpmop.CPML2Dev_IExchange6ColoredFace(x.dev.ptr, pdm, Color::Red, 1, 0);
+        cpmop.CPML2Dev_IExchange6ColoredFace(x.dev.ptr, pdm, Color::Red, 1, 0, 0);
         L0Dev_Struct3d7p_SORSweep(a, x, b, pc_relax_factor, Color::Black, pdm, inner_map, block_dim);
         cpmop.CPML2_Wait6Face();
         cpmop.CPML2Dev_PostExchange6ColoredFace();
@@ -261,7 +261,7 @@ void L2EqSolver::L2Dev_Struct3d7p_SORPC(Matrix<REAL> &a, Matrix<REAL> &x, Matrix
         }
         falmWaitStream();
 
-        cpmop.CPML2Dev_IExchange6ColoredFace(x.dev.ptr, pdm, Color::Black, 1, 0);
+        cpmop.CPML2Dev_IExchange6ColoredFace(x.dev.ptr, pdm, Color::Black, 1, 0, 0);
         L0Dev_Struct3d7p_SORSweep(a, x, b, pc_relax_factor, Color::Red, pdm, inner_map, block_dim);
         cpmop.CPML2_Wait6Face();
         cpmop.CPML2Dev_PostExchange6ColoredFace();

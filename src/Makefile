@@ -12,7 +12,7 @@ eql2obj    = $(falm)/bin/structEqL2.o
 cpml1obj   = $(falm)/bin/CPML1.o
 cpml2obj   = 
 cfdl1obj   = $(falm)/bin/CFDL1.o
-cfdl2obj   = 
+cfdl2obj   = $(falm)/bin/CFDL2.o
 
 mvobj      = $(mvl1obj) $(mvl2obj)
 eqobj      = $(eql1obj) $(eql2obj)
@@ -44,3 +44,10 @@ eq: eql2
 
 cfdl1:
 	$(nvnvcc) -c $(falm)/src/dev/FalmCFDL1.cu $(cuflag) -o $(cfdl1obj)
+
+cfdl2: cfdl1 cpm
+	$(nvmpicxx) -cuda -c $(falm)/src/FalmCFDL2.cpp $(flag) -o $(cfdl2obj)
+
+cfd: cfdl2
+
+Falm: cfd eq

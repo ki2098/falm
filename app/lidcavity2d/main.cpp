@@ -10,8 +10,8 @@
 #include "../../src/structEqL1.h"
 
 #define L 1.0
-#define N 256
-#define T 300.0
+#define N 128
+#define T 100.0
 #define DT 1e-3
 
 const int monitor_i = int(N * 0.01);
@@ -69,20 +69,20 @@ void main_loop(L1CFD &cfdsolver, L1EqSolver &eqsolver, dim3 block_dim = dim3{8, 
     L1CFD rk2fs1(cfdsolver.Re, cfdsolver.dt * 0.5, cfdsolver.AdvScheme, cfdsolver.SGSModel, cfdsolver.CSmagorinsky);
     L1CFD rk2fs2(cfdsolver.Re, cfdsolver.dt      , cfdsolver.AdvScheme, cfdsolver.SGSModel, cfdsolver.CSmagorinsky);
 
-    rk2fs1.L1Dev_Cartesian3d_FSCalcPseudoU(un, u, uu, ua, nut, kx, g, ja, ff, pdm, block_dim);
-    rk2fs1.L1Dev_Cartesian3d_UtoCU(ua, uc, kx, ja, pdm, block_dim);
-    rk2fs1.L1Dev_Cartesian3d_InterpolateCU(uua, uc, pdm, block_dim);
-    forceFaceVelocityZero(uua, pdm);
-    rk2fs1.L1Dev_Cartesian3d_MACCalcPoissonRHS(uua, rhs, ja, pdm, block_dim, maxdiag);
-    eqsolver.L1Dev_Struct3d7p_Solve(poisson_a, p, rhs, res, pdm, pdm, block_dim);
-    pressureBC(p, pdm);
-    copyZ5(p, pdm);
-    rk2fs1.L1Dev_Cartesian3d_ProjectPGrid(u, ua, p, kx, pdm, block_dim);
-    rk2fs1.L1Dev_Cartesian3d_ProjectPFace(uu, uua, p, g, pdm, block_dim);
-    velocityBC(u, pdm);
-    copyZ5(u, pdm);
-    rk2fs1.L1Dev_Cartesian3d_SGS(u, nut, x, kx, ja, pdm, block_dim);
-    copyZ5(nut, pdm);
+    // rk2fs1.L1Dev_Cartesian3d_FSCalcPseudoU(un, u, uu, ua, nut, kx, g, ja, ff, pdm, block_dim);
+    // rk2fs1.L1Dev_Cartesian3d_UtoCU(ua, uc, kx, ja, pdm, block_dim);
+    // rk2fs1.L1Dev_Cartesian3d_InterpolateCU(uua, uc, pdm, block_dim);
+    // forceFaceVelocityZero(uua, pdm);
+    // rk2fs1.L1Dev_Cartesian3d_MACCalcPoissonRHS(uua, rhs, ja, pdm, block_dim, maxdiag);
+    // eqsolver.L1Dev_Struct3d7p_Solve(poisson_a, p, rhs, res, pdm, pdm, block_dim);
+    // pressureBC(p, pdm);
+    // copyZ5(p, pdm);
+    // rk2fs1.L1Dev_Cartesian3d_ProjectPGrid(u, ua, p, kx, pdm, block_dim);
+    // rk2fs1.L1Dev_Cartesian3d_ProjectPFace(uu, uua, p, g, pdm, block_dim);
+    // velocityBC(u, pdm);
+    // copyZ5(u, pdm);
+    // rk2fs1.L1Dev_Cartesian3d_SGS(u, nut, x, kx, ja, pdm, block_dim);
+    // copyZ5(nut, pdm);
 
     rk2fs2.L1Dev_Cartesian3d_FSCalcPseudoU(un, u, uu, ua, nut, kx, g, ja, ff, pdm, block_dim);
     rk2fs2.L1Dev_Cartesian3d_UtoCU(ua, uc, kx, ja, pdm, block_dim);
@@ -154,7 +154,7 @@ int main() {
     //     );
     // }
 
-    L1CFD cfdsolver(10000, DT, AdvectionSchemeType::Upwind3, SGSType::Empty, 0.1);
+    L1CFD cfdsolver(3200, DT, AdvectionSchemeType::Upwind3, SGSType::Empty, 0.1);
     L1EqSolver eqsolver(LSType::PBiCGStab, 1000, 1e-8, 1.2, LSType::SOR, 5, 1.5);
 
     printf("running on %dx%d grid with Re=%lf until t=%lf\n", N, N, cfdsolver.Re, T);

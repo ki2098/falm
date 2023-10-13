@@ -9,7 +9,8 @@
 #define Nz   24
 
 #define USE_CUDA_AWARE_MPI true
-#define THICK 2
+#define THICK 1
+#define MARGIN 1
 
 Falm::STREAM faceStream[6];
 #define FACESTREAM faceStream
@@ -131,6 +132,7 @@ int main(int argc, char **argv) {
     printf("cpmop %d: %d %u\n", cpm.rank, cpmop.mpi_dtype == MPI_DOUBLE, cpmop.buffer_hdctype);
     CPML2_Barrier(MPI_COMM_WORLD);
     INT thick = THICK;
+    INT margin = MARGIN;
     
     for (int fid = 0; fid < 6; fid ++) {
         cudaStreamCreate(&faceStream[fid]);
@@ -144,7 +146,7 @@ int main(int argc, char **argv) {
         }
         // printf("%p\n", x.dev.ptr);
         CPML2_Barrier(MPI_COMM_WORLD);
-        cpmop.CPML2Dev_IExchange6ColoredFace(x.dev.ptr, process, Color::Black, thick, 0, FACESTREAM);
+        cpmop.CPML2Dev_IExchange6ColoredFace(x.dev.ptr, process, Color::Black, thick, margin, 0, FACESTREAM);
         // cpmop.CPML2dev_IExchange6Face(x.dev.ptr, process, thick, 0);
         cpmop.CPML2_Wait6Face();
         // printf("%p\n", x.dev.ptr);
@@ -179,7 +181,7 @@ int main(int argc, char **argv) {
             fflush(stdout);
         }
         CPML2_Barrier(MPI_COMM_WORLD);
-        cpmop.CPML2Dev_IExchange6ColoredFace(x.dev.ptr, process, Color::Red, thick, 0, FACESTREAM);
+        cpmop.CPML2Dev_IExchange6ColoredFace(x.dev.ptr, process, Color::Red, thick, margin, 0, FACESTREAM);
         cpmop.CPML2_Wait6Face();
         cpmop.CPML2Dev_PostExchange6ColoredFace(FACESTREAM);
     }
@@ -240,7 +242,7 @@ int main(int argc, char **argv) {
         }
         // printf("%u %p\n", x.hdctype, x.dev.ptr);
         CPML2_Barrier(MPI_COMM_WORLD);
-        cpmop.CPML2Dev_IExchange6ColoredFace(x.dev.ptr, process, Color::Black, thick, 0, FACESTREAM);
+        cpmop.CPML2Dev_IExchange6ColoredFace(x.dev.ptr, process, Color::Black, thick, margin, 0, FACESTREAM);
         // cpmop.CPML2dev_IExchange6Face(x.dev.ptr, process, thick, 0);
         cpmop.CPML2_Wait6Face();
         cpmop.CPML2Dev_PostExchange6ColoredFace(FACESTREAM);
@@ -273,7 +275,7 @@ int main(int argc, char **argv) {
             fflush(stdout);
         }
         CPML2_Barrier(MPI_COMM_WORLD);
-        cpmop.CPML2Dev_IExchange6ColoredFace(x.dev.ptr, process, Color::Red, thick, 0, FACESTREAM);
+        cpmop.CPML2Dev_IExchange6ColoredFace(x.dev.ptr, process, Color::Red, thick, margin, 0, FACESTREAM);
         cpmop.CPML2_Wait6Face();
         cpmop.CPML2Dev_PostExchange6ColoredFace(FACESTREAM);
     }

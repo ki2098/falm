@@ -43,7 +43,7 @@ __global__ void kernel_makePoissonMatrix(
         REAL coefficient;
 
         coefficient = 0.5 * (gxcc + gxe1) / jacob;
-        if (i < pdm_shape.x - Gd - 1){
+        if (i < pdm_shape.x - Gd - 1) {
             ac -= coefficient;
             ae = coefficient;
         }

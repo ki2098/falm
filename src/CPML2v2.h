@@ -221,13 +221,13 @@ public:
     // void CPML2Dev_IExchange6ColoredFace(T *data, Mapper &pdm, INT color, INT thick, int grp_tag);
     // void CPML2Dev_PostExchange6Face();
     // void CPML2Dev_PostExchange6ColoredFace();
-    void CPML2Dev_IExchange6Face(T *data, Mapper &pdm, INT thick, int grp_tag, STREAM *stream = nullptr);
-    void CPML2Dev_IExchange6ColoredFace(T *data, Mapper &pdm, INT color, INT thick, int grp_tag, STREAM *stream = nullptr);
+    void CPML2Dev_IExchange6Face(T *data, Mapper &pdm, INT thick, INT margin, int grp_tag, STREAM *stream = nullptr);
+    void CPML2Dev_IExchange6ColoredFace(T *data, Mapper &pdm, INT color, INT thick, INT margin, int grp_tag, STREAM *stream = nullptr);
     void CPML2Dev_PostExchange6Face(STREAM *stream = nullptr);
     void CPML2Dev_PostExchange6ColoredFace(STREAM *stream = nullptr);
 
 protected:
-    void makeBufferShapeOffset(Mapper &pdm, INT thick) {
+    void makeBufferShapeOffset(Mapper &pdm, INT thick, INT margin) {
         for (INT fid = 0; fid < 6; fid ++) {
             if (base.neighbour[fid] >= 0) {
                 INT __s = fid*2, __r = fid*2+1;
@@ -238,23 +238,23 @@ protected:
                 };
                 INTx3 sendbuffer_offset, recvbuffer_offset;
                 if (fid == 0) {
-                    sendbuffer_offset = {pdm.shape.x - Gd - thick, Gd, Gd};
-                    recvbuffer_offset = {pdm.shape.x - Gd        , Gd, Gd};
+                    sendbuffer_offset = {pdm.shape.x - Gd - thick - margin, Gd, Gd};
+                    recvbuffer_offset = {pdm.shape.x - Gd         + margin, Gd, Gd};
                 } else if (fid == 1) {
-                    sendbuffer_offset = {               Gd        , Gd, Gd};
-                    recvbuffer_offset = {               Gd - thick, Gd, Gd};
+                    sendbuffer_offset = {              Gd         + margin, Gd, Gd};
+                    recvbuffer_offset = {              Gd - thick - margin, Gd, Gd};
                 } else if (fid == 2) {
-                    sendbuffer_offset = {Gd, pdm.shape.y - Gd - thick, Gd};
-                    recvbuffer_offset = {Gd, pdm.shape.y - Gd        , Gd};
+                    sendbuffer_offset = {Gd, pdm.shape.y - Gd - thick - margin, Gd};
+                    recvbuffer_offset = {Gd, pdm.shape.y - Gd         + margin, Gd};
                 } else if (fid == 3) {
-                    sendbuffer_offset = {Gd,                Gd        , Gd};
-                    recvbuffer_offset = {Gd,                Gd - thick, Gd};
+                    sendbuffer_offset = {Gd,               Gd         + margin, Gd};
+                    recvbuffer_offset = {Gd,               Gd - thick - margin, Gd};
                 } else if (fid == 4) {
-                    sendbuffer_offset = {Gd, Gd, pdm.shape.z - Gd - thick};
-                    recvbuffer_offset = {Gd, Gd, pdm.shape.z - Gd        };
+                    sendbuffer_offset = {Gd, Gd, pdm.shape.z - Gd - thick - margin};
+                    recvbuffer_offset = {Gd, Gd, pdm.shape.z - Gd         + margin};
                 } else if (fid == 5) {
-                    sendbuffer_offset = {Gd, Gd,                Gd        };
-                    recvbuffer_offset = {Gd, Gd,                Gd - thick};
+                    sendbuffer_offset = {Gd, Gd,               Gd         + margin};
+                    recvbuffer_offset = {Gd, Gd,               Gd - thick - margin};
                 }
                 buffer[__s].map = Mapper(buffer_shape, sendbuffer_offset);
                 buffer[__r].map = Mapper(buffer_shape, recvbuffer_offset);
@@ -264,11 +264,11 @@ protected:
 
 };
 
-template<typename T> void CPMOp<T>::CPML2Dev_IExchange6Face(T *data, Mapper &pdm, INT thick, int grp_tag, STREAM *stream) {
+template<typename T> void CPMOp<T>::CPML2Dev_IExchange6Face(T *data, Mapper &pdm, INT thick, INT margin, int grp_tag, STREAM *stream) {
     assert(origin_ptr == nullptr);
     origin_ptr    = data;
     origin_domain = pdm;
-    makeBufferShapeOffset(pdm, thick);
+    makeBufferShapeOffset(pdm, thick, margin);
     for (INT fid = 0; fid < 6; fid ++) {
         if (base.validNeighbour(fid)) {
             CPMBuffer &sbuf = buffer[fid * 2], &rbuf = buffer[fid * 2 + 1];
@@ -315,11 +315,11 @@ template<typename T> void CPMOp<T>::CPML2Dev_IExchange6Face(T *data, Mapper &pdm
     }
 }
 
-template<typename T> void CPMOp<T>::CPML2Dev_IExchange6ColoredFace(T *data, Mapper &pdm, INT color, INT thick, int grp_tag, STREAM *stream) {
+template<typename T> void CPMOp<T>::CPML2Dev_IExchange6ColoredFace(T *data, Mapper &pdm, INT color, INT thick, INT margin, int grp_tag, STREAM *stream) {
     assert(origin_ptr == nullptr);
     origin_ptr    = data;
     origin_domain = pdm;
-    makeBufferShapeOffset(pdm, thick);
+    makeBufferShapeOffset(pdm, thick, margin);
     for (INT fid = 0; fid < 6; fid ++) {
         if (base.validNeighbour(fid)) {
             CPMBuffer &sbuf = buffer[fid * 2], &rbuf = buffer[fid * 2 + 1];
