@@ -11,6 +11,7 @@ __global__ void kernel_setCoord(
     INT                side_n_cell,
     INTx3              pdm_shape,
     INTx3              pdm_offset,
+    INT                gc,
     MatrixFrame<REAL> &x,
     MatrixFrame<REAL> &h,
     MatrixFrame<REAL> &kx,
@@ -24,9 +25,9 @@ __global__ void kernel_setCoord(
         REAL pitch = side_lenth / side_n_cell;
         REAL dkdx = 1.0 / pitch;
         REAL vol = pitch * pitch * pitch;
-        x(idx, 0) = (i + pdm_offset.x - Gd + 0.5) * pitch;
-        x(idx, 1) = (j + pdm_offset.y - Gd + 0.5) * pitch;
-        x(idx, 2) = (k + pdm_offset.z - Gd      ) * pitch;
+        x(idx, 0) = (i + pdm_offset.x - gc + 0.5) * pitch;
+        x(idx, 1) = (j + pdm_offset.y - gc + 0.5) * pitch;
+        x(idx, 2) = (k + pdm_offset.z - gc      ) * pitch;
         h(idx, 0) = h(idx, 1) = h(idx, 2) = pitch;
         kx(idx, 0) = kx(idx, 1) = kx(idx, 2) = dkdx;
         ja(idx) = vol;
@@ -38,6 +39,7 @@ void setCoord(
     REAL          side_lenth,
     INT           side_n_cell,
     Mapper       &pdm,
+    INT           gc,
     Matrix<REAL> &x,
     Matrix<REAL> &h,
     Matrix<REAL> &kx,
@@ -61,6 +63,7 @@ void setCoord(
         side_n_cell,
         pdm.shape,
         pdm.offset,
+        gc,
         *(x.devptr),
         *(h.devptr),
         *(kx.devptr),

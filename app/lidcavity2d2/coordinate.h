@@ -10,6 +10,7 @@ void setCoord(
     Falm::REAL                side_lenth,
     Falm::INT                 side_n_cell,
     Falm::Mapper             &pdm,
+    Falm::INT                 gc,
     Falm::Matrix<Falm::REAL> &x,
     Falm::Matrix<Falm::REAL> &h,
     Falm::Matrix<Falm::REAL> &kx,

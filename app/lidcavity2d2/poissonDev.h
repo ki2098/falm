@@ -12,6 +12,7 @@ void dev_makePoissonMatrix(
     Falm::Matrix<Falm::REAL> &ja,
     Falm::Mapper             &global,
     Falm::Mapper             &pdm,
+    Falm::INT                 gc,
     dim3                      block_dim = dim3(8, 8, 1)
 );
 

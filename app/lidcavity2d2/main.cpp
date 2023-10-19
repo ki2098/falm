@@ -24,20 +24,21 @@ using namespace LidCavity2d2;
 Matrix<REAL> x, h, kx, g, ja;
 Matrix<REAL> u, ua, uu, uua, p, nut, ff, rhs, res, dvr, w;
 Matrix<REAL> poisson_a;
-Mapper pdm, global;
+// Mapper pdm, global;
 REAL maxdiag;
 CPMBase cpm;
 
 void field_output(INT i, int rank) {
+    Mapper &pdm = cpm.pdm_list[cpm.rank];
     std::string filename = "data/cavity-rank" + std::to_string(rank) + ".csv" + std::to_string(i);
     FILE *file = fopen(filename.c_str(), "w");
     fprintf(file, "x,y,z,u,v,w,p\n");
     x.sync(MCpType::Dev2Hst);
     u.sync(MCpType::Dev2Hst);
     p.sync(MCpType::Dev2Hst);
-    for (INT k = Gd; k < pdm.shape.z - Gd; k ++) {
-        for (INT j = Gd; j < pdm.shape.y - Gd; j ++) {
-            for (INT i = Gd; i < pdm.shape.x - Gd; i ++) {
+    for (INT k = cpm.gc; k < pdm.shape.z - cpm.gc; k ++) {
+        for (INT j = cpm.gc; j < pdm.shape.y - cpm.gc; j ++) {
+            for (INT i = cpm.gc; i < pdm.shape.x - cpm.gc; i ++) {
                 INT idx = IDX(i, j, k, pdm.shape);
                 fprintf(file, "%12.5e,%12.5e,%12.5e,%12.5e,%12.5e,%12.5e,%12.5e\n", x(idx, 0), x(idx, 1), x(idx, 2), u(idx, 0), u(idx, 1), u(idx, 2), p(idx));
             }
@@ -59,43 +60,52 @@ void allocVars(Mapper &pdm) {
     dvr.alloc(pdm.shape, 1, HDCType::Device);
 }
 
-REAL main_loop(L2CFD &cfd, L2EqSolver &eqsolver, CPMBase cpm, dim3 block_dim, STREAM *stream) {
+REAL main_loop(L2CFD &cfd, L2EqSolver &eqsolver, CPMBase &cpm, dim3 block_dim, STREAM *stream) {
+    Mapper &pdm = cpm.pdm_list[cpm.rank];
+    Mapper &global = cpm.global;
     cfd.L2Dev_Cartesian3d_FSCalcPseudoU(u, u, uu, ua, nut, kx, g, ja, ff, pdm, block_dim, cpm, stream);
     cfd.L2Dev_Cartesian3d_UtoUU(ua, uua, kx, ja, pdm, block_dim, cpm, stream);
     forceFaceVelocityZero(uua, global, pdm, cpm);
-    cfd.L2Dev_Cartesian3d_MACCalcPoissonRHS(uua, rhs, ja, pdm, block_dim, maxdiag);
+    cfd.L2Dev_Cartesian3d_MACCalcPoissonRHS(uua, rhs, ja, pdm, cpm, block_dim, maxdiag);
     
     eqsolver.L2Dev_Struct3d7p_Solve(poisson_a, p, rhs, res, global, pdm, block_dim, cpm, stream);
     pressureBC(p, global, pdm, cpm, stream);
-    copyZ5(p, pdm);
+    copyZ5(p, pdm, cpm);
 
     cfd.L2Dev_Cartesian3d_ProjectP(u, ua, uu, uua, p, kx, g, pdm, block_dim, cpm, stream);
     velocityBC(u, global, pdm, cpm, stream);
-    copyZ5(u, pdm);
+    copyZ5(u, pdm, cpm);
 
     cfd.L2Dev_Cartesian3d_SGS(u, nut, x, kx, ja, pdm, block_dim, cpm, stream);
-    copyZ5(nut, pdm, stream);
+    copyZ5(nut, pdm, cpm);
 
-    cfd.L2Dev_Cartesian3d_Divergence(uu, dvr, ja, pdm, block_dim);
+    cfd.L2Dev_Cartesian3d_Divergence(uu, dvr, ja, pdm, cpm, block_dim);
 
     return L2Dev_EuclideanNormSq(dvr, pdm, block_dim, cpm);
 }
 
 int main(int argc, char **argv) {
     CPML2_Init(&argc, &argv);
+    int mpi_rank, mpi_size;
     cpm.use_cuda_aware_mpi = true;
-    CPML2_GetRank(MPI_COMM_WORLD, cpm.rank);
-    CPML2_GetSize(MPI_COMM_WORLD, cpm.size);
-    cpm.shape = INTx3{atoi(argv[1]), atoi(argv[2]), 1};
-    cpm.initNeighbour();
-    setPartition(L, N, global, pdm, cpm);
+    CPML2_GetRank(MPI_COMM_WORLD, mpi_rank);
+    CPML2_GetSize(MPI_COMM_WORLD, mpi_size);
+    cpm.initPartition(
+        mpi_rank,
+        mpi_size,
+        {atoi(argv[1]), atoi(argv[2]), 1},
+        {N, N, 1},
+        2
+    );
+    Mapper &pdm = cpm.pdm_list[cpm.rank];
+    Mapper &global = cpm.global;
 
-    Mapper ginner(global, Gd);
+    Mapper ginner(global, cpm.gc);
 
     printf("rank %d, global size = (%d %d %d), proc size = (%d %d %d), proc offset = (%d %d %d)\n", cpm.rank, global.shape.x, global.shape.y, global.shape.z, pdm.shape.x, pdm.shape.y, pdm.shape.z, pdm.offset.x, pdm.offset.y, pdm.offset.z);
 
     allocVars(pdm);
-    setCoord(L, N, pdm, x, h, kx, g, ja);
+    setCoord(L, N, pdm, cpm.gc, x, h, kx, g, ja);
     poisson_a.alloc(pdm.shape, 7, HDCType::Device);
     maxdiag = makePoissonMatrix(poisson_a, g, ja, global, pdm, cpm);
 
@@ -106,8 +116,8 @@ int main(int argc, char **argv) {
             Matrix<REAL> &a = poisson_a;
             a.sync(MCpType::Dev2Hst);
             printf("rank = %d\n", cpm.rank);
-            for (INT i = Gd; i < pdm.shape.x - Gd; i ++) {
-                INT idx = IDX(i, Gd, Gd, pdm.shape);
+            for (INT i = cpm.gc; i < pdm.shape.x - cpm.gc; i ++) {
+                INT idx = IDX(i, cpm.gc, cpm.gc, pdm.shape);
                 printf(
                     "%.5e %.5e %.5e %.5e %.5e %.5e %.5e\n",
                     a(idx, 0), a(idx, 1), a(idx, 2), a(idx, 3), a(idx, 4), a(idx, 5), a(idx, 6)

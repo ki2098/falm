@@ -50,9 +50,10 @@ public:
         Matrix<REAL> &ja,
         Matrix<REAL> &ff,
         Mapper       &pdm,
+        INT           gc,
         dim3          block_dim
     ) {
-        Mapper map(pdm, Gd);
+        Mapper map(pdm, gc);
         L0Dev_Cartesian3d_FSCalcPseudoU(un, u, uu, ua, nut, kx, g, ja, ff, pdm, map, block_dim);
     }
 
@@ -62,9 +63,10 @@ public:
         Matrix<REAL> &kx,
         Matrix<REAL> &ja,
         Mapper       &pdm,
+        INT           gc,
         dim3          block_dim
     ) {
-        Mapper map(pdm, Gd - 1);
+        Mapper map(pdm, gc - 1);
         L0Dev_Cartesian3d_UtoCU(u, uc, kx, ja, pdm, map, block_dim);
     }
 
@@ -72,9 +74,10 @@ public:
         Matrix<REAL> &uu,
         Matrix<REAL> &uc,
         Mapper       &pdm,
+        INT           gc,
         dim3          block_dim
     ) {
-        Mapper map(pdm, Gd);
+        Mapper map(pdm, gc);
         map = map.transform(
             INTx3{ 1,  1,  1},
             INTx3{-1, -1, -1}
@@ -88,9 +91,10 @@ public:
         Matrix<REAL> &p,
         Matrix<REAL> &kx,
         Mapper       &pdm,
+        INT           gc,
         dim3          block_dim
     ) {
-        Mapper map(pdm, Gd);
+        Mapper map(pdm, gc);
         L0Dev_Cartesian3d_ProjectPGrid(u, ua, p, kx, pdm, map, block_dim);
     }
 
@@ -100,9 +104,10 @@ public:
         Matrix<REAL> &p,
         Matrix<REAL> &g,
         Mapper       &pdm,
+        INT           gc,
         dim3          block_dim
     ) {
-        Mapper map(pdm, Gd);
+        Mapper map(pdm, gc);
         map = map.transform(
             INTx3{ 1,  1,  1},
             INTx3{-1, -1, -1}
@@ -117,12 +122,13 @@ public:
         Matrix<REAL> &kx,
         Matrix<REAL> &ja,
         Mapper       &pdm,
+        INT           gc,
         dim3          block_dim
     ) {
         if (SGSModel == SGSType::Empty) {
             return;
         }
-        Mapper map(pdm, Gd);
+        Mapper map(pdm, gc);
         L0Dev_Cartesian3d_SGS(u, nut, x, kx, ja, pdm, map, block_dim);
     }
 
@@ -131,9 +137,10 @@ public:
         Matrix<REAL> &div,
         Matrix<REAL> &ja,
         Mapper       &pdm,
+        INT           gc,
         dim3          block_dim
     ) {
-        Mapper map(pdm, Gd);
+        Mapper map(pdm, gc);
         L0Dev_Cartesian3d_Divergence(uu, div, ja, pdm, map, block_dim);
     }
 
@@ -142,10 +149,11 @@ public:
         Matrix<REAL> &rhs,
         Matrix<REAL> &ja,
         Mapper       &pdm,
+        INT           gc,
         dim3          block_dim,
         REAL          maxdiag = 1.0
     ) {
-        L1Dev_Cartesian3d_Divergence(uu, rhs, ja, pdm, block_dim);
+        L1Dev_Cartesian3d_Divergence(uu, rhs, ja, pdm, gc, block_dim);
         L1Dev_ScaleMatrix(rhs, 1.0 / (dt * maxdiag), block_dim);
     }
 

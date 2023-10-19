@@ -21,7 +21,7 @@ static void setPartition(
     Falm::CPMBase      &cpm
 ) {
     global = Falm::Mapper(
-        Falm::INTx3{side_n_cell + Gdx2, side_n_cell + Gdx2, 1 + Gdx2},
+        Falm::INTx3{side_n_cell + (cpm.gc*2), side_n_cell + (cpm.gc*2), 1 + (cpm.gc*2)},
         Falm::INTx3{0, 0, 0}
     );
 
@@ -37,9 +37,9 @@ static void setPartition(
 
     pdm = Falm::Mapper(
         Falm::INTx3{
-            dim_division(side_n_cell, cpm.shape.x, cpm.idx.x) + Gdx2,
-            dim_division(side_n_cell, cpm.shape.y, cpm.idx.y) + Gdx2,
-            1 + Gdx2
+            dim_division(side_n_cell, cpm.shape.x, cpm.idx.x) + (cpm.gc*2),
+            dim_division(side_n_cell, cpm.shape.y, cpm.idx.y) + (cpm.gc*2),
+            1 + (cpm.gc*2)
         },
         Falm::INTx3{ox, oy, oz}
     );

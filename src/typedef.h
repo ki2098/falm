@@ -1,8 +1,8 @@
 #ifndef FALM_TYPEDEF_H
 #define FALM_TYPEDEF_H
 
-#define Gd   2
-#define Gdx2 4
+// #define Gd   2
+// #define Gdx2 4
 
 #include <cuda.h>
 #include <cuda_runtime.h>

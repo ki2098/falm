@@ -71,9 +71,10 @@ public:
         Matrix<REAL> &dvr,
         Matrix<REAL> &ja,
         Mapper       &pdm,
+        CPMBase      &cpm,
         dim3          block_dim
     ) {
-        L1Dev_Cartesian3d_Divergence(uu, dvr, ja, pdm, block_dim);
+        L1Dev_Cartesian3d_Divergence(uu, dvr, ja, pdm, cpm.gc, block_dim);
     }
 
     void L2Dev_Cartesian3d_MACCalcPoissonRHS(
@@ -81,10 +82,11 @@ public:
         Matrix<REAL> &rhs,
         Matrix<REAL> &ja,
         Mapper       &pdm,
+        CPMBase      &cpm,
         dim3          block_dim,
         REAL          maxdiag = 1.0
     ) {
-        L1Dev_Cartesian3d_MACCalcPoissonRHS(uu, rhs, ja, pdm, block_dim, maxdiag);
+        L1Dev_Cartesian3d_MACCalcPoissonRHS(uu, rhs, ja, pdm, cpm.gc, block_dim, maxdiag);
     }
     
 };

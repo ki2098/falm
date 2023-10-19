@@ -5,10 +5,10 @@
 namespace Falm {
 
 void L2Dev_Struct3d7p_MV(Matrix<REAL> &a, Matrix<REAL> &x, Matrix<REAL> &ax, Mapper &pdm, dim3 block_dim, CPMBase &cpm, STREAM *stream) {
-    CPMOp<REAL> cpmop(cpm);
+    CPMOp<REAL> cpmop(&cpm);
     cpmop.CPML2Dev_IExchange6Face(x.dev.ptr, pdm, 1, 0, 0);
     INTx3 inner_shape, inner_offset, boundary_shape[6], boundary_offset[6];
-    cpm.set6Region(inner_shape, inner_offset, boundary_shape, boundary_offset, 1, Mapper(pdm, Gd));
+    cpm.set6Region(inner_shape, inner_offset, boundary_shape, boundary_offset, 1, Mapper(pdm, cpm.gc));
 
     // Mapper inner_map(inner_shape, inner_offset);
     L0Dev_Struct3d7p_MV(a, x, ax, pdm, Mapper(inner_shape, inner_offset), block_dim);
@@ -39,10 +39,10 @@ void L2Dev_Struct3d7p_MV(Matrix<REAL> &a, Matrix<REAL> &x, Matrix<REAL> &ax, Map
 }
 
 void L2Dev_Struct3d7p_Res(Matrix<REAL> &a, Matrix<REAL> &x, Matrix<REAL> &b, Matrix<REAL> &r, Mapper &pdm, dim3 block_dim, CPMBase &cpm, STREAM *stream) {
-    CPMOp<REAL> cpmop(cpm);
+    CPMOp<REAL> cpmop(&cpm);
     cpmop.CPML2Dev_IExchange6Face(x.dev.ptr, pdm, 1, 0, 0);
     INTx3 inner_shape, inner_offset, boundary_shape[6], boundary_offset[6];
-    cpm.set6Region(inner_shape, inner_offset, boundary_shape, boundary_offset, 1, Mapper(pdm, Gd));
+    cpm.set6Region(inner_shape, inner_offset, boundary_shape, boundary_offset, 1, Mapper(pdm, cpm.gc));
 
     // Mapper inner_map(inner_shape, inner_offset);
     L0Dev_Struct3d7p_Res(a, x, b, r, pdm, Mapper(inner_shape, inner_offset), block_dim);
@@ -73,10 +73,10 @@ void L2Dev_Struct3d7p_Res(Matrix<REAL> &a, Matrix<REAL> &x, Matrix<REAL> &b, Mat
 }
 
 void L2EqSolver::L2Dev_Struct3d7p_Jacobi(Matrix<REAL> &a, Matrix<REAL> &x, Matrix<REAL> &b, Matrix<REAL> &r, Mapper &global, Mapper &pdm, dim3 block_dim, CPMBase &cpm, STREAM *stream) {
-    Mapper gmap(global, Gd);
-    CPMOp<REAL> cpmop(cpm);
+    Mapper gmap(global, cpm.gc);
+    CPMOp<REAL> cpmop(&cpm);
     INTx3 inner_shape, inner_offset, boundary_shape[6], boundary_offset[6];
-    cpm.set6Region(inner_shape, inner_offset, boundary_shape, boundary_offset, 1, Mapper(pdm, Gd));
+    cpm.set6Region(inner_shape, inner_offset, boundary_shape, boundary_offset, 1, Mapper(pdm, cpm.gc));
 
     Mapper inner_map(inner_shape, inner_offset);
 
@@ -119,9 +119,9 @@ void L2EqSolver::L2Dev_Struct3d7p_Jacobi(Matrix<REAL> &a, Matrix<REAL> &x, Matri
 }
 
 void L2EqSolver::L2Dev_Struct3d7p_JacobiPC(Matrix<REAL> &a, Matrix<REAL> &x, Matrix<REAL> &b, Mapper &pdm, dim3 block_dim, CPMBase &cpm, STREAM *stream) {
-    CPMOp<REAL> cpmop(cpm);
+    CPMOp<REAL> cpmop(&cpm);
     INTx3 inner_shape, inner_offset, boundary_shape[6], boundary_offset[6];
-    cpm.set6Region(inner_shape, inner_offset, boundary_shape, boundary_offset, 1, Mapper(pdm, Gd));
+    cpm.set6Region(inner_shape, inner_offset, boundary_shape, boundary_offset, 1, Mapper(pdm, cpm.gc));
 
     Mapper inner_map(inner_shape, inner_offset);
 
@@ -162,10 +162,10 @@ void L2EqSolver::L2Dev_Struct3d7p_JacobiPC(Matrix<REAL> &a, Matrix<REAL> &x, Mat
 }
 
 void L2EqSolver::L2Dev_Struct3d7p_SOR(Matrix<REAL> &a, Matrix<REAL> &x, Matrix<REAL> &b, Matrix<REAL> &r, Mapper &global, Mapper &pdm, dim3 block_dim, CPMBase &cpm, STREAM *stream) {
-    Mapper gmap(global, Gd);
-    CPMOp<REAL> cpmop(cpm);
+    Mapper gmap(global, cpm.gc);
+    CPMOp<REAL> cpmop(&cpm);
     INTx3 inner_shape, inner_offset, boundary_shape[6], boundary_offset[6];
-    cpm.set6Region(inner_shape, inner_offset, boundary_shape, boundary_offset, 1, Mapper(pdm, Gd));
+    cpm.set6Region(inner_shape, inner_offset, boundary_shape, boundary_offset, 1, Mapper(pdm, cpm.gc));
 
     Mapper inner_map(inner_shape, inner_offset);
 
@@ -228,9 +228,9 @@ void L2EqSolver::L2Dev_Struct3d7p_SOR(Matrix<REAL> &a, Matrix<REAL> &x, Matrix<R
 }
 
 void L2EqSolver::L2Dev_Struct3d7p_SORPC(Matrix<REAL> &a, Matrix<REAL> &x, Matrix<REAL> &b, Mapper &pdm, dim3 block_dim, CPMBase &cpm, STREAM *stream) {
-    CPMOp<REAL> cpmop(cpm);
+    CPMOp<REAL> cpmop(&cpm);
     INTx3 inner_shape, inner_offset, boundary_shape[6], boundary_offset[6];
-    cpm.set6Region(inner_shape, inner_offset, boundary_shape, boundary_offset, 1, Mapper(pdm, Gd));
+    cpm.set6Region(inner_shape, inner_offset, boundary_shape, boundary_offset, 1, Mapper(pdm, cpm.gc));
 
     Mapper inner_map(inner_shape, inner_offset);
 
@@ -291,8 +291,8 @@ void L2EqSolver::L2Dev_Struct3d7p_SORPC(Matrix<REAL> &a, Matrix<REAL> &x, Matrix
 }
 
 void L2EqSolver::L2Dev_Struct3d7p_PBiCGStab(Matrix<REAL> &a, Matrix<REAL> &x, Matrix<REAL> &b, Matrix<REAL> &r, Mapper &global, Mapper &pdm, dim3 block_dim, CPMBase &cpm, STREAM *stream) {
-    Mapper gmap(global, Gd);
-    Mapper map(pdm, Gd);
+    Mapper gmap(global, cpm.gc);
+    Mapper map(pdm, cpm.gc);
 
     Matrix<REAL> rr(pdm.shape, 1, HDCType::Device, "PBiCGStab rr");
     Matrix<REAL>  p(pdm.shape, 1, HDCType::Device, "PBiCGStab  p");

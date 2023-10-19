@@ -15,19 +15,19 @@ static void pressureBC(
 ) {
     if (!cpm.validNeighbour(0)) {
         Falm::STREAM estream = (stream)? stream[0] : 0;
-        dev_pressureBC_E(p, pdm, estream);
+        dev_pressureBC_E(p, pdm, cpm.gc, estream);
     }
     if (!cpm.validNeighbour(1)) {
         Falm::STREAM wstream = (stream)? stream[1] : 0;
-        dev_pressureBC_W(p, pdm, wstream);
+        dev_pressureBC_W(p, pdm, cpm.gc, wstream);
     }
     if (!cpm.validNeighbour(2)) {
         Falm::STREAM nstream = (stream)? stream[2] : 0;
-        dev_pressureBC_N(p, pdm, nstream);
+        dev_pressureBC_N(p, pdm, cpm.gc, nstream);
     }
     if (!cpm.validNeighbour(3)) {
         Falm::STREAM sstream = (stream)? stream[3] : 0;
-        dev_pressureBC_S(p, pdm, sstream);
+        dev_pressureBC_S(p, pdm, cpm.gc, sstream);
     }
 
     if (stream) {
@@ -50,19 +50,19 @@ static void velocityBC(
 ) {
     if (!cpm.validNeighbour(0)) {
         Falm::STREAM estream = (stream)? stream[0] : 0;
-        dev_velocityBC_E(u, pdm, estream);
+        dev_velocityBC_E(u, pdm, cpm.gc, estream);
     }
     if (!cpm.validNeighbour(1)) {
         Falm::STREAM wstream = (stream)? stream[1] : 0;
-        dev_velocityBC_W(u, pdm, wstream);
+        dev_velocityBC_W(u, pdm, cpm.gc, wstream);
     }
     if (!cpm.validNeighbour(2)) {
         Falm::STREAM nstream = (stream)? stream[2] : 0;
-        dev_velocityBC_N(u, pdm, nstream);
+        dev_velocityBC_N(u, pdm, cpm.gc, nstream);
     }
     if (!cpm.validNeighbour(3)) {
         Falm::STREAM sstream = (stream)? stream[3] : 0;
-        dev_velocityBC_S(u, pdm, sstream);
+        dev_velocityBC_S(u, pdm, cpm.gc, sstream);
     }
 
     if (stream) {
@@ -85,19 +85,19 @@ static void forceFaceVelocityZero(
 ) {
     if (!cpm.validNeighbour(0)) {
         Falm::STREAM fstream = (stream)? stream[0] : 0;
-        dev_forceFaceVelocityZero_E(uu, pdm, fstream);
+        dev_forceFaceVelocityZero_E(uu, pdm, cpm.gc, fstream);
     }
     if (!cpm.validNeighbour(1)) {
         Falm::STREAM fstream = (stream)? stream[1] : 0;
-        dev_forceFaceVelocityZero_W(uu, pdm, fstream);
+        dev_forceFaceVelocityZero_W(uu, pdm, cpm.gc, fstream);
     }
     if (!cpm.validNeighbour(2)) {
         Falm::STREAM fstream = (stream)? stream[2] : 0;
-        dev_forceFaceVelocityZero_N(uu, pdm, fstream);
+        dev_forceFaceVelocityZero_N(uu, pdm, cpm.gc, fstream);
     }
     if (!cpm.validNeighbour(3)) {
         Falm::STREAM fstream = (stream)? stream[3] : 0;
-        dev_forceFaceVelocityZero_S(uu, pdm, fstream);
+        dev_forceFaceVelocityZero_S(uu, pdm, cpm.gc, fstream);
     }
 
     if (stream) {
@@ -114,13 +114,14 @@ static void forceFaceVelocityZero(
 static void copyZ5(
     Falm::Matrix<Falm::REAL> &field,
     Falm::Mapper             &pdm,
+    Falm::CPMBase            &cpm,
     Falm::STREAM             *stream = nullptr
 ) {
-    Falm::INT idxcc = Falm::IDX(0, 0, Gd  , pdm.shape);
-    Falm::INT idxt1 = Falm::IDX(0, 0, Gd+1, pdm.shape);
-    Falm::INT idxt2 = Falm::IDX(0, 0, Gd+2, pdm.shape);
-    Falm::INT idxb1 = Falm::IDX(0, 0, Gd-1, pdm.shape);
-    Falm::INT idxb2 = Falm::IDX(0, 0, Gd-2, pdm.shape);
+    Falm::INT idxcc = Falm::IDX(0, 0, cpm.gc  , pdm.shape);
+    Falm::INT idxt1 = Falm::IDX(0, 0, cpm.gc+1, pdm.shape);
+    Falm::INT idxt2 = Falm::IDX(0, 0, cpm.gc+2, pdm.shape);
+    Falm::INT idxb1 = Falm::IDX(0, 0, cpm.gc-1, pdm.shape);
+    Falm::INT idxb2 = Falm::IDX(0, 0, cpm.gc-2, pdm.shape);
     Falm::INT slice_size = pdm.shape.x * pdm.shape.y;
     for (Falm::INT d = 0; d < field.shape.y; d ++) {
         Falm::falmMemcpyAsync(&field.dev(idxt1, d), &field.dev(idxcc, d), sizeof(Falm::REAL) * slice_size, Falm::MCpType::Dev2Dev);
