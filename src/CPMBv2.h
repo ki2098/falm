@@ -24,7 +24,7 @@ struct CPMBuffer {
     size_t    width;
     FLAG    buftype;
     FLAG    hdctype;
-    FLAG      color;
+    INT       color;
 
     CPMBuffer() : ptr(nullptr), count(0), buftype(BufType::Empty), hdctype(HDCType::Empty) {}
     ~CPMBuffer() {

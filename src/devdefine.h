@@ -2,6 +2,6 @@
 #define FALM_DEVDEFINE_H
 
 #include "dev/cuhandler.h"
-#include "extern.h"
+#include "typedef.h"
 
 #endif

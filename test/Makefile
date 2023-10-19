@@ -1,6 +1,6 @@
-falm = ..
+falmdir = ..
 
-include $(falm)/src/Makefile
+include $(falmdir)/src/Makefile
 
 cuflag = $(flag) --default-stream per-thread
 
@@ -19,3 +19,9 @@ cpmtest2: cpm
 cpmtestv2: cpm
 	$(nvmpicxx) -cuda -c cpmtestv2.cpp $(flag) -o bin/cpmtestv2.o
 	$(nvmpicxx) -cuda $(cpmobj) bin/cpmtestv2.o -o bin/cpmtestv2
+
+
+vcdmtest:
+	$(nvnvcxx) -cuda -c __vcdm.cpp $(flag) -o bin/__vcdm.o
+	$(nvnvcxx) -cuda -c vcdmtest.cpp $(flag) -o bin/vcdmtest.o
+	$(nvnvcxx) -cuda $(vcdmobj) bin/vcdmtest.o bin/__vcdm.o -o bin/vcdmtest

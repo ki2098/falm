@@ -12,6 +12,8 @@ namespace Falm {
 typedef double         REAL;
 typedef unsigned       FLAG;
 typedef int             INT;
+typedef double3      REALx3;
+typedef double2      REALx2;
 typedef int3          INTx3;
 typedef int2          INTx2;
 

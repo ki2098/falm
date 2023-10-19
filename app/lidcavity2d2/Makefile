@@ -1,5 +1,5 @@
-falm = ../..
-include $(falm)/src/Makefile
+falmdir = ../..
+include $(falmdir)/src/Makefile
 
 cuflag = $(flag) --default-stream per-thread
 
