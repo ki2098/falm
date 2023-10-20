@@ -7,11 +7,11 @@
 using namespace Falm;
 
 int main() {
-    Mapper pdm(
+    Region pdm(
         uint3{12, 12, 12},
         uint3{0, 0, 0}
     );
-    Mapper map(
+    Region map(
         uint3{10, 10, 10},
         uint3{1, 1, 1}
     );

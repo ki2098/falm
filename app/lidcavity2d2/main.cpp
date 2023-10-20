@@ -29,7 +29,7 @@ REAL maxdiag;
 CPMBase cpm;
 
 void field_output(INT i, int rank) {
-    Mapper &pdm = cpm.pdm_list[cpm.rank];
+    Region &pdm = cpm.pdm_list[cpm.rank];
     std::string filename = "data/cavity-rank" + std::to_string(rank) + ".csv" + std::to_string(i);
     FILE *file = fopen(filename.c_str(), "w");
     fprintf(file, "x,y,z,u,v,w,p\n");
@@ -47,7 +47,7 @@ void field_output(INT i, int rank) {
     fclose(file);
 }
 
-void allocVars(Mapper &pdm) {
+void allocVars(Region &pdm) {
     u.alloc(pdm.shape, 3, HDCType::Device);
     ua.alloc(pdm.shape, 3, HDCType::Device);
     uu.alloc(pdm.shape, 3, HDCType::Device);
@@ -61,27 +61,25 @@ void allocVars(Mapper &pdm) {
 }
 
 REAL main_loop(L2CFD &cfd, L2EqSolver &eqsolver, CPMBase &cpm, dim3 block_dim, STREAM *stream) {
-    Mapper &pdm = cpm.pdm_list[cpm.rank];
-    Mapper &global = cpm.global;
-    cfd.L2Dev_Cartesian3d_FSCalcPseudoU(u, u, uu, ua, nut, kx, g, ja, ff, pdm, block_dim, cpm, stream);
-    cfd.L2Dev_Cartesian3d_UtoUU(ua, uua, kx, ja, pdm, block_dim, cpm, stream);
-    forceFaceVelocityZero(uua, global, pdm, cpm);
-    cfd.L2Dev_Cartesian3d_MACCalcPoissonRHS(uua, rhs, ja, pdm, cpm, block_dim, maxdiag);
+    cfd.L2Dev_Cartesian3d_FSCalcPseudoU(u, u, uu, ua, nut, kx, g, ja, ff, block_dim, cpm, stream);
+    cfd.L2Dev_Cartesian3d_UtoUU(ua, uua, kx, ja, block_dim, cpm, stream);
+    forceFaceVelocityZero(uua, cpm);
+    cfd.L2Dev_Cartesian3d_MACCalcPoissonRHS(uua, rhs, ja, cpm, block_dim, maxdiag);
     
-    eqsolver.L2Dev_Struct3d7p_Solve(poisson_a, p, rhs, res, global, pdm, block_dim, cpm, stream);
-    pressureBC(p, global, pdm, cpm, stream);
-    copyZ5(p, pdm, cpm);
+    eqsolver.L2Dev_Struct3d7p_Solve(poisson_a, p, rhs, res, block_dim, cpm, stream);
+    pressureBC(p, cpm, stream);
+    copyZ5(p, cpm);
 
-    cfd.L2Dev_Cartesian3d_ProjectP(u, ua, uu, uua, p, kx, g, pdm, block_dim, cpm, stream);
-    velocityBC(u, global, pdm, cpm, stream);
-    copyZ5(u, pdm, cpm);
+    cfd.L2Dev_Cartesian3d_ProjectP(u, ua, uu, uua, p, kx, g, block_dim, cpm, stream);
+    velocityBC(u, cpm, stream);
+    copyZ5(u, cpm);
 
-    cfd.L2Dev_Cartesian3d_SGS(u, nut, x, kx, ja, pdm, block_dim, cpm, stream);
-    copyZ5(nut, pdm, cpm);
+    cfd.L2Dev_Cartesian3d_SGS(u, nut, x, kx, ja, block_dim, cpm, stream);
+    copyZ5(nut, cpm);
 
-    cfd.L2Dev_Cartesian3d_Divergence(uu, dvr, ja, pdm, cpm, block_dim);
+    cfd.L2Dev_Cartesian3d_Divergence(uu, dvr, ja, cpm, block_dim);
 
-    return L2Dev_EuclideanNormSq(dvr, pdm, block_dim, cpm);
+    return L2Dev_EuclideanNormSq(dvr, block_dim, cpm);
 }
 
 int main(int argc, char **argv) {
@@ -95,19 +93,19 @@ int main(int argc, char **argv) {
         mpi_size,
         {atoi(argv[1]), atoi(argv[2]), 1},
         {N, N, 1},
-        2
+        GuideCell
     );
-    Mapper &pdm = cpm.pdm_list[cpm.rank];
-    Mapper &global = cpm.global;
+    Region &pdm = cpm.pdm_list[cpm.rank];
+    Region &global = cpm.global;
 
-    Mapper ginner(global, cpm.gc);
+    Region ginner(global.shape, cpm.gc);
 
     printf("rank %d, global size = (%d %d %d), proc size = (%d %d %d), proc offset = (%d %d %d)\n", cpm.rank, global.shape.x, global.shape.y, global.shape.z, pdm.shape.x, pdm.shape.y, pdm.shape.z, pdm.offset.x, pdm.offset.y, pdm.offset.z);
 
     allocVars(pdm);
     setCoord(L, N, pdm, cpm.gc, x, h, kx, g, ja);
     poisson_a.alloc(pdm.shape, 7, HDCType::Device);
-    maxdiag = makePoissonMatrix(poisson_a, g, ja, global, pdm, cpm);
+    maxdiag = makePoissonMatrix(poisson_a, g, ja, cpm);
 
     printf("%lf\n", maxdiag);
 

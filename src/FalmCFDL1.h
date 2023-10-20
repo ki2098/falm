@@ -2,7 +2,7 @@
 #define FALM_FALMCFDL1_H
 
 #include "matrix.h"
-#include "mapper.h"
+#include "region.h"
 #include "structEqL1.h"
 #include "MVL1.h"
 
@@ -49,11 +49,11 @@ public:
         Matrix<REAL> &g,
         Matrix<REAL> &ja,
         Matrix<REAL> &ff,
-        Mapper       &pdm,
+        Region       &pdm,
         INT           gc,
         dim3          block_dim
     ) {
-        Mapper map(pdm, gc);
+        Region map(pdm.shape, gc);
         L0Dev_Cartesian3d_FSCalcPseudoU(un, u, uu, ua, nut, kx, g, ja, ff, pdm, map, block_dim);
     }
 
@@ -62,22 +62,22 @@ public:
         Matrix<REAL> &uc,
         Matrix<REAL> &kx,
         Matrix<REAL> &ja,
-        Mapper       &pdm,
+        Region       &pdm,
         INT           gc,
         dim3          block_dim
     ) {
-        Mapper map(pdm, gc - 1);
+        Region map(pdm.shape, gc - 1);
         L0Dev_Cartesian3d_UtoCU(u, uc, kx, ja, pdm, map, block_dim);
     }
 
     void L1Dev_Cartesian3d_InterpolateCU(
         Matrix<REAL> &uu,
         Matrix<REAL> &uc,
-        Mapper       &pdm,
+        Region       &pdm,
         INT           gc,
         dim3          block_dim
     ) {
-        Mapper map(pdm, gc);
+        Region map(pdm.shape, gc);
         map = map.transform(
             INTx3{ 1,  1,  1},
             INTx3{-1, -1, -1}
@@ -90,11 +90,11 @@ public:
         Matrix<REAL> &ua,
         Matrix<REAL> &p,
         Matrix<REAL> &kx,
-        Mapper       &pdm,
+        Region       &pdm,
         INT           gc,
         dim3          block_dim
     ) {
-        Mapper map(pdm, gc);
+        Region map(pdm.shape, gc);
         L0Dev_Cartesian3d_ProjectPGrid(u, ua, p, kx, pdm, map, block_dim);
     }
 
@@ -103,11 +103,11 @@ public:
         Matrix<REAL> &uua,
         Matrix<REAL> &p,
         Matrix<REAL> &g,
-        Mapper       &pdm,
+        Region       &pdm,
         INT           gc,
         dim3          block_dim
     ) {
-        Mapper map(pdm, gc);
+        Region map(pdm.shape, gc);
         map = map.transform(
             INTx3{ 1,  1,  1},
             INTx3{-1, -1, -1}
@@ -121,14 +121,14 @@ public:
         Matrix<REAL> &x,
         Matrix<REAL> &kx,
         Matrix<REAL> &ja,
-        Mapper       &pdm,
+        Region       &pdm,
         INT           gc,
         dim3          block_dim
     ) {
         if (SGSModel == SGSType::Empty) {
             return;
         }
-        Mapper map(pdm, gc);
+        Region map(pdm.shape, gc);
         L0Dev_Cartesian3d_SGS(u, nut, x, kx, ja, pdm, map, block_dim);
     }
 
@@ -136,11 +136,11 @@ public:
         Matrix<REAL> &uu,
         Matrix<REAL> &div,
         Matrix<REAL> &ja,
-        Mapper       &pdm,
+        Region       &pdm,
         INT           gc,
         dim3          block_dim
     ) {
-        Mapper map(pdm, gc);
+        Region map(pdm.shape, gc);
         L0Dev_Cartesian3d_Divergence(uu, div, ja, pdm, map, block_dim);
     }
 
@@ -148,7 +148,7 @@ public:
         Matrix<REAL> &uu,
         Matrix<REAL> &rhs,
         Matrix<REAL> &ja,
-        Mapper       &pdm,
+        Region       &pdm,
         INT           gc,
         dim3          block_dim,
         REAL          maxdiag = 1.0
@@ -168,8 +168,8 @@ protected:
         Matrix<REAL> &g,
         Matrix<REAL> &ja,
         Matrix<REAL> &ff,
-        Mapper       &pdm,
-        const Mapper &map,
+        Region       &pdm,
+        const Region &map,
         dim3          block_dim,
         STREAM        stream = (STREAM)0
     );
@@ -178,16 +178,16 @@ protected:
         Matrix<REAL> &uc,
         Matrix<REAL> &kx,
         Matrix<REAL> &ja,
-        Mapper       &pdm,
-        const Mapper &map,
+        Region       &pdm,
+        const Region &map,
         dim3          block_dim,
         STREAM        stream = (STREAM)0
     );
     void L0Dev_Cartesian3d_InterpolateCU(
         Matrix<REAL> &uu,
         Matrix<REAL> &uc,
-        Mapper       &pdm,
-        const Mapper &map,
+        Region       &pdm,
+        const Region &map,
         dim3          block_dim,
         STREAM        stream = (STREAM)0
     );
@@ -196,8 +196,8 @@ protected:
         Matrix<REAL> &ua,
         Matrix<REAL> &p,
         Matrix<REAL> &kx,
-        Mapper       &pdm,
-        const Mapper &map,
+        Region       &pdm,
+        const Region &map,
         dim3          block_dim,
         STREAM        stream = (STREAM)0
     );
@@ -206,8 +206,8 @@ protected:
         Matrix<REAL> &uua,
         Matrix<REAL> &p,
         Matrix<REAL> &g,
-        Mapper       &pdm,
-        const Mapper &map,
+        Region       &pdm,
+        const Region &map,
         dim3          block_dim,
         STREAM        stream = (STREAM)0
     );
@@ -217,8 +217,8 @@ protected:
         Matrix<REAL> &x,
         Matrix<REAL> &kx,
         Matrix<REAL> &ja,
-        Mapper       &pdm,
-        const Mapper &map,
+        Region       &pdm,
+        const Region &map,
         dim3          block_dim,
         STREAM        stream = (STREAM)0
     );
@@ -226,8 +226,8 @@ protected:
         Matrix<REAL> &uu,
         Matrix<REAL> &div,
         Matrix<REAL> &ja,
-        Mapper       &pdm,
-        const Mapper &map,
+        Region       &pdm,
+        const Region &map,
         dim3          block_dim,
         STREAM        stream = (STREAM)0
     );

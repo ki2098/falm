@@ -2,7 +2,7 @@
 #define _LID_CAVITY2D_POISSON_H_
 
 #include "../../src/matrix.h"
-#include "../../src/mapper.h"
+#include "../../src/region.h"
 
 namespace LidCavity2d {
 
@@ -10,7 +10,8 @@ Falm::REAL makePoissonMatrix(
     Falm::Matrix<Falm::REAL> &a,
     Falm::Matrix<Falm::REAL> &g,
     Falm::Matrix<Falm::REAL> &ja,
-    Falm::Mapper             &pdm,
+    Falm::Region             &pdm,
+    Falm::INT gc,
     dim3                      block_dim = dim3(8, 8, 1)
 );
 
@@ -20,7 +21,8 @@ void makePoissonRHS(
     Falm::Matrix<Falm::REAL> &g,
     Falm::Matrix<Falm::REAL> &ja,
     Falm::REAL                maxdiag,
-    Falm::Mapper             &pdm,
+    Falm::Region             &pdm,
+    Falm::INT gc,
     dim3                      block_dim = dim3(8, 8, 1)
 );
 

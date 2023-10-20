@@ -35,7 +35,7 @@ __global__ void kernel_DotProduct(MatrixFrame<REAL> &a, MatrixFrame<REAL> &b, RE
     }
 }
 
-REAL L0Dev_DotProduct(Matrix<REAL> &a, Matrix<REAL> &b, Mapper &pdm, const Mapper &map, dim3 block_dim) {
+REAL L0Dev_DotProduct(Matrix<REAL> &a, Matrix<REAL> &b, Region &pdm, const Region &map, dim3 block_dim) {
     dim3 grid_dim(
         (map.shape.x + block_dim.x - 1) / block_dim.x,
         (map.shape.y + block_dim.y - 1) / block_dim.y,
@@ -95,7 +95,7 @@ __global__ void kernel_EuclideanNormSq(MatrixFrame<REAL> &a, REAL *partial_sum_d
     }
 }
 
-REAL L0Dev_EuclideanNormSq(Matrix<REAL> &a, Mapper &pdm, const Mapper &map, dim3 block_dim) {
+REAL L0Dev_EuclideanNormSq(Matrix<REAL> &a, Region &pdm, const Region &map, dim3 block_dim) {
     dim3 grid_dim(
         (map.shape.x + block_dim.x - 1) / block_dim.x,
         (map.shape.y + block_dim.y - 1) / block_dim.y,
@@ -155,7 +155,7 @@ __global__ void kernel_MaxDiag(MatrixFrame<REAL> &a, REAL *partial_max_dev, INTx
     }
 }
 
-REAL L0Dev_MaxDiag(Matrix<REAL> &a, Mapper &pdm, const Mapper &map, dim3 block_dim) {
+REAL L0Dev_MaxDiag(Matrix<REAL> &a, Region &pdm, const Region &map, dim3 block_dim) {
     dim3 grid_dim(
         (map.shape.x + block_dim.x - 1) / block_dim.x,
         (map.shape.y + block_dim.y - 1) / block_dim.y,

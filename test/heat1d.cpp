@@ -12,11 +12,11 @@ using namespace Falm;
 #define TE 100.0
 
 int main() {
-    Mapper global(
+    Region global(
         INTx3{Nx + 2 * Gd, Ny + 2 * Gd, Nz + 2 * Gd},
         INTx3{0, 0, 0}
     );
-    Mapper pdm(global.shape, global.offset);
+    Region pdm(global.shape, global.offset);
     Matrix<double> a, t, b, r;
     a.alloc(pdm.shape, 7, HDCType::Host  , "a");
     t.alloc(pdm.shape, 1, HDCType::Device, "t");

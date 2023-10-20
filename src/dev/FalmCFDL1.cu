@@ -472,8 +472,8 @@ void L1CFD::L0Dev_Cartesian3d_FSCalcPseudoU(
     Matrix<REAL> &g,
     Matrix<REAL> &ja,
     Matrix<REAL> &ff,
-    Mapper       &pdm,
-    const Mapper &map,
+    Region       &pdm,
+    const Region &map,
     dim3          block_dim,
     STREAM        stream
 ) {
@@ -505,8 +505,8 @@ void L1CFD::L0Dev_Cartesian3d_UtoCU(
     Matrix<REAL> &uc,
     Matrix<REAL> &kx,
     Matrix<REAL> &ja,
-    Mapper       &pdm,
-    const Mapper &map,
+    Region       &pdm,
+    const Region &map,
     dim3          block_dim,
     STREAM        stream
 ) {
@@ -529,8 +529,8 @@ void L1CFD::L0Dev_Cartesian3d_UtoCU(
 void L1CFD::L0Dev_Cartesian3d_InterpolateCU(
     Matrix<REAL> &uu,
     Matrix<REAL> &uc,
-    Mapper       &pdm,
-    const Mapper &map,
+    Region       &pdm,
+    const Region &map,
     dim3          block_dim,
     STREAM        stream
 ) {
@@ -553,8 +553,8 @@ void L1CFD::L0Dev_Cartesian3d_ProjectPGrid(
     Matrix<REAL> &ua,
     Matrix<REAL> &p,
     Matrix<REAL> &kx,
-    Mapper       &pdm,
-    const Mapper &map,
+    Region       &pdm,
+    const Region &map,
     dim3          block_dim,
     STREAM        stream
 ) {
@@ -580,8 +580,8 @@ void L1CFD::L0Dev_Cartesian3d_ProjectPFace(
     Matrix<REAL> &uua,
     Matrix<REAL> &p,
     Matrix<REAL> &g,
-    Mapper       &pdm,
-    const Mapper &map,
+    Region       &pdm,
+    const Region &map,
     dim3          block_dim,
     STREAM        stream
 ) {
@@ -608,8 +608,8 @@ void L1CFD::L0Dev_Cartesian3d_SGS(
     Matrix<REAL> &x,
     Matrix<REAL> &kx,
     Matrix<REAL> &ja,
-    Mapper       &pdm,
-    const Mapper &map,
+    Region       &pdm,
+    const Region &map,
     dim3          block_dim,
     STREAM        stream
 ) {
@@ -648,8 +648,8 @@ void L1CFD::L0Dev_Cartesian3d_Divergence(
     Matrix<REAL> &uu,
     Matrix<REAL> &div,
     Matrix<REAL> &ja,
-    Mapper       &pdm,
-    const Mapper &map,
+    Region       &pdm,
+    const Region &map,
     dim3          block_dim,
     STREAM        stream
 ) {

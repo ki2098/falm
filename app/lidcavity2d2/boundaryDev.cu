@@ -68,7 +68,7 @@ __global__ void kernel_pressureBC_S(
 
 void dev_pressureBC_E(
     Matrix<REAL> &p,
-    Mapper       &pdm,
+    Region       &pdm,
     INT           gc,
     STREAM        stream
 ) {
@@ -79,7 +79,7 @@ void dev_pressureBC_E(
 
 void dev_pressureBC_W(
     Matrix<REAL> &p,
-    Mapper       &pdm,
+    Region       &pdm,
     INT           gc,
     STREAM        stream
 ) {
@@ -90,7 +90,7 @@ void dev_pressureBC_W(
 
 void dev_pressureBC_N(
     Matrix<REAL> &p,
-    Mapper       &pdm,
+    Region       &pdm,
     INT           gc,
     STREAM        stream
 ) {
@@ -101,7 +101,7 @@ void dev_pressureBC_N(
 
 void dev_pressureBC_S(
     Matrix<REAL> &p,
-    Mapper       &pdm,
+    Region       &pdm,
     INT           gc,
     STREAM        stream
 ) {
@@ -188,7 +188,7 @@ __global__ void kernel_velocityBC_S(
 
 void dev_velocityBC_E(
     Matrix<REAL> &u,
-    Mapper       &pdm,
+    Region       &pdm,
     INT           gc,
     STREAM        stream
 ) {
@@ -199,7 +199,7 @@ void dev_velocityBC_E(
 
 void dev_velocityBC_W(
     Matrix<REAL> &u,
-    Mapper       &pdm,
+    Region       &pdm,
     INT           gc,
     STREAM        stream
 ) {
@@ -210,7 +210,7 @@ void dev_velocityBC_W(
 
 void dev_velocityBC_N(
     Matrix<REAL> &u,
-    Mapper       &pdm,
+    Region       &pdm,
     INT           gc,
     STREAM        stream
 ) {
@@ -221,7 +221,7 @@ void dev_velocityBC_N(
 
 void dev_velocityBC_S(
     Matrix<REAL> &u,
-    Mapper       &pdm,
+    Region       &pdm,
     INT           gc,
     STREAM        stream
 ) {
@@ -292,7 +292,7 @@ __global__ void kernel_forceFaceVelocityZero_S(
 
 void dev_forceFaceVelocityZero_E(
     Matrix<REAL> &uu,
-    Mapper       &pdm,
+    Region       &pdm,
     INT           gc,
     STREAM        stream
 ) {
@@ -303,7 +303,7 @@ void dev_forceFaceVelocityZero_E(
 
 void dev_forceFaceVelocityZero_W(
     Matrix<REAL> &uu,
-    Mapper       &pdm,
+    Region       &pdm,
     INT           gc,
     STREAM        stream
 ) {
@@ -314,7 +314,7 @@ void dev_forceFaceVelocityZero_W(
 
 void dev_forceFaceVelocityZero_N(
     Matrix<REAL> &uu,
-    Mapper       &pdm,
+    Region       &pdm,
     INT           gc,
     STREAM        stream
 ) {
@@ -325,7 +325,7 @@ void dev_forceFaceVelocityZero_N(
 
 void dev_forceFaceVelocityZero_S(
     Matrix<REAL> &uu,
-    Mapper       &pdm,
+    Region       &pdm,
     INT           gc,
     STREAM        stream
 ) {

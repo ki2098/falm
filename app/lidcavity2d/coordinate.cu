@@ -10,6 +10,7 @@ __global__ void kernel_setCoord(
     REAL               side_lenth,
     INT                side_n_cell,
     INTx3              pdm_shape,
+    INT gc,
     MatrixFrame<REAL> &x,
     MatrixFrame<REAL> &h,
     MatrixFrame<REAL> &kx,
@@ -23,9 +24,9 @@ __global__ void kernel_setCoord(
         REAL pitch = side_lenth / side_n_cell;
         REAL dkdx = 1.0 / pitch;
         REAL vol = pitch * pitch * pitch;
-        x(idx, 0) = (i - Gd + 0.5) * pitch;
-        x(idx, 1) = (j - Gd + 0.5) * pitch;
-        x(idx, 2) = (k - Gd      ) * pitch;
+        x(idx, 0) = (i - gc + 0.5) * pitch;
+        x(idx, 1) = (j - gc + 0.5) * pitch;
+        x(idx, 2) = (k - gc      ) * pitch;
         h(idx, 0) = h(idx, 1) = h(idx, 2) = pitch;
         kx(idx, 0) = kx(idx, 1) = kx(idx, 2) = dkdx;
         ja(idx) = vol;
@@ -36,7 +37,8 @@ __global__ void kernel_setCoord(
 void setCoord(
     REAL          side_lenth,
     INT           side_n_cell,
-    Mapper       &pdm,
+    Region       &pdm,
+    INT gc,
     Matrix<REAL> &x,
     Matrix<REAL> &h,
     Matrix<REAL> &kx,
@@ -44,8 +46,8 @@ void setCoord(
     Matrix<REAL> &ja,
     dim3          block_dim
 ) {
-    pdm = Mapper(
-        INTx3{side_n_cell + Gdx2, side_n_cell + Gdx2, 1 + Gdx2},
+    pdm = Region(
+        INTx3{side_n_cell + (gc*2), side_n_cell + (gc*2), 1 + (gc*2)},
         INTx3{0, 0, 0}
     );
     x.alloc(pdm.shape, 3, HDCType::Device);
@@ -63,6 +65,7 @@ void setCoord(
         side_lenth,
         side_n_cell,
         pdm.shape,
+        gc,
         *(x.devptr),
         *(h.devptr),
         *(kx.devptr),

@@ -3,7 +3,7 @@
 
 #include <stdio.h>
 #include "../../src/matrix.h"
-#include "../../src/mapper.h"
+#include "../../src/region.h"
 #include "../../src/flag.h"
 
 namespace LidCavity2d {
@@ -14,7 +14,7 @@ static void outputGridInfo(
     Falm::Matrix<Falm::REAL> &kx,
     Falm::Matrix<Falm::REAL> &g,
     Falm::Matrix<Falm::REAL> &ja,
-    Falm::Mapper             &pdm
+    Falm::Region             &pdm
 ) {
     x.sync(Falm::MCpType::Dev2Hst);
     h.sync(Falm::MCpType::Dev2Hst);

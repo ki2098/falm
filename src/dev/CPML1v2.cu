@@ -60,7 +60,7 @@ __global__ void kernel_CPM_UnpackColoredBuffer(REAL *buffer, INTx3 buf_shape, IN
     }
 }
 
-void CPML0Dev_PackBuffer(REAL *buffer, Mapper &map, REAL *src, Mapper &pdm, dim3 block_dim, STREAM stream) {
+void CPML0Dev_PackBuffer(REAL *buffer, Region &map, REAL *src, Region &pdm, dim3 block_dim, STREAM stream) {
     dim3 grid_dim(
         (map.shape.x + block_dim.x - 1) / block_dim.x,
         (map.shape.y + block_dim.y - 1) / block_dim.y,
@@ -69,7 +69,7 @@ void CPML0Dev_PackBuffer(REAL *buffer, Mapper &map, REAL *src, Mapper &pdm, dim3
     kernel_CPM_PackBuffer<<<grid_dim, block_dim, 0, stream>>>(buffer, map.shape, map.offset, src, pdm.shape);
 }
 
-void CPML0Dev_PackColoredBuffer(REAL *buffer, Mapper &map, INT color, REAL *src, Mapper &pdm, dim3 block_dim, STREAM stream) {
+void CPML0Dev_PackColoredBuffer(REAL *buffer, Region &map, INT color, REAL *src, Region &pdm, dim3 block_dim, STREAM stream) {
     dim3 grid_dim(
         (map.shape.x + block_dim.x - 1) / block_dim.x,
         (map.shape.y + block_dim.y - 1) / block_dim.y,
@@ -78,7 +78,7 @@ void CPML0Dev_PackColoredBuffer(REAL *buffer, Mapper &map, INT color, REAL *src,
     kernel_CPM_PackColoredBuffer<<<grid_dim, block_dim, 0, stream>>>(buffer, map.shape, map.offset, color, src, pdm.shape, pdm.offset);
 }
 
-void CPML0Dev_UnpackBuffer(REAL *buffer, Mapper &map, REAL *dst, Mapper &pdm, dim3 block_dim, STREAM stream) {
+void CPML0Dev_UnpackBuffer(REAL *buffer, Region &map, REAL *dst, Region &pdm, dim3 block_dim, STREAM stream) {
     dim3 grid_dim(
         (map.shape.x + block_dim.x - 1) / block_dim.x,
         (map.shape.y + block_dim.y - 1) / block_dim.y,
@@ -87,7 +87,7 @@ void CPML0Dev_UnpackBuffer(REAL *buffer, Mapper &map, REAL *dst, Mapper &pdm, di
     kernel_CPM_UnpackBuffer<<<grid_dim, block_dim, 0, stream>>>(buffer, map.shape, map.offset, dst, pdm.shape);
 }
 
-void CPML0Dev_UnpackColoredBuffer(REAL *buffer, Mapper &map, INT color, REAL *dst, Mapper &pdm, dim3 block_dim, STREAM stream) {
+void CPML0Dev_UnpackColoredBuffer(REAL *buffer, Region &map, INT color, REAL *dst, Region &pdm, dim3 block_dim, STREAM stream) {
     dim3 grid_dim(
         (map.shape.x + block_dim.x - 1) / block_dim.x,
         (map.shape.y + block_dim.y - 1) / block_dim.y,
@@ -96,8 +96,8 @@ void CPML0Dev_UnpackColoredBuffer(REAL *buffer, Mapper &map, INT color, REAL *ds
     kernel_CPM_UnpackColoredBuffer<<<grid_dim, block_dim, 0, stream>>>(buffer, map.shape, map.offset, color, dst, pdm.shape, pdm.offset);
 }
 
-void CPML1Dev_PackBuffer(CPMBuffer &buffer, REAL *src, Mapper &pdm, dim3 block_dim) {
-    Mapper &map = buffer.map;
+void CPML1Dev_PackBuffer(CPMBuffer &buffer, REAL *src, Region &pdm, dim3 block_dim) {
+    Region &map = buffer.map;
     dim3 grid_dim(
         (map.shape.x + block_dim.x - 1) / block_dim.x,
         (map.shape.y + block_dim.y - 1) / block_dim.y,
@@ -113,8 +113,8 @@ void CPML1Dev_PackBuffer(CPMBuffer &buffer, REAL *src, Mapper &pdm, dim3 block_d
     }
 }
 
-void CPML1Dev_PackColoredBuffer(CPMBuffer &buffer, REAL *src, Mapper &pdm, dim3 block_dim) {
-    Mapper &map = buffer.map;
+void CPML1Dev_PackColoredBuffer(CPMBuffer &buffer, REAL *src, Region &pdm, dim3 block_dim) {
+    Region &map = buffer.map;
     dim3 grid_dim(
         (map.shape.x + block_dim.x - 1) / block_dim.x,
         (map.shape.y + block_dim.y - 1) / block_dim.y,
@@ -130,8 +130,8 @@ void CPML1Dev_PackColoredBuffer(CPMBuffer &buffer, REAL *src, Mapper &pdm, dim3 
     }
 }
 
-void CPML1Dev_UnpackBuffer(CPMBuffer &buffer, REAL *dst, Mapper &pdm, dim3 block_dim) {
-    Mapper &map = buffer.map;
+void CPML1Dev_UnpackBuffer(CPMBuffer &buffer, REAL *dst, Region &pdm, dim3 block_dim) {
+    Region &map = buffer.map;
     dim3 grid_dim(
         (map.shape.x + block_dim.x - 1) / block_dim.x,
         (map.shape.y + block_dim.y - 1) / block_dim.y,
@@ -147,8 +147,8 @@ void CPML1Dev_UnpackBuffer(CPMBuffer &buffer, REAL *dst, Mapper &pdm, dim3 block
     }
 }
 
-void CPML1Dev_UnpackColoredBuffer(CPMBuffer &buffer, REAL *dst, Mapper &pdm, dim3 block_dim) {
-    Mapper &map = buffer.map;
+void CPML1Dev_UnpackColoredBuffer(CPMBuffer &buffer, REAL *dst, Region &pdm, dim3 block_dim) {
+    Region &map = buffer.map;
     dim3 grid_dim(
         (map.shape.x + block_dim.x - 1) / block_dim.x,
         (map.shape.y + block_dim.y - 1) / block_dim.y,

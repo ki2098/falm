@@ -3,7 +3,7 @@
 
 #include <stdio.h>
 #include <assert.h>
-#include "mapper.h"
+#include "region.h"
 
 namespace Falm {
 
@@ -20,7 +20,7 @@ typedef CPMBufferType BufType;
 template<typename T>
 struct CPMBuffer {
     T       *ptr;
-    Mapper   map;
+    Region   map;
     INT     size;
     FLAG buftype;
     FLAG hdctype;
@@ -28,11 +28,11 @@ struct CPMBuffer {
 
     CPMBuffer() : ptr(nullptr), size(0), buftype(BufType::Empty), hdctype(HDCType::Empty) {}
     CPMBuffer(INTx3 _buf_shape, INTx3 _buf_offset, FLAG _buftype, FLAG _hdctype);
-    CPMBuffer(INTx3 _buf_shape, INTx3 _buf_offset, FLAG _buftype, FLAG _hdctype, Mapper &_pdm, INT _color);
+    CPMBuffer(INTx3 _buf_shape, INTx3 _buf_offset, FLAG _buftype, FLAG _hdctype, Region &_pdm, INT _color);
     ~CPMBuffer();
 
     void alloc(INTx3 _buf_shape, INTx3 _buf_offset, FLAG _buftype, FLAG _hdctype);
-    void alloc(INTx3 _buf_shape, INTx3 _buf_offset, FLAG _buftype, FLAG _hdctype, Mapper &_pdm, INT _color);
+    void alloc(INTx3 _buf_shape, INTx3 _buf_offset, FLAG _buftype, FLAG _hdctype, Region &_pdm, INT _color);
     void release();
 
     void clear() {
@@ -57,7 +57,7 @@ template<typename T> CPMBuffer<T>::CPMBuffer(INTx3 _buf_shape, INTx3 _buf_offset
     }
 }
 
-template<typename T> CPMBuffer<T>::CPMBuffer(INTx3 _buf_shape, INTx3 _buf_offset, FLAG _buftype, FLAG _hdctype, Mapper &_pdm, INT _color) :
+template<typename T> CPMBuffer<T>::CPMBuffer(INTx3 _buf_shape, INTx3 _buf_offset, FLAG _buftype, FLAG _hdctype, Region &_pdm, INT _color) :
     map(_buf_shape, _buf_offset),
     buftype(_buftype),
     hdctype(_hdctype),
@@ -87,7 +87,7 @@ template<typename T> void CPMBuffer<T>::alloc(INTx3 _buf_shape, INTx3 _buf_offse
     assert(hdctype == HDCType::Empty);
     assert(buftype == BufType::Empty);
     
-    map     = Mapper(_buf_shape, _buf_offset);
+    map     = Region(_buf_shape, _buf_offset);
     size    = PRODUCT3(_buf_shape);
     buftype = _buftype;
     hdctype = _hdctype;
@@ -98,10 +98,10 @@ template<typename T> void CPMBuffer<T>::alloc(INTx3 _buf_shape, INTx3 _buf_offse
     }
 }
 
-template<typename T> void CPMBuffer<T>::alloc(INTx3 _buf_shape, INTx3 _buf_offset, FLAG _buftype, FLAG _hdctype, Mapper &_pdm, INT _color) {
+template<typename T> void CPMBuffer<T>::alloc(INTx3 _buf_shape, INTx3 _buf_offset, FLAG _buftype, FLAG _hdctype, Region &_pdm, INT _color) {
     assert(hdctype == HDCType::Empty);
     assert(buftype == BufType::Empty);
-    map     = Mapper(_buf_shape, _buf_offset);
+    map     = Region(_buf_shape, _buf_offset);
     buftype = _buftype;
     hdctype = _hdctype;
     color   = _color;

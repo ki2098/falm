@@ -6,7 +6,7 @@ void CPM::CPML2_Wait6Face(MPI_Request *req) {
     CPML2_Waitall(nP2P, req, MPI_STATUSES_IGNORE);
 }
 
-void CPM::CPML2dev_IExchange6Face(double *data, Mapper &pdm, unsigned int thick, int grp_tag, CPMBuffer<double> *&buffer, unsigned int buf_hdctype, MPI_Request *&req) {
+void CPM::CPML2dev_IExchange6Face(double *data, Region &pdm, unsigned int thick, int grp_tag, CPMBuffer<double> *&buffer, unsigned int buf_hdctype, MPI_Request *&req) {
     buffer = new CPMBuffer<double>[12];
     req    = new MPI_Request[12];
     nP2P   = 0;
@@ -126,7 +126,7 @@ void CPM::CPML2dev_IExchange6Face(double *data, Mapper &pdm, unsigned int thick,
     }
 }
 
-void CPM::CPML2dev_IExchange6ColoredFace(double *data, Mapper &pdm, unsigned int color, unsigned int thick, int grp_tag, CPMBuffer<double> *&buffer, unsigned int buf_hdctype, MPI_Request *&req) {
+void CPM::CPML2dev_IExchange6ColoredFace(double *data, Region &pdm, unsigned int color, unsigned int thick, int grp_tag, CPMBuffer<double> *&buffer, unsigned int buf_hdctype, MPI_Request *&req) {
     buffer = new CPMBuffer<double>[12];
     req    = new MPI_Request[12];
     nP2P   = 0;
@@ -258,7 +258,7 @@ void CPM::CPML2dev_IExchange6ColoredFace(double *data, Mapper &pdm, unsigned int
     }
 }
 
-void CPM::CPML2dev_PostExchange6Face(double *data, Mapper &pdm, CPMBuffer<double> *&buffer, MPI_Request *&req) {
+void CPM::CPML2dev_PostExchange6Face(double *data, Region &pdm, CPMBuffer<double> *&buffer, MPI_Request *&req) {
     dim3 yz_block_dim(1, 8, 8);
     dim3 xz_block_dim(8, 1, 8);
     dim3 xy_block_dim(8, 8, 1);
@@ -302,7 +302,7 @@ void CPM::CPML2dev_PostExchange6Face(double *data, Mapper &pdm, CPMBuffer<double
     delete[] req;
 }
 
-void CPM::CPML2dev_PostExchange6ColoredFace(double *data, Mapper &pdm, unsigned int color, CPMBuffer<double> *&buffer, MPI_Request *&req) {
+void CPM::CPML2dev_PostExchange6ColoredFace(double *data, Region &pdm, unsigned int color, CPMBuffer<double> *&buffer, MPI_Request *&req) {
     dim3 yz_block_dim(1, 8, 8);
     dim3 xz_block_dim(8, 1, 8);
     dim3 xy_block_dim(8, 8, 1);

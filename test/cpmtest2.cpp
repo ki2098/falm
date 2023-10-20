@@ -61,7 +61,7 @@ void set_matrix_value(Matrix<double> &x, INTx3 range_shape, INTx3 range_offset, 
 int main(int argc, char **argv) {
     CPML2_Init(&argc, &argv);
 
-    Mapper global(
+    Region global(
         INTx3{Nx + Gdx2, Ny + Gdx2, Nz + Gdx2},
         INTx3{0, 0, 0}
     );
@@ -93,7 +93,7 @@ int main(int argc, char **argv) {
     for (INT k = 0; k < cpm.idx.z; k ++) {
         oz += dim_division(Nz, cpm.shape.z, k);
     }
-    Mapper process(
+    Region process(
         INTx3{dim_division(Nx, cpm.shape.x, cpm.idx.x) + Gdx2, dim_division(Ny, cpm.shape.y, cpm.idx.y) + Gdx2, dim_division(Nz, cpm.shape.z, cpm.idx.z) + Gdx2},
         INTx3{ox, oy, oz}
     );
@@ -103,7 +103,7 @@ int main(int argc, char **argv) {
 
     INTx3 inner_shape, inner_offset;
     INTx3 boundary_shape[6], boundary_offset[6];
-    cpm.set6Region(inner_shape, inner_offset, boundary_shape, boundary_offset, 1, Mapper(process, Gd));
+    cpm.set6Region(inner_shape, inner_offset, boundary_shape, boundary_offset, 1, Region(process, Gd));
     Matrix<double> x(process.shape, 1, HDCType::Host);
     set_matrix_value(x, inner_shape, inner_offset, process.shape, cpm.rank * 10);
     for (INT i = 0; i < 6; i ++) {

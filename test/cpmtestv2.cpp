@@ -60,7 +60,7 @@ INT dim_division(INT dim_size, INT mpi_size, INT mpi_rank) {
 int main(int argc, char **argv) {
     CPML2_Init(&argc, &argv);
 
-    Mapper global(
+    Region global(
         INTx3{Nx + Gdx2, Ny + Gdx2, Nz + Gdx2},
         INTx3{0, 0, 0}
     );
@@ -98,7 +98,7 @@ int main(int argc, char **argv) {
     for (INT k = 0; k < cpm.idx.z; k ++) {
         oz += dim_division(Nz, cpm.shape.z, k);
     }
-    Mapper process(
+    Region process(
         INTx3{dim_division(Nx, cpm.shape.x, cpm.idx.x) + Gdx2, dim_division(Ny, cpm.shape.y, cpm.idx.y) + Gdx2, dim_division(Nz, cpm.shape.z, cpm.idx.z) + Gdx2},
         INTx3{ox, oy, oz}
     );

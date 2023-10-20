@@ -16,11 +16,11 @@ static Falm::INT dim_division(Falm::INT dim_size, Falm::INT mpi_size, Falm::INT 
 static void setPartition(
     Falm::REAL          side_lenth,
     Falm::INT           side_n_cell,
-    Falm::Mapper       &global,
-    Falm::Mapper       &pdm,
+    Falm::Region       &global,
+    Falm::Region       &pdm,
     Falm::CPMBase      &cpm
 ) {
-    global = Falm::Mapper(
+    global = Falm::Region(
         Falm::INTx3{side_n_cell + (cpm.gc*2), side_n_cell + (cpm.gc*2), 1 + (cpm.gc*2)},
         Falm::INTx3{0, 0, 0}
     );
@@ -35,7 +35,7 @@ static void setPartition(
     }
     Falm::INT oz = 0;
 
-    pdm = Falm::Mapper(
+    pdm = Falm::Region(
         Falm::INTx3{
             dim_division(side_n_cell, cpm.shape.x, cpm.idx.x) + (cpm.gc*2),
             dim_division(side_n_cell, cpm.shape.y, cpm.idx.y) + (cpm.gc*2),

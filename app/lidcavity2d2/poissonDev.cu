@@ -85,12 +85,12 @@ void dev_makePoissonMatrix(
     Matrix<REAL> &a,
     Matrix<REAL> &g,
     Matrix<REAL> &ja,
-    Mapper       &global,
-    Mapper       &pdm,
+    Region       &global,
+    Region       &pdm,
     INT           gc,
     dim3          block_dim
 ) {
-    Mapper map(pdm, gc);
+    Region map(pdm.shape, gc);
     dim3 grid_dim(
         (map.shape.x + block_dim.x - 1) / block_dim.x,
         (map.shape.y + block_dim.y - 1) / block_dim.y,

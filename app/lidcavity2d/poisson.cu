@@ -13,7 +13,8 @@ __global__ void kernel_makePoissonMatrix(
     MatrixFrame<REAL> &ja,
     INTx3              pdm_shape,
     INTx3              map_shape,
-    INTx3              map_offset
+    INTx3              map_offset,
+    INT gc
 ) {
     INT i, j, k;
     GLOBAL_THREAD_IDX_3D(i, j, k);
@@ -43,25 +44,25 @@ __global__ void kernel_makePoissonMatrix(
         REAL coefficient;
 
         coefficient = 0.5 * (gxcc + gxe1) / jacob;
-        if (i < pdm_shape.x - Gd - 1) {
+        if (i < pdm_shape.x - gc - 1) {
             ac -= coefficient;
             ae = coefficient;
         }
 
         coefficient = 0.5 * (gxcc + gxw1) / jacob;
-        if (i > Gd) {
+        if (i > gc) {
             ac -= coefficient;
             aw = coefficient;
         }
 
         coefficient = 0.5 * (gycc + gyn1) / jacob;
-        if (j < pdm_shape.y - Gd - 1) {
+        if (j < pdm_shape.y - gc - 1) {
             ac -= coefficient;
             an = coefficient;
         }
 
         coefficient = 0.5 * (gycc + gys1) / jacob;
-        if (j > Gd) {
+        if (j > gc) {
             ac -= coefficient;
             as = coefficient;
         }
@@ -78,10 +79,11 @@ REAL makePoissonMatrix(
     Matrix<REAL> &a,
     Matrix<REAL> &g,
     Matrix<REAL> &ja,
-    Mapper       &pdm,
+    Region       &pdm,
+    INT gc,
     dim3          block_dim
 ) {
-    Mapper map(pdm, Gd);
+    Region map(pdm.shape, gc);
     dim3 grid_dim(
         (pdm.shape.x + block_dim.x - 1) / block_dim.x,
         (pdm.shape.y + block_dim.y - 1) / block_dim.y,
@@ -93,9 +95,10 @@ REAL makePoissonMatrix(
         *(ja.devptr),
         pdm.shape,
         map.shape,
-        map.offset
+        map.offset,
+        gc
     );
-    REAL maxdiag = L1Dev_MaxDiag(a, pdm, block_dim);
+    REAL maxdiag = L1Dev_MaxDiag(a, pdm, gc, block_dim);
     L1Dev_ScaleMatrix(a, 1.0 / maxdiag, block_dim);
     return maxdiag;
 }
@@ -139,16 +142,16 @@ __global__ void kernel_makePoissonRHS(
         REAL  pt1  =  p(idxt1);
         REAL  pb1  =  p(idxb1);
         REAL jacob = ja(idxcc);
-        // if (i == pdm_shape.x - Gd - 1) {
+        // if (i == pdm_shape.x - gc - 1) {
         //     rhs(idxcc) -= pe1 * 0.5 * (gxcc + gxe1) / jacob;
         // }
-        // if (i == Gd) {
+        // if (i == gc) {
         //     rhs(idxcc) -= pw1 * 0.5 * (gxcc + gxw1) / jacob;
         // }
-        // if (j == pdm_shape.y - Gd - 1) {
+        // if (j == pdm_shape.y - gc - 1) {
         //     rhs(idxcc) -= pn1 * 0.5 * (gycc + gyn1) / jacob;
         // }
-        // if (j == Gd) {
+        // if (j == gc) {
         //     rhs(idxcc) -= ps1 * 0.5 * (gycc + gys1) / jacob;
         // }
     } 
@@ -160,10 +163,11 @@ void makePoissonRHS(
     Matrix<REAL> &g,
     Matrix<REAL> &ja,
     REAL          maxdiag,
-    Mapper       &pdm,
+    Region       &pdm,
+    INT gc,
     dim3          block_dim
 ) {
-    Mapper map(pdm, Gd);
+    Region map(pdm.shape, gc);
     dim3 grid_dim(
         (pdm.shape.x + block_dim.x - 1) / block_dim.x,
         (pdm.shape.y + block_dim.y - 1) / block_dim.y,

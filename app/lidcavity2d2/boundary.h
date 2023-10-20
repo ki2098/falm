@@ -8,11 +8,10 @@ namespace LidCavity2d2 {
 
 static void pressureBC(
     Falm::Matrix<Falm::REAL> &p,
-    Falm::Mapper             &global,
-    Falm::Mapper             &pdm,
     Falm::CPMBase            &cpm,
     Falm::STREAM             *stream = nullptr
 ) {
+    Falm::Region &pdm = cpm.pdm_list[cpm.rank];
     if (!cpm.validNeighbour(0)) {
         Falm::STREAM estream = (stream)? stream[0] : 0;
         dev_pressureBC_E(p, pdm, cpm.gc, estream);
@@ -43,11 +42,10 @@ static void pressureBC(
 
 static void velocityBC(
     Falm::Matrix<Falm::REAL> &u,
-    Falm::Mapper             &global,
-    Falm::Mapper             &pdm,
     Falm::CPMBase            &cpm,
     Falm::STREAM             *stream = nullptr
 ) {
+    Falm::Region &pdm = cpm.pdm_list[cpm.rank];
     if (!cpm.validNeighbour(0)) {
         Falm::STREAM estream = (stream)? stream[0] : 0;
         dev_velocityBC_E(u, pdm, cpm.gc, estream);
@@ -78,11 +76,10 @@ static void velocityBC(
 
 static void forceFaceVelocityZero(
     Falm::Matrix<Falm::REAL> &uu,
-    Falm::Mapper             &global,
-    Falm::Mapper             &pdm,
     Falm::CPMBase            &cpm,
     Falm::STREAM             *stream = nullptr
 ) {
+    Falm::Region &pdm = cpm.pdm_list[cpm.rank];
     if (!cpm.validNeighbour(0)) {
         Falm::STREAM fstream = (stream)? stream[0] : 0;
         dev_forceFaceVelocityZero_E(uu, pdm, cpm.gc, fstream);
@@ -113,10 +110,10 @@ static void forceFaceVelocityZero(
 
 static void copyZ5(
     Falm::Matrix<Falm::REAL> &field,
-    Falm::Mapper             &pdm,
     Falm::CPMBase            &cpm,
     Falm::STREAM             *stream = nullptr
 ) {
+    Falm::Region &pdm = cpm.pdm_list[cpm.rank];
     Falm::INT idxcc = Falm::IDX(0, 0, cpm.gc  , pdm.shape);
     Falm::INT idxt1 = Falm::IDX(0, 0, cpm.gc+1, pdm.shape);
     Falm::INT idxt2 = Falm::IDX(0, 0, cpm.gc+2, pdm.shape);

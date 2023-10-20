@@ -24,8 +24,9 @@ using namespace LidCavity2d;
 Matrix<REAL> x, h, kx, g, ja;
 Matrix<REAL> u, ua, uc, uu, uua, p, nut, ff, rhs, res, diver, w;
 Matrix<REAL> poisson_a;
-Mapper pdm;
+Region pdm;
 REAL maxdiag;
+INT gc;
 
 void output(INT i) {
     std::string filename = "data/lid2d.csv." + std::to_string(i);
@@ -36,9 +37,9 @@ void output(INT i) {
     p.sync(MCpType::Dev2Hst);
     uu.sync(MCpType::Dev2Hst);
     uua.sync(MCpType::Dev2Hst);
-    for (INT k = Gd - 1; k < pdm.shape.z - Gd + 1; k ++) {
-        for (INT j = Gd - 1; j < pdm.shape.y - Gd + 1; j ++) {
-            for (INT i = Gd - 1; i < pdm.shape.x - Gd + 1; i ++) {
+    for (INT k = gc - 1; k < pdm.shape.z - gc + 1; k ++) {
+        for (INT j = gc - 1; j < pdm.shape.y - gc + 1; j ++) {
+            for (INT i = gc - 1; i < pdm.shape.x - gc + 1; i ++) {
                 INT idx = IDX(i, j, k, pdm.shape);
                 fprintf(file, "%12.5e,%12.5e,%12.5e,%12.5e,%12.5e,%12.5e,%12.5e\n", x(idx, 0), x(idx, 1), x(idx, 2), u(idx, 0), u(idx, 1), u(idx, 2), p(idx));
             }
@@ -47,7 +48,7 @@ void output(INT i) {
     fclose(file);
 }
 
-void allocVars(Mapper &pdm) {
+void allocVars(Region &pdm) {
     u.alloc(pdm.shape, 3, HDCType::Device);
     ua.alloc(pdm.shape, 3, HDCType::Device);
     uc.alloc(pdm.shape, 3, HDCType::Device);
@@ -84,22 +85,22 @@ void main_loop(L1CFD &cfdsolver, L1EqSolver &eqsolver, dim3 block_dim = dim3{8, 
     // rk2fs1.L1Dev_Cartesian3d_SGS(u, nut, x, kx, ja, pdm, block_dim);
     // copyZ5(nut, pdm);
 
-    rk2fs2.L1Dev_Cartesian3d_FSCalcPseudoU(un, u, uu, ua, nut, kx, g, ja, ff, pdm, block_dim);
-    rk2fs2.L1Dev_Cartesian3d_UtoCU(ua, uc, kx, ja, pdm, block_dim);
-    rk2fs2.L1Dev_Cartesian3d_InterpolateCU(uua, uc, pdm, block_dim);
-    forceFaceVelocityZero(uua, pdm);
-    rk2fs2.L1Dev_Cartesian3d_MACCalcPoissonRHS(uua, rhs, ja, pdm, block_dim, maxdiag);
-    eqsolver.L1Dev_Struct3d7p_Solve(poisson_a, p, rhs, res, pdm, pdm, block_dim);
-    pressureBC(p, pdm);
-    copyZ5(p, pdm);
-    rk2fs2.L1Dev_Cartesian3d_ProjectPGrid(u, ua, p, kx, pdm, block_dim);
-    rk2fs2.L1Dev_Cartesian3d_ProjectPFace(uu, uua, p, g, pdm, block_dim);
-    velocityBC(u, pdm);
-    copyZ5(u, pdm);
-    rk2fs2.L1Dev_Cartesian3d_SGS(u, nut, x, kx, ja, pdm, block_dim);
-    copyZ5(nut, pdm);
+    rk2fs2.L1Dev_Cartesian3d_FSCalcPseudoU(un, u, uu, ua, nut, kx, g, ja, ff, pdm, gc, block_dim);
+    rk2fs2.L1Dev_Cartesian3d_UtoCU(ua, uc, kx, ja, pdm, gc, block_dim);
+    rk2fs2.L1Dev_Cartesian3d_InterpolateCU(uua, uc, pdm, gc, block_dim);
+    forceFaceVelocityZero(uua, pdm, gc);
+    rk2fs2.L1Dev_Cartesian3d_MACCalcPoissonRHS(uua, rhs, ja, pdm, gc, block_dim, maxdiag);
+    eqsolver.L1Dev_Struct3d7p_Solve(poisson_a, p, rhs, res, pdm, gc, block_dim);
+    pressureBC(p, pdm, gc);
+    copyZ5(p, pdm, gc);
+    rk2fs2.L1Dev_Cartesian3d_ProjectPGrid(u, ua, p, kx, pdm, gc, block_dim);
+    rk2fs2.L1Dev_Cartesian3d_ProjectPFace(uu, uua, p, g, pdm, gc, block_dim);
+    velocityBC(u, pdm, gc);
+    copyZ5(u, pdm, gc);
+    rk2fs2.L1Dev_Cartesian3d_SGS(u, nut, x, kx, ja, pdm, gc, block_dim);
+    copyZ5(nut, pdm, gc);
 
-    rk2fs2.L1Dev_Cartesian3d_Divergence(uu, diver, ja, pdm, block_dim);
+    rk2fs2.L1Dev_Cartesian3d_Divergence(uu, diver, ja, pdm, gc, block_dim);
     // cfdsolver.L1Dev_Cartesian3d_FSCalcPseudoU(u, u, uu, ua, nut, kx, g, ja, ff, pdm, block_dim);
 
     // cfdsolver.L1Dev_Cartesian3d_UtoCU(ua, uc, kx, ja, pdm, block_dim);
@@ -134,20 +135,21 @@ void main_loop(L1CFD &cfdsolver, L1EqSolver &eqsolver, dim3 block_dim = dim3{8, 
 }
 
 int main() {
-    setCoord(L, N, pdm, x, h, kx, g, ja);
+    gc = GuideCell;
+    setCoord(L, N, pdm, gc, x, h, kx, g, ja);
     printf("%d %d %d\n", pdm.shape.x, pdm.shape.y, pdm.shape.z);
 
     poisson_a.alloc(pdm.shape, 7, HDCType::Device);
 
-    maxdiag =  makePoissonMatrix(poisson_a, g, ja, pdm);
+    maxdiag =  makePoissonMatrix(poisson_a, g, ja, pdm, gc);
 
     printf("%lf\n", maxdiag);
 
     Matrix<REAL> &a = poisson_a;
 
     // a.sync(MCpType::Dev2Hst);
-    // for (INT i = Gd; i < pdm.shape.x - Gd; i ++) {
-    //     INT idx = IDX(i, Gd, Gd, pdm.shape);
+    // for (INT i = gc; i < pdm.shape.x - gc; i ++) {
+    //     INT idx = IDX(i, gc, gc, pdm.shape);
     //     printf(
     //         "%.5e %.5e %.5e %.5e %.5e %.5e %.5e\n",
     //         a(idx, 0), a(idx, 1), a(idx, 2), a(idx, 3), a(idx, 4), a(idx, 5), a(idx, 6)
@@ -167,19 +169,19 @@ int main() {
     const INT __IT = int(T / DT);
     const REAL output_interval = 1.0;
     allocVars(pdm);
-    velocityBC(u, pdm);
-    pressureBC(p, pdm);
-    Mapper inner(pdm, Gd);
+    velocityBC(u, pdm, gc);
+    pressureBC(p, pdm, gc);
+    Region inner(pdm.shape, gc);
     output(__it / INT(output_interval / DT));
     while (__it < __IT) {
         main_loop(cfdsolver, eqsolver);
-        REAL tke = sqrt(L1Dev_EuclideanNormSq(u, pdm, dim3(8, 8, 1))) / inner.size;
+        REAL tke = sqrt(L1Dev_EuclideanNormSq(u, pdm, gc, dim3(8, 8, 1))) / inner.size;
         __t += DT;
         __it ++;
-        REAL divernorm = sqrt(L1Dev_EuclideanNormSq(diver, pdm, dim3(8, 8, 1))) / inner.size;
+        REAL divernorm = sqrt(L1Dev_EuclideanNormSq(diver, pdm, gc, dim3(8, 8, 1))) / inner.size;
 
         REAL probeu, probev;
-        INT probeidx = IDX(monitor_i + Gd, monitor_j + Gd, Gd, pdm.shape);
+        INT probeidx = IDX(monitor_i + gc, monitor_j + gc, gc, pdm.shape);
         falmMemcpy(&probeu, &u.dev(probeidx, 0), sizeof(REAL), MCpType::Dev2Hst);
         falmMemcpy(&probev, &u.dev(probeidx, 1), sizeof(REAL), MCpType::Dev2Hst);
 

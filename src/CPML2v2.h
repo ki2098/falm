@@ -83,8 +83,8 @@ public:
     int      size;
     bool use_cuda_aware_mpi;
     INT        gc;
-    Mapper global;
-    std::vector<Mapper> pdm_list;
+    Region global;
+    std::vector<Region> pdm_list;
 
     void initPartition(int mpi_rank, int mpi_size, INTx3 mpi_shape, INTx3 gShape, INT guideCell) {
         assert(mpi_size == PRODUCT3(mpi_shape));
@@ -95,11 +95,11 @@ public:
         initNeighbour();
 
         gc     = guideCell;
-        global = Mapper(
+        global = Region(
             INTx3{gShape.x + gc*2, gShape.y + gc*2, gShape.z + gc*2},
             INTx3{0, 0, 0}
         );
-        pdm_list = std::vector<Mapper>(size, Mapper());
+        pdm_list = std::vector<Region>(size, Region());
         for (INT k = 0; k < shape.z; k ++) {
         for (INT j = 0; j < shape.y; j ++) {
         for (INT i = 0; i < shape.x; i ++) {
@@ -113,7 +113,7 @@ public:
             for (INT __z = 0; __z < k; __z ++) {
                 oz += dim_division(gShape.z, shape.z, __z);
             }
-            pdm_list[IDX(i, j, k, shape)] = Mapper(
+            pdm_list[IDX(i, j, k, shape)] = Region(
                 INTx3{
                     dim_division(gShape.x, shape.x, i) + gc*2,
                     dim_division(gShape.y, shape.y, j) + gc*2,
@@ -125,7 +125,7 @@ public:
 
     }
 
-    void set6Region(INTx3 &inner_shape, INTx3 &inner_offset, INTx3 *boundary_shape, INTx3 *boundary_offset, INT thick, const Mapper &map) {
+    void set6Region(INTx3 &inner_shape, INTx3 &inner_offset, INTx3 *boundary_shape, INTx3 *boundary_offset, INT thick, const Region &map) {
         inner_shape = map.shape;
         inner_offset = map.offset;
         if (neighbour[0] >= 0) {
@@ -230,7 +230,7 @@ public:
     MPI_Status         mpi_stat[12];
     MPI_Datatype      mpi_dtype;
     T              *origin_ptr;
-    Mapper        origin_domain;
+    Region        origin_domain;
     FLAG         buffer_hdctype;
     void             *packerptr[6];
     
@@ -260,13 +260,14 @@ public:
     // void CPML2Dev_IExchange6ColoredFace(T *data, Mapper &pdm, INT color, INT thick, int grp_tag);
     // void CPML2Dev_PostExchange6Face();
     // void CPML2Dev_PostExchange6ColoredFace();
-    void CPML2Dev_IExchange6Face(T *data, Mapper &pdm, INT thick, INT margin, int grp_tag, STREAM *stream = nullptr);
-    void CPML2Dev_IExchange6ColoredFace(T *data, Mapper &pdm, INT color, INT thick, INT margin, int grp_tag, STREAM *stream = nullptr);
+    void CPML2Dev_IExchange6Face(T *data, INT thick, INT margin, int grp_tag, STREAM *stream = nullptr);
+    void CPML2Dev_IExchange6ColoredFace(T *data, INT color, INT thick, INT margin, int grp_tag, STREAM *stream = nullptr);
     void CPML2Dev_PostExchange6Face(STREAM *stream = nullptr);
     void CPML2Dev_PostExchange6ColoredFace(STREAM *stream = nullptr);
 
 protected:
-    void makeBufferShapeOffset(Mapper &pdm, INT thick, INT margin) {
+    void makeBufferShapeOffset(INT thick, INT margin) {
+        Region &pdm = base->pdm_list[base->rank];
         for (INT fid = 0; fid < 6; fid ++) {
             // printf("%d\n", base->gc);
             if (base->neighbour[fid] >= 0) {
@@ -298,19 +299,20 @@ protected:
                     sendbuffer_offset = {gc, gc,               gc         + margin};
                     recvbuffer_offset = {gc, gc,               gc - thick - margin};
                 }
-                buffer[__s].map = Mapper(buffer_shape, sendbuffer_offset);
-                buffer[__r].map = Mapper(buffer_shape, recvbuffer_offset);
+                buffer[__s].map = Region(buffer_shape, sendbuffer_offset);
+                buffer[__r].map = Region(buffer_shape, recvbuffer_offset);
             }
         }
     }
 
 };
 
-template<typename T> void CPMOp<T>::CPML2Dev_IExchange6Face(T *data, Mapper &pdm, INT thick, INT margin, int grp_tag, STREAM *stream) {
+template<typename T> void CPMOp<T>::CPML2Dev_IExchange6Face(T *data, INT thick, INT margin, int grp_tag, STREAM *stream) {
     assert(origin_ptr == nullptr);
+    Region &pdm   = base->pdm_list[base->rank];
     origin_ptr    = data;
     origin_domain = pdm;
-    makeBufferShapeOffset(pdm, thick, margin);
+    makeBufferShapeOffset(thick, margin);
     for (INT fid = 0; fid < 6; fid ++) {
         if (base->validNeighbour(fid)) {
             CPMBuffer &sbuf = buffer[fid * 2], &rbuf = buffer[fid * 2 + 1];
@@ -357,11 +359,12 @@ template<typename T> void CPMOp<T>::CPML2Dev_IExchange6Face(T *data, Mapper &pdm
     }
 }
 
-template<typename T> void CPMOp<T>::CPML2Dev_IExchange6ColoredFace(T *data, Mapper &pdm, INT color, INT thick, INT margin, int grp_tag, STREAM *stream) {
+template<typename T> void CPMOp<T>::CPML2Dev_IExchange6ColoredFace(T *data, INT color, INT thick, INT margin, int grp_tag, STREAM *stream) {
     assert(origin_ptr == nullptr);
+    Region &pdm = base->pdm_list[base->rank];
     origin_ptr    = data;
     origin_domain = pdm;
-    makeBufferShapeOffset(pdm, thick, margin);
+    makeBufferShapeOffset(thick, margin);
     for (INT fid = 0; fid < 6; fid ++) {
         if (base->validNeighbour(fid)) {
             CPMBuffer &sbuf = buffer[fid * 2], &rbuf = buffer[fid * 2 + 1];

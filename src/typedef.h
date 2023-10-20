@@ -24,6 +24,8 @@ typedef cudaStream_t STREAM;
 // typedef size_t       SIZE_T;
 // typedef unsigned int UINT_T;
 
+const INT GuideCell = 2;
+
 }
 
 #endif

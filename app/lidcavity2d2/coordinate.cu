@@ -38,7 +38,7 @@ __global__ void kernel_setCoord(
 void setCoord(
     REAL          side_lenth,
     INT           side_n_cell,
-    Mapper       &pdm,
+    Region       &pdm,
     INT           gc,
     Matrix<REAL> &x,
     Matrix<REAL> &h,
