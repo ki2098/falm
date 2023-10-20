@@ -1,7 +1,7 @@
 #ifndef __TEST___VCDM_H__
 #define __TEST___VCDM_H__
 
-#include "../vcdm/VCDM.h"
+#include "../src/vcdm/VCDM.h"
 
 class __VCDM {
 public:
