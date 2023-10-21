@@ -3,8 +3,9 @@
 
 namespace Falm {
 
-__global__ void kernel_DotProduct(MatrixFrame<REAL> &a, MatrixFrame<REAL> &b, REAL *partial_sum_dev, INTx3 pdm_shape, INTx3 map_shape, INTx3 map_offset) {
+__global__ void kernel_DotProduct(const MatrixFrame<REAL> *va, const MatrixFrame<REAL> *vb, REAL *partial_sum_dev, INTx3 pdm_shape, INTx3 map_shape, INTx3 map_offset) {
     extern __shared__ REAL cache[];
+    const MatrixFrame<REAL> &a=*va, &b=*vb;
     INT i, j, k;
     GLOBAL_THREAD_IDX_3D(i, j, k);
     INT tidx = IDX(threadIdx, blockDim);
@@ -47,7 +48,7 @@ REAL L0Dev_DotProduct(Matrix<REAL> &a, Matrix<REAL> &b, Region &pdm, const Regio
     REAL *partial_sum_dev = (REAL*)falmMallocDevice(sizeof(REAL) * n_blocks);
     size_t shared_size = n_threads * sizeof(REAL);
 
-    kernel_DotProduct<<<grid_dim, block_dim, shared_size>>>(*(a.devptr), *(b.devptr), partial_sum_dev, pdm.shape, map.shape, map.offset);
+    kernel_DotProduct<<<grid_dim, block_dim, shared_size>>>(a.devptr, b.devptr, partial_sum_dev, pdm.shape, map.shape, map.offset);
 
     falmMemcpy(partial_sum, partial_sum_dev, sizeof(REAL) * n_blocks, MCpType::Dev2Hst);
     REAL sum = partial_sum[0];
@@ -61,8 +62,9 @@ REAL L0Dev_DotProduct(Matrix<REAL> &a, Matrix<REAL> &b, Region &pdm, const Regio
     return sum;
 }
 
-__global__ void kernel_EuclideanNormSq(MatrixFrame<REAL> &a, REAL *partial_sum_dev, INTx3 pdm_shape, INTx3 map_shape, INTx3 map_offset) {
+__global__ void kernel_EuclideanNormSq(const MatrixFrame<REAL> *va, REAL *partial_sum_dev, INTx3 pdm_shape, INTx3 map_shape, INTx3 map_offset) {
     extern __shared__ REAL cache[];
+    const MatrixFrame<REAL> &a=*va;
     INT i, j, k;
     GLOBAL_THREAD_IDX_3D(i, j, k);
     INT tidx = IDX(threadIdx, blockDim);
@@ -107,7 +109,7 @@ REAL L0Dev_EuclideanNormSq(Matrix<REAL> &a, Region &pdm, const Region &map, dim3
     REAL *partial_sum_dev = (REAL*)falmMallocDevice(sizeof(REAL) * n_blocks);
     size_t shared_size = n_threads * sizeof(REAL);
 
-    kernel_EuclideanNormSq<<<grid_dim, block_dim, shared_size>>>(*(a.devptr), partial_sum_dev, pdm.shape, map.shape, map.offset);
+    kernel_EuclideanNormSq<<<grid_dim, block_dim, shared_size>>>(a.devptr, partial_sum_dev, pdm.shape, map.shape, map.offset);
 
     falmMemcpy(partial_sum, partial_sum_dev, sizeof(REAL) * n_blocks, MCpType::Dev2Hst);
     REAL sum = partial_sum[0];
@@ -121,8 +123,9 @@ REAL L0Dev_EuclideanNormSq(Matrix<REAL> &a, Region &pdm, const Region &map, dim3
     return sum;
 }
 
-__global__ void kernel_MaxDiag(MatrixFrame<REAL> &a, REAL *partial_max_dev, INTx3 pdm_shape, INTx3 map_shape, INTx3 map_offset) {
+__global__ void kernel_MaxDiag(const MatrixFrame<REAL> *va, REAL *partial_max_dev, INTx3 pdm_shape, INTx3 map_shape, INTx3 map_offset) {
     extern __shared__ REAL cache[];
+    const MatrixFrame<REAL> &a=*va;
     INT i, j, k;
     GLOBAL_THREAD_IDX_3D(i, j, k);
     INT tidx = IDX(threadIdx, blockDim);
@@ -167,7 +170,7 @@ REAL L0Dev_MaxDiag(Matrix<REAL> &a, Region &pdm, const Region &map, dim3 block_d
     REAL *partial_max_dev = (REAL*)falmMallocDevice(sizeof(REAL) * n_blocks);
     size_t shared_size = n_threads * sizeof(REAL);
 
-    kernel_MaxDiag<<<grid_dim, block_dim, shared_size>>>(*(a.devptr), partial_max_dev, pdm.shape, map.shape, map.offset);
+    kernel_MaxDiag<<<grid_dim, block_dim, shared_size>>>(a.devptr, partial_max_dev, pdm.shape, map.shape, map.offset);
 
     falmMemcpy(partial_max, partial_max_dev, sizeof(REAL) * n_blocks, MCpType::Dev2Hst);
     REAL maximum = partial_max[0];
@@ -183,7 +186,8 @@ REAL L0Dev_MaxDiag(Matrix<REAL> &a, Region &pdm, const Region &map, dim3 block_d
     return maximum;
 }
 
-__global__ void kernel_ScaleMatrix(MatrixFrame<REAL> &a, REAL scale) {
+__global__ void kernel_ScaleMatrix(const MatrixFrame<REAL> *va, REAL scale) {
+    const MatrixFrame<REAL> &a=*va;
     INT tidx  = IDX(threadIdx, blockDim);
     INT bidx  = IDX(blockIdx, gridDim);
     INT bsize = PRODUCT3(blockDim);
@@ -196,7 +200,7 @@ __global__ void kernel_ScaleMatrix(MatrixFrame<REAL> &a, REAL scale) {
 void L1Dev_ScaleMatrix(Matrix<REAL> &a, REAL scale, dim3 block_dim) {
     INT n_threads = PRODUCT3(block_dim);
     INT n_blocks = (a.size + n_threads - 1) / n_threads;
-    kernel_ScaleMatrix<<<n_blocks, n_threads, 0, 0>>>(*(a.devptr), scale);
+    kernel_ScaleMatrix<<<n_blocks, n_threads, 0, 0>>>(a.devptr, scale);
     falmWaitStream(0);
 }
 

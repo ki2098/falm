@@ -4,7 +4,8 @@
 
 namespace Falm {
 
-__global__ void kernel_Struct3d7p_MV(MatrixFrame<REAL> &a, MatrixFrame<REAL> &x, MatrixFrame<REAL> &ax, INTx3 pdm_shape, INTx3 map_shape, INTx3 map_offset) {
+__global__ void kernel_Struct3d7p_MV(const MatrixFrame<REAL> *va, const MatrixFrame<REAL> *vx, const MatrixFrame<REAL> *vax, INTx3 pdm_shape, INTx3 map_shape, INTx3 map_offset) {
+    const MatrixFrame<REAL> &a=*va, &x=*vx, &ax=*vax;
     INT i, j, k;
     GLOBAL_THREAD_IDX_3D(i, j, k);
     if (i < map_shape.x && j < map_shape.y && k < map_shape.z) {
@@ -47,10 +48,11 @@ void L0Dev_Struct3d7p_MV(Matrix<REAL> &a, Matrix<REAL> &x, Matrix<REAL> &ax, Reg
         (map.shape.z + block_dim.z - 1) / block_dim.z
     );
 
-    kernel_Struct3d7p_MV<<<grid_dim, block_dim, 0, stream>>>(*(a.devptr), *(x.devptr), *(ax.devptr), pdm.shape, map.shape, map.offset);
+    kernel_Struct3d7p_MV<<<grid_dim, block_dim, 0, stream>>>(a.devptr, x.devptr, ax.devptr, pdm.shape, map.shape, map.offset);
 }
 
-__global__ void kernel_Struct3d7p_Res(MatrixFrame<REAL> &a, MatrixFrame<REAL> &x, MatrixFrame<REAL> &b, MatrixFrame<REAL> &r, INTx3 pdm_shape, INTx3 map_shape, INTx3 map_offset) {
+__global__ void kernel_Struct3d7p_Res(const MatrixFrame<REAL> *va, const MatrixFrame<REAL> *vx, const MatrixFrame<REAL> *vb, const MatrixFrame<REAL> *vr, INTx3 pdm_shape, INTx3 map_shape, INTx3 map_offset) {
+    const MatrixFrame<REAL> &a=*va, &x=*vx, &b=*vb, &r=*vr;
     INT i, j, k;
     GLOBAL_THREAD_IDX_3D(i, j, k);
     if (i < map_shape.x && j < map_shape.y && k < map_shape.z) {
@@ -93,10 +95,11 @@ void L0Dev_Struct3d7p_Res(Matrix<REAL> &a, Matrix<REAL> &x, Matrix<REAL> &b, Mat
         (map.shape.z + block_dim.z - 1) / block_dim.z
     );
 
-    kernel_Struct3d7p_Res<<<grid_dim, block_dim, 0, stream>>>(*(a.devptr), *(x.devptr), *(b.devptr), *(r.devptr), pdm.shape, map.shape, map.offset);
+    kernel_Struct3d7p_Res<<<grid_dim, block_dim, 0, stream>>>(a.devptr, x.devptr, b.devptr, r.devptr, pdm.shape, map.shape, map.offset);
 }
 
-__global__ void kernel_Struct3d7p_Jacobi(MatrixFrame<REAL> &a, MatrixFrame<REAL> &x, MatrixFrame<REAL> &xp, MatrixFrame<REAL> &b, INTx3 pdm_shape, INTx3 map_shape, INTx3 map_offset) {
+__global__ void kernel_Struct3d7p_Jacobi(const MatrixFrame<REAL> *va, const MatrixFrame<REAL> *vx, const MatrixFrame<REAL> *vxp, const MatrixFrame<REAL> *vb, INTx3 pdm_shape, INTx3 map_shape, INTx3 map_offset) {
+    const MatrixFrame<REAL> &a=*va, &x=*vx, &xp=*vxp, &b=*vb;
     INT i, j, k;
     GLOBAL_THREAD_IDX_3D(i, j, k);
     if (i < map_shape.x && j < map_shape.y && k < map_shape.z) {
@@ -135,7 +138,7 @@ void L1EqSolver::L0Dev_Struct3d7p_JacobiSweep(Matrix<REAL> &a, Matrix<REAL> &x, 
         (map.shape.z + block_dim.z - 1) / block_dim.z
     );
 
-    kernel_Struct3d7p_Jacobi<<<grid_dim, block_dim, 0, stream>>>(*(a.devptr), *(x.devptr), *(xp.devptr), *(b.devptr), pdm.shape, map.shape, map.offset);
+    kernel_Struct3d7p_Jacobi<<<grid_dim, block_dim, 0, stream>>>(a.devptr, x.devptr, xp.devptr, b.devptr, pdm.shape, map.shape, map.offset);
 }
 
 void L1EqSolver::L1Dev_Struct3d7p_Jacobi(Matrix<REAL> &a, Matrix<REAL> &x, Matrix<REAL> &b, Matrix<REAL> &r, Region &pdm, INT gc, dim3 block_dim) {
@@ -167,7 +170,8 @@ void L1EqSolver::L1Dev_Struct3d7p_JacobiPC(Matrix<REAL> &a, Matrix<REAL> &x, Mat
     } while (__it < pc_maxit);
 }
 
-__global__ void kernel_Struct3d7p_SOR(MatrixFrame<REAL> &a, MatrixFrame<REAL> &x, MatrixFrame<REAL> &b, REAL omega, INT color, INTx3 pdm_shape, INTx3 pdm_offset, INTx3 map_shape, INTx3 map_offset) {
+__global__ void kernel_Struct3d7p_SOR(const MatrixFrame<REAL> *va, const MatrixFrame<REAL> *vx, const MatrixFrame<REAL> *vb, REAL omega, INT color, INTx3 pdm_shape, INTx3 pdm_offset, INTx3 map_shape, INTx3 map_offset) {
+    const MatrixFrame<REAL> &a=*va, &x=*vx, &b=*vb;
     INT i, j, k;
     GLOBAL_THREAD_IDX_3D(i, j, k);
     if (i < map_shape.x && j < map_shape.y && k < map_shape.z) {
@@ -211,7 +215,7 @@ void L1EqSolver::L0Dev_Struct3d7p_SORSweep(Matrix<REAL> &a, Matrix<REAL> &x, Mat
         (map.shape.z + block_dim.z - 1) / block_dim.z
     );
 
-    kernel_Struct3d7p_SOR<<<grid_dim, block_dim, 0, stream>>>(*(a.devptr), *(x.devptr), *(b.devptr), omega, color, pdm.shape, pdm.offset, map.shape, map.offset);
+    kernel_Struct3d7p_SOR<<<grid_dim, block_dim, 0, stream>>>(a.devptr, x.devptr, b.devptr, omega, color, pdm.shape, pdm.offset, map.shape, map.offset);
 }
 
 void L1EqSolver::L1Dev_Struct3d7p_SOR(Matrix<REAL> &a, Matrix<REAL> &x, Matrix<REAL> &b, Matrix<REAL> &r, Region &pdm, INT gc, dim3 block_dim) {
@@ -241,7 +245,8 @@ void L1EqSolver::L1Dev_Struct3d7p_SORPC(Matrix<REAL> &a, Matrix<REAL> &x, Matrix
     } while (__it < pc_maxit);
 }
 
-__global__ void kernel_PBiCGStab_1(MatrixFrame<REAL> &p, MatrixFrame<REAL> &q, MatrixFrame<REAL> &r, REAL beta, REAL omega, INTx3 pdm_shape, INTx3 map_shape, INTx3 map_offset) {
+__global__ void kernel_PBiCGStab_1(const MatrixFrame<REAL> *vp, const MatrixFrame<REAL> *vq, const MatrixFrame<REAL> *vr, REAL beta, REAL omega, INTx3 pdm_shape, INTx3 map_shape, INTx3 map_offset) {
+    const MatrixFrame<REAL> &p=*vp, &q=*vq, &r=*vr;
     INT i, j, k;
     GLOBAL_THREAD_IDX_3D(i, j, k);
     if (i < map_shape.x && j < map_shape.y && k < map_shape.z) {
@@ -259,10 +264,11 @@ void L1EqSolver::L0Dev_PBiCGStab1(Matrix<REAL> &p, Matrix<REAL> &q, Matrix<REAL>
         (map.shape.y + block_dim.y - 1) / block_dim.y,
         (map.shape.z + block_dim.z - 1) / block_dim.z
     );
-    kernel_PBiCGStab_1<<<grid_dim, block_dim, 0, 0>>>(*(p.devptr), *(q.devptr), *(r.devptr), beta, omega, pdm.shape, map.shape, map.offset);
+    kernel_PBiCGStab_1<<<grid_dim, block_dim, 0, 0>>>(p.devptr, q.devptr, r.devptr, beta, omega, pdm.shape, map.shape, map.offset);
 }
 
-__global__ void kernel_PBiCGStab_2(MatrixFrame<REAL> &s, MatrixFrame<REAL> &q, MatrixFrame<REAL> &r, REAL alpha, INTx3 pdm_shape, INTx3 map_shape, INTx3 map_offset) {
+__global__ void kernel_PBiCGStab_2(const MatrixFrame<REAL> *vs, const MatrixFrame<REAL> *vq, const MatrixFrame<REAL> *vr, REAL alpha, INTx3 pdm_shape, INTx3 map_shape, INTx3 map_offset) {
+    const MatrixFrame<REAL> &s=*vs, &q=*vq, &r=*vr;
     INT i, j, k;
     GLOBAL_THREAD_IDX_3D(i, j, k);
     if (i < map_shape.x && j < map_shape.y && k < map_shape.z) {
@@ -280,10 +286,11 @@ void L1EqSolver::L0Dev_PBiCGStab2(Matrix<REAL> &s, Matrix<REAL> &q, Matrix<REAL>
         (map.shape.y + block_dim.y - 1) / block_dim.y,
         (map.shape.z + block_dim.z - 1) / block_dim.z
     );
-    kernel_PBiCGStab_2<<<grid_dim, block_dim, 0, 0>>>(*(s.devptr), *(q.devptr), *(r.devptr), alpha, pdm.shape, map.shape, map.offset);
+    kernel_PBiCGStab_2<<<grid_dim, block_dim, 0, 0>>>(s.devptr, q.devptr, r.devptr, alpha, pdm.shape, map.shape, map.offset);
 }
 
-__global__ void kernel_PBiCGStab_3(MatrixFrame<REAL> &x, MatrixFrame<REAL> &pp, MatrixFrame<REAL> &ss, REAL alpha, REAL omega, INTx3 pdm_shape, INTx3 map_shape, INTx3 map_offset) {
+__global__ void kernel_PBiCGStab_3(const MatrixFrame<REAL> *vx, const MatrixFrame<REAL> *vpp, const MatrixFrame<REAL> *vss, REAL alpha, REAL omega, INTx3 pdm_shape, INTx3 map_shape, INTx3 map_offset) {
+    const MatrixFrame<REAL> &x=*vx, &pp=*vpp, &ss=*vss;
     INT i, j, k;
     GLOBAL_THREAD_IDX_3D(i, j, k);
     if (i < map_shape.x && j < map_shape.y && k < map_shape.z) {
@@ -301,10 +308,11 @@ void L1EqSolver::L0Dev_PBiCGStab3(Matrix<REAL> &x, Matrix<REAL> &pp, Matrix<REAL
         (map.shape.y + block_dim.y - 1) / block_dim.y,
         (map.shape.z + block_dim.z - 1) / block_dim.z
     );
-    kernel_PBiCGStab_3<<<grid_dim, block_dim, 0, 0>>>(*(x.devptr), *(pp.devptr), *(ss.devptr), alpha, omega, pdm.shape, map.shape, map.offset);
+    kernel_PBiCGStab_3<<<grid_dim, block_dim, 0, 0>>>(x.devptr, pp.devptr, ss.devptr, alpha, omega, pdm.shape, map.shape, map.offset);
 } 
 
-__global__ void kernel_PBiCGStab_4(MatrixFrame<REAL> &r, MatrixFrame<REAL> &s, MatrixFrame<REAL> &t, REAL omega, INTx3 pdm_shape, INTx3 map_shape, INTx3 map_offset) {
+__global__ void kernel_PBiCGStab_4(const MatrixFrame<REAL> *vr, const MatrixFrame<REAL> *vs, const MatrixFrame<REAL> *vt, REAL omega, INTx3 pdm_shape, INTx3 map_shape, INTx3 map_offset) {
+    const MatrixFrame<REAL> &r=*vr, &s=*vs, &t=*vt;
     INT i, j, k;
     GLOBAL_THREAD_IDX_3D(i, j, k);
     if (i < map_shape.x && j < map_shape.y && k < map_shape.z) {
@@ -322,7 +330,7 @@ void L1EqSolver::L0Dev_PBiCGStab4(Matrix<REAL> &r, Matrix<REAL> &s, Matrix<REAL>
         (map.shape.y + block_dim.y - 1) / block_dim.y,
         (map.shape.z + block_dim.z - 1) / block_dim.z
     );
-    kernel_PBiCGStab_4<<<grid_dim, block_dim, 0, 0>>>(*(r.devptr), *(s.devptr), *(t.devptr), omega, pdm.shape, map.shape, map.offset);
+    kernel_PBiCGStab_4<<<grid_dim, block_dim, 0, 0>>>(r.devptr, s.devptr, t.devptr, omega, pdm.shape, map.shape, map.offset);
 }
 
 void L1EqSolver::L1Dev_Struct3d7p_PBiCGStab(Matrix<REAL> &a, Matrix<REAL> &x, Matrix<REAL> &b, Matrix<REAL> &r, Region &pdm, INT gc, dim3 block_dim) {
@@ -371,7 +379,7 @@ void L1EqSolver::L1Dev_Struct3d7p_PBiCGStab(Matrix<REAL> &a, Matrix<REAL> &x, Ma
             p.cpy(r, HDCType::Device);
         } else {
             beta = (rho * alpha) / (rrho * omega);
-            // kernel_PBiCGStab_1<<<grid_dim, block_dim>>>(*(p.devptr), *(q.devptr), *(r.devptr), beta, omega, pdm.shape, map.shape, map.offset);
+            // kernel_PBiCGStab_1<<<grid_dim, block_dim>>>(p.devptr, q.devptr, r.devptr, beta, omega, pdm.shape, map.shape, map.offset);
             L0Dev_PBiCGStab1(p, q, r, beta, omega, pdm, map, block_dim);
         }
         pp.clear(HDCType::Device);
@@ -379,15 +387,15 @@ void L1EqSolver::L1Dev_Struct3d7p_PBiCGStab(Matrix<REAL> &a, Matrix<REAL> &x, Ma
         L0Dev_Struct3d7p_MV(a, pp, q, pdm, map, block_dim);
         alpha = rho / L0Dev_DotProduct(rr, q, pdm, map, block_dim);
 
-        // kernel_PBiCGStab_2<<<grid_dim, block_dim>>>(*(s.devptr), *(q.devptr), *(r.devptr), alpha, pdm.shape, map.shape, map.offset);
+        // kernel_PBiCGStab_2<<<grid_dim, block_dim>>>(s.devptr, q.devptr, r.devptr, alpha, pdm.shape, map.shape, map.offset);
         L0Dev_PBiCGStab2(s, q, r, alpha, pdm, map, block_dim);
         ss.clear(HDCType::Device);
         L1Dev_Struct3d7p_Precondition(a, ss, s, pdm, gc, block_dim);
         L0Dev_Struct3d7p_MV(a, ss, t, pdm, map, block_dim);
         omega = L0Dev_DotProduct(t, s, pdm, map, block_dim) / L0Dev_DotProduct(t, t, pdm, map, block_dim);
 
-        // kernel_PBiCGStab_3<<<grid_dim, block_dim, 0, 0>>>(*(x.devptr), *(pp.devptr), *(ss.devptr), alpha, omega, pdm.shape, map.shape, map.offset);
-        // kernel_PBiCGStab_4<<<grid_dim, block_dim, 0, 0>>>(*(r.devptr), *(s.devptr), *(t.devptr), omega, pdm.shape, map.shape, map.offset);
+        // kernel_PBiCGStab_3<<<grid_dim, block_dim, 0, 0>>>(x.devptr, pp.devptr, ss.devptr, alpha, omega, pdm.shape, map.shape, map.offset);
+        // kernel_PBiCGStab_4<<<grid_dim, block_dim, 0, 0>>>(r.devptr, s.devptr, t.devptr, omega, pdm.shape, map.shape, map.offset);
         L0Dev_PBiCGStab3(x, pp, ss, alpha, omega, pdm, map, block_dim);
         L0Dev_PBiCGStab4(r, s, t, omega, pdm, map, block_dim);
 

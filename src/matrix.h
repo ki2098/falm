@@ -13,8 +13,11 @@ struct MatrixFrame {
     INTx2          shape;
     INT             size;
     FLAG         hdctype;
-    __host__ __device__ T &operator()(INT _idx) {return ptr[_idx];}
-    __host__ __device__ T &operator()(INT _row, INT _col) {return ptr[_row + _col * shape.x];}
+    __host__ __device__ T &operator()(INT _idx) const {return ptr[_idx];}
+    __host__ __device__ T &operator()(INT _row, INT _col) const {return ptr[_row + _col * shape.x];}
+
+    MatrixFrame(const MatrixFrame<T> &_mat) = delete;
+    MatrixFrame<T>& operator=(const MatrixFrame<T> &_mat) = delete;
 
     MatrixFrame() : ptr(nullptr), shape(INTx2{0, 0}), size(0), hdctype(HDCType::Empty){}
     MatrixFrame(INTx3 _dom, INT _dim, FLAG _hdctype);
@@ -112,16 +115,21 @@ template<typename T> void MatrixFrame<T>::release() {
 
 template<typename T>
 struct Matrix {
+
     MatrixFrame<T>    host;
     MatrixFrame<T>     dev;
     MatrixFrame<T> *devptr;
+
     INTx2            shape;
     INT               size;
     FLAG           hdctype;
     std::string      name;
 
-    __host__ __device__ T &operator()(INT _idx) {return host(_idx);}
-    __host__ __device__ T &operator()(INT _row, INT _col) {return host(_row, _col);}
+    __host__ __device__ T &operator()(INT _idx) const {return host(_idx);}
+    __host__ __device__ T &operator()(INT _row, INT _col) const {return host(_row, _col);}
+
+    Matrix(const Matrix<T> &_mat) = delete;
+    Matrix<T>& operator=(const Matrix<T> &_mat) = delete;
 
     Matrix(std::string _name = "") : shape(INTx2{0, 0}), size(0), hdctype(HDCType::Empty), name(_name), devptr(nullptr) {}
     Matrix(INTx3 _dom, INT _dim, FLAG _hdctype, std::string _name = "");

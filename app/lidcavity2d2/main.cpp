@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string>
 #include <math.h>
+#include <type_traits>
 #include "coordinate.h"
 #include "poisson.h"
 #include "boundary.h"
@@ -83,6 +84,9 @@ REAL main_loop(L2CFD &cfd, L2EqSolver &eqsolver, CPMBase &cpm, dim3 block_dim, S
 }
 
 int main(int argc, char **argv) {
+    // std::is_trivially_copyable<Matrix<REAL>> tcp;
+    printf("%d\n", std::is_trivially_copyable<Matrix<REAL>>::value);
+
     CPML2_Init(&argc, &argv);
     int mpi_rank, mpi_size;
     cpm.use_cuda_aware_mpi = true;

@@ -8,14 +8,15 @@ using namespace Falm;
 namespace LidCavity2d {
 
 __global__ void kernel_makePoissonMatrix(
-    MatrixFrame<REAL> &a,
-    MatrixFrame<REAL> &g,
-    MatrixFrame<REAL> &ja,
+    const MatrixFrame<REAL> *va,
+    const MatrixFrame<REAL> *vg,
+    const MatrixFrame<REAL> *vja,
     INTx3              pdm_shape,
     INTx3              map_shape,
     INTx3              map_offset,
     INT gc
 ) {
+    const MatrixFrame<REAL> &a=*va, &g=*vg, &ja=*vja;
     INT i, j, k;
     GLOBAL_THREAD_IDX_3D(i, j, k);
     if (i < map_shape.x & j < map_shape.y && k < map_shape.z) {
@@ -90,9 +91,9 @@ REAL makePoissonMatrix(
         (pdm.shape.z + block_dim.z - 1) / block_dim.z
     );
     kernel_makePoissonMatrix<<<grid_dim, block_dim, 0, 0>>>(
-        *(a.devptr),
-        *(g.devptr),
-        *(ja.devptr),
+        a.devptr,
+        g.devptr,
+        ja.devptr,
         pdm.shape,
         map.shape,
         map.offset,
@@ -104,14 +105,15 @@ REAL makePoissonMatrix(
 }
 
 __global__ void kernel_makePoissonRHS(
-    MatrixFrame<REAL> &p,
-    MatrixFrame<REAL> &rhs,
-    MatrixFrame<REAL> &g,
-    MatrixFrame<REAL> &ja,
+    const MatrixFrame<REAL> *vp,
+    const MatrixFrame<REAL> *vrhs,
+    const MatrixFrame<REAL> *vg,
+    const MatrixFrame<REAL> *vja,
     INTx3              pdm_shape,
     INTx3              map_shape,
     INTx3              map_offset
 ) {
+    const MatrixFrame<REAL> &p=*vp, &rhs=*vrhs, &g=*vg, &ja=*vja;
     INT i, j, k;
     GLOBAL_THREAD_IDX_3D(i, j, k);
     if (i < map_shape.x & j < map_shape.y && k < map_shape.z) {
@@ -174,10 +176,10 @@ void makePoissonRHS(
         (pdm.shape.z + block_dim.z - 1) / block_dim.z
     );
     kernel_makePoissonRHS<<<grid_dim, block_dim, 0, 0>>>(
-        *(p.devptr),
-        *(rhs.devptr),
-        *(g.devptr),
-        *(ja.devptr),
+        p.devptr,
+        rhs.devptr,
+        g.devptr,
+        ja.devptr,
         pdm.shape,
         map.shape,
         map.offset

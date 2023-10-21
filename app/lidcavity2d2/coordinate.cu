@@ -12,12 +12,13 @@ __global__ void kernel_setCoord(
     INTx3              pdm_shape,
     INTx3              pdm_offset,
     INT                gc,
-    MatrixFrame<REAL> &x,
-    MatrixFrame<REAL> &h,
-    MatrixFrame<REAL> &kx,
-    MatrixFrame<REAL> &g,
-    MatrixFrame<REAL> &ja
+    const MatrixFrame<REAL> *vx,
+    const MatrixFrame<REAL> *vh,
+    const MatrixFrame<REAL> *vkx,
+    const MatrixFrame<REAL> *vg,
+    const MatrixFrame<REAL> *vja
 ) {
+    const MatrixFrame<REAL> &x=*vx, &h=*vh, &kx=*vkx, &g=*vg, &ja=*vja;
     INT i, j, k;
     GLOBAL_THREAD_IDX_3D(i, j, k);
     if (i < pdm_shape.x && j < pdm_shape.y && k < pdm_shape.z) {
@@ -64,11 +65,11 @@ void setCoord(
         pdm.shape,
         pdm.offset,
         gc,
-        *(x.devptr),
-        *(h.devptr),
-        *(kx.devptr),
-        *(g.devptr),
-        *(ja.devptr)
+        x.devptr,
+        h.devptr,
+        kx.devptr,
+        g.devptr,
+        ja.devptr
     );
 }
 

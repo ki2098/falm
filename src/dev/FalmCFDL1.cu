@@ -8,21 +8,22 @@
 namespace Falm {
 
 __global__ void kernel_Cartesian_CalcPseudoU(
-    MatrixFrame<REAL> &un,
-    MatrixFrame<REAL> &u,
-    MatrixFrame<REAL> &uu,
-    MatrixFrame<REAL> &ua,
-    MatrixFrame<REAL> &nut,
-    MatrixFrame<REAL> &kx,
-    MatrixFrame<REAL> &g,
-    MatrixFrame<REAL> &ja,
-    MatrixFrame<REAL> &ff,
+    const MatrixFrame<REAL> *vun,
+    const MatrixFrame<REAL> *vu,
+    const MatrixFrame<REAL> *vuu,
+    const MatrixFrame<REAL> *vua,
+    const MatrixFrame<REAL> *vnut,
+    const MatrixFrame<REAL> *vkx,
+    const MatrixFrame<REAL> *vg,
+    const MatrixFrame<REAL> *vja,
+    const MatrixFrame<REAL> *vff,
     REAL               ReI,
     REAL               dt,
     INTx3              pdm_shape,
     INTx3              map_shap,
     INTx3              map_offset
 ) {
+    const MatrixFrame<REAL> &un=*vun, &u=*vu, &uu=*vuu, &ua=*vua, &nut=*vnut, &kx=*vkx, &g=*vg, &ja=*vja, &ff=*vff;
     INT i, j, k;
     GLOBAL_THREAD_IDX_3D(i, j, k);
     if (i < map_shap.x && j < map_shap.y && k < map_shap.z) {
@@ -190,14 +191,15 @@ __global__ void kernel_Cartesian_CalcPseudoU(
 }
 
 __global__ void kernel_Cartesian_UtoCU (
-    MatrixFrame<REAL> &u,
-    MatrixFrame<REAL> &uc,
-    MatrixFrame<REAL> &kx,
-    MatrixFrame<REAL> &ja,
+    const MatrixFrame<REAL> *vu,
+    const MatrixFrame<REAL> *vuc,
+    const MatrixFrame<REAL> *vkx,
+    const MatrixFrame<REAL> *vja,
     INTx3              pdm_shape,
     INTx3              map_shap,
     INTx3              map_offset
 ) {
+    const MatrixFrame<REAL> &u=*vu, &uc=*vuc, &kx=*vkx, &ja=*vja;
     INT i, j, k;
     GLOBAL_THREAD_IDX_3D(i, j, k);
     if (i < map_shap.x && j < map_shap.y && k < map_shap.z) {
@@ -213,12 +215,13 @@ __global__ void kernel_Cartesian_UtoCU (
 }
 
 __global__ void kernel_Cartesian_InterpolateCU(
-    MatrixFrame<REAL> &uu,
-    MatrixFrame<REAL> &uc,
+    const MatrixFrame<REAL> *vuu,
+    const MatrixFrame<REAL> *vuc,
     INTx3              pdm_shape,
     INTx3              map_shap,
     INTx3              map_offset
 ) {
+    const MatrixFrame<REAL> &uu=*vuu, &uc=*vuc;
     INT i, j, k;
     GLOBAL_THREAD_IDX_3D(i, j, k);
     if (i < map_shap.x && j < map_shap.y && k < map_shap.z) {
@@ -236,15 +239,16 @@ __global__ void kernel_Cartesian_InterpolateCU(
 }
 
 __global__ void kernel_Cartesian_ProjectPGrid(
-    MatrixFrame<REAL> &u,
-    MatrixFrame<REAL> &ua,
-    MatrixFrame<REAL> &p,
-    MatrixFrame<REAL> &kx,
+    const MatrixFrame<REAL> *vu,
+    const MatrixFrame<REAL> *vua,
+    const MatrixFrame<REAL> *vp,
+    const MatrixFrame<REAL> *vkx,
     REAL               dt,
     INTx3              pdm_shape,
     INTx3              map_shap,
     INTx3              map_offset
 ) {
+    const MatrixFrame<REAL> &u=*vu, &ua=*vua, &p=*vp, &kx=*vkx;
     INT i, j, k;
     GLOBAL_THREAD_IDX_3D(i, j, k);
     if (i < map_shap.x && j < map_shap.y && k < map_shap.z) {
@@ -262,15 +266,16 @@ __global__ void kernel_Cartesian_ProjectPGrid(
 }
 
 __global__ void kernel_Cartesian_ProjectPFace(
-    MatrixFrame<REAL> &uu,
-    MatrixFrame<REAL> &uua,
-    MatrixFrame<REAL> &p,
-    MatrixFrame<REAL> &g,
+    const MatrixFrame<REAL> *vuu,
+    const MatrixFrame<REAL> *vuua,
+    const MatrixFrame<REAL> *vp,
+    const MatrixFrame<REAL> *vg,
     REAL               dt,
     INTx3              pdm_shape,
     INTx3              map_shap,
     INTx3              map_offset
 ) {
+    const MatrixFrame<REAL> &uu=*vuu, &uua=*vuua, &p=*vp, &g=*vg;
     INT i, j, k;
     GLOBAL_THREAD_IDX_3D(i, j, k);
     if (i < map_shap.x && j < map_shap.y && k < map_shap.z) {
@@ -292,16 +297,17 @@ __global__ void kernel_Cartesian_ProjectPFace(
 }
 
 __global__ void kernel_Cartesian_Smagorinsky(
-    MatrixFrame<REAL> &u,
-    MatrixFrame<REAL> &nut,
-    MatrixFrame<REAL> &x,
-    MatrixFrame<REAL> &kx,
-    MatrixFrame<REAL> &ja,
+    const MatrixFrame<REAL> *vu,
+    const MatrixFrame<REAL> *vnut,
+    const MatrixFrame<REAL> *vx,
+    const MatrixFrame<REAL> *vkx,
+    const MatrixFrame<REAL> *vja,
     REAL               Cs,
     INTx3              pdm_shape,
     INTx3              map_shap,
     INTx3              map_offset            
 ) {
+    const MatrixFrame<REAL> &u=*vu, &nut=*vnut, &x=*vx, &kx=*vkx, &ja=*vja;
     INT i, j, k;
     GLOBAL_THREAD_IDX_3D(i, j, k);
     if (i < map_shap.x && j < map_shap.y && k < map_shap.z) {
@@ -360,15 +366,16 @@ __global__ void kernel_Cartesian_Smagorinsky(
 }
 
 __global__ void kernel_Cartesian_CSM(
-    MatrixFrame<REAL> &u,
-    MatrixFrame<REAL> &nut,
-    MatrixFrame<REAL> &x,
-    MatrixFrame<REAL> &kx,
-    MatrixFrame<REAL> &ja,
+    const MatrixFrame<REAL> *vu,
+    const MatrixFrame<REAL> *vnut,
+    const MatrixFrame<REAL> *vx,
+    const MatrixFrame<REAL> *vkx,
+    const MatrixFrame<REAL> *vja,
     INTx3              pdm_shape,
     INTx3              map_shap,
     INTx3              map_offset   
 ) {
+    const MatrixFrame<REAL> &u=*vu, &nut=*vnut, &x=*vx, &kx=*vkx, &ja=*vja;
     INT i, j, k;
     GLOBAL_THREAD_IDX_3D(i, j, k);
     if (i < map_shap.x && j < map_shap.y && k < map_shap.z) {
@@ -438,13 +445,14 @@ __global__ void kernel_Cartesian_CSM(
 }
 
 __global__ void kernel_Cartesian_Divergence(
-    MatrixFrame<REAL> &uu,
-    MatrixFrame<REAL> &div,
-    MatrixFrame<REAL> &ja,
+    const MatrixFrame<REAL> *vuu,
+    const MatrixFrame<REAL> *vdiv,
+    const MatrixFrame<REAL> *vja,
     INTx3              pdm_shap,
     INTx3              map_shap,
     INTx3              map_offset
 ) {
+    const MatrixFrame<REAL> &uu=*vuu, &div=*vdiv, &ja=*vja;
     INT i, j, k;
     GLOBAL_THREAD_IDX_3D(i, j, k);
     if (i < map_shap.x && j < map_shap.y && k < map_shap.z) {
@@ -483,15 +491,15 @@ void L1CFD::L0Dev_Cartesian3d_FSCalcPseudoU(
         (map.shape.z + block_dim.z - 1) / block_dim.z
     );
     kernel_Cartesian_CalcPseudoU<<<grid_dim, block_dim, 0, stream>>>(
-        *(un.devptr),
-        *(u.devptr),
-        *(uu.devptr),
-        *(ua.devptr),
-        *(nut.devptr),
-        *(kx.devptr),
-        *(g.devptr),
-        *(ja.devptr),
-        *(ff.devptr),
+        un.devptr,
+        u.devptr,
+        uu.devptr,
+        ua.devptr,
+        nut.devptr,
+        kx.devptr,
+        g.devptr,
+        ja.devptr,
+        ff.devptr,
         ReI,
         dt,
         pdm.shape,
@@ -516,10 +524,10 @@ void L1CFD::L0Dev_Cartesian3d_UtoCU(
         (map.shape.z + block_dim.z - 1) / block_dim.z
     );
     kernel_Cartesian_UtoCU<<<grid_dim, block_dim, 0, stream>>>(
-        *(u.devptr),
-        *(uc.devptr),
-        *(kx.devptr),
-        *(ja.devptr),
+        u.devptr,
+        uc.devptr,
+        kx.devptr,
+        ja.devptr,
         pdm.shape,
         map.shape,
         map.offset
@@ -540,8 +548,8 @@ void L1CFD::L0Dev_Cartesian3d_InterpolateCU(
         (map.shape.z + block_dim.z - 1) / block_dim.z
     );
     kernel_Cartesian_InterpolateCU<<<grid_dim, block_dim, 0, stream>>>(
-        *(uu.devptr),
-        *(uc.devptr),
+        uu.devptr,
+        uc.devptr,
         pdm.shape,
         map.shape,
         map.offset
@@ -564,10 +572,10 @@ void L1CFD::L0Dev_Cartesian3d_ProjectPGrid(
         (map.shape.z + block_dim.z - 1) / block_dim.z
     );
     kernel_Cartesian_ProjectPGrid<<<grid_dim, block_dim, 0, stream>>>(
-        *(u.devptr),
-        *(ua.devptr),
-        *(p.devptr),
-        *(kx.devptr),
+        u.devptr,
+        ua.devptr,
+        p.devptr,
+        kx.devptr,
         dt,
         pdm.shape,
         map.shape,
@@ -591,10 +599,10 @@ void L1CFD::L0Dev_Cartesian3d_ProjectPFace(
         (map.shape.z + block_dim.z - 1) / block_dim.z
     );
     kernel_Cartesian_ProjectPFace<<<grid_dim, block_dim, 0, stream>>>(
-        *(uu.devptr),
-        *(uua.devptr),
-        *(p.devptr),
-        *(g.devptr),
+        uu.devptr,
+        uua.devptr,
+        p.devptr,
+        g.devptr,
         dt,
         pdm.shape,
         map.shape,
@@ -620,11 +628,11 @@ void L1CFD::L0Dev_Cartesian3d_SGS(
     );
     if (SGSModel == SGSType::Smagorinsky) {
         kernel_Cartesian_Smagorinsky<<<grid_dim, block_dim, 0, stream>>>(
-            *(u.devptr),
-            *(nut.devptr),
-            *(x.devptr),
-            *(kx.devptr),
-            *(ja.devptr),
+            u.devptr,
+            nut.devptr,
+            x.devptr,
+            kx.devptr,
+            ja.devptr,
             CSmagorinsky,
             pdm.shape,
             map.shape,
@@ -632,11 +640,11 @@ void L1CFD::L0Dev_Cartesian3d_SGS(
         );
     } else if (SGSModel == SGSType::CSM) {
         kernel_Cartesian_CSM<<<grid_dim, block_dim, 0, stream>>>(
-            *(u.devptr),
-            *(nut.devptr),
-            *(x.devptr),
-            *(kx.devptr),
-            *(ja.devptr),
+            u.devptr,
+            nut.devptr,
+            x.devptr,
+            kx.devptr,
+            ja.devptr,
             pdm.shape,
             map.shape,
             map.offset
@@ -659,9 +667,9 @@ void L1CFD::L0Dev_Cartesian3d_Divergence(
         (map.shape.z + block_dim.z - 1) / block_dim.z
     );
     kernel_Cartesian_Divergence<<<grid_dim, block_dim, 0, stream>>>(
-        *(uu.devptr),
-        *(div.devptr),
-        *(ja.devptr),
+        uu.devptr,
+        div.devptr,
+        ja.devptr,
         pdm.shape,
         map.shape,
         map.offset

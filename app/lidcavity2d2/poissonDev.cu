@@ -8,9 +8,9 @@ namespace LidCavity2d2 {
 using namespace Falm;
 
 __global__ void kernel_makePoissonMatrix(
-    MatrixFrame<REAL> &a,
-    MatrixFrame<REAL> &g,
-    MatrixFrame<REAL> &ja,
+    const MatrixFrame<REAL> *va,
+    const MatrixFrame<REAL> *vg,
+    const MatrixFrame<REAL> *vja,
     INTx3              global_shape,
     INTx3              pdm_shape,
     INTx3              pdm_offset,
@@ -18,6 +18,7 @@ __global__ void kernel_makePoissonMatrix(
     INTx3              map_offset,
     INT                gc
 ) {
+    const MatrixFrame<REAL> &a = *va, &g = *vg, &ja = *vja;
     INT i, j, k;
     GLOBAL_THREAD_IDX_3D(i, j, k);
     if (i < map_shape.x && j < map_shape.y && k < map_shape.z) {
@@ -97,9 +98,9 @@ void dev_makePoissonMatrix(
         (map.shape.z + block_dim.z - 1) / block_dim.z
     );
     kernel_makePoissonMatrix<<<grid_dim, block_dim, 0, 0>>>(
-        *(a.devptr),
-        *(g.devptr),
-        *(ja.devptr),
+        a.devptr,
+        g.devptr,
+        ja.devptr,
         global.shape,
         pdm.shape,
         pdm.offset,
