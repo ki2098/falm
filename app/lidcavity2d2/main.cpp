@@ -129,6 +129,39 @@ int main(int argc, char **argv) {
         }
         CPML2_Barrier(MPI_COMM_WORLD);
     }
+
+    Vcdm::VCDM<REAL> vcdm;
+    setVcdm<REAL>(cpm, vcdm, Vcdm::doublex3{L, L, L/N});
+
+    if (cpm.rank == 0) {
+        Vcdm::doublex3 d3;
+        Vcdm::intx3    i3;
+        printf("------------dfi info------------\n");
+        d3 = vcdm.dfiDomain.globalOrigin;
+        printf("gOrigin   (%e %e %e)\n", d3.x, d3.y, d3.z);
+        d3 = vcdm.dfiDomain.globalRegion;
+        printf("gRegion   (%e %e %e)\n", d3.x, d3.y, d3.z);
+        i3 = vcdm.dfiDomain.globalVoxel;
+        printf("gVoxel    (%d %d %d)\n", i3.x, i3.y, i3.z);
+        i3 = vcdm.dfiDomain.globalDivision;
+        printf("gDivision (%d %d %d)\n", i3.x, i3.y, i3.z);
+        printf("\n");
+        for (int i = 0; i < cpm.size; i ++) {
+            Vcdm::VcdmRank &vproc = vcdm.dfiProc[i];
+            printf("rank %d\n", vproc.rank);
+            printf("host name %s\n", vproc.hostName.c_str());
+            i3 = vproc.voxelSize;
+            printf("voxel size (%d %d %d)\n", i3.x, i3.y, i3.z);
+            i3 = vproc.headIdx;
+            printf("head idx   (%d %d %d)\n", i3.x, i3.y, i3.z);
+            i3 = vproc.tailIdx;
+            printf("tail idx   (%d %d %d)\n", i3.x, i3.y, i3.z);
+            printf("\n");
+        }
+        printf("------------dfi info------------\n");
+        fflush(stdout);
+    }
+    CPML2_Barrier(MPI_COMM_WORLD);
     
     L2CFD cfdsolver(3200, DT, AdvectionSchemeType::Upwind3, SGSType::Empty, 0.1);
     L2EqSolver eqsolver(LSType::PBiCGStab, 10000, 1e-8, 1.2, LSType::SOR, 5, 1.5);
@@ -138,20 +171,19 @@ int main(int argc, char **argv) {
         fflush(stdout);
     }
 
-    REAL __t = 0;
-    INT  __it = 0;
-    const INT __IT = int(T / DT);
-    while (__it < __IT) {
-        REAL dvr_norm = sqrt(main_loop(cfdsolver, eqsolver, cpm, dim3(8, 8, 1), nullptr)) / ginner.size;
-        __t += DT;
-        __it ++;
-        if (cpm.rank == 0) {
-            printf("\r%8d %12.5e, %12.5e, %3d, %12.5e", __it, __t, dvr_norm, eqsolver.it, eqsolver.err);
-            fflush(stdout);
-        }
-    }
-
-    field_output(__IT, cpm.rank);
+    // REAL __t = 0;
+    // INT  __it = 0;
+    // const INT __IT = int(T / DT);
+    // while (__it < __IT) {
+    //     REAL dvr_norm = sqrt(main_loop(cfdsolver, eqsolver, cpm, dim3(8, 8, 1), nullptr)) / ginner.size;
+    //     __t += DT;
+    //     __it ++;
+    //     if (cpm.rank == 0) {
+    //         printf("\r%8d %12.5e, %12.5e, %3d, %12.5e", __it, __t, dvr_norm, eqsolver.it, eqsolver.err);
+    //         fflush(stdout);
+    //     }
+    // }
+    // field_output(__IT, cpm.rank);
 
     return CPML2_Finalize();
 }
