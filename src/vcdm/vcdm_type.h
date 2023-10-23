@@ -68,7 +68,7 @@ struct VcdmFinfo {
     std::string              prefix;
     int                      gc;
     std::vector<std::string> varList;
-    std::string              rankPrefix;
+    std::string              rankPrefix   = "_id";
     DataType                 dtype;
 
     void write(FILE *file);

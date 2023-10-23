@@ -69,7 +69,7 @@ public:
         CPMBase      &cpm,
         dim3          block_dim
     ) {
-        L1Dev_Cartesian3d_Divergence(uu, dvr, ja, cpm.pdm_list[cpm.rank], cpm.gc, block_dim);
+        L1Dev_Cartesian3d_Divergence(uu, dvr, ja, cpm, block_dim);
     }
 
     void L2Dev_Cartesian3d_MACCalcPoissonRHS(
@@ -80,7 +80,7 @@ public:
         dim3          block_dim,
         REAL          maxdiag = 1.0
     ) {
-        L1Dev_Cartesian3d_MACCalcPoissonRHS(uu, rhs, ja, cpm.pdm_list[cpm.rank], cpm.gc, block_dim, maxdiag);
+        L1Dev_Cartesian3d_MACCalcPoissonRHS(uu, rhs, ja, cpm, block_dim, maxdiag);
     }
     
 };

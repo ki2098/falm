@@ -1,6 +1,7 @@
 #include "coordinate.h"
 #include "../../src/util.h"
 #include "../../src/dev/devutil.cuh"
+#include "../../src/CPMBase.h"
 
 using namespace Falm;
 
@@ -38,8 +39,7 @@ __global__ void kernel_setCoord(
 void setCoord(
     REAL          side_lenth,
     INT           side_n_cell,
-    Region       &pdm,
-    INT gc,
+    CPMBase      &cpm,
     Matrix<REAL> &x,
     Matrix<REAL> &h,
     Matrix<REAL> &kx,
@@ -47,10 +47,7 @@ void setCoord(
     Matrix<REAL> &ja,
     dim3          block_dim
 ) {
-    pdm = Region(
-        INTx3{side_n_cell + (gc*2), side_n_cell + (gc*2), 1 + (gc*2)},
-        INTx3{0, 0, 0}
-    );
+    Region &pdm = cpm.pdm_list[cpm.rank];
     x.alloc(pdm.shape, 3, HDCType::Device);
     h.alloc(pdm.shape, 3, HDCType::Device);
     kx.alloc(pdm.shape, 3, HDCType::Device);
@@ -66,7 +63,7 @@ void setCoord(
         side_lenth,
         side_n_cell,
         pdm.shape,
-        gc,
+        cpm.gc,
         x.devptr,
         h.devptr,
         kx.devptr,

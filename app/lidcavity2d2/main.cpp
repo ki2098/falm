@@ -48,6 +48,20 @@ void field_output(INT i, int rank) {
     fclose(file);
 }
 
+void plt3d_output(int step, int rank, Vcdm::VCDM<REAL> &vcdm) {
+    Matrix<REAL> uvwp(cpm.pdm_list[cpm.rank].shape, 4, HDCType::Host, "uvwp");
+    u.sync(MCpType::Dev2Hst);
+    p.sync(MCpType::Dev2Hst);
+    falmMemcpy(&uvwp(0, 0), &u(0, 0), sizeof(REAL) * u.size, MCpType::Hst2Hst);
+    falmMemcpy(&uvwp(0, 3), &p(0)   , sizeof(REAL) * p.size, MCpType::Hst2Hst);
+    vcdm.writeFileData(&u(0, 0), cpm.gc, 4, rank, step, Vcdm::IdxType::IJKN);
+}
+
+void setVcdmAttributes(Vcdm::VCDM<REAL> &vcdm) {
+    setVcdm<REAL>(cpm, vcdm, {L, L, L/N});
+
+}
+
 void allocVars(Region &pdm) {
     u.alloc(pdm.shape, 3, HDCType::Device);
     ua.alloc(pdm.shape, 3, HDCType::Device);
@@ -93,11 +107,11 @@ int main(int argc, char **argv) {
     CPML2_GetRank(MPI_COMM_WORLD, mpi_rank);
     CPML2_GetSize(MPI_COMM_WORLD, mpi_size);
     cpm.initPartition(
+        {N, N, 1},
+        GuideCell,
         mpi_rank,
         mpi_size,
-        {atoi(argv[1]), atoi(argv[2]), 1},
-        {N, N, 1},
-        GuideCell
+        {atoi(argv[1]), atoi(argv[2]), 1}
     );
     Region &pdm = cpm.pdm_list[cpm.rank];
     Region &global = cpm.global;
@@ -131,7 +145,8 @@ int main(int argc, char **argv) {
     }
 
     Vcdm::VCDM<REAL> vcdm;
-    setVcdm<REAL>(cpm, vcdm, Vcdm::doublex3{L, L, L/N});
+    // setVcdm<REAL>(cpm, vcdm, Vcdm::doublex3{L, L, L/N});
+    setVcdmAttributes(vcdm);
 
     if (cpm.rank == 0) {
         Vcdm::doublex3 d3;
@@ -171,18 +186,18 @@ int main(int argc, char **argv) {
         fflush(stdout);
     }
 
-    // REAL __t = 0;
-    // INT  __it = 0;
-    // const INT __IT = int(T / DT);
-    // while (__it < __IT) {
-    //     REAL dvr_norm = sqrt(main_loop(cfdsolver, eqsolver, cpm, dim3(8, 8, 1), nullptr)) / ginner.size;
-    //     __t += DT;
-    //     __it ++;
-    //     if (cpm.rank == 0) {
-    //         printf("\r%8d %12.5e, %12.5e, %3d, %12.5e", __it, __t, dvr_norm, eqsolver.it, eqsolver.err);
-    //         fflush(stdout);
-    //     }
-    // }
+    REAL __t = 0;
+    INT  __it = 0;
+    const INT __IT = int(T / DT);
+    while (__it < __IT) {
+        REAL dvr_norm = sqrt(main_loop(cfdsolver, eqsolver, cpm, dim3(8, 8, 1), nullptr)) / ginner.size;
+        __t += DT;
+        __it ++;
+        if (cpm.rank == 0) {
+            printf("\r%8d %12.5e, %12.5e, %3d, %12.5e", __it, __t, dvr_norm, eqsolver.it, eqsolver.err);
+            fflush(stdout);
+        }
+    }
     // field_output(__IT, cpm.rank);
 
     return CPML2_Finalize();

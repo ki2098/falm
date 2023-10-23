@@ -80,10 +80,11 @@ REAL makePoissonMatrix(
     Matrix<REAL> &a,
     Matrix<REAL> &g,
     Matrix<REAL> &ja,
-    Region       &pdm,
-    INT gc,
+    CPMBase      &cpm,
     dim3          block_dim
 ) {
+    Region &pdm = cpm.pdm_list[cpm.rank];
+    INT    &gc  = cpm.gc;
     Region map(pdm.shape, gc);
     dim3 grid_dim(
         (pdm.shape.x + block_dim.x - 1) / block_dim.x,
@@ -99,7 +100,7 @@ REAL makePoissonMatrix(
         map.offset,
         gc
     );
-    REAL maxdiag = L1Dev_MaxDiag(a, pdm, gc, block_dim);
+    REAL maxdiag = L1Dev_MaxDiag(a, cpm, block_dim);
     L1Dev_ScaleMatrix(a, 1.0 / maxdiag, block_dim);
     return maxdiag;
 }
@@ -165,10 +166,11 @@ void makePoissonRHS(
     Matrix<REAL> &g,
     Matrix<REAL> &ja,
     REAL          maxdiag,
-    Region       &pdm,
-    INT gc,
+    CPMBase      &cpm,
     dim3          block_dim
 ) {
+    Region &pdm = cpm.pdm_list[cpm.rank];
+    INT    &gc  = cpm.gc;
     Region map(pdm.shape, gc);
     dim3 grid_dim(
         (pdm.shape.x + block_dim.x - 1) / block_dim.x,

@@ -49,11 +49,11 @@ public:
         Matrix<REAL> &g,
         Matrix<REAL> &ja,
         Matrix<REAL> &ff,
-        Region       &pdm,
-        INT           gc,
+        CPMBase      &cpm,
         dim3          block_dim
     ) {
-        Region map(pdm.shape, gc);
+        Region &pdm = cpm.pdm_list[cpm.rank];
+        Region map(pdm.shape, cpm.gc);
         L0Dev_Cartesian3d_FSCalcPseudoU(un, u, uu, ua, nut, kx, g, ja, ff, pdm, map, block_dim);
     }
 
@@ -62,22 +62,22 @@ public:
         Matrix<REAL> &uc,
         Matrix<REAL> &kx,
         Matrix<REAL> &ja,
-        Region       &pdm,
-        INT           gc,
+        CPMBase      &cpm,
         dim3          block_dim
     ) {
-        Region map(pdm.shape, gc - 1);
+        Region &pdm = cpm.pdm_list[cpm.rank];
+        Region map(pdm.shape, cpm.gc - 1);
         L0Dev_Cartesian3d_UtoCU(u, uc, kx, ja, pdm, map, block_dim);
     }
 
     void L1Dev_Cartesian3d_InterpolateCU(
         Matrix<REAL> &uu,
         Matrix<REAL> &uc,
-        Region       &pdm,
-        INT           gc,
+        CPMBase      &cpm,
         dim3          block_dim
     ) {
-        Region map(pdm.shape, gc);
+        Region &pdm = cpm.pdm_list[cpm.rank];
+        Region map(pdm.shape, cpm.gc);
         map = map.transform(
             INTx3{ 1,  1,  1},
             INTx3{-1, -1, -1}
@@ -90,11 +90,11 @@ public:
         Matrix<REAL> &ua,
         Matrix<REAL> &p,
         Matrix<REAL> &kx,
-        Region       &pdm,
-        INT           gc,
+        CPMBase      &cpm,
         dim3          block_dim
     ) {
-        Region map(pdm.shape, gc);
+        Region &pdm = cpm.pdm_list[cpm.rank];
+        Region map(pdm.shape, cpm.gc);
         L0Dev_Cartesian3d_ProjectPGrid(u, ua, p, kx, pdm, map, block_dim);
     }
 
@@ -103,11 +103,11 @@ public:
         Matrix<REAL> &uua,
         Matrix<REAL> &p,
         Matrix<REAL> &g,
-        Region       &pdm,
-        INT           gc,
+        CPMBase      &cpm,
         dim3          block_dim
     ) {
-        Region map(pdm.shape, gc);
+        Region &pdm = cpm.pdm_list[cpm.rank];
+        Region map(pdm.shape, cpm.gc);
         map = map.transform(
             INTx3{ 1,  1,  1},
             INTx3{-1, -1, -1}
@@ -121,14 +121,14 @@ public:
         Matrix<REAL> &x,
         Matrix<REAL> &kx,
         Matrix<REAL> &ja,
-        Region       &pdm,
-        INT           gc,
+        CPMBase      &cpm,
         dim3          block_dim
     ) {
         if (SGSModel == SGSType::Empty) {
             return;
         }
-        Region map(pdm.shape, gc);
+        Region &pdm = cpm.pdm_list[cpm.rank];
+        Region map(pdm.shape, cpm.gc);
         L0Dev_Cartesian3d_SGS(u, nut, x, kx, ja, pdm, map, block_dim);
     }
 
@@ -136,11 +136,11 @@ public:
         Matrix<REAL> &uu,
         Matrix<REAL> &div,
         Matrix<REAL> &ja,
-        Region       &pdm,
-        INT           gc,
+        CPMBase      &cpm,
         dim3          block_dim
     ) {
-        Region map(pdm.shape, gc);
+        Region &pdm = cpm.pdm_list[cpm.rank];
+        Region map(pdm.shape, cpm.gc);
         L0Dev_Cartesian3d_Divergence(uu, div, ja, pdm, map, block_dim);
     }
 
@@ -148,12 +148,11 @@ public:
         Matrix<REAL> &uu,
         Matrix<REAL> &rhs,
         Matrix<REAL> &ja,
-        Region       &pdm,
-        INT           gc,
+        CPMBase      &cpm,
         dim3          block_dim,
         REAL          maxdiag = 1.0
     ) {
-        L1Dev_Cartesian3d_Divergence(uu, rhs, ja, pdm, gc, block_dim);
+        L1Dev_Cartesian3d_Divergence(uu, rhs, ja, cpm, block_dim);
         L1Dev_ScaleMatrix(rhs, 1.0 / (dt * maxdiag), block_dim);
     }
 

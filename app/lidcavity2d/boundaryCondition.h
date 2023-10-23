@@ -2,35 +2,31 @@
 #define _LID_CAVITY2D_BOUNDARY_CONDITION_H_
 
 #include "../../src/matrix.h"
-#include "../../src/region.h"
+#include "../../src/CPMBase.h"
 
 namespace LidCavity2d {
 
 void pressureBC(
     Falm::Matrix<Falm::REAL> &p,
-    Falm::Region             &pdm,
-    Falm::INT gc,
+    Falm::CPMBase            &cpm,
     Falm::STREAM             *streamptr = nullptr
 );
 
 void velocityBC(
     Falm::Matrix<Falm::REAL> &u,
-    Falm::Region             &pdm,
-    Falm::INT gc,
+    Falm::CPMBase            &cpm,
     Falm::STREAM             *streamptr = nullptr
 );
 
 void forceFaceVelocityZero(
     Falm::Matrix<Falm::REAL> &uu,
-    Falm::Region             &pdm,
-    Falm::INT gc,
+    Falm::CPMBase            &cpm,
     Falm::STREAM             *streamptr = nullptr
 );
 
 void copyZ5(
     Falm::Matrix<Falm::REAL> &field,
-    Falm::Region             &pdm,
-    Falm::INT gc,
+    Falm::CPMBase            &cpm,
     Falm::STREAM             *streamptr = nullptr
 );
 

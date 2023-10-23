@@ -38,7 +38,7 @@ int main() {
     vcdm.writeProcDfi();
 
     vcdm.dfiFinfo.gc = 2;
-    vcdm.dfiFinfo.rankPrefix = "_id";
+    // vcdm.dfiFinfo.rankPrefix = "_id";
     vcdm.dfiFinfo.varList = {"u", "v", "w"};
 
     VcdmSlice slice;

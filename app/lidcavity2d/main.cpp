@@ -24,11 +24,12 @@ using namespace LidCavity2d;
 Matrix<REAL> x, h, kx, g, ja;
 Matrix<REAL> u, ua, uc, uu, uua, p, nut, ff, rhs, res, diver, w;
 Matrix<REAL> poisson_a;
-Region pdm;
 REAL maxdiag;
-INT gc;
+CPMBase cpm;
 
 void output(INT i) {
+    Region &pdm = cpm.pdm_list[cpm.rank];
+    INT    &gc  = cpm.gc;
     std::string filename = "data/lid2d.csv." + std::to_string(i);
     FILE *file = fopen(filename.c_str(), "w");
     fprintf(file, "x,y,z,u,v,w,p\n");
@@ -85,22 +86,22 @@ void main_loop(L1CFD &cfdsolver, L1EqSolver &eqsolver, dim3 block_dim = dim3{8, 
     // rk2fs1.L1Dev_Cartesian3d_SGS(u, nut, x, kx, ja, pdm, block_dim);
     // copyZ5(nut, pdm);
 
-    rk2fs2.L1Dev_Cartesian3d_FSCalcPseudoU(un, u, uu, ua, nut, kx, g, ja, ff, pdm, gc, block_dim);
-    rk2fs2.L1Dev_Cartesian3d_UtoCU(ua, uc, kx, ja, pdm, gc, block_dim);
-    rk2fs2.L1Dev_Cartesian3d_InterpolateCU(uua, uc, pdm, gc, block_dim);
-    forceFaceVelocityZero(uua, pdm, gc);
-    rk2fs2.L1Dev_Cartesian3d_MACCalcPoissonRHS(uua, rhs, ja, pdm, gc, block_dim, maxdiag);
-    eqsolver.L1Dev_Struct3d7p_Solve(poisson_a, p, rhs, res, pdm, gc, block_dim);
-    pressureBC(p, pdm, gc);
-    copyZ5(p, pdm, gc);
-    rk2fs2.L1Dev_Cartesian3d_ProjectPGrid(u, ua, p, kx, pdm, gc, block_dim);
-    rk2fs2.L1Dev_Cartesian3d_ProjectPFace(uu, uua, p, g, pdm, gc, block_dim);
-    velocityBC(u, pdm, gc);
-    copyZ5(u, pdm, gc);
-    rk2fs2.L1Dev_Cartesian3d_SGS(u, nut, x, kx, ja, pdm, gc, block_dim);
-    copyZ5(nut, pdm, gc);
+    rk2fs2.L1Dev_Cartesian3d_FSCalcPseudoU(un, u, uu, ua, nut, kx, g, ja, ff, cpm, block_dim);
+    rk2fs2.L1Dev_Cartesian3d_UtoCU(ua, uc, kx, ja, cpm, block_dim);
+    rk2fs2.L1Dev_Cartesian3d_InterpolateCU(uua, uc, cpm, block_dim);
+    forceFaceVelocityZero(uua, cpm);
+    rk2fs2.L1Dev_Cartesian3d_MACCalcPoissonRHS(uua, rhs, ja, cpm, block_dim, maxdiag);
+    eqsolver.L1Dev_Struct3d7p_Solve(poisson_a, p, rhs, res, cpm, block_dim);
+    pressureBC(p, cpm);
+    copyZ5(p, cpm);
+    rk2fs2.L1Dev_Cartesian3d_ProjectPGrid(u, ua, p, kx, cpm, block_dim);
+    rk2fs2.L1Dev_Cartesian3d_ProjectPFace(uu, uua, p, g, cpm, block_dim);
+    velocityBC(u, cpm);
+    copyZ5(u, cpm);
+    rk2fs2.L1Dev_Cartesian3d_SGS(u, nut, x, kx, ja, cpm, block_dim);
+    copyZ5(nut, cpm);
 
-    rk2fs2.L1Dev_Cartesian3d_Divergence(uu, diver, ja, pdm, gc, block_dim);
+    rk2fs2.L1Dev_Cartesian3d_Divergence(uu, diver, ja, cpm, block_dim);
     // cfdsolver.L1Dev_Cartesian3d_FSCalcPseudoU(u, u, uu, ua, nut, kx, g, ja, ff, pdm, block_dim);
 
     // cfdsolver.L1Dev_Cartesian3d_UtoCU(ua, uc, kx, ja, pdm, block_dim);
@@ -135,13 +136,15 @@ void main_loop(L1CFD &cfdsolver, L1EqSolver &eqsolver, dim3 block_dim = dim3{8, 
 }
 
 int main() {
-    gc = GuideCell;
-    setCoord(L, N, pdm, gc, x, h, kx, g, ja);
+    cpm.initPartition({N, N, 1}, GuideCell);
+    Region &pdm = cpm.pdm_list[cpm.rank];
+    INT    &gc  = cpm.gc;
+    setCoord(L, N, cpm, x, h, kx, g, ja);
     printf("%d %d %d\n", pdm.shape.x, pdm.shape.y, pdm.shape.z);
 
     poisson_a.alloc(pdm.shape, 7, HDCType::Device);
 
-    maxdiag =  makePoissonMatrix(poisson_a, g, ja, pdm, gc);
+    maxdiag =  makePoissonMatrix(poisson_a, g, ja, cpm);
 
     printf("%lf\n", maxdiag);
 
@@ -169,16 +172,16 @@ int main() {
     const INT __IT = int(T / DT);
     const REAL output_interval = 1.0;
     allocVars(pdm);
-    velocityBC(u, pdm, gc);
-    pressureBC(p, pdm, gc);
+    velocityBC(u, cpm);
+    pressureBC(p, cpm);
     Region inner(pdm.shape, gc);
     output(__it / INT(output_interval / DT));
     while (__it < __IT) {
         main_loop(cfdsolver, eqsolver);
-        REAL tke = sqrt(L1Dev_EuclideanNormSq(u, pdm, gc, dim3(8, 8, 1))) / inner.size;
+        REAL tke = sqrt(L1Dev_EuclideanNormSq(u, cpm, dim3(8, 8, 1))) / inner.size;
         __t += DT;
         __it ++;
-        REAL divernorm = sqrt(L1Dev_EuclideanNormSq(diver, pdm, gc, dim3(8, 8, 1))) / inner.size;
+        REAL divernorm = sqrt(L1Dev_EuclideanNormSq(diver, cpm, dim3(8, 8, 1))) / inner.size;
 
         REAL probeu, probev;
         INT probeidx = IDX(monitor_i + gc, monitor_j + gc, gc, pdm.shape);

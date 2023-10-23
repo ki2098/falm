@@ -72,10 +72,11 @@ __global__ void kernel_pressureBC_S(
 
 void pressureBC(
     Matrix<REAL> &p,
-    Region       &pdm,
-    INT gc,
+    CPMBase      &cpm,
     STREAM       *streamptr
 ) {
+    Region &pdm = cpm.pdm_list[cpm.rank];
+    INT    &gc  = cpm.gc;
     dim3 grid_dim_ew(1, (pdm.shape.y - (gc*2) + 7) / 8, (pdm.shape.z - (gc*2) + 7) / 8);
     dim3 block_dim_ew(1, 8, 8);
     STREAM stream_e = (streamptr)? streamptr[0] : (STREAM)0;
@@ -181,10 +182,11 @@ __global__ void kernel_velocityBC_S(
 
 void velocityBC(
     Matrix<REAL> &u,
-    Region       &pdm,
-    INT gc,
+    CPMBase      &cpm,
     STREAM       *streamptr
 ) {
+    Region &pdm = cpm.pdm_list[cpm.rank];
+    INT    &gc  = cpm.gc;
     dim3 grid_dim_ew(1, (pdm.shape.y - (gc*2) + 7) / 8, (pdm.shape.z - (gc*2) + 7) / 8);
     dim3 block_dim_ew(1, 8, 8);
     STREAM stream_e = (streamptr)? streamptr[0] : (STREAM)0;
@@ -274,10 +276,11 @@ __global__ void kernel_forceFaceVelocityZero_S(
 
 void forceFaceVelocityZero(
     Matrix<REAL> &uu,
-    Region       &pdm,
-    INT gc,
+    CPMBase      &cpm,
     STREAM       *streamptr
 ) {
+    Region &pdm = cpm.pdm_list[cpm.rank];
+    INT    &gc  = cpm.gc;
     dim3 grid_dim_ew(1, (pdm.shape.y - (gc*2) + 7) / 8, (pdm.shape.z - (gc*2) + 7) / 8);
     dim3 block_dim_ew(1, 8, 8);
     STREAM stream_e = (streamptr)? streamptr[0] : (STREAM)0;
@@ -303,10 +306,11 @@ void forceFaceVelocityZero(
 
 void copyZ5(
     Matrix<REAL> &field,
-    Region       &pdm,
-    INT gc,
+    CPMBase      &cpm,
     STREAM       *streamptr
 ) {
+    Region &pdm = cpm.pdm_list[cpm.rank];
+    INT    &gc  = cpm.gc;
     INT idxcc = IDX(0, 0, gc  , pdm.shape);
     INT idxt1 = IDX(0, 0, gc+1, pdm.shape);
     INT idxt2 = IDX(0, 0, gc+2, pdm.shape);
