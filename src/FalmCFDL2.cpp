@@ -12,15 +12,15 @@ void L2CFD::L2Dev_Cartesian3d_FSCalcPseudoU(
     Matrix<REAL> &g,
     Matrix<REAL> &ja,
     Matrix<REAL> &ff,
-    dim3          block_dim,
     CPMBase      &cpm,
+    dim3          block_dim,
     STREAM       *stream
 ) {
     Region &pdm = cpm.pdm_list[cpm.rank];
-    CPMOp<REAL> ucpm(&cpm);
-    CPMOp<REAL> vcpm(&cpm);
-    CPMOp<REAL> wcpm(&cpm);
-    CPMOp<REAL> nutcpm(&cpm);
+    CPMComm<REAL> ucpm(&cpm);
+    CPMComm<REAL> vcpm(&cpm);
+    CPMComm<REAL> wcpm(&cpm);
+    CPMComm<REAL> nutcpm(&cpm);
 
     ucpm.CPML2Dev_IExchange6Face(&u.dev(0,0), 2, 0, 0, stream);
     vcpm.CPML2Dev_IExchange6Face(&u.dev(0,1), 2, 0, 1, stream);
@@ -69,8 +69,8 @@ void L2CFD::L2Dev_Cartesian3d_UtoUU(
     Matrix<REAL> &uu,
     Matrix<REAL> &kx,
     Matrix<REAL> &ja,
-    dim3          block_dim,
     CPMBase      &cpm,
+    dim3          block_dim,
     STREAM       *stream
 ) {
     Region &pdm = cpm.pdm_list[cpm.rank];
@@ -78,9 +78,9 @@ void L2CFD::L2Dev_Cartesian3d_UtoUU(
     cpm.set6Region(inner_shape, inner_offset, boundary_shape, boundary_offset, 1, Region(pdm.shape, cpm.gc - 1));
     Matrix<REAL> uc(pdm.shape, 3, HDCType::Device, "contra u at grid");
 
-    CPMOp<REAL> ucpm(&cpm);
-    CPMOp<REAL> vcpm(&cpm);
-    CPMOp<REAL> wcpm(&cpm);
+    CPMComm<REAL> ucpm(&cpm);
+    CPMComm<REAL> vcpm(&cpm);
+    CPMComm<REAL> wcpm(&cpm);
 
     ucpm.CPML2Dev_IExchange6Face(&u.dev(0,0), 1, 0, 0, stream);
     vcpm.CPML2Dev_IExchange6Face(&u.dev(0,1), 1, 0, 1, stream);
@@ -132,15 +132,15 @@ void L2CFD::L2Dev_Cartesian3d_ProjectP(
     Matrix<REAL> &p,
     Matrix<REAL> &kx,
     Matrix<REAL> &g,
-    dim3          block_dim,
     CPMBase      &cpm,
+    dim3          block_dim,
     STREAM       *stream
 ) {
     Region &pdm = cpm.pdm_list[cpm.rank];
     INTx3 inner_shape, inner_offset, boundary_shape[6], boundary_offset[6];
     cpm.set6Region(inner_shape, inner_offset, boundary_shape, boundary_offset, 1, Region(pdm.shape, cpm.gc));
 
-    CPMOp<REAL> pcpm(&cpm);
+    CPMComm<REAL> pcpm(&cpm);
 
     pcpm.CPML2Dev_IExchange6Face(p.dev.ptr, 1, 0, 0, stream);
 
@@ -184,8 +184,8 @@ void L2CFD::L2Dev_Cartesian3d_SGS(
     Matrix<REAL> &x,
     Matrix<REAL> &kx,
     Matrix<REAL> &ja,
-    dim3          block_dim,
     CPMBase      &cpm,
+    dim3          block_dim,
     STREAM       *stream
 ) {
     Region &pdm = cpm.pdm_list[cpm.rank];
@@ -195,9 +195,9 @@ void L2CFD::L2Dev_Cartesian3d_SGS(
     INTx3 inner_shape, inner_offset, boundary_shape[6], boundary_offset[6];
     cpm.set6Region(inner_shape, inner_offset, boundary_shape, boundary_offset, 1, Region(pdm.shape, cpm.gc));
 
-    CPMOp<REAL> ucpm;
-    CPMOp<REAL> vcpm;
-    CPMOp<REAL> wcpm;
+    CPMComm<REAL> ucpm;
+    CPMComm<REAL> vcpm;
+    CPMComm<REAL> wcpm;
 
     ucpm.CPML2Dev_IExchange6Face(&u.dev(0, 0), 1, 0, 0, stream);
     vcpm.CPML2Dev_IExchange6Face(&u.dev(0, 1), 1, 0, 1, stream);

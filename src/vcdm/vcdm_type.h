@@ -13,6 +13,7 @@ struct intx3 {int x, y, z;};
 
 struct doublex3 {double x, y, z;};
 
+enum class FileType {BINARY, FBINARY};
 enum class FilenameFormat {RANK, STEP_RANK, RANK_STEP};
 enum class FileFormat {SPH, BOV, PLOT3D};
 enum class DFIType {Cartesian, NonUniformCartesian};
@@ -103,6 +104,7 @@ public:
     VcdmFinfo              dfiFinfo;
     std::vector<VcdmRank>  dfiProc;
     std::vector<VcdmSlice> timeSlice;
+    FileType               ftype;
 
     void setPath(const std::string &_dir, const std::string &_prefix) {
         outputDir = _dir + "/" + cut_dirpath(_prefix);

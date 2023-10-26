@@ -23,8 +23,8 @@ public:
         Matrix<REAL> &g,
         Matrix<REAL> &ja,
         Matrix<REAL> &ff,
-        dim3          block_dim,
         CPMBase      &cpm,
+        dim3          block_dim,
         STREAM       *stream = nullptr
     );
 
@@ -33,8 +33,8 @@ public:
         Matrix<REAL> &uu,
         Matrix<REAL> &kx,
         Matrix<REAL> &ja,
-        dim3          block_dim,
         CPMBase      &cpm,
+        dim3          block_dim,
         STREAM       *stream = nullptr
     );
 
@@ -46,8 +46,8 @@ public:
         Matrix<REAL> &p,
         Matrix<REAL> &kx,
         Matrix<REAL> &g,
-        dim3          block_dim,
         CPMBase      &cpm,
+        dim3          block_dim,
         STREAM       *stream = nullptr
     );
 
@@ -57,8 +57,8 @@ public:
         Matrix<REAL> &x,
         Matrix<REAL> &kx,
         Matrix<REAL> &ja,
-        dim3          block_dim,
         CPMBase      &cpm,
+        dim3          block_dim,
         STREAM       *stream = nullptr
     );
 

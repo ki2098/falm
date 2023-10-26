@@ -9,7 +9,7 @@
 
 namespace Falm {
 
-template<typename T> MPI_Datatype getMPIDtype() {
+template<typename T> inline MPI_Datatype getMPIDtype() {
     if     (typeid(T) == typeid(char))               return MPI_CHAR;
     else if(typeid(T) == typeid(short))              return MPI_SHORT;
     else if(typeid(T) == typeid(int))                return MPI_INT;
@@ -75,7 +75,7 @@ static inline int CPML2_AllReduce(void *buffer, int count, MPI_Datatype mpi_dtyp
 }
 
 template<typename T>
-class CPMOp {
+class CPMComm {
 public:
     CPMBase               *base;
     CPMBuffer            buffer[12];
@@ -88,8 +88,8 @@ public:
     void             *packerptr[6];
     
 
-    CPMOp() : origin_ptr(nullptr) {}
-    CPMOp(CPMBase *_base) : 
+    CPMComm() : origin_ptr(nullptr) {}
+    CPMComm(CPMBase *_base) : 
         base(_base),
         origin_ptr(nullptr)
     {
@@ -160,7 +160,7 @@ protected:
 
 };
 
-template<typename T> void CPMOp<T>::CPML2Dev_IExchange6Face(T *data, INT thick, INT margin, int grp_tag, STREAM *stream) {
+template<typename T> void CPMComm<T>::CPML2Dev_IExchange6Face(T *data, INT thick, INT margin, int grp_tag, STREAM *stream) {
     assert(origin_ptr == nullptr);
     Region &pdm   = base->pdm_list[base->rank];
     origin_ptr    = data;
@@ -212,7 +212,7 @@ template<typename T> void CPMOp<T>::CPML2Dev_IExchange6Face(T *data, INT thick, 
     }
 }
 
-template<typename T> void CPMOp<T>::CPML2Dev_IExchange6ColoredFace(T *data, INT color, INT thick, INT margin, int grp_tag, STREAM *stream) {
+template<typename T> void CPMComm<T>::CPML2Dev_IExchange6ColoredFace(T *data, INT color, INT thick, INT margin, int grp_tag, STREAM *stream) {
     assert(origin_ptr == nullptr);
     Region &pdm = base->pdm_list[base->rank];
     origin_ptr    = data;
@@ -265,7 +265,7 @@ template<typename T> void CPMOp<T>::CPML2Dev_IExchange6ColoredFace(T *data, INT 
     }
 }
 
-template<typename T> void CPMOp<T>::CPML2Dev_PostExchange6Face(STREAM *stream) {
+template<typename T> void CPMComm<T>::CPML2Dev_PostExchange6Face(STREAM *stream) {
     assert(origin_ptr != nullptr);
     for (INT fid = 0; fid < 6; fid ++) {
         if (base->validNeighbour(fid)) {
@@ -311,7 +311,7 @@ template<typename T> void CPMOp<T>::CPML2Dev_PostExchange6Face(STREAM *stream) {
     origin_ptr = nullptr;
 }
 
-template<typename T> void CPMOp<T>::CPML2Dev_PostExchange6ColoredFace(STREAM *stream) {
+template<typename T> void CPMComm<T>::CPML2Dev_PostExchange6ColoredFace(STREAM *stream) {
     assert(origin_ptr != nullptr);
     for (INT fid = 0; fid < 6; fid ++) {
         if (base->validNeighbour(fid)) {

@@ -4,9 +4,9 @@
 
 namespace Falm {
 
-void L2Dev_Struct3d7p_MV(Matrix<REAL> &a, Matrix<REAL> &x, Matrix<REAL> &ax, dim3 block_dim, CPMBase &cpm, STREAM *stream) {
+void L2Dev_Struct3d7p_MV(Matrix<REAL> &a, Matrix<REAL> &x, Matrix<REAL> &ax, CPMBase &cpm, dim3 block_dim, STREAM *stream) {
     Region &pdm = cpm.pdm_list[cpm.rank];
-    CPMOp<REAL> cpmop(&cpm);
+    CPMComm<REAL> cpmop(&cpm);
     cpmop.CPML2Dev_IExchange6Face(x.dev.ptr, 1, 0, 0);
     INTx3 inner_shape, inner_offset, boundary_shape[6], boundary_offset[6];
     cpm.set6Region(inner_shape, inner_offset, boundary_shape, boundary_offset, 1, Region(pdm.shape, cpm.gc));
@@ -39,9 +39,9 @@ void L2Dev_Struct3d7p_MV(Matrix<REAL> &a, Matrix<REAL> &x, Matrix<REAL> &ax, dim
     falmWaitStream();
 }
 
-void L2Dev_Struct3d7p_Res(Matrix<REAL> &a, Matrix<REAL> &x, Matrix<REAL> &b, Matrix<REAL> &r, dim3 block_dim, CPMBase &cpm, STREAM *stream) {
+void L2Dev_Struct3d7p_Res(Matrix<REAL> &a, Matrix<REAL> &x, Matrix<REAL> &b, Matrix<REAL> &r, CPMBase &cpm, dim3 block_dim, STREAM *stream) {
     Region &pdm = cpm.pdm_list[cpm.rank];
-    CPMOp<REAL> cpmop(&cpm);
+    CPMComm<REAL> cpmop(&cpm);
     cpmop.CPML2Dev_IExchange6Face(x.dev.ptr, 1, 0, 0);
     INTx3 inner_shape, inner_offset, boundary_shape[6], boundary_offset[6];
     cpm.set6Region(inner_shape, inner_offset, boundary_shape, boundary_offset, 1, Region(pdm.shape, cpm.gc));
@@ -74,11 +74,11 @@ void L2Dev_Struct3d7p_Res(Matrix<REAL> &a, Matrix<REAL> &x, Matrix<REAL> &b, Mat
     falmWaitStream();
 }
 
-void L2EqSolver::L2Dev_Struct3d7p_Jacobi(Matrix<REAL> &a, Matrix<REAL> &x, Matrix<REAL> &b, Matrix<REAL> &r, dim3 block_dim, CPMBase &cpm, STREAM *stream) {
+void L2EqSolver::L2Dev_Struct3d7p_Jacobi(Matrix<REAL> &a, Matrix<REAL> &x, Matrix<REAL> &b, Matrix<REAL> &r, CPMBase &cpm, dim3 block_dim, STREAM *stream) {
     Region &global = cpm.global;
     Region &pdm = cpm.pdm_list[cpm.rank];
     Region gmap(global.shape, cpm.gc);
-    CPMOp<REAL> cpmop(&cpm);
+    CPMComm<REAL> cpmop(&cpm);
     INTx3 inner_shape, inner_offset, boundary_shape[6], boundary_offset[6];
     cpm.set6Region(inner_shape, inner_offset, boundary_shape, boundary_offset, 1, Region(pdm.shape, cpm.gc));
 
@@ -116,15 +116,15 @@ void L2EqSolver::L2Dev_Struct3d7p_Jacobi(Matrix<REAL> &a, Matrix<REAL> &x, Matri
         }
         falmWaitStream();
 
-        L2Dev_Struct3d7p_Res(a, x, b, r, block_dim, cpm);
-        err = sqrt(L2Dev_EuclideanNormSq(r, block_dim, cpm)) / gmap.size;
+        L2Dev_Struct3d7p_Res(a, x, b, r, cpm, block_dim);
+        err = sqrt(L2Dev_EuclideanNormSq(r, cpm, block_dim)) / gmap.size;
         it ++;
     } while (it < maxit && err > tol);
 }
 
-void L2EqSolver::L2Dev_Struct3d7p_JacobiPC(Matrix<REAL> &a, Matrix<REAL> &x, Matrix<REAL> &b, dim3 block_dim, CPMBase &cpm, STREAM *stream) {
+void L2EqSolver::L2Dev_Struct3d7p_JacobiPC(Matrix<REAL> &a, Matrix<REAL> &x, Matrix<REAL> &b, CPMBase &cpm, dim3 block_dim, STREAM *stream) {
     Region &pdm = cpm.pdm_list[cpm.rank];
-    CPMOp<REAL> cpmop(&cpm);
+    CPMComm<REAL> cpmop(&cpm);
     INTx3 inner_shape, inner_offset, boundary_shape[6], boundary_offset[6];
     cpm.set6Region(inner_shape, inner_offset, boundary_shape, boundary_offset, 1, Region(pdm.shape, cpm.gc));
 
@@ -166,11 +166,11 @@ void L2EqSolver::L2Dev_Struct3d7p_JacobiPC(Matrix<REAL> &a, Matrix<REAL> &x, Mat
     } while (__it < pc_maxit);
 }
 
-void L2EqSolver::L2Dev_Struct3d7p_SOR(Matrix<REAL> &a, Matrix<REAL> &x, Matrix<REAL> &b, Matrix<REAL> &r, dim3 block_dim, CPMBase &cpm, STREAM *stream) {
+void L2EqSolver::L2Dev_Struct3d7p_SOR(Matrix<REAL> &a, Matrix<REAL> &x, Matrix<REAL> &b, Matrix<REAL> &r, CPMBase &cpm, dim3 block_dim, STREAM *stream) {
     Region &global = cpm.global;
     Region &pdm = cpm.pdm_list[cpm.rank];
     Region gmap(global.shape, cpm.gc);
-    CPMOp<REAL> cpmop(&cpm);
+    CPMComm<REAL> cpmop(&cpm);
     INTx3 inner_shape, inner_offset, boundary_shape[6], boundary_offset[6];
     cpm.set6Region(inner_shape, inner_offset, boundary_shape, boundary_offset, 1, Region(pdm.shape, cpm.gc));
 
@@ -228,15 +228,15 @@ void L2EqSolver::L2Dev_Struct3d7p_SOR(Matrix<REAL> &a, Matrix<REAL> &x, Matrix<R
         }
         falmWaitStream();
 
-        L2Dev_Struct3d7p_Res(a, x, b, r, block_dim, cpm);
-        err = sqrt(L2Dev_EuclideanNormSq(r, block_dim, cpm)) / gmap.size;
+        L2Dev_Struct3d7p_Res(a, x, b, r, cpm, block_dim);
+        err = sqrt(L2Dev_EuclideanNormSq(r, cpm, block_dim)) / gmap.size;
         it ++;
     } while (it < maxit && err > tol);
 }
 
-void L2EqSolver::L2Dev_Struct3d7p_SORPC(Matrix<REAL> &a, Matrix<REAL> &x, Matrix<REAL> &b, dim3 block_dim, CPMBase &cpm, STREAM *stream) {
+void L2EqSolver::L2Dev_Struct3d7p_SORPC(Matrix<REAL> &a, Matrix<REAL> &x, Matrix<REAL> &b, CPMBase &cpm, dim3 block_dim, STREAM *stream) {
     Region &pdm = cpm.pdm_list[cpm.rank];
-    CPMOp<REAL> cpmop(&cpm);
+    CPMComm<REAL> cpmop(&cpm);
     INTx3 inner_shape, inner_offset, boundary_shape[6], boundary_offset[6];
     cpm.set6Region(inner_shape, inner_offset, boundary_shape, boundary_offset, 1, Region(pdm.shape, cpm.gc));
 
@@ -298,7 +298,7 @@ void L2EqSolver::L2Dev_Struct3d7p_SORPC(Matrix<REAL> &a, Matrix<REAL> &x, Matrix
     } while (__it < pc_maxit);
 }
 
-void L2EqSolver::L2Dev_Struct3d7p_PBiCGStab(Matrix<REAL> &a, Matrix<REAL> &x, Matrix<REAL> &b, Matrix<REAL> &r, dim3 block_dim, CPMBase &cpm, STREAM *stream) {
+void L2EqSolver::L2Dev_Struct3d7p_PBiCGStab(Matrix<REAL> &a, Matrix<REAL> &x, Matrix<REAL> &b, Matrix<REAL> &r, CPMBase &cpm, dim3 block_dim, STREAM *stream) {
     Region &global = cpm.global;
     Region &pdm = cpm.pdm_list[cpm.rank];
     Region gmap(global.shape, cpm.gc);
@@ -313,8 +313,8 @@ void L2EqSolver::L2Dev_Struct3d7p_PBiCGStab(Matrix<REAL> &a, Matrix<REAL> &x, Ma
     Matrix<REAL>  t(pdm.shape, 1, HDCType::Device, "PBiCGStab  t");
     REAL rho, rrho, alpha, beta, omega;
 
-    L2Dev_Struct3d7p_Res(a, x, b, r, block_dim, cpm);
-    err = sqrt(L2Dev_EuclideanNormSq(r, block_dim, cpm)) / gmap.size;
+    L2Dev_Struct3d7p_Res(a, x, b, r, cpm, block_dim);
+    err = sqrt(L2Dev_EuclideanNormSq(r, cpm, block_dim)) / gmap.size;
 
     rr.cpy(r, HDCType::Device);
     rrho  = 1.0;
@@ -327,7 +327,7 @@ void L2EqSolver::L2Dev_Struct3d7p_PBiCGStab(Matrix<REAL> &a, Matrix<REAL> &x, Ma
         //     break;
         // }
 
-        rho = L2Dev_DotProduct(r, rr, block_dim, cpm);
+        rho = L2Dev_DotProduct(r, rr, cpm, block_dim);
         if (fabs(rho) < __FLT_MIN__) {
             err = rho;
             break;
@@ -340,22 +340,22 @@ void L2EqSolver::L2Dev_Struct3d7p_PBiCGStab(Matrix<REAL> &a, Matrix<REAL> &x, Ma
             L0Dev_PBiCGStab1(p, q, r, beta, omega, pdm, map, block_dim);
         }
         pp.clear(HDCType::Device);
-        L2Dev_Struct3d7p_Precondition(a, pp, p, block_dim, cpm);
-        L2Dev_Struct3d7p_MV(a, pp, q, block_dim, cpm);
-        alpha = rho / L2Dev_DotProduct(rr, q, block_dim, cpm);
+        L2Dev_Struct3d7p_Precondition(a, pp, p, cpm, block_dim);
+        L2Dev_Struct3d7p_MV(a, pp, q, cpm, block_dim);
+        alpha = rho / L2Dev_DotProduct(rr, q, cpm, block_dim);
 
         L0Dev_PBiCGStab2(s, q, r, alpha, pdm, map, block_dim);
         ss.clear(HDCType::Device);
-        L2Dev_Struct3d7p_Precondition(a, ss, s, block_dim, cpm);
-        L2Dev_Struct3d7p_MV(a, ss, t, block_dim, cpm);
-        omega = L2Dev_DotProduct(t, s, block_dim, cpm) / L2Dev_DotProduct(t, t, block_dim, cpm);
+        L2Dev_Struct3d7p_Precondition(a, ss, s, cpm, block_dim);
+        L2Dev_Struct3d7p_MV(a, ss, t, cpm, block_dim);
+        omega = L2Dev_DotProduct(t, s, cpm, block_dim) / L2Dev_DotProduct(t, t, cpm, block_dim);
 
         L0Dev_PBiCGStab3(x, pp, ss, alpha, omega, pdm, map, block_dim);
         L0Dev_PBiCGStab4(r, s, t, omega, pdm, map, block_dim);
 
         rrho = rho;
 
-        err = sqrt(L2Dev_EuclideanNormSq(r, block_dim, cpm)) / gmap.size;
+        err = sqrt(L2Dev_EuclideanNormSq(r, cpm, block_dim)) / gmap.size;
         it ++;
     } while (it < maxit && err > tol);
 }

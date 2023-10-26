@@ -37,9 +37,9 @@ void field_output(INT i, int rank) {
     x.sync(MCpType::Dev2Hst);
     u.sync(MCpType::Dev2Hst);
     p.sync(MCpType::Dev2Hst);
-    for (INT k = cpm.gc; k < pdm.shape.z - cpm.gc; k ++) {
-        for (INT j = cpm.gc; j < pdm.shape.y - cpm.gc; j ++) {
-            for (INT i = cpm.gc; i < pdm.shape.x - cpm.gc; i ++) {
+    for (INT k = 0; k < pdm.shape.z; k ++) {
+        for (INT j = 0; j < pdm.shape.y; j ++) {
+            for (INT i = 0; i < pdm.shape.x; i ++) {
                 INT idx = IDX(i, j, k, pdm.shape);
                 fprintf(file, "%12.5e,%12.5e,%12.5e,%12.5e,%12.5e,%12.5e,%12.5e\n", x(idx, 0), x(idx, 1), x(idx, 2), u(idx, 0), u(idx, 1), u(idx, 2), p(idx));
             }
@@ -48,18 +48,43 @@ void field_output(INT i, int rank) {
     fclose(file);
 }
 
-void plt3d_output(int step, int rank, Vcdm::VCDM<REAL> &vcdm) {
-    Matrix<REAL> uvwp(cpm.pdm_list[cpm.rank].shape, 4, HDCType::Host, "uvwp");
+void plt3d_output(int step, int rank, REAL dt, Vcdm::VCDM<float> &vcdm) {
+    Matrix<float> uvw(cpm.pdm_list[cpm.rank].shape, 3, HDCType::Host, "uvw");
     u.sync(MCpType::Dev2Hst);
-    p.sync(MCpType::Dev2Hst);
-    falmMemcpy(&uvwp(0, 0), &u(0, 0), sizeof(REAL) * u.size, MCpType::Hst2Hst);
-    falmMemcpy(&uvwp(0, 3), &p(0)   , sizeof(REAL) * p.size, MCpType::Hst2Hst);
-    vcdm.writeFileData(&u(0, 0), cpm.gc, 4, rank, step, Vcdm::IdxType::IJKN);
+    // p.sync(MCpType::Dev2Hst);
+    // falmMemcpy(&uvw(0, 0), &u(0, 0), sizeof(REAL) * u.size, MCpType::Hst2Hst);
+    // falmMemcpy(&uvwp(0, 3), &p(0)   , sizeof(REAL) * p.size, MCpType::Hst2Hst);
+    for (INT i = 0; i < u.size; i ++) {
+        uvw(i) = u(i);
+    }
+    vcdm.writeFileData(&uvw(0, 0), cpm.gc, 3, rank, step, Vcdm::IdxType::IJKN);
+    dim3 bdim(8, 8, 1);
+    double umax = L2Dev_MatColMax(u, 0, cpm, bdim);
+    double vmax = L2Dev_MatColMax(u, 1, cpm, bdim);
+    double wmax = L2Dev_MatColMax(u, 2, cpm, bdim);
+    double _max = L2Dev_VecMax(u, cpm, bdim);
+    double umin = L2Dev_MatColMin(u, 0, cpm, bdim);
+    double vmin = L2Dev_MatColMin(u, 1, cpm, bdim);
+    double wmin = L2Dev_MatColMin(u, 2, cpm, bdim);
+    double _min = L2Dev_VecMin(u, cpm, bdim);
+    Vcdm::VcdmSlice slice;
+    slice.step = step;
+    slice.time = step * dt;
+    slice.avgStep = 1;
+    slice.avgTime = dt;
+    slice.avgMode = false;
+    slice.vectorMax = _max;
+    slice.vectorMin = _min;
+    slice.varMax = {umax, vmax, wmax};
+    slice.varMin = {umin, vmin, wmin};
+    vcdm.timeSlice.push_back(slice);
 }
 
-void setVcdmAttributes(Vcdm::VCDM<REAL> &vcdm) {
-    setVcdm<REAL>(cpm, vcdm, {L, L, L/N});
-
+template<typename Type>
+void setVcdmAttributes(Vcdm::VCDM<Type> &vcdm) {
+    vcdm.setPath("data", "field");
+    setVcdm<Type>(cpm, vcdm, {L, L, L/N});
+    vcdm.dfiFinfo.varList = {"u", "v", "w"};
 }
 
 void allocVars(Region &pdm) {
@@ -76,25 +101,25 @@ void allocVars(Region &pdm) {
 }
 
 REAL main_loop(L2CFD &cfd, L2EqSolver &eqsolver, CPMBase &cpm, dim3 block_dim, STREAM *stream) {
-    cfd.L2Dev_Cartesian3d_FSCalcPseudoU(u, u, uu, ua, nut, kx, g, ja, ff, block_dim, cpm, stream);
-    cfd.L2Dev_Cartesian3d_UtoUU(ua, uua, kx, ja, block_dim, cpm, stream);
+    cfd.L2Dev_Cartesian3d_FSCalcPseudoU(u, u, uu, ua, nut, kx, g, ja, ff, cpm, block_dim, stream);
+    cfd.L2Dev_Cartesian3d_UtoUU(ua, uua, kx, ja, cpm, block_dim, stream);
     forceFaceVelocityZero(uua, cpm);
     cfd.L2Dev_Cartesian3d_MACCalcPoissonRHS(uua, rhs, ja, cpm, block_dim, maxdiag);
     
-    eqsolver.L2Dev_Struct3d7p_Solve(poisson_a, p, rhs, res, block_dim, cpm, stream);
+    eqsolver.L2Dev_Struct3d7p_Solve(poisson_a, p, rhs, res, cpm, block_dim, stream);
     pressureBC(p, cpm, stream);
     copyZ5(p, cpm);
 
-    cfd.L2Dev_Cartesian3d_ProjectP(u, ua, uu, uua, p, kx, g, block_dim, cpm, stream);
+    cfd.L2Dev_Cartesian3d_ProjectP(u, ua, uu, uua, p, kx, g, cpm, block_dim, stream);
     velocityBC(u, cpm, stream);
     copyZ5(u, cpm);
 
-    cfd.L2Dev_Cartesian3d_SGS(u, nut, x, kx, ja, block_dim, cpm, stream);
+    cfd.L2Dev_Cartesian3d_SGS(u, nut, x, kx, ja, cpm, block_dim, stream);
     copyZ5(nut, cpm);
 
     cfd.L2Dev_Cartesian3d_Divergence(uu, dvr, ja, cpm, block_dim);
 
-    return L2Dev_EuclideanNormSq(dvr, block_dim, cpm);
+    return L2Dev_EuclideanNormSq(dvr, cpm, block_dim);
 }
 
 int main(int argc, char **argv) {
@@ -144,14 +169,19 @@ int main(int argc, char **argv) {
         CPML2_Barrier(MPI_COMM_WORLD);
     }
 
-    Vcdm::VCDM<REAL> vcdm;
+    Vcdm::VCDM<float> vcdm;
     // setVcdm<REAL>(cpm, vcdm, Vcdm::doublex3{L, L, L/N});
     setVcdmAttributes(vcdm);
+    if (cpm.rank == 0) {
+        vcdm.writeIndexDfi();
+        vcdm.writeProcDfi();
+    }
 
     if (cpm.rank == 0) {
         Vcdm::doublex3 d3;
         Vcdm::intx3    i3;
         printf("------------dfi info------------\n");
+        printf("mpi (%d %d)\n", vcdm.dfiMPI.size, vcdm.dfiMPI.ngrp);
         d3 = vcdm.dfiDomain.globalOrigin;
         printf("gOrigin   (%e %e %e)\n", d3.x, d3.y, d3.z);
         d3 = vcdm.dfiDomain.globalRegion;
@@ -177,6 +207,13 @@ int main(int argc, char **argv) {
         fflush(stdout);
     }
     CPML2_Barrier(MPI_COMM_WORLD);
+
+    x.sync(MCpType::Dev2Hst);
+    Matrix<float> xyz(x.shape.x, x.shape.y, HDCType::Host, "float x");
+    for (INT i = 0; i < x.size; i ++) {
+        xyz(i) = x(i);
+    }
+    vcdm.writeGridData(&xyz(0, 0), cpm.gc, cpm.rank, 0, Vcdm::IdxType::IJKN);
     
     L2CFD cfdsolver(3200, DT, AdvectionSchemeType::Upwind3, SGSType::Empty, 0.1);
     L2EqSolver eqsolver(LSType::PBiCGStab, 10000, 1e-8, 1.2, LSType::SOR, 5, 1.5);
@@ -189,6 +226,10 @@ int main(int argc, char **argv) {
     REAL __t = 0;
     INT  __it = 0;
     const INT __IT = int(T / DT);
+    const INT __oIT = int(10.0/DT);
+    
+    plt3d_output(__it, cpm.rank, DT, vcdm);
+    field_output(__it, cpm.rank);
     while (__it < __IT) {
         REAL dvr_norm = sqrt(main_loop(cfdsolver, eqsolver, cpm, dim3(8, 8, 1), nullptr)) / ginner.size;
         __t += DT;
@@ -197,6 +238,20 @@ int main(int argc, char **argv) {
             printf("\r%8d %12.5e, %12.5e, %3d, %12.5e", __it, __t, dvr_norm, eqsolver.it, eqsolver.err);
             fflush(stdout);
         }
+        if (__it % __oIT == 0) {
+            plt3d_output(__it, cpm.rank, DT, vcdm);
+            field_output(__it, cpm.rank);
+            if (cpm.rank == 0) {
+                REAL probe_u;
+                falmMemcpy(&probe_u, &u.dev(IDX(2, 0, 0, cpm.pdm_list[cpm.rank].shape), 0), sizeof(REAL), MCpType::Dev2Hst);
+                printf("\n%lf\n", probe_u);
+            }
+        }
+    }
+    printf("\n");
+    if (cpm.rank == 0) {
+        vcdm.writeIndexDfi();
+        vcdm.writeProcDfi();
     }
     // field_output(__IT, cpm.rank);
 

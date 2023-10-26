@@ -20,6 +20,8 @@ void setVcdm(CPMBase &cpm, Vcdm::VCDM<T> &vcdm, Vcdm::doublex3 gRegion, Vcdm::do
         cpm.shape.x, cpm.shape.y, cpm.shape.z
     };
 
+    vcdm.dfiMPI.size = cpm.size;
+
     vcdm.dfiProc = std::vector<Vcdm::VcdmRank>(cpm.size, Vcdm::VcdmRank());
     for (INT k = 0; k < cpm.shape.z; k ++) {
     for (INT j = 0; j < cpm.shape.y; j ++) {

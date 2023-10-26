@@ -243,7 +243,7 @@ void VCDM<T>::writeXYZ(T *xyz, int gc, int rank, int step, IdxType idxtype) {
 
     FILE *file = fopen(fname.c_str(), "wb");
 
-    intx3 size = dfiDomain.globalVoxel;
+    intx3 size = dfiProc[rank].voxelSize;
     size.x += 2 * gc;
     size.y += 2 * gc;
     size.z += 2 * gc;
@@ -287,7 +287,7 @@ void VCDM<T>::writeFunc(T *data, int gc, int dim, int rank, int step, IdxType id
 
     FILE *file = fopen(fname.c_str(), "wb");
 
-    intx3 size = dfiDomain.globalVoxel;
+    intx3 size = dfiProc[rank].voxelSize;
     size.x += 2 * gc;
     size.y += 2 * gc;
     size.z += 2 * gc;

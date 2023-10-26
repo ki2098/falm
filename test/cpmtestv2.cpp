@@ -128,7 +128,7 @@ int main(int argc, char **argv) {
     }
 
     cpm.use_cuda_aware_mpi = USE_CUDA_AWARE_MPI;
-    CPMOp<REAL> cpmop(cpm);
+    CPMComm<REAL> cpmop(cpm);
     printf("cpmop %d: %d %u\n", cpm.rank, cpmop.mpi_dtype == MPI_DOUBLE, cpmop.buffer_hdctype);
     CPML2_Barrier(MPI_COMM_WORLD);
     INT thick = THICK;
