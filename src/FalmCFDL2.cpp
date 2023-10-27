@@ -27,7 +27,7 @@ void L2CFD::L2Dev_Cartesian3d_FSCalcPseudoU(
     wcpm.CPML2Dev_IExchange6Face(&u.dev(0,2), 2, 0, 2, stream);
     nutcpm.CPML2Dev_IExchange6Face(&nut.dev(0), 1, 0, 3, stream);
 
-    INTx3 inner_shape, inner_offset, boundary_shape[6], boundary_offset[6];
+    INT3 inner_shape, inner_offset, boundary_shape[6], boundary_offset[6];
     cpm.set6Region(inner_shape, inner_offset, boundary_shape, boundary_offset, 2, Region(pdm.shape, cpm.gc));
 
 
@@ -74,7 +74,7 @@ void L2CFD::L2Dev_Cartesian3d_UtoUU(
     STREAM       *stream
 ) {
     Region &pdm = cpm.pdm_list[cpm.rank];
-    INTx3 inner_shape, inner_offset, boundary_shape[6], boundary_offset[6];
+    INT3 inner_shape, inner_offset, boundary_shape[6], boundary_offset[6];
     cpm.set6Region(inner_shape, inner_offset, boundary_shape, boundary_offset, 1, Region(pdm.shape, cpm.gc - 1));
     Matrix<REAL> uc(pdm.shape, 3, HDCType::Device, "contra u at grid");
 
@@ -115,10 +115,12 @@ void L2CFD::L2Dev_Cartesian3d_UtoUU(
     }
 
     Region uumap(pdm.shape, cpm.gc);
-    uumap = uumap.transform(
-        INTx3{ 1,  1,  1},
-        INTx3{-1, -1, -1}
-    );
+    uumap.shape  += {1, 1, 1};
+    uumap.offset -= {1, 1, 1};
+    // uumap = uumap.transform(
+    //     INT3{ 1,  1,  1},
+    //     INT3{-1, -1, -1}
+    // );
     L0Dev_Cartesian3d_InterpolateCU(uu, uc, pdm, uumap, block_dim);
 
     falmWaitStream();
@@ -137,7 +139,7 @@ void L2CFD::L2Dev_Cartesian3d_ProjectP(
     STREAM       *stream
 ) {
     Region &pdm = cpm.pdm_list[cpm.rank];
-    INTx3 inner_shape, inner_offset, boundary_shape[6], boundary_offset[6];
+    INT3 inner_shape, inner_offset, boundary_shape[6], boundary_offset[6];
     cpm.set6Region(inner_shape, inner_offset, boundary_shape, boundary_offset, 1, Region(pdm.shape, cpm.gc));
 
     CPMComm<REAL> pcpm(&cpm);
@@ -169,10 +171,12 @@ void L2CFD::L2Dev_Cartesian3d_ProjectP(
     }
 
     Region uumap(pdm.shape, cpm.gc);
-    uumap = uumap.transform(
-        INTx3{ 1,  1,  1},
-        INTx3{-1, -1, -1}
-    );
+    uumap.shape  += {1, 1, 1};
+    uumap.offset -= {1, 1, 1};
+    // uumap = uumap.transform(
+    //     INT3{ 1,  1,  1},
+    //     INT3{-1, -1, -1}
+    // );
     L0Dev_Cartesian3d_ProjectPFace(uu, uua, p, g, pdm, uumap, block_dim);
 
     falmWaitStream();
@@ -192,7 +196,7 @@ void L2CFD::L2Dev_Cartesian3d_SGS(
     if (SGSModel == SGSType::Empty) {
         return;
     }
-    INTx3 inner_shape, inner_offset, boundary_shape[6], boundary_offset[6];
+    INT3 inner_shape, inner_offset, boundary_shape[6], boundary_offset[6];
     cpm.set6Region(inner_shape, inner_offset, boundary_shape, boundary_offset, 1, Region(pdm.shape, cpm.gc));
 
     CPMComm<REAL> ucpm;

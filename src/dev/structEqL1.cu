@@ -4,7 +4,7 @@
 
 namespace Falm {
 
-__global__ void kernel_Struct3d7p_MV(const MatrixFrame<REAL> *va, const MatrixFrame<REAL> *vx, const MatrixFrame<REAL> *vax, INTx3 pdm_shape, INTx3 map_shape, INTx3 map_offset) {
+__global__ void kernel_Struct3d7p_MV(const MatrixFrame<REAL> *va, const MatrixFrame<REAL> *vx, const MatrixFrame<REAL> *vax, INT3 pdm_shape, INT3 map_shape, INT3 map_offset) {
     const MatrixFrame<REAL> &a=*va, &x=*vx, &ax=*vax;
     INT i, j, k;
     GLOBAL_THREAD_IDX_3D(i, j, k);
@@ -51,7 +51,7 @@ void L0Dev_Struct3d7p_MV(Matrix<REAL> &a, Matrix<REAL> &x, Matrix<REAL> &ax, Reg
     kernel_Struct3d7p_MV<<<grid_dim, block_dim, 0, stream>>>(a.devptr, x.devptr, ax.devptr, pdm.shape, map.shape, map.offset);
 }
 
-__global__ void kernel_Struct3d7p_Res(const MatrixFrame<REAL> *va, const MatrixFrame<REAL> *vx, const MatrixFrame<REAL> *vb, const MatrixFrame<REAL> *vr, INTx3 pdm_shape, INTx3 map_shape, INTx3 map_offset) {
+__global__ void kernel_Struct3d7p_Res(const MatrixFrame<REAL> *va, const MatrixFrame<REAL> *vx, const MatrixFrame<REAL> *vb, const MatrixFrame<REAL> *vr, INT3 pdm_shape, INT3 map_shape, INT3 map_offset) {
     const MatrixFrame<REAL> &a=*va, &x=*vx, &b=*vb, &r=*vr;
     INT i, j, k;
     GLOBAL_THREAD_IDX_3D(i, j, k);
@@ -98,7 +98,7 @@ void L0Dev_Struct3d7p_Res(Matrix<REAL> &a, Matrix<REAL> &x, Matrix<REAL> &b, Mat
     kernel_Struct3d7p_Res<<<grid_dim, block_dim, 0, stream>>>(a.devptr, x.devptr, b.devptr, r.devptr, pdm.shape, map.shape, map.offset);
 }
 
-__global__ void kernel_Struct3d7p_Jacobi(const MatrixFrame<REAL> *va, const MatrixFrame<REAL> *vx, const MatrixFrame<REAL> *vxp, const MatrixFrame<REAL> *vb, INTx3 pdm_shape, INTx3 map_shape, INTx3 map_offset) {
+__global__ void kernel_Struct3d7p_Jacobi(const MatrixFrame<REAL> *va, const MatrixFrame<REAL> *vx, const MatrixFrame<REAL> *vxp, const MatrixFrame<REAL> *vb, INT3 pdm_shape, INT3 map_shape, INT3 map_offset) {
     const MatrixFrame<REAL> &a=*va, &x=*vx, &xp=*vxp, &b=*vb;
     INT i, j, k;
     GLOBAL_THREAD_IDX_3D(i, j, k);
@@ -172,7 +172,7 @@ void L1EqSolver::L1Dev_Struct3d7p_JacobiPC(Matrix<REAL> &a, Matrix<REAL> &x, Mat
     } while (__it < pc_maxit);
 }
 
-__global__ void kernel_Struct3d7p_SOR(const MatrixFrame<REAL> *va, const MatrixFrame<REAL> *vx, const MatrixFrame<REAL> *vb, REAL omega, INT color, INTx3 pdm_shape, INTx3 pdm_offset, INTx3 map_shape, INTx3 map_offset) {
+__global__ void kernel_Struct3d7p_SOR(const MatrixFrame<REAL> *va, const MatrixFrame<REAL> *vx, const MatrixFrame<REAL> *vb, REAL omega, INT color, INT3 pdm_shape, INT3 pdm_offset, INT3 map_shape, INT3 map_offset) {
     const MatrixFrame<REAL> &a=*va, &x=*vx, &b=*vb;
     INT i, j, k;
     GLOBAL_THREAD_IDX_3D(i, j, k);
@@ -249,7 +249,7 @@ void L1EqSolver::L1Dev_Struct3d7p_SORPC(Matrix<REAL> &a, Matrix<REAL> &x, Matrix
     } while (__it < pc_maxit);
 }
 
-__global__ void kernel_PBiCGStab_1(const MatrixFrame<REAL> *vp, const MatrixFrame<REAL> *vq, const MatrixFrame<REAL> *vr, REAL beta, REAL omega, INTx3 pdm_shape, INTx3 map_shape, INTx3 map_offset) {
+__global__ void kernel_PBiCGStab_1(const MatrixFrame<REAL> *vp, const MatrixFrame<REAL> *vq, const MatrixFrame<REAL> *vr, REAL beta, REAL omega, INT3 pdm_shape, INT3 map_shape, INT3 map_offset) {
     const MatrixFrame<REAL> &p=*vp, &q=*vq, &r=*vr;
     INT i, j, k;
     GLOBAL_THREAD_IDX_3D(i, j, k);
@@ -271,7 +271,7 @@ void L1EqSolver::L0Dev_PBiCGStab1(Matrix<REAL> &p, Matrix<REAL> &q, Matrix<REAL>
     kernel_PBiCGStab_1<<<grid_dim, block_dim, 0, 0>>>(p.devptr, q.devptr, r.devptr, beta, omega, pdm.shape, map.shape, map.offset);
 }
 
-__global__ void kernel_PBiCGStab_2(const MatrixFrame<REAL> *vs, const MatrixFrame<REAL> *vq, const MatrixFrame<REAL> *vr, REAL alpha, INTx3 pdm_shape, INTx3 map_shape, INTx3 map_offset) {
+__global__ void kernel_PBiCGStab_2(const MatrixFrame<REAL> *vs, const MatrixFrame<REAL> *vq, const MatrixFrame<REAL> *vr, REAL alpha, INT3 pdm_shape, INT3 map_shape, INT3 map_offset) {
     const MatrixFrame<REAL> &s=*vs, &q=*vq, &r=*vr;
     INT i, j, k;
     GLOBAL_THREAD_IDX_3D(i, j, k);
@@ -293,7 +293,7 @@ void L1EqSolver::L0Dev_PBiCGStab2(Matrix<REAL> &s, Matrix<REAL> &q, Matrix<REAL>
     kernel_PBiCGStab_2<<<grid_dim, block_dim, 0, 0>>>(s.devptr, q.devptr, r.devptr, alpha, pdm.shape, map.shape, map.offset);
 }
 
-__global__ void kernel_PBiCGStab_3(const MatrixFrame<REAL> *vx, const MatrixFrame<REAL> *vpp, const MatrixFrame<REAL> *vss, REAL alpha, REAL omega, INTx3 pdm_shape, INTx3 map_shape, INTx3 map_offset) {
+__global__ void kernel_PBiCGStab_3(const MatrixFrame<REAL> *vx, const MatrixFrame<REAL> *vpp, const MatrixFrame<REAL> *vss, REAL alpha, REAL omega, INT3 pdm_shape, INT3 map_shape, INT3 map_offset) {
     const MatrixFrame<REAL> &x=*vx, &pp=*vpp, &ss=*vss;
     INT i, j, k;
     GLOBAL_THREAD_IDX_3D(i, j, k);
@@ -315,7 +315,7 @@ void L1EqSolver::L0Dev_PBiCGStab3(Matrix<REAL> &x, Matrix<REAL> &pp, Matrix<REAL
     kernel_PBiCGStab_3<<<grid_dim, block_dim, 0, 0>>>(x.devptr, pp.devptr, ss.devptr, alpha, omega, pdm.shape, map.shape, map.offset);
 } 
 
-__global__ void kernel_PBiCGStab_4(const MatrixFrame<REAL> *vr, const MatrixFrame<REAL> *vs, const MatrixFrame<REAL> *vt, REAL omega, INTx3 pdm_shape, INTx3 map_shape, INTx3 map_offset) {
+__global__ void kernel_PBiCGStab_4(const MatrixFrame<REAL> *vr, const MatrixFrame<REAL> *vs, const MatrixFrame<REAL> *vt, REAL omega, INT3 pdm_shape, INT3 map_shape, INT3 map_offset) {
     const MatrixFrame<REAL> &r=*vr, &s=*vs, &t=*vt;
     INT i, j, k;
     GLOBAL_THREAD_IDX_3D(i, j, k);

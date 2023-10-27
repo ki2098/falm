@@ -11,11 +11,11 @@ __global__ void kernel_makePoissonMatrix(
     const MatrixFrame<REAL> *va,
     const MatrixFrame<REAL> *vg,
     const MatrixFrame<REAL> *vja,
-    INTx3              global_shape,
-    INTx3              pdm_shape,
-    INTx3              pdm_offset,
-    INTx3              map_shape,
-    INTx3              map_offset,
+    INT3              global_shape,
+    INT3              pdm_shape,
+    INT3              pdm_offset,
+    INT3              map_shape,
+    INT3              map_offset,
     INT                gc
 ) {
     const MatrixFrame<REAL> &a = *va, &g = *vg, &ja = *vja;

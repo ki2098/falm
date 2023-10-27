@@ -6,16 +6,19 @@
 
 #include <cuda.h>
 #include <cuda_runtime.h>
+#include "vectypes.h"
 
 namespace Falm {
 
 typedef double         REAL;
 typedef unsigned       FLAG;
 typedef int             INT;
-typedef double3      REALx3;
-typedef double2      REALx2;
-typedef int3          INTx3;
-typedef int2          INTx2;
+
+
+typedef VECTOR3<INT>   INT3;
+typedef VECTOR3<REAL> REAL3;
+typedef VECTOR2<INT>   INT2;
+typedef VECTOR2<REAL> REAL2;
 
 typedef cudaStream_t STREAM;
 

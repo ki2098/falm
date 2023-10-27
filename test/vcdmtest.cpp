@@ -21,7 +21,7 @@ int main() {
 
     vcdm.dfiMPI.size              = 8;
 
-    intx3 &division = vcdm.dfiDomain.globalDivision;
+    int3 &division = vcdm.dfiDomain.globalDivision;
     for (int k = 0; k < division.z; k ++) {
         for (int j = 0; j < division.y; j ++) {
             for (int i = 0; i < division.x; i ++) {

@@ -3,7 +3,7 @@
 
 namespace Falm {
 
-__global__ void kernel_DotProduct(const MatrixFrame<REAL> *va, const MatrixFrame<REAL> *vb, REAL *partial_sum_dev, INTx3 pdm_shape, INTx3 map_shape, INTx3 map_offset) {
+__global__ void kernel_DotProduct(const MatrixFrame<REAL> *va, const MatrixFrame<REAL> *vb, REAL *partial_sum_dev, INT3 pdm_shape, INT3 map_shape, INT3 map_offset) {
     extern __shared__ REAL cache[];
     const MatrixFrame<REAL> &a=*va, &b=*vb;
     INT i, j, k;
@@ -62,7 +62,7 @@ REAL L0Dev_DotProduct(Matrix<REAL> &a, Matrix<REAL> &b, Region &pdm, const Regio
     return sum;
 }
 
-__global__ void kernel_EuclideanNormSq(const MatrixFrame<REAL> *va, REAL *partial_sum_dev, INTx3 pdm_shape, INTx3 map_shape, INTx3 map_offset) {
+__global__ void kernel_EuclideanNormSq(const MatrixFrame<REAL> *va, REAL *partial_sum_dev, INT3 pdm_shape, INT3 map_shape, INT3 map_offset) {
     extern __shared__ REAL cache[];
     const MatrixFrame<REAL> &a=*va;
     INT i, j, k;
@@ -158,7 +158,7 @@ REAL L0Dev_EuclideanNormSq(Matrix<REAL> &a, Region &pdm, const Region &map, dim3
     }
 } */
 
-__global__ void kernel_MatColMax(const MatrixFrame<REAL> *va, INT col, REAL *partial_max_dev, INTx3 pdm_shape, INTx3 map_shape, INTx3 map_offset) {
+__global__ void kernel_MatColMax(const MatrixFrame<REAL> *va, INT col, REAL *partial_max_dev, INT3 pdm_shape, INT3 map_shape, INT3 map_offset) {
     extern __shared__ REAL cache[];
     const MatrixFrame<REAL> &a=*va;
     INT i, j, k;
@@ -193,7 +193,7 @@ __global__ void kernel_MatColMax(const MatrixFrame<REAL> *va, INT col, REAL *par
     }
 }
 
-__global__ void kernel_MatColMin(const MatrixFrame<REAL> *va, INT col, REAL *partial_max_dev, INTx3 pdm_shape, INTx3 map_shape, INTx3 map_offset) {
+__global__ void kernel_MatColMin(const MatrixFrame<REAL> *va, INT col, REAL *partial_max_dev, INT3 pdm_shape, INT3 map_shape, INT3 map_offset) {
     extern __shared__ REAL cache[];
     const MatrixFrame<REAL> &a=*va;
     INT i, j, k;
@@ -228,7 +228,7 @@ __global__ void kernel_MatColMin(const MatrixFrame<REAL> *va, INT col, REAL *par
     }
 }
 
-__global__ void kernel_MatColAbsMax(const MatrixFrame<REAL> *va, INT col, REAL *partial_max_dev, INTx3 pdm_shape, INTx3 map_shape, INTx3 map_offset) {
+__global__ void kernel_MatColAbsMax(const MatrixFrame<REAL> *va, INT col, REAL *partial_max_dev, INT3 pdm_shape, INT3 map_shape, INT3 map_offset) {
     extern __shared__ REAL cache[];
     const MatrixFrame<REAL> &a=*va;
     INT i, j, k;
@@ -263,7 +263,7 @@ __global__ void kernel_MatColAbsMax(const MatrixFrame<REAL> *va, INT col, REAL *
     }
 }
 
-__global__ void kernel_MatColAbsMin(const MatrixFrame<REAL> *va, INT col, REAL *partial_max_dev, INTx3 pdm_shape, INTx3 map_shape, INTx3 map_offset) {
+__global__ void kernel_MatColAbsMin(const MatrixFrame<REAL> *va, INT col, REAL *partial_max_dev, INT3 pdm_shape, INT3 map_shape, INT3 map_offset) {
     extern __shared__ REAL cache[];
     const MatrixFrame<REAL> &a=*va;
     INT i, j, k;
@@ -456,7 +456,7 @@ void L1Dev_ScaleMatrix(Matrix<REAL> &a, REAL scale, dim3 block_dim) {
     falmWaitStream(0);
 }
 
-__global__ void kernel_VecMax(const MatrixFrame<REAL> *va, REAL *partial_max_dev, INTx3 pdm_shape, INTx3 map_shape, INTx3 map_offset ) {
+__global__ void kernel_VecMax(const MatrixFrame<REAL> *va, REAL *partial_max_dev, INT3 pdm_shape, INT3 map_shape, INT3 map_offset ) {
     extern __shared__ REAL cache[];
     const MatrixFrame<REAL> &a=*va;
     INT i, j, k;
@@ -494,7 +494,7 @@ __global__ void kernel_VecMax(const MatrixFrame<REAL> *va, REAL *partial_max_dev
     }
 }
 
-__global__ void kernel_VecMin(const MatrixFrame<REAL> *va, REAL *partial_max_dev, INTx3 pdm_shape, INTx3 map_shape, INTx3 map_offset ) {
+__global__ void kernel_VecMin(const MatrixFrame<REAL> *va, REAL *partial_max_dev, INT3 pdm_shape, INT3 map_shape, INT3 map_offset ) {
     extern __shared__ REAL cache[];
     const MatrixFrame<REAL> &a=*va;
     INT i, j, k;

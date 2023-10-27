@@ -8,7 +8,7 @@ using namespace Falm;
 
 __global__ void kernel_pressureBC_E(
     const MatrixFrame<REAL> *vp,
-    INTx3              pdm_shape,
+    INT3              pdm_shape,
     INT                gc
 ) {
     const MatrixFrame<REAL> &p=*vp;
@@ -24,7 +24,7 @@ __global__ void kernel_pressureBC_E(
 
 __global__ void kernel_pressureBC_W(
     const MatrixFrame<REAL> *vp,
-    INTx3              pdm_shape,
+    INT3              pdm_shape,
     INT                gc
 ) {
     const MatrixFrame<REAL> &p=*vp;
@@ -40,7 +40,7 @@ __global__ void kernel_pressureBC_W(
 
 __global__ void kernel_pressureBC_N(
     const MatrixFrame<REAL> *vp,
-    INTx3              pdm_shape,
+    INT3              pdm_shape,
     INT                gc
 ) {
     const MatrixFrame<REAL> &p=*vp;
@@ -56,7 +56,7 @@ __global__ void kernel_pressureBC_N(
 
 __global__ void kernel_pressureBC_S(
     const MatrixFrame<REAL> *vp,
-    INTx3              pdm_shape,
+    INT3              pdm_shape,
     INT                gc
 ) {
     const MatrixFrame<REAL> &p=*vp;
@@ -116,7 +116,7 @@ void dev_pressureBC_S(
 
 __global__ void kernel_velocityBC_E(
     const MatrixFrame<REAL> *vu,
-    INTx3              pdm_shape,
+    INT3              pdm_shape,
     INT                gc
 ) {
     const MatrixFrame<REAL> &u=*vu;
@@ -136,7 +136,7 @@ __global__ void kernel_velocityBC_E(
 
 __global__ void kernel_velocityBC_W(
     const MatrixFrame<REAL> *vu,
-    INTx3              pdm_shape,
+    INT3              pdm_shape,
     INT                gc
 ) {
     const MatrixFrame<REAL> &u=*vu;
@@ -156,7 +156,7 @@ __global__ void kernel_velocityBC_W(
 
 __global__ void kernel_velocityBC_N(
     const MatrixFrame<REAL> *vu,
-    INTx3              pdm_shape,
+    INT3              pdm_shape,
     INT                gc
 ) {
     const MatrixFrame<REAL> &u=*vu;
@@ -176,7 +176,7 @@ __global__ void kernel_velocityBC_N(
 
 __global__ void kernel_velocityBC_S(
     const MatrixFrame<REAL> *vu,
-    INTx3              pdm_shape,
+    INT3              pdm_shape,
     INT                gc
 ) {
     const MatrixFrame<REAL> &u=*vu;
@@ -240,7 +240,7 @@ void dev_velocityBC_S(
 
 __global__ void kernel_forceFaceVelocityZero_E(
     const MatrixFrame<REAL> *vuu,
-    INTx3              pdm_shape,
+    INT3              pdm_shape,
     INT                gc
 ) {
     const MatrixFrame<REAL> &uu=*vuu;
@@ -256,7 +256,7 @@ __global__ void kernel_forceFaceVelocityZero_E(
 
 __global__ void kernel_forceFaceVelocityZero_W(
     const MatrixFrame<REAL> *vuu,
-    INTx3              pdm_shape,
+    INT3              pdm_shape,
     INT                gc
 ) {
     const MatrixFrame<REAL> &uu=*vuu;
@@ -272,7 +272,7 @@ __global__ void kernel_forceFaceVelocityZero_W(
 
 __global__ void kernel_forceFaceVelocityZero_N(
     const MatrixFrame<REAL> *vuu,
-    INTx3              pdm_shape,
+    INT3              pdm_shape,
     INT                gc
 ) {
     const MatrixFrame<REAL> &uu=*vuu;
@@ -288,7 +288,7 @@ __global__ void kernel_forceFaceVelocityZero_N(
 
 __global__ void kernel_forceFaceVelocityZero_S(
     const MatrixFrame<REAL> *vuu,
-    INTx3              pdm_shape,
+    INT3              pdm_shape,
     INT                gc
 ) {
     const MatrixFrame<REAL> &uu=*vuu;

@@ -11,9 +11,9 @@ __global__ void kernel_makePoissonMatrix(
     const MatrixFrame<REAL> *va,
     const MatrixFrame<REAL> *vg,
     const MatrixFrame<REAL> *vja,
-    INTx3              pdm_shape,
-    INTx3              map_shape,
-    INTx3              map_offset,
+    INT3              pdm_shape,
+    INT3              map_shape,
+    INT3              map_offset,
     INT gc
 ) {
     const MatrixFrame<REAL> &a=*va, &g=*vg, &ja=*vja;
@@ -110,9 +110,9 @@ __global__ void kernel_makePoissonRHS(
     const MatrixFrame<REAL> *vrhs,
     const MatrixFrame<REAL> *vg,
     const MatrixFrame<REAL> *vja,
-    INTx3              pdm_shape,
-    INTx3              map_shape,
-    INTx3              map_offset
+    INT3              pdm_shape,
+    INT3              map_shape,
+    INT3              map_offset
 ) {
     const MatrixFrame<REAL> &p=*vp, &rhs=*vrhs, &g=*vg, &ja=*vja;
     INT i, j, k;

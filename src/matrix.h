@@ -10,7 +10,7 @@ namespace Falm {
 template<typename T>
 struct MatrixFrame {
     T               *ptr;
-    INTx2          shape;
+    INT2           shape;
     INT             size;
     FLAG         hdctype;
     __host__ __device__ T &operator()(INT _idx) const {return ptr[_idx];}
@@ -19,12 +19,12 @@ struct MatrixFrame {
     MatrixFrame(const MatrixFrame<T> &_mat) = delete;
     MatrixFrame<T>& operator=(const MatrixFrame<T> &_mat) = delete;
 
-    MatrixFrame() : ptr(nullptr), shape(INTx2{0, 0}), size(0), hdctype(HDCType::Empty){}
-    MatrixFrame(INTx3 _dom, INT _dim, FLAG _hdctype);
+    MatrixFrame() : ptr(nullptr), shape(INT2{0, 0}), size(0), hdctype(HDCType::Empty){}
+    MatrixFrame(INT3 _dom, INT _dim, FLAG _hdctype);
     MatrixFrame(INT _row, INT _col, FLAG _hdctype);
     ~MatrixFrame();
 
-    void alloc(INTx3 _dom, INT _dim, FLAG _hdctype);
+    void alloc(INT3 _dom, INT _dim, FLAG _hdctype);
     void alloc(INT _row, INT _col, FLAG _hdctype);
     void release();
     void clear() {
@@ -36,8 +36,8 @@ struct MatrixFrame {
     }
 };
 
-template<typename T> MatrixFrame<T>::MatrixFrame(INTx3 _dom, INT _dim, FLAG _hdctype) :
-    shape(INTx2{PRODUCT3(_dom), _dim}),
+template<typename T> MatrixFrame<T>::MatrixFrame(INT3 _dom, INT _dim, FLAG _hdctype) :
+    shape(INT2{PRODUCT3(_dom), _dim}),
     size(PRODUCT3(_dom) * _dim),
     hdctype(_hdctype)
 {
@@ -51,7 +51,7 @@ template<typename T> MatrixFrame<T>::MatrixFrame(INTx3 _dom, INT _dim, FLAG _hdc
 }
 
 template<typename T> MatrixFrame<T>::MatrixFrame(INT _row, INT _col, FLAG _hdctype) :
-    shape(INTx2{_row, _col}),
+    shape(INT2{_row, _col}),
     size(_row * _col),
     hdctype(_hdctype)
 {
@@ -74,9 +74,9 @@ template<typename T> MatrixFrame<T>::~MatrixFrame() {
     hdctype = HDCType::Empty;
 }
 
-template<typename T> void MatrixFrame<T>::alloc(INTx3 _dom, INT _dim, FLAG _hdctype) {
+template<typename T> void MatrixFrame<T>::alloc(INT3 _dom, INT _dim, FLAG _hdctype) {
     assert(hdctype == HDCType::Empty);
-    shape   = INTx2{PRODUCT3(_dom), _dim};
+    shape   = INT2{PRODUCT3(_dom), _dim};
     size    = PRODUCT3(_dom) * _dim;
     hdctype = _hdctype;
     if (hdctype == HDCType::Host) {
@@ -90,7 +90,7 @@ template<typename T> void MatrixFrame<T>::alloc(INTx3 _dom, INT _dim, FLAG _hdct
 
 template<typename T> void MatrixFrame<T>::alloc(INT _row, INT _col, FLAG _hdctype) {
     assert(hdctype == HDCType::Empty);
-    shape   = INTx2{_row, _col};
+    shape   = INT2{_row, _col};
     size    = _row * _col;
     hdctype = _hdctype;
     if (hdctype == HDCType::Host) {
@@ -120,7 +120,7 @@ struct Matrix {
     MatrixFrame<T>     dev;
     MatrixFrame<T> *devptr;
 
-    INTx2            shape;
+    INT2            shape;
     INT               size;
     FLAG           hdctype;
     std::string      name;
@@ -131,14 +131,14 @@ struct Matrix {
     Matrix(const Matrix<T> &_mat) = delete;
     Matrix<T>& operator=(const Matrix<T> &_mat) = delete;
 
-    Matrix(std::string _name = "") : shape(INTx2{0, 0}), size(0), hdctype(HDCType::Empty), name(_name), devptr(nullptr) {}
-    Matrix(INTx3 _dom, INT _dim, FLAG _hdctype, std::string _name = "");
+    Matrix(std::string _name = "") : shape(INT2{0, 0}), size(0), hdctype(HDCType::Empty), name(_name), devptr(nullptr) {}
+    Matrix(INT3 _dom, INT _dim, FLAG _hdctype, std::string _name = "");
     Matrix(INT _row, INT _col, FLAG _hdctype, std::string _name = "");
     ~Matrix();
 
-    void alloc(INTx3 _dom, INT _dim, FLAG _hdctype, std::string _name);
+    void alloc(INT3 _dom, INT _dim, FLAG _hdctype, std::string _name);
     void alloc(INT _row, INT _col, FLAG _hdctype, std::string _name);
-    void alloc(INTx3 _dom, INT _dim, FLAG _hdctype) {
+    void alloc(INT3 _dom, INT _dim, FLAG _hdctype) {
         alloc(_dom, _dim, _hdctype, name);
     }
     void alloc(INT _row, INT _col, FLAG _hdctype) {
@@ -153,10 +153,10 @@ struct Matrix {
     const char *cname() {return name.c_str();}
 };
 
-template<typename T> Matrix<T>::Matrix(INTx3 _dom, INT _dim, FLAG _hdctype, std::string _name) :
+template<typename T> Matrix<T>::Matrix(INT3 _dom, INT _dim, FLAG _hdctype, std::string _name) :
     host(_dom, _dim, _hdctype & HDCType::Host),
     dev(_dom, _dim, _hdctype & HDCType::Device),
-    shape(INTx2{PRODUCT3(_dom), _dim}),
+    shape(INT2{PRODUCT3(_dom), _dim}),
     size(PRODUCT3(_dom) * _dim),
     hdctype(_hdctype),
     name(_name)
@@ -170,7 +170,7 @@ template<typename T> Matrix<T>::Matrix(INTx3 _dom, INT _dim, FLAG _hdctype, std:
 template<typename T> Matrix<T>::Matrix(INT _row, INT _col, FLAG _hdctype, std::string _name) :
     host(_row, _col, _hdctype & HDCType::Host),
     dev(_row, _col, _hdctype & HDCType::Device),
-    shape(INTx2{_row, _col}),
+    shape(INT2{_row, _col}),
     size(_row * _col),
     hdctype(_hdctype),
     name(_name)
@@ -189,11 +189,11 @@ template<typename T> Matrix<T>::~Matrix() {
     hdctype = HDCType::Empty;
 }
 
-template<typename T> void Matrix<T>::alloc(INTx3 _dom, INT _dim, FLAG _hdctype, std::string _name) {
+template<typename T> void Matrix<T>::alloc(INT3 _dom, INT _dim, FLAG _hdctype, std::string _name) {
     assert(hdctype == HDCType::Empty);
     host.alloc(_dom, _dim, _hdctype & HDCType::Host);
     dev.alloc(_dom, _dim, _hdctype & HDCType::Device);
-    shape   = INTx2{PRODUCT3(_dom), _dim};
+    shape   = INT2{PRODUCT3(_dom), _dim};
     size    = PRODUCT3(_dom) * _dim;
     hdctype = _hdctype;
     name    = _name;
@@ -207,7 +207,7 @@ template<typename T> void Matrix<T>::alloc(INT _row, INT _col, FLAG _hdctype, st
     assert(hdctype == HDCType::Empty);
     host.alloc(_row, _col, _hdctype & HDCType::Host);
     dev.alloc(_row, _col, _hdctype & HDCType::Device);
-    shape   = INTx2{_row, _col};
+    shape   = INT2{_row, _col};
     size    = _row * _col;
     hdctype = _hdctype;
     name    = _name;

@@ -178,8 +178,8 @@ int main(int argc, char **argv) {
     }
 
     if (cpm.rank == 0) {
-        Vcdm::doublex3 d3;
-        Vcdm::intx3    i3;
+        Vcdm::double3 d3;
+        Vcdm::int3    i3;
         printf("------------dfi info------------\n");
         printf("mpi (%d %d)\n", vcdm.dfiMPI.size, vcdm.dfiMPI.ngrp);
         d3 = vcdm.dfiDomain.globalOrigin;

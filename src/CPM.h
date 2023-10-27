@@ -7,16 +7,16 @@
 namespace Falm {
 
 template<typename T>
-void setVcdm(CPMBase &cpm, Vcdm::VCDM<T> &vcdm, Vcdm::doublex3 gRegion, Vcdm::doublex3 gOrigin = {0, 0, 0}) {
+void setVcdm(CPMBase &cpm, Vcdm::VCDM<T> &vcdm, Vcdm::double3 gRegion, Vcdm::double3 gOrigin = {0, 0, 0}) {
     vcdm.dfiFinfo.gc = cpm.gc;
     vcdm.dfiDomain.globalOrigin = gOrigin;
     vcdm.dfiDomain.globalRegion = gRegion;
-    vcdm.dfiDomain.globalVoxel  = Vcdm::intx3{
+    vcdm.dfiDomain.globalVoxel  = Vcdm::int3{
         cpm.global.shape.x - cpm.gc*2,
         cpm.global.shape.y - cpm.gc*2,
         cpm.global.shape.z - cpm.gc*2
     };
-    vcdm.dfiDomain.globalDivision = Vcdm::intx3{
+    vcdm.dfiDomain.globalDivision = Vcdm::int3{
         cpm.shape.x, cpm.shape.y, cpm.shape.z
     };
 

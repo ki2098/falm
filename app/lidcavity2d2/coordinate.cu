@@ -9,8 +9,8 @@ using namespace Falm;
 __global__ void kernel_setCoord(
     REAL               side_lenth,
     INT                side_n_cell,
-    INTx3              pdm_shape,
-    INTx3              pdm_offset,
+    INT3              pdm_shape,
+    INT3              pdm_offset,
     INT                gc,
     const MatrixFrame<REAL> *vx,
     const MatrixFrame<REAL> *vh,

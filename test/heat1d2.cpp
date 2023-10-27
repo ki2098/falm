@@ -13,7 +13,7 @@ using namespace Falm;
 #define TW 0.0
 #define TE 100.0
 
-void set_matrix_value(Matrix<REAL> &x, INTx3 range_shape, INTx3 range_offset, INTx3 pshape, REAL value) {
+void set_matrix_value(Matrix<REAL> &x, INT3 range_shape, INT3 range_offset, INT3 pshape, REAL value) {
     for (INT i = 0; i < range_shape.x; i ++) {
         for (INT j = 0; j < range_shape.y; j ++) {
             for (INT k = 0; k < range_shape.z; k ++) {
@@ -26,7 +26,7 @@ void set_matrix_value(Matrix<REAL> &x, INTx3 range_shape, INTx3 range_offset, IN
     }
 }
 
-void print_eq(Matrix<REAL> &a, Matrix<REAL> &b, INTx3 shape) {
+void print_eq(Matrix<REAL> &a, Matrix<REAL> &b, INT3 shape) {
     printf("%s = %s\n", a.cname(), b.cname());
     for (INT i = Gd; i < shape.x - Gd; i ++) {
         for (INT j = Gd; j < shape.y - Gd; j ++) {
@@ -41,7 +41,7 @@ void print_eq(Matrix<REAL> &a, Matrix<REAL> &b, INTx3 shape) {
     }
 }
 
-void print_result(Matrix<REAL> &x, Matrix<REAL> &r, INTx3 shape) {
+void print_result(Matrix<REAL> &x, Matrix<REAL> &r, INT3 shape) {
     for (INT i = Gd; i < shape.x - Gd; i ++) {
         for (INT j = Gd; j < shape.y - Gd; j ++) {
             for (INT k = Gd; k < shape.z - Gd; k ++) {
@@ -60,7 +60,7 @@ INT dim_division(INT dim_size, INT mpi_size, INT mpi_rank) {
     return p_dim_size;
 }
 
-void print_xy_slice(Matrix<REAL> &x, INTx3 domain_shape, INT slice_at_z) {
+void print_xy_slice(Matrix<REAL> &x, INT3 domain_shape, INT slice_at_z) {
     for (INT j = domain_shape.y - 1; j >= 0; j --) {
         for (INT i = 0; i < domain_shape.x; i ++) {
             REAL value = x(IDX(i, j, slice_at_z, domain_shape));
@@ -78,8 +78,8 @@ int main(int argc, char **argv) {
     CPML2_Init(&argc, &argv);
 
     Region global(
-        INTx3{Nx + 2 * Gd, Ny + 2 * Gd, Nz + 2 * Gd},
-        INTx3{0, 0, 0}
+        INT3{Nx + 2 * Gd, Ny + 2 * Gd, Nz + 2 * Gd},
+        INT3{0, 0, 0}
     );
     Matrix<REAL> ga, gt, gb, gr;
     ga.alloc(global.shape, 7, HDCType::Host  , "global a");
@@ -140,8 +140,8 @@ int main(int argc, char **argv) {
         oz += dim_division(Nz, cpm.shape.z, k);
     }
     Region process(
-        INTx3{dim_division(Nx, cpm.shape.x, cpm.idx.x) + Gdx2, dim_division(Ny, cpm.shape.y, cpm.idx.y) + Gdx2, dim_division(Nz, cpm.shape.z, cpm.idx.z) + Gdx2},
-        INTx3{ox, oy, oz}
+        INT3{dim_division(Nx, cpm.shape.x, cpm.idx.x) + Gdx2, dim_division(Ny, cpm.shape.y, cpm.idx.y) + Gdx2, dim_division(Nz, cpm.shape.z, cpm.idx.z) + Gdx2},
+        INT3{ox, oy, oz}
     );
     for (INT i = 0; i < cpm.size; i ++) {
         if (i == cpm.rank) {
@@ -172,7 +172,7 @@ int main(int argc, char **argv) {
         }
     }
 
-    INTx3 inner_shape, inner_offset, boundary_shape[6], boundary_offset[6];
+    INT3 inner_shape, inner_offset, boundary_shape[6], boundary_offset[6];
     cpm.set6Region(inner_shape, inner_offset, boundary_shape, boundary_offset, 1, Region(process, Gd));
     Matrix<REAL> region(process.shape, 1, HDCType::Host, "region");
     set_matrix_value(region, inner_shape, inner_offset, process.shape, cpm.rank * 10);

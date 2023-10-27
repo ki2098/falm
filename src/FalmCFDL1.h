@@ -78,10 +78,12 @@ public:
     ) {
         Region &pdm = cpm.pdm_list[cpm.rank];
         Region map(pdm.shape, cpm.gc);
-        map = map.transform(
-            INTx3{ 1,  1,  1},
-            INTx3{-1, -1, -1}
-        );
+        map.shape  += {1, 1, 1};
+        map.offset -= {1, 1, 1};
+        // map = map.transform(
+        //     INT3{ 1,  1,  1},
+        //     INT3{-1, -1, -1}
+        // );
         L0Dev_Cartesian3d_InterpolateCU(uu, uc, pdm, map, block_dim);
     }
 
@@ -108,10 +110,12 @@ public:
     ) {
         Region &pdm = cpm.pdm_list[cpm.rank];
         Region map(pdm.shape, cpm.gc);
-        map = map.transform(
-            INTx3{ 1,  1,  1},
-            INTx3{-1, -1, -1}
-        );
+        map.shape  += {1, 1, 1};
+        map.offset -= {1, 1, 1};
+        // map = map.transform(
+        //     INT3{ 1,  1,  1},
+        //     INT3{-1, -1, -1}
+        // );
         L0Dev_Cartesian3d_ProjectPFace(uu, uua, p, g, pdm, map, block_dim);
     }
 

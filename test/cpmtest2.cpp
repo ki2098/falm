@@ -17,7 +17,7 @@ INT dim_division(INT dim_size, INT mpi_size, INT mpi_rank) {
     return p_dim_size;
 }
 
-void print_xy_slice(Matrix<double> &x, INTx3 domain_shape, INT slice_at_z) {
+void print_xy_slice(Matrix<double> &x, INT3 domain_shape, INT slice_at_z) {
     for (INT j = domain_shape.y - 1; j >= 0; j --) {
         for (INT i = 0; i < domain_shape.x; i ++) {
             double value = x(IDX(i, j, slice_at_z, domain_shape));
@@ -31,7 +31,7 @@ void print_xy_slice(Matrix<double> &x, INTx3 domain_shape, INT slice_at_z) {
     }
 }
 
-void print_xz_slice(Matrix<double> &x, INTx3 domain_shape, INT slice_at_y) {
+void print_xz_slice(Matrix<double> &x, INT3 domain_shape, INT slice_at_y) {
     for (INT k = domain_shape.z - 1; k >= 0; k --) {
         for (INT i = 0; i < domain_shape.x; i ++) {
             double value = x(IDX(i, slice_at_y, k, domain_shape));
@@ -45,7 +45,7 @@ void print_xz_slice(Matrix<double> &x, INTx3 domain_shape, INT slice_at_y) {
     }
 }
 
-void set_matrix_value(Matrix<double> &x, INTx3 range_shape, INTx3 range_offset, INTx3 pshape, double value) {
+void set_matrix_value(Matrix<double> &x, INT3 range_shape, INT3 range_offset, INT3 pshape, double value) {
     for (INT i = 0; i < range_shape.x; i ++) {
         for (INT j = 0; j < range_shape.y; j ++) {
             for (INT k = 0; k < range_shape.z; k ++) {
@@ -62,14 +62,14 @@ int main(int argc, char **argv) {
     CPML2_Init(&argc, &argv);
 
     Region global(
-        INTx3{Nx + Gdx2, Ny + Gdx2, Nz + Gdx2},
-        INTx3{0, 0, 0}
+        INT3{Nx + Gdx2, Ny + Gdx2, Nz + Gdx2},
+        INT3{0, 0, 0}
     );
 
     CPMBase cpm;
     CPML2_GetRank(MPI_COMM_WORLD, cpm.rank);
     CPML2_GetSize(MPI_COMM_WORLD, cpm.size);
-    cpm.shape = INTx3{atoi(argv[1]), atoi(argv[2]), atoi(argv[3])};
+    cpm.shape = INT3{atoi(argv[1]), atoi(argv[2]), atoi(argv[3])};
     if (PRODUCT3(cpm.shape) != cpm.size) {
         printf("wrong group shape: %ux%ux%u != %d\n",cpm.shape.x, cpm.shape.y, cpm.shape.z, cpm.size);
         CPML2_Finalize();
@@ -94,15 +94,15 @@ int main(int argc, char **argv) {
         oz += dim_division(Nz, cpm.shape.z, k);
     }
     Region process(
-        INTx3{dim_division(Nx, cpm.shape.x, cpm.idx.x) + Gdx2, dim_division(Ny, cpm.shape.y, cpm.idx.y) + Gdx2, dim_division(Nz, cpm.shape.z, cpm.idx.z) + Gdx2},
-        INTx3{ox, oy, oz}
+        INT3{dim_division(Nx, cpm.shape.x, cpm.idx.x) + Gdx2, dim_division(Ny, cpm.shape.y, cpm.idx.y) + Gdx2, dim_division(Nz, cpm.shape.z, cpm.idx.z) + Gdx2},
+        INT3{ox, oy, oz}
     );
     printf("%d(%u %u %u): (%u %u %u) (%u %u %u))\n", cpm.rank, cpm.idx.x, cpm.idx.y, cpm.idx.z, process.shape.x, process.shape.y, process.shape.z, process.offset.x, process.offset.y, process.offset.z);
     fflush(stdout);
     CPML2_Barrier(MPI_COMM_WORLD);
 
-    INTx3 inner_shape, inner_offset;
-    INTx3 boundary_shape[6], boundary_offset[6];
+    INT3 inner_shape, inner_offset;
+    INT3 boundary_shape[6], boundary_offset[6];
     cpm.set6Region(inner_shape, inner_offset, boundary_shape, boundary_offset, 1, Region(process, Gd));
     Matrix<double> x(process.shape, 1, HDCType::Host);
     set_matrix_value(x, inner_shape, inner_offset, process.shape, cpm.rank * 10);

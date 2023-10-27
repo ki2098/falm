@@ -4,7 +4,7 @@
 
 namespace Falm {
 
-__global__ void kernel_CPM_PackBuffer(REAL *buffer, INTx3 buf_shape, INTx3 buf_offset, REAL *src, INTx3 src_shape) {
+__global__ void kernel_CPM_PackBuffer(REAL *buffer, INT3 buf_shape, INT3 buf_offset, REAL *src, INT3 src_shape) {
     INT i, j, k;
     GLOBAL_THREAD_IDX_3D(i, j, k);
     if (i < buf_shape.x && j < buf_shape.y && k < buf_shape.z) {
@@ -17,7 +17,7 @@ __global__ void kernel_CPM_PackBuffer(REAL *buffer, INTx3 buf_shape, INTx3 buf_o
     }
 }
 
-__global__ void kernel_CPM_PackColoredBuffer(REAL *buffer, INTx3 buf_shape, INTx3 buf_offset, INT color, REAL *src, INTx3 src_shape, INTx3 src_offset) {
+__global__ void kernel_CPM_PackColoredBuffer(REAL *buffer, INT3 buf_shape, INT3 buf_offset, INT color, REAL *src, INT3 src_shape, INT3 src_offset) {
     INT i, j, k;
     GLOBAL_THREAD_IDX_3D(i, j, k);
     if (i < buf_shape.x && j < buf_shape.y && k < buf_shape.z) {
@@ -32,7 +32,7 @@ __global__ void kernel_CPM_PackColoredBuffer(REAL *buffer, INTx3 buf_shape, INTx
     }
 }
 
-__global__ void kernel_CPM_UnpackBuffer(REAL *buffer, INTx3 buf_shape, INTx3 buf_offset, REAL *dst, INTx3 dst_shape) {
+__global__ void kernel_CPM_UnpackBuffer(REAL *buffer, INT3 buf_shape, INT3 buf_offset, REAL *dst, INT3 dst_shape) {
     INT i, j, k;
     GLOBAL_THREAD_IDX_3D(i, j, k);
     if (i < buf_shape.x && j < buf_shape.y && k < buf_shape.z) {
@@ -45,7 +45,7 @@ __global__ void kernel_CPM_UnpackBuffer(REAL *buffer, INTx3 buf_shape, INTx3 buf
     }
 }
 
-__global__ void kernel_CPM_UnpackColoredBuffer(REAL *buffer, INTx3 buf_shape, INTx3 buf_offset, INT color , REAL *dst, INTx3 dst_shape, INTx3 dst_offset) {
+__global__ void kernel_CPM_UnpackColoredBuffer(REAL *buffer, INT3 buf_shape, INT3 buf_offset, INT color , REAL *dst, INT3 dst_shape, INT3 dst_offset) {
     INT i, j, k;
     GLOBAL_THREAD_IDX_3D(i, j, k);
     if (i < buf_shape.x && j < buf_shape.y && k < buf_shape.z) {

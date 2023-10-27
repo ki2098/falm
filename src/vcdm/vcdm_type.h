@@ -9,9 +9,9 @@
 
 namespace Vcdm {
 
-struct intx3 {int x, y, z;};
+struct int3 {int x, y, z;};
 
-struct doublex3 {double x, y, z;};
+struct double3 {double x, y, z;};
 
 enum class FileType {BINARY, FBINARY};
 enum class FilenameFormat {RANK, STEP_RANK, RANK_STEP};
@@ -32,10 +32,10 @@ static inline Endian getEndian() {
 }
 
 struct VcdmDomain {
-    doublex3       globalOrigin;
-    doublex3       globalRegion;
-    intx3          globalVoxel;
-    intx3          globalDivision;
+    double3       globalOrigin;
+    double3       globalRegion;
+    int3          globalVoxel;
+    int3          globalDivision;
     DataType       dtype;
 
     void write(FILE *file);
@@ -56,9 +56,9 @@ struct VcdmMPI {
 
 struct VcdmRank {
     int         rank;
-    intx3       voxelSize;
-    intx3       headIdx;
-    intx3       tailIdx;
+    int3       voxelSize;
+    int3       headIdx;
+    int3       tailIdx;
 
     void write(FILE *file);
 
@@ -184,15 +184,15 @@ protected:
 
     void writeTimeSlice(FILE *file);
 
-    int IJK_IDX(int i, int j, int k, const intx3 &size) {
+    int IJK_IDX(int i, int j, int k, const int3 &size) {
         return i + j * size.x + k * size.x * size.y;
     }
 
-    int IJKN_IDX(int i, int j, int k, int n, const intx3 &size) {
+    int IJKN_IDX(int i, int j, int k, int n, const int3 &size) {
         return i + j * size.x + k * size.x * size.y + n * size.x * size.y * size.z;
     }
 
-    int NIJK_IDX(int n, int i, int j, int k, const intx3 &size, int dim) {
+    int NIJK_IDX(int n, int i, int j, int k, const int3 &size, int dim) {
         return n + i * dim + j * dim * size.x + k * dim * size.x * size.y;
     }
 

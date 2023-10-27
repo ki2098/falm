@@ -17,7 +17,7 @@ Falm::STREAM faceStream[6];
 
 using namespace Falm;
 
-void print_xy_slice(Matrix<REAL> &x, INTx3 domain_shape, INTx3 domain_offset) {
+void print_xy_slice(Matrix<REAL> &x, INT3 domain_shape, INT3 domain_offset) {
     for (INT j = domain_shape.y - 1; j >= 0; j --) {
         printf(" ");
         for (INT i = 0; i < domain_shape.x; i ++) {
@@ -33,7 +33,7 @@ void print_xy_slice(Matrix<REAL> &x, INTx3 domain_shape, INTx3 domain_offset) {
     printf("yx\n");
 }
 
-void print_xz_slice(Matrix<REAL> &x, INTx3 domain_shape, INTx3 domain_offset) {
+void print_xz_slice(Matrix<REAL> &x, INT3 domain_shape, INT3 domain_offset) {
     for (INT k = domain_shape.z - 1; k >= 0; k --) {
         printf(" ");
         for (INT i = 0; i < domain_shape.x; i ++) {
@@ -61,14 +61,14 @@ int main(int argc, char **argv) {
     CPML2_Init(&argc, &argv);
 
     Region global(
-        INTx3{Nx + Gdx2, Ny + Gdx2, Nz + Gdx2},
-        INTx3{0, 0, 0}
+        INT3{Nx + Gdx2, Ny + Gdx2, Nz + Gdx2},
+        INT3{0, 0, 0}
     );
 
     CPMBase cpm;
     CPML2_GetRank(MPI_COMM_WORLD, cpm.rank);
     CPML2_GetSize(MPI_COMM_WORLD, cpm.size);
-    cpm.shape = INTx3{atoi(argv[1]), atoi(argv[2]), atoi(argv[3])};
+    cpm.shape = INT3{atoi(argv[1]), atoi(argv[2]), atoi(argv[3])};
     if (PRODUCT3(cpm.shape) != cpm.size) {
         printf("wrong group shape: %ux%ux%u != %d\n",cpm.shape.x, cpm.shape.y, cpm.shape.z, cpm.size);
         CPML2_Finalize();
@@ -99,8 +99,8 @@ int main(int argc, char **argv) {
         oz += dim_division(Nz, cpm.shape.z, k);
     }
     Region process(
-        INTx3{dim_division(Nx, cpm.shape.x, cpm.idx.x) + Gdx2, dim_division(Ny, cpm.shape.y, cpm.idx.y) + Gdx2, dim_division(Nz, cpm.shape.z, cpm.idx.z) + Gdx2},
-        INTx3{ox, oy, oz}
+        INT3{dim_division(Nx, cpm.shape.x, cpm.idx.x) + Gdx2, dim_division(Ny, cpm.shape.y, cpm.idx.y) + Gdx2, dim_division(Nz, cpm.shape.z, cpm.idx.z) + Gdx2},
+        INT3{ox, oy, oz}
     );
     printf("%d(%u %u %u): (%u %u %u) (%u %u %u))\n", cpm.rank, cpm.idx.x, cpm.idx.y, cpm.idx.z, process.shape.x, process.shape.y, process.shape.z, process.offset.x, process.offset.y, process.offset.z);
     fflush(stdout);

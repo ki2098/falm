@@ -127,12 +127,12 @@ protected:
                 INT gc = base->gc;
                 INT gcx2 = 2 * gc;
                 INT __s = fid*2, __r = fid*2+1;
-                INTx3 buffer_shape {
+                INT3 buffer_shape {
                     (fid / 2 == 0)? thick : pdm.shape.x - gcx2,
                     (fid / 2 == 1)? thick : pdm.shape.y - gcx2,
                     (fid / 2 == 2)? thick : pdm.shape.z - gcx2
                 };
-                INTx3 sendbuffer_offset, recvbuffer_offset;
+                INT3 sendbuffer_offset, recvbuffer_offset;
                 if (fid == 0) {
                     sendbuffer_offset = {pdm.shape.x - gc - thick - margin, gc, gc};
                     recvbuffer_offset = {pdm.shape.x - gc         + margin, gc, gc};

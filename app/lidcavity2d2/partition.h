@@ -21,8 +21,8 @@ static void setPartition(
     Falm::CPMBase      &cpm
 ) {
     global = Falm::Region(
-        Falm::INTx3{side_n_cell + (cpm.gc*2), side_n_cell + (cpm.gc*2), 1 + (cpm.gc*2)},
-        Falm::INTx3{0, 0, 0}
+        Falm::INT3{side_n_cell + (cpm.gc*2), side_n_cell + (cpm.gc*2), 1 + (cpm.gc*2)},
+        Falm::INT3{0, 0, 0}
     );
 
     Falm::INT ox = 0;
@@ -36,12 +36,12 @@ static void setPartition(
     Falm::INT oz = 0;
 
     pdm = Falm::Region(
-        Falm::INTx3{
+        Falm::INT3{
             dim_division(side_n_cell, cpm.shape.x, cpm.idx.x) + (cpm.gc*2),
             dim_division(side_n_cell, cpm.shape.y, cpm.idx.y) + (cpm.gc*2),
             1 + (cpm.gc*2)
         },
-        Falm::INTx3{ox, oy, oz}
+        Falm::INT3{ox, oy, oz}
     );
 }
 

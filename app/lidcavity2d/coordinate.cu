@@ -10,7 +10,7 @@ namespace LidCavity2d {
 __global__ void kernel_setCoord(
     REAL               side_lenth,
     INT                side_n_cell,
-    INTx3              pdm_shape,
+    INT3              pdm_shape,
     INT gc,
     const MatrixFrame<REAL> *vx,
     const MatrixFrame<REAL> *vh,

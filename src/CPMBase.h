@@ -10,8 +10,8 @@ namespace Falm {
 class CPMBase {
 public:
     int neighbour[6];
-    INTx3   shape;
-    INTx3     idx;
+    INT3   shape;
+    INT3     idx;
     int      rank;
     int      size;
     bool use_cuda_aware_mpi;
@@ -19,7 +19,7 @@ public:
     Region global;
     std::vector<Region> pdm_list;
 
-    void initPartition(INTx3 gShape, INT guideCell, int mpi_rank = 0, int mpi_size = 1, INTx3 mpi_shape = {1,1,1}) {
+    void initPartition(INT3 gShape, INT guideCell, int mpi_rank = 0, int mpi_size = 1, INT3 mpi_shape = {1,1,1}) {
         assert(mpi_size == PRODUCT3(mpi_shape));
 
         shape  = mpi_shape;
@@ -29,8 +29,8 @@ public:
 
         gc     = guideCell;
         global = Region(
-            INTx3{gShape.x + gc*2, gShape.y + gc*2, gShape.z + gc*2},
-            INTx3{0, 0, 0}
+            INT3{gShape.x + gc*2, gShape.y + gc*2, gShape.z + gc*2},
+            INT3{0, 0, 0}
         );
         pdm_list = std::vector<Region>(size, Region());
         for (INT k = 0; k < shape.z; k ++) {
@@ -47,18 +47,18 @@ public:
                 oz += dim_division(gShape.z, shape.z, __z);
             }
             pdm_list[IDX(i, j, k, shape)] = Region(
-                INTx3{
+                INT3{
                     dim_division(gShape.x, shape.x, i) + gc*2,
                     dim_division(gShape.y, shape.y, j) + gc*2,
                     dim_division(gShape.z, shape.z, k) + gc*2
                 },
-                INTx3{ox, oy, oz}
+                INT3{ox, oy, oz}
             );
         }}}
 
     }
 
-    void set6Region(INTx3 &inner_shape, INTx3 &inner_offset, INTx3 *boundary_shape, INTx3 *boundary_offset, INT thick, const Region &map) {
+    void set6Region(INT3 &inner_shape, INT3 &inner_offset, INT3 *boundary_shape, INT3 *boundary_offset, INT thick, const Region &map) {
         inner_shape = map.shape;
         inner_offset = map.offset;
         if (neighbour[0] >= 0) {

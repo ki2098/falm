@@ -19,9 +19,9 @@ __global__ void kernel_Cartesian_CalcPseudoU(
     const MatrixFrame<REAL> *vff,
     REAL               ReI,
     REAL               dt,
-    INTx3              pdm_shape,
-    INTx3              map_shap,
-    INTx3              map_offset
+    INT3              pdm_shape,
+    INT3              map_shap,
+    INT3              map_offset
 ) {
     const MatrixFrame<REAL> &un=*vun, &u=*vu, &uu=*vuu, &ua=*vua, &nut=*vnut, &kx=*vkx, &g=*vg, &ja=*vja, &ff=*vff;
     INT i, j, k;
@@ -188,6 +188,7 @@ __global__ void kernel_Cartesian_CalcPseudoU(
         );
         ua(idxcc, d) = un(idxcc, d) + dt * (- adv + vis + ff(idxcc, d));
     }
+    // pdm_shape += {1, 1, 1};
 }
 
 __global__ void kernel_Cartesian_UtoCU (
@@ -195,9 +196,9 @@ __global__ void kernel_Cartesian_UtoCU (
     const MatrixFrame<REAL> *vuc,
     const MatrixFrame<REAL> *vkx,
     const MatrixFrame<REAL> *vja,
-    INTx3              pdm_shape,
-    INTx3              map_shap,
-    INTx3              map_offset
+    INT3              pdm_shape,
+    INT3              map_shap,
+    INT3              map_offset
 ) {
     const MatrixFrame<REAL> &u=*vu, &uc=*vuc, &kx=*vkx, &ja=*vja;
     INT i, j, k;
@@ -217,9 +218,9 @@ __global__ void kernel_Cartesian_UtoCU (
 __global__ void kernel_Cartesian_InterpolateCU(
     const MatrixFrame<REAL> *vuu,
     const MatrixFrame<REAL> *vuc,
-    INTx3              pdm_shape,
-    INTx3              map_shap,
-    INTx3              map_offset
+    INT3              pdm_shape,
+    INT3              map_shap,
+    INT3              map_offset
 ) {
     const MatrixFrame<REAL> &uu=*vuu, &uc=*vuc;
     INT i, j, k;
@@ -244,9 +245,9 @@ __global__ void kernel_Cartesian_ProjectPGrid(
     const MatrixFrame<REAL> *vp,
     const MatrixFrame<REAL> *vkx,
     REAL               dt,
-    INTx3              pdm_shape,
-    INTx3              map_shap,
-    INTx3              map_offset
+    INT3              pdm_shape,
+    INT3              map_shap,
+    INT3              map_offset
 ) {
     const MatrixFrame<REAL> &u=*vu, &ua=*vua, &p=*vp, &kx=*vkx;
     INT i, j, k;
@@ -271,9 +272,9 @@ __global__ void kernel_Cartesian_ProjectPFace(
     const MatrixFrame<REAL> *vp,
     const MatrixFrame<REAL> *vg,
     REAL               dt,
-    INTx3              pdm_shape,
-    INTx3              map_shap,
-    INTx3              map_offset
+    INT3              pdm_shape,
+    INT3              map_shap,
+    INT3              map_offset
 ) {
     const MatrixFrame<REAL> &uu=*vuu, &uua=*vuua, &p=*vp, &g=*vg;
     INT i, j, k;
@@ -303,9 +304,9 @@ __global__ void kernel_Cartesian_Smagorinsky(
     const MatrixFrame<REAL> *vkx,
     const MatrixFrame<REAL> *vja,
     REAL               Cs,
-    INTx3              pdm_shape,
-    INTx3              map_shap,
-    INTx3              map_offset            
+    INT3              pdm_shape,
+    INT3              map_shap,
+    INT3              map_offset            
 ) {
     const MatrixFrame<REAL> &u=*vu, &nut=*vnut, &x=*vx, &kx=*vkx, &ja=*vja;
     INT i, j, k;
@@ -371,9 +372,9 @@ __global__ void kernel_Cartesian_CSM(
     const MatrixFrame<REAL> *vx,
     const MatrixFrame<REAL> *vkx,
     const MatrixFrame<REAL> *vja,
-    INTx3              pdm_shape,
-    INTx3              map_shap,
-    INTx3              map_offset   
+    INT3              pdm_shape,
+    INT3              map_shap,
+    INT3              map_offset   
 ) {
     const MatrixFrame<REAL> &u=*vu, &nut=*vnut, &x=*vx, &kx=*vkx, &ja=*vja;
     INT i, j, k;
@@ -448,9 +449,9 @@ __global__ void kernel_Cartesian_Divergence(
     const MatrixFrame<REAL> *vuu,
     const MatrixFrame<REAL> *vdiv,
     const MatrixFrame<REAL> *vja,
-    INTx3              pdm_shap,
-    INTx3              map_shap,
-    INTx3              map_offset
+    INT3              pdm_shap,
+    INT3              map_shap,
+    INT3              map_offset
 ) {
     const MatrixFrame<REAL> &uu=*vuu, &div=*vdiv, &ja=*vja;
     INT i, j, k;

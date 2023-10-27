@@ -13,8 +13,8 @@ using namespace Falm;
 
 int main() {
     Region global(
-        INTx3{Nx + 2 * Gd, Ny + 2 * Gd, Nz + 2 * Gd},
-        INTx3{0, 0, 0}
+        INT3{Nx + 2 * Gd, Ny + 2 * Gd, Nz + 2 * Gd},
+        INT3{0, 0, 0}
     );
     Region pdm(global.shape, global.offset);
     Matrix<double> a, t, b, r;
