@@ -7,11 +7,11 @@
 #include "poisson.h"
 #include "boundary.h"
 #include "partition.h"
-#include "../../src/FalmCFDL2.h"
-#include "../../src/structEqL2.h"
+#include "../../src/FalmCFD.h"
+#include "../../src/FalmEq.h"
 
 #define L 1.0
-#define N 128
+#define N 256
 #define T 100.0
 #define DT 1e-3
 
@@ -49,34 +49,39 @@ void field_output(INT i, int rank) {
 }
 
 void plt3d_output(int step, int rank, REAL dt, Vcdm::VCDM<float> &vcdm) {
-    Matrix<float> uvw(cpm.pdm_list[cpm.rank].shape, 3, HDCType::Host, "uvw");
+    Matrix<float> uvw(cpm.pdm_list[cpm.rank].shape, 4, HDCType::Host, "uvw");
     u.sync(MCpType::Dev2Hst);
-    // p.sync(MCpType::Dev2Hst);
+    p.sync(MCpType::Dev2Hst);
     // falmMemcpy(&uvw(0, 0), &u(0, 0), sizeof(REAL) * u.size, MCpType::Hst2Hst);
     // falmMemcpy(&uvwp(0, 3), &p(0)   , sizeof(REAL) * p.size, MCpType::Hst2Hst);
-    for (INT i = 0; i < u.size; i ++) {
-        uvw(i) = u(i);
+    for (INT i = 0; i < u.shape.x; i ++) {
+        uvw(i, 0) = u(i, 0);
+        uvw(i, 1) = u(i, 1);
+        uvw(i, 2) = u(i, 2);
+        uvw(i, 3) = p(i);
     }
-    vcdm.writeFileData(&uvw(0, 0), cpm.gc, 3, rank, step, Vcdm::IdxType::IJKN);
+    vcdm.writeFileData(&uvw(0, 0), cpm.gc, 4, rank, step, Vcdm::IdxType::IJKN);
     dim3 bdim(8, 8, 1);
-    double umax = L2Dev_MatColMax(u, 0, cpm, bdim);
-    double vmax = L2Dev_MatColMax(u, 1, cpm, bdim);
-    double wmax = L2Dev_MatColMax(u, 2, cpm, bdim);
-    double _max = L2Dev_VecMax(u, cpm, bdim);
-    double umin = L2Dev_MatColMin(u, 0, cpm, bdim);
-    double vmin = L2Dev_MatColMin(u, 1, cpm, bdim);
-    double wmin = L2Dev_MatColMin(u, 2, cpm, bdim);
-    double _min = L2Dev_VecMin(u, cpm, bdim);
+    double umax = MV::MatColMax(u, 0, cpm, bdim);
+    double vmax = MV::MatColMax(u, 1, cpm, bdim);
+    double wmax = MV::MatColMax(u, 2, cpm, bdim);
+    // double _max = L2Dev_VecMax(u, cpm, bdim);
+    double pmax = MV::MatColMax(p, 0, cpm, bdim);
+    double umin = MV::MatColMin(u, 0, cpm, bdim);
+    double vmin = MV::MatColMin(u, 1, cpm, bdim);
+    double wmin = MV::MatColMin(u, 2, cpm, bdim);
+    // double _min = L2Dev_VecMin(u, cpm, bdim);
+    double pmin = MV::MatColMin(p, 0, cpm, bdim);
     Vcdm::VcdmSlice slice;
     slice.step = step;
     slice.time = step * dt;
     slice.avgStep = 1;
     slice.avgTime = dt;
-    slice.avgMode = false;
-    slice.vectorMax = _max;
-    slice.vectorMin = _min;
-    slice.varMax = {umax, vmax, wmax};
-    slice.varMin = {umin, vmin, wmin};
+    slice.avgMode = true;
+    // slice.vectorMax = _max;
+    // slice.vectorMin = _min;
+    slice.varMax = {umax, vmax, wmax, pmax};
+    slice.varMin = {umin, vmin, wmin, pmin};
     vcdm.timeSlice.push_back(slice);
 }
 
@@ -84,7 +89,7 @@ template<typename Type>
 void setVcdmAttributes(Vcdm::VCDM<Type> &vcdm) {
     vcdm.setPath("data", "field");
     setVcdm<Type>(cpm, vcdm, {L, L, L/N});
-    vcdm.dfiFinfo.varList = {"u", "v", "w"};
+    vcdm.dfiFinfo.varList = {"u", "v", "w", "p"};
 }
 
 void allocVars(Region &pdm) {
@@ -100,37 +105,37 @@ void allocVars(Region &pdm) {
     dvr.alloc(pdm.shape, 1, HDCType::Device);
 }
 
-REAL main_loop(L2CFD &cfd, L2EqSolver &eqsolver, CPMBase &cpm, dim3 block_dim, STREAM *stream) {
-    cfd.L2Dev_Cartesian3d_FSCalcPseudoU(u, u, uu, ua, nut, kx, g, ja, ff, cpm, block_dim, stream);
-    cfd.L2Dev_Cartesian3d_UtoUU(ua, uua, kx, ja, cpm, block_dim, stream);
+REAL main_loop(FalmCFD &cfd, FalmEq &eqsolver, CPMBase &cpm, dim3 block_dim, STREAM *stream) {
+    cfd.FSPseudoU(u, u, uu, ua, nut, kx, g, ja, ff, cpm, block_dim, stream);
+    cfd.UtoUU(ua, uua, kx, ja, cpm, block_dim, stream);
     forceFaceVelocityZero(uua, cpm);
-    cfd.L2Dev_Cartesian3d_MACCalcPoissonRHS(uua, rhs, ja, cpm, block_dim, maxdiag);
+    cfd.MACCalcPoissonRHS(uua, rhs, ja, cpm, block_dim, maxdiag);
     
-    eqsolver.L2Dev_Struct3d7p_Solve(poisson_a, p, rhs, res, cpm, block_dim, stream);
+    eqsolver.Solve(poisson_a, p, rhs, res, cpm, block_dim, stream);
     pressureBC(p, cpm, stream);
     copyZ5(p, cpm);
 
-    cfd.L2Dev_Cartesian3d_ProjectP(u, ua, uu, uua, p, kx, g, cpm, block_dim, stream);
+    cfd.ProjectP(u, ua, uu, uua, p, kx, g, cpm, block_dim, stream);
     velocityBC(u, cpm, stream);
     copyZ5(u, cpm);
 
-    cfd.L2Dev_Cartesian3d_SGS(u, nut, x, kx, ja, cpm, block_dim, stream);
+    cfd.SGS(u, nut, x, kx, ja, cpm, block_dim, stream);
     copyZ5(nut, cpm);
 
-    cfd.L2Dev_Cartesian3d_Divergence(uu, dvr, ja, cpm, block_dim);
+    cfd.Divergence(uu, dvr, ja, cpm, block_dim);
 
-    return L2Dev_EuclideanNormSq(dvr, cpm, block_dim);
+    return MV::EuclideanNormSq(dvr, cpm, block_dim);
 }
 
 int main(int argc, char **argv) {
     // std::is_trivially_copyable<Matrix<REAL>> tcp;
     printf("%d\n", std::is_trivially_copyable<Matrix<REAL>>::value);
 
-    CPML2_Init(&argc, &argv);
+    CPM_Init(&argc, &argv);
     int mpi_rank, mpi_size;
     cpm.use_cuda_aware_mpi = true;
-    CPML2_GetRank(MPI_COMM_WORLD, mpi_rank);
-    CPML2_GetSize(MPI_COMM_WORLD, mpi_size);
+    CPM_GetRank(MPI_COMM_WORLD, mpi_rank);
+    CPM_GetSize(MPI_COMM_WORLD, mpi_size);
     cpm.initPartition(
         {N, N, 1},
         GuideCell,
@@ -166,7 +171,7 @@ int main(int argc, char **argv) {
             }
             fflush(stdout);
         }
-        CPML2_Barrier(MPI_COMM_WORLD);
+        CPM_Barrier(MPI_COMM_WORLD);
     }
 
     Vcdm::VCDM<float> vcdm;
@@ -206,7 +211,7 @@ int main(int argc, char **argv) {
         printf("------------dfi info------------\n");
         fflush(stdout);
     }
-    CPML2_Barrier(MPI_COMM_WORLD);
+    CPM_Barrier(MPI_COMM_WORLD);
 
     x.sync(MCpType::Dev2Hst);
     Matrix<float> xyz(x.shape.x, x.shape.y, HDCType::Host, "float x");
@@ -215,8 +220,8 @@ int main(int argc, char **argv) {
     }
     vcdm.writeGridData(&xyz(0, 0), cpm.gc, cpm.rank, 0, Vcdm::IdxType::IJKN);
     
-    L2CFD cfdsolver(3200, DT, AdvectionSchemeType::Upwind3, SGSType::Empty, 0.1);
-    L2EqSolver eqsolver(LSType::PBiCGStab, 10000, 1e-8, 1.2, LSType::SOR, 5, 1.5);
+    FalmCFD cfdsolver(7500, DT, AdvectionSchemeType::Upwind3, SGSType::Empty, 0.1);
+    FalmEq eqsolver(LSType::PBiCGStab, 10000, 1e-8, 1.2, LSType::SOR, 5, 1.5);
 
     if (cpm.rank == 0) {
         printf("running on %dx%d grid with Re=%lf until t=%lf\n", N, N, cfdsolver.Re, T);
@@ -226,7 +231,7 @@ int main(int argc, char **argv) {
     REAL __t = 0;
     INT  __it = 0;
     const INT __IT = int(T / DT);
-    const INT __oIT = int(10.0/DT);
+    const INT __oIT = int(1.0/DT);
     
     plt3d_output(__it, cpm.rank, DT, vcdm);
     field_output(__it, cpm.rank);
@@ -240,11 +245,11 @@ int main(int argc, char **argv) {
         }
         if (__it % __oIT == 0) {
             plt3d_output(__it, cpm.rank, DT, vcdm);
-            field_output(__it, cpm.rank);
+            // field_output(__it, cpm.rank);
             if (cpm.rank == 0) {
                 REAL probe_u;
                 falmMemcpy(&probe_u, &u.dev(IDX(2, 0, 0, cpm.pdm_list[cpm.rank].shape), 0), sizeof(REAL), MCpType::Dev2Hst);
-                printf("\n%lf\n", probe_u);
+                printf("\n%e\n", probe_u);
             }
         }
     }
@@ -255,5 +260,5 @@ int main(int argc, char **argv) {
     }
     // field_output(__IT, cpm.rank);
 
-    return CPML2_Finalize();
+    return CPM_Finalize();
 }

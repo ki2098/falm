@@ -1,4 +1,4 @@
-#include "../FalmCFDL1.h"
+#include "../FalmCFDDevCall.h"
 #include "../FalmCFDScheme.h"
 #include "devutil.cuh"
 
@@ -471,7 +471,7 @@ __global__ void kernel_Cartesian_Divergence(
     }
 }
 
-void L1CFD::L0Dev_Cartesian3d_FSCalcPseudoU(
+void FalmCFDDevCall::FSPseudoU(
     Matrix<REAL> &un,
     Matrix<REAL> &u,
     Matrix<REAL> &uu,
@@ -509,7 +509,7 @@ void L1CFD::L0Dev_Cartesian3d_FSCalcPseudoU(
     );
 }
 
-void L1CFD::L0Dev_Cartesian3d_UtoCU(
+void FalmCFDDevCall::UtoCU(
     Matrix<REAL> &u,
     Matrix<REAL> &uc,
     Matrix<REAL> &kx,
@@ -535,7 +535,7 @@ void L1CFD::L0Dev_Cartesian3d_UtoCU(
     );
 }
 
-void L1CFD::L0Dev_Cartesian3d_InterpolateCU(
+void FalmCFDDevCall::InterpolateCU(
     Matrix<REAL> &uu,
     Matrix<REAL> &uc,
     Region       &pdm,
@@ -557,7 +557,7 @@ void L1CFD::L0Dev_Cartesian3d_InterpolateCU(
     );
 }
 
-void L1CFD::L0Dev_Cartesian3d_ProjectPGrid(
+void FalmCFDDevCall::ProjectPGrid(
     Matrix<REAL> &u,
     Matrix<REAL> &ua,
     Matrix<REAL> &p,
@@ -584,7 +584,7 @@ void L1CFD::L0Dev_Cartesian3d_ProjectPGrid(
     );
 }
 
-void L1CFD::L0Dev_Cartesian3d_ProjectPFace(
+void FalmCFDDevCall::ProjectPFace(
     Matrix<REAL> &uu,
     Matrix<REAL> &uua,
     Matrix<REAL> &p,
@@ -611,7 +611,7 @@ void L1CFD::L0Dev_Cartesian3d_ProjectPFace(
     );
 }
 
-void L1CFD::L0Dev_Cartesian3d_SGS(
+void FalmCFDDevCall::SGS(
     Matrix<REAL> &u,
     Matrix<REAL> &nut,
     Matrix<REAL> &x,
@@ -653,7 +653,7 @@ void L1CFD::L0Dev_Cartesian3d_SGS(
     }
 }
 
-void L1CFD::L0Dev_Cartesian3d_Divergence(
+void FalmCFDDevCall::Divergence(
     Matrix<REAL> &uu,
     Matrix<REAL> &div,
     Matrix<REAL> &ja,

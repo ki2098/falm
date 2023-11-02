@@ -60,7 +60,7 @@ if (!avgMode) {
     fprintf(file, "    AveragedTime      = %e\n", avgTime);
 }
 
-if (varMin.size() > 1) {
+if (varMin.size() == 3) {
     fprintf(file, "    VectorMinMax {\n");
     fprintf(file, "      Min             = %e\n", vectorMin);
     fprintf(file, "      Max             = %e\n", vectorMax);

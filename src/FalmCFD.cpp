@@ -1,8 +1,8 @@
-#include "FalmCFDL2.h"
+#include "FalmCFD.h"
 
 namespace Falm {
 
-void L2CFD::L2Dev_Cartesian3d_FSCalcPseudoU(
+void FalmCFD::FSPseudoU(
     Matrix<REAL> &un,
     Matrix<REAL> &u,
     Matrix<REAL> &uu,
@@ -22,26 +22,26 @@ void L2CFD::L2Dev_Cartesian3d_FSCalcPseudoU(
     CPMComm<REAL> wcpm(&cpm);
     CPMComm<REAL> nutcpm(&cpm);
 
-    ucpm.CPML2Dev_IExchange6Face(&u.dev(0,0), 2, 0, 0, stream);
-    vcpm.CPML2Dev_IExchange6Face(&u.dev(0,1), 2, 0, 1, stream);
-    wcpm.CPML2Dev_IExchange6Face(&u.dev(0,2), 2, 0, 2, stream);
-    nutcpm.CPML2Dev_IExchange6Face(&nut.dev(0), 1, 0, 3, stream);
+    ucpm.IExchange6Face(&u.dev(0,0), 2, 0, 0, stream);
+    vcpm.IExchange6Face(&u.dev(0,1), 2, 0, 1, stream);
+    wcpm.IExchange6Face(&u.dev(0,2), 2, 0, 2, stream);
+    nutcpm.IExchange6Face(&nut.dev(0), 1, 0, 3, stream);
 
     INT3 inner_shape, inner_offset, boundary_shape[6], boundary_offset[6];
     cpm.set6Region(inner_shape, inner_offset, boundary_shape, boundary_offset, 2, Region(pdm.shape, cpm.gc));
 
 
-    L0Dev_Cartesian3d_FSCalcPseudoU(un, u, uu, ua, nut, kx, g, ja, ff, pdm, Region(inner_shape, inner_offset), block_dim);
+    FalmCFDDevCall::FSPseudoU(un, u, uu, ua, nut, kx, g, ja, ff, pdm, Region(inner_shape, inner_offset), block_dim);
 
-    ucpm.CPML2_Wait6Face();
-    vcpm.CPML2_Wait6Face();
-    wcpm.CPML2_Wait6Face();
-    nutcpm.CPML2_Wait6Face();
+    ucpm.Wait6Face();
+    vcpm.Wait6Face();
+    wcpm.Wait6Face();
+    nutcpm.Wait6Face();
 
-    ucpm.CPML2Dev_PostExchange6Face();
-    vcpm.CPML2Dev_PostExchange6Face();
-    wcpm.CPML2Dev_PostExchange6Face();
-    nutcpm.CPML2Dev_PostExchange6Face();
+    ucpm.PostExchange6Face();
+    vcpm.PostExchange6Face();
+    wcpm.PostExchange6Face();
+    nutcpm.PostExchange6Face();
 
     for (INT fid = 0; fid < 6; fid ++) {
         if (cpm.validNeighbour(fid)) {
@@ -51,7 +51,7 @@ void L2CFD::L2Dev_Cartesian3d_FSCalcPseudoU(
                 (fid / 2 == 2)? 1U : 8U
             );
             STREAM fstream = (stream)? stream[fid] : (STREAM)0;
-            L0Dev_Cartesian3d_FSCalcPseudoU(un, u, uu, ua, nut, kx, g, ja, ff, pdm, Region(boundary_shape[fid], boundary_offset[fid]), __block, fstream);
+            FalmCFDDevCall::FSPseudoU(un, u, uu, ua, nut, kx, g, ja, ff, pdm, Region(boundary_shape[fid], boundary_offset[fid]), __block, fstream);
         }
     }
     if (stream) {
@@ -64,7 +64,7 @@ void L2CFD::L2Dev_Cartesian3d_FSCalcPseudoU(
     falmWaitStream();
 }
 
-void L2CFD::L2Dev_Cartesian3d_UtoUU(
+void FalmCFD::UtoUU(
     Matrix<REAL> &u,
     Matrix<REAL> &uu,
     Matrix<REAL> &kx,
@@ -82,19 +82,19 @@ void L2CFD::L2Dev_Cartesian3d_UtoUU(
     CPMComm<REAL> vcpm(&cpm);
     CPMComm<REAL> wcpm(&cpm);
 
-    ucpm.CPML2Dev_IExchange6Face(&u.dev(0,0), 1, 0, 0, stream);
-    vcpm.CPML2Dev_IExchange6Face(&u.dev(0,1), 1, 0, 1, stream);
-    wcpm.CPML2Dev_IExchange6Face(&u.dev(0,2), 1, 0, 2, stream);
+    ucpm.IExchange6Face(&u.dev(0,0), 1, 0, 0, stream);
+    vcpm.IExchange6Face(&u.dev(0,1), 1, 0, 1, stream);
+    wcpm.IExchange6Face(&u.dev(0,2), 1, 0, 2, stream);
 
-    L0Dev_Cartesian3d_UtoCU(u, uc, kx, ja, pdm, Region(inner_shape, inner_offset), block_dim);
+    FalmCFDDevCall::UtoCU(u, uc, kx, ja, pdm, Region(inner_shape, inner_offset), block_dim);
 
-    ucpm.CPML2_Wait6Face();
-    vcpm.CPML2_Wait6Face();
-    wcpm.CPML2_Wait6Face();
+    ucpm.Wait6Face();
+    vcpm.Wait6Face();
+    wcpm.Wait6Face();
 
-    ucpm.CPML2Dev_PostExchange6Face();
-    vcpm.CPML2Dev_PostExchange6Face();
-    wcpm.CPML2Dev_PostExchange6Face();
+    ucpm.PostExchange6Face();
+    vcpm.PostExchange6Face();
+    wcpm.PostExchange6Face();
     for (INT fid = 0; fid < 6; fid ++) {
         if (cpm.validNeighbour(fid)) {
             dim3 __block(
@@ -103,7 +103,7 @@ void L2CFD::L2Dev_Cartesian3d_UtoUU(
                 (fid / 2 == 2)? 1U : 8U
             );
             STREAM fstream = (stream)? stream[fid] : (STREAM)0;
-            L0Dev_Cartesian3d_UtoCU(u, uc, kx, ja, pdm, Region(boundary_shape[fid], boundary_offset[fid]), __block, fstream);
+            FalmCFDDevCall::UtoCU(u, uc, kx, ja, pdm, Region(boundary_shape[fid], boundary_offset[fid]), __block, fstream);
         }
     }
     if (stream) {
@@ -121,12 +121,12 @@ void L2CFD::L2Dev_Cartesian3d_UtoUU(
     //     INT3{ 1,  1,  1},
     //     INT3{-1, -1, -1}
     // );
-    L0Dev_Cartesian3d_InterpolateCU(uu, uc, pdm, uumap, block_dim);
+    FalmCFDDevCall::InterpolateCU(uu, uc, pdm, uumap, block_dim);
 
     falmWaitStream();
 }
 
-void L2CFD::L2Dev_Cartesian3d_ProjectP(
+void FalmCFD::ProjectP(
     Matrix<REAL> &u,
     Matrix<REAL> &ua,
     Matrix<REAL> &uu,
@@ -144,12 +144,12 @@ void L2CFD::L2Dev_Cartesian3d_ProjectP(
 
     CPMComm<REAL> pcpm(&cpm);
 
-    pcpm.CPML2Dev_IExchange6Face(p.dev.ptr, 1, 0, 0, stream);
+    pcpm.IExchange6Face(p.dev.ptr, 1, 0, 0, stream);
 
-    L0Dev_Cartesian3d_ProjectPGrid(u, ua, p, kx, pdm, Region(inner_shape, inner_offset), block_dim);
+    FalmCFDDevCall::ProjectPGrid(u, ua, p, kx, pdm, Region(inner_shape, inner_offset), block_dim);
 
-    pcpm.CPML2_Wait6Face();
-    pcpm.CPML2Dev_PostExchange6Face();
+    pcpm.Wait6Face();
+    pcpm.PostExchange6Face();
 
     for (INT fid = 0; fid < 6; fid ++) {
         if (cpm.validNeighbour(fid)) {
@@ -159,7 +159,7 @@ void L2CFD::L2Dev_Cartesian3d_ProjectP(
                 (fid / 2 == 2)? 1U : 8U
             );
             STREAM fstream = (stream)? stream[fid] : (STREAM)0;
-            L0Dev_Cartesian3d_ProjectPGrid(u, ua, p, kx, pdm, Region(boundary_shape[fid], boundary_offset[fid]), __block, fstream);
+            FalmCFDDevCall::ProjectPGrid(u, ua, p, kx, pdm, Region(boundary_shape[fid], boundary_offset[fid]), __block, fstream);
         }
     }
     if (stream) {
@@ -177,12 +177,12 @@ void L2CFD::L2Dev_Cartesian3d_ProjectP(
     //     INT3{ 1,  1,  1},
     //     INT3{-1, -1, -1}
     // );
-    L0Dev_Cartesian3d_ProjectPFace(uu, uua, p, g, pdm, uumap, block_dim);
+    FalmCFDDevCall::ProjectPFace(uu, uua, p, g, pdm, uumap, block_dim);
 
     falmWaitStream();
 }
 
-void L2CFD::L2Dev_Cartesian3d_SGS(
+void FalmCFD::SGS(
     Matrix<REAL> &u,
     Matrix<REAL> &nut,
     Matrix<REAL> &x,
@@ -203,19 +203,19 @@ void L2CFD::L2Dev_Cartesian3d_SGS(
     CPMComm<REAL> vcpm;
     CPMComm<REAL> wcpm;
 
-    ucpm.CPML2Dev_IExchange6Face(&u.dev(0, 0), 1, 0, 0, stream);
-    vcpm.CPML2Dev_IExchange6Face(&u.dev(0, 1), 1, 0, 1, stream);
-    wcpm.CPML2Dev_IExchange6Face(&u.dev(0, 2), 1, 0, 2, stream);
+    ucpm.IExchange6Face(&u.dev(0, 0), 1, 0, 0, stream);
+    vcpm.IExchange6Face(&u.dev(0, 1), 1, 0, 1, stream);
+    wcpm.IExchange6Face(&u.dev(0, 2), 1, 0, 2, stream);
 
-    L0Dev_Cartesian3d_SGS(u, nut, x, kx, ja, pdm, Region(inner_shape, inner_offset), block_dim);
+    FalmCFDDevCall::SGS(u, nut, x, kx, ja, pdm, Region(inner_shape, inner_offset), block_dim);
 
-    ucpm.CPML2_Wait6Face();
-    vcpm.CPML2_Wait6Face();
-    wcpm.CPML2_Wait6Face();
+    ucpm.Wait6Face();
+    vcpm.Wait6Face();
+    wcpm.Wait6Face();
 
-    ucpm.CPML2Dev_PostExchange6Face();
-    vcpm.CPML2Dev_PostExchange6Face();
-    wcpm.CPML2Dev_PostExchange6Face();
+    ucpm.PostExchange6Face();
+    vcpm.PostExchange6Face();
+    wcpm.PostExchange6Face();
 
     for (INT fid = 0; fid < 6; fid ++) {
         if (cpm.validNeighbour(fid)) {
@@ -225,7 +225,7 @@ void L2CFD::L2Dev_Cartesian3d_SGS(
                 (fid / 2 == 2)? 1U : 8U
             );
             STREAM fstream = (stream)? stream[fid] : (STREAM)0;
-            L0Dev_Cartesian3d_SGS(u, nut, x, kx, ja, pdm, Region(boundary_shape[fid], boundary_offset[fid]), __block, fstream);
+            FalmCFDDevCall::SGS(u, nut, x, kx, ja, pdm, Region(boundary_shape[fid], boundary_offset[fid]), __block, fstream);
         }
     }
     if (stream) {

@@ -5,50 +5,45 @@ nvnvcc = /opt/nvidia/hpc_sdk/Linux_x86_64/23.3/cuda/bin/nvcc
 
 flag   = --std=c++11
 
-mvl1obj    = $(falmdir)/bin/MVL1.o
-mvl2obj    = 
-eql1obj    = $(falmdir)/bin/structEqL1.o
-eql2obj    = $(falmdir)/bin/structEqL2.o
-cpml1obj   = $(falmdir)/bin/CPML1.o
-cpml2obj   = 
-cfdl1obj   = $(falmdir)/bin/CFDL1.o
-cfdl2obj   = $(falmdir)/bin/CFDL2.o
+mvdevcallobj    = $(falmdir)/bin/MVDevCall.o
+mvobj    = 
+eqdevcallobj    = $(falmdir)/bin/FalmEqDevCall.o
+eqobj    = $(falmdir)/bin/FalmEq.o
+cpmdevcallobj   = $(falmdir)/bin/CPMDevCall.o
+cpmcommobj   = 
+cfddevcallobj   = $(falmdir)/bin/CFDDevCall.o
+cfdobj   = $(falmdir)/bin/CFD.o
 
-mvobj      = $(mvl1obj) $(mvl2obj)
-eqobj      = $(eql1obj) $(eql2obj)
-cpmobj     = $(cpml1obj) $(cpml2obj)
-cfdobj     = $(cfdl1obj) $(cfdl2obj)
-falmobj    = $(mvobj) $(eqobj) $(cpmobj) $(cfdobj)
+mv_obj      = $(mvdevcallobj) $(mvobj)
+eq_obj      = $(eqdevcallobj) $(eqobj)
+cpm_obj     = $(cpmdevcallobj) $(cpmcommobj)
+cfd_obj     = $(cfddevcallobj) $(cfdobj)
+falmobj    = $(mv_obj) $(eq_obj) $(cpm_obj) $(cfd_obj)
 
-cpml1:
-	$(nvnvcc) -c $(falmdir)/src/dev/CPML1v2.cu $(cuflag) -o $(cpml1obj)
+cpmdevcall:
+	$(nvnvcc) -c $(falmdir)/src/dev/CPMDevCall.cu $(cuflag) -o $(cpmdevcallobj)
 
-cpml2: cpml1
+cpmcomm: cpmdevcall
 
-cpm: cpml2
+cpm: cpmcomm
 
-mvl1:
-	$(nvnvcc) -c $(falmdir)/src/dev/MVL1.cu $(cuflag) -o $(mvl1obj)
+mvdevcall:
+	$(nvnvcc) -c $(falmdir)/src/dev/MVDevCall.cu $(cuflag) -o $(mvdevcallobj)
 
-mvl2: mvl1 cpm
+mv: mvdevcall cpm
 
-mv: mvl2
+eqdevcall: mvdevcall
+	$(nvnvcc) -c $(falmdir)/src/dev/FalmEqDevCall.cu $(cuflag) -o $(eqdevcallobj)
 
-eql1: mvl1
-	$(nvnvcc) -c $(falmdir)/src/dev/structEqL1.cu $(cuflag) -o $(eql1obj)
+eq: eqdevcall cpm mv
+	$(nvmpicxx) -cuda -c $(falmdir)/src/FalmEq.cpp $(flag) -o $(eqobj)
 
-eql2: eql1 cpm mvl2
-	$(nvmpicxx) -cuda -c $(falmdir)/src/structEqL2.cpp $(flag) -o $(eql2obj)
+cfddevcall:
+	$(nvnvcc) -c $(falmdir)/src/dev/FalmCFDDevCall.cu $(cuflag) -o $(cfddevcallobj)
 
-eq: eql2
+cfd: cfddevcall cpm
+	$(nvmpicxx) -cuda -c $(falmdir)/src/FalmCFD.cpp $(flag) -o $(cfdobj)
 
-cfdl1:
-	$(nvnvcc) -c $(falmdir)/src/dev/FalmCFDL1.cu $(cuflag) -o $(cfdl1obj)
-
-cfdl2: cfdl1 cpm
-	$(nvmpicxx) -cuda -c $(falmdir)/src/FalmCFDL2.cpp $(flag) -o $(cfdl2obj)
-
-cfd: cfdl2
 
 Falm: cfd eq
 

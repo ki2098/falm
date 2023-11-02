@@ -3,7 +3,7 @@
 namespace Falm {
 
 void CPM::CPML2_Wait6Face(MPI_Request *req) {
-    CPML2_Waitall(nP2P, req, MPI_STATUSES_IGNORE);
+    CPM_Waitall(nP2P, req, MPI_STATUSES_IGNORE);
 }
 
 void CPM::CPML2dev_IExchange6Face(double *data, Region &pdm, unsigned int thick, int grp_tag, CPMBuffer<double> *&buffer, unsigned int buf_hdctype, MPI_Request *&req) {

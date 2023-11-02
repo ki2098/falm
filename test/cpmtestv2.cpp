@@ -58,7 +58,7 @@ INT dim_division(INT dim_size, INT mpi_size, INT mpi_rank) {
 }
 
 int main(int argc, char **argv) {
-    CPML2_Init(&argc, &argv);
+    CPM_Init(&argc, &argv);
 
     Region global(
         INT3{Nx + Gdx2, Ny + Gdx2, Nz + Gdx2},
@@ -66,27 +66,27 @@ int main(int argc, char **argv) {
     );
 
     CPMBase cpm;
-    CPML2_GetRank(MPI_COMM_WORLD, cpm.rank);
-    CPML2_GetSize(MPI_COMM_WORLD, cpm.size);
+    CPM_GetRank(MPI_COMM_WORLD, cpm.rank);
+    CPM_GetSize(MPI_COMM_WORLD, cpm.size);
     cpm.shape = INT3{atoi(argv[1]), atoi(argv[2]), atoi(argv[3])};
     if (PRODUCT3(cpm.shape) != cpm.size) {
         printf("wrong group shape: %ux%ux%u != %d\n",cpm.shape.x, cpm.shape.y, cpm.shape.z, cpm.size);
-        CPML2_Finalize();
+        CPM_Finalize();
         return 0;
     }
     printf("group shape %ux%ux%u\n", cpm.shape.x, cpm.shape.y, cpm.shape.z);
     fflush(stdout);
-    CPML2_Barrier(MPI_COMM_WORLD);
+    CPM_Barrier(MPI_COMM_WORLD);
     cpm.initNeighbour();
     printf("%d(%u %u %u): E%2d W%2d N%2d S%2d T%2d B%2d\n", cpm.rank, cpm.idx.x, cpm.idx.y, cpm.idx.z, cpm.neighbour[0], cpm.neighbour[1], cpm.neighbour[2], cpm.neighbour[3], cpm.neighbour[4], cpm.neighbour[5]);
     fflush(stdout);
-    CPML2_Barrier(MPI_COMM_WORLD);
+    CPM_Barrier(MPI_COMM_WORLD);
 
     int gpu_count;
     cudaGetDeviceCount(&gpu_count);
     cudaSetDevice(cpm.rank % gpu_count);
     printf("process %d running no device %d\n", cpm.rank, cpm.rank % gpu_count);
-    CPML2_Barrier(MPI_COMM_WORLD);
+    CPM_Barrier(MPI_COMM_WORLD);
 
     INT ox = 0, oy = 0, oz = 0;
     for (INT i = 0; i < cpm.idx.x; i ++) {
@@ -104,7 +104,7 @@ int main(int argc, char **argv) {
     );
     printf("%d(%u %u %u): (%u %u %u) (%u %u %u))\n", cpm.rank, cpm.idx.x, cpm.idx.y, cpm.idx.z, process.shape.x, process.shape.y, process.shape.z, process.offset.x, process.offset.y, process.offset.z);
     fflush(stdout);
-    CPML2_Barrier(MPI_COMM_WORLD);
+    CPM_Barrier(MPI_COMM_WORLD);
 
     Matrix<REAL> x(process.shape, 1, HDCType::Host, "x");
     for (INT i = Gd; i < process.shape.x - Gd; i ++) {
@@ -124,13 +124,13 @@ int main(int argc, char **argv) {
             printf("\n");
             fflush(stdout);
         }
-        CPML2_Barrier(MPI_COMM_WORLD);
+        CPM_Barrier(MPI_COMM_WORLD);
     }
 
     cpm.use_cuda_aware_mpi = USE_CUDA_AWARE_MPI;
     CPMComm<REAL> cpmop(cpm);
     printf("cpmop %d: %d %u\n", cpm.rank, cpmop.mpi_dtype == MPI_DOUBLE, cpmop.buffer_hdctype);
-    CPML2_Barrier(MPI_COMM_WORLD);
+    CPM_Barrier(MPI_COMM_WORLD);
     INT thick = THICK;
     INT margin = MARGIN;
     
@@ -145,13 +145,13 @@ int main(int argc, char **argv) {
             fflush(stdout);
         }
         // printf("%p\n", x.dev.ptr);
-        CPML2_Barrier(MPI_COMM_WORLD);
-        cpmop.CPML2Dev_IExchange6ColoredFace(x.dev.ptr, process, Color::Black, thick, margin, 0, FACESTREAM);
+        CPM_Barrier(MPI_COMM_WORLD);
+        cpmop.IExchange6ColoredFace(x.dev.ptr, process, Color::Black, thick, margin, 0, FACESTREAM);
         // cpmop.CPML2dev_IExchange6Face(x.dev.ptr, process, thick, 0);
         cpmop.CPML2_Wait6Face();
         // printf("%p\n", x.dev.ptr);
         printf("%d sending complete\n", cpm.rank);
-        cpmop.CPML2Dev_PostExchange6ColoredFace(FACESTREAM);
+        cpmop.PostExchange6ColoredFace(FACESTREAM);
         // cpmop.CPML2dev_PostExchange6Face();
     }
     x.sync(MCpType::Dev2Hst);
@@ -173,17 +173,17 @@ int main(int argc, char **argv) {
             // print_buffer_dev(buffer[3]);
             fflush(stdout);
         }
-        CPML2_Barrier(MPI_COMM_WORLD);
+        CPM_Barrier(MPI_COMM_WORLD);
     }
     if (cpm.size > 1) {
         if (cpm.rank == 0) {
             printf("Sending color %u...\n", Color::Red);
             fflush(stdout);
         }
-        CPML2_Barrier(MPI_COMM_WORLD);
-        cpmop.CPML2Dev_IExchange6ColoredFace(x.dev.ptr, process, Color::Red, thick, margin, 0, FACESTREAM);
+        CPM_Barrier(MPI_COMM_WORLD);
+        cpmop.IExchange6ColoredFace(x.dev.ptr, process, Color::Red, thick, margin, 0, FACESTREAM);
         cpmop.CPML2_Wait6Face();
-        cpmop.CPML2Dev_PostExchange6ColoredFace(FACESTREAM);
+        cpmop.PostExchange6ColoredFace(FACESTREAM);
     }
     x.sync(MCpType::Dev2Hst);
     for (INT i = 0; i < cpm.size; i ++) {
@@ -204,14 +204,14 @@ int main(int argc, char **argv) {
             // print_buffer_dev(buffer[3]);
             fflush(stdout);
         }
-        CPML2_Barrier(MPI_COMM_WORLD);
+        CPM_Barrier(MPI_COMM_WORLD);
     }
 
     x.release(HDCType::HstDev);
     
     printf("_____________________________________________________________________\n");
     fflush(stdout);
-    CPML2_Barrier(MPI_COMM_WORLD);
+    CPM_Barrier(MPI_COMM_WORLD);
 
     x.alloc(process.shape, 1, HDCType::Host);
     for (INT i = Gd; i < process.shape.x - Gd; i ++) {
@@ -231,7 +231,7 @@ int main(int argc, char **argv) {
             printf("\n");
             fflush(stdout);
         }
-        CPML2_Barrier(MPI_COMM_WORLD);
+        CPM_Barrier(MPI_COMM_WORLD);
     }
 
     x.sync(MCpType::Hst2Dev);
@@ -241,11 +241,11 @@ int main(int argc, char **argv) {
             fflush(stdout);
         }
         // printf("%u %p\n", x.hdctype, x.dev.ptr);
-        CPML2_Barrier(MPI_COMM_WORLD);
-        cpmop.CPML2Dev_IExchange6ColoredFace(x.dev.ptr, process, Color::Black, thick, margin, 0, FACESTREAM);
+        CPM_Barrier(MPI_COMM_WORLD);
+        cpmop.IExchange6ColoredFace(x.dev.ptr, process, Color::Black, thick, margin, 0, FACESTREAM);
         // cpmop.CPML2dev_IExchange6Face(x.dev.ptr, process, thick, 0);
         cpmop.CPML2_Wait6Face();
-        cpmop.CPML2Dev_PostExchange6ColoredFace(FACESTREAM);
+        cpmop.PostExchange6ColoredFace(FACESTREAM);
         // cpmop.CPML2dev_PostExchange6Face();
     }
     x.sync(MCpType::Dev2Hst);
@@ -267,17 +267,17 @@ int main(int argc, char **argv) {
             // print_buffer_dev(buffer[3]);
             fflush(stdout);
         }
-        CPML2_Barrier(MPI_COMM_WORLD);
+        CPM_Barrier(MPI_COMM_WORLD);
     }
     if (cpm.size > 1) {
         if (cpm.rank == 0) {
             printf("Sending color %u...\n", Color::Red);
             fflush(stdout);
         }
-        CPML2_Barrier(MPI_COMM_WORLD);
-        cpmop.CPML2Dev_IExchange6ColoredFace(x.dev.ptr, process, Color::Red, thick, margin, 0, FACESTREAM);
+        CPM_Barrier(MPI_COMM_WORLD);
+        cpmop.IExchange6ColoredFace(x.dev.ptr, process, Color::Red, thick, margin, 0, FACESTREAM);
         cpmop.CPML2_Wait6Face();
-        cpmop.CPML2Dev_PostExchange6ColoredFace(FACESTREAM);
+        cpmop.PostExchange6ColoredFace(FACESTREAM);
     }
     x.sync(MCpType::Dev2Hst);
     for (INT i = 0; i < cpm.size; i ++) {
@@ -298,7 +298,7 @@ int main(int argc, char **argv) {
             // print_buffer_dev(buffer[3]);
             fflush(stdout);
         }
-        CPML2_Barrier(MPI_COMM_WORLD);
+        CPM_Barrier(MPI_COMM_WORLD);
     }
 
     x.release(HDCType::HstDev);
@@ -307,5 +307,5 @@ int main(int argc, char **argv) {
         cudaStreamDestroy(faceStream[fid]);
     }
 
-    return CPML2_Finalize();
+    return CPM_Finalize();
 }

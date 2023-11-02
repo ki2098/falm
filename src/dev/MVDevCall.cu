@@ -1,7 +1,54 @@
-#include "../MVL1.h"
+#include "../MVDevCall.h"
 #include "devutil.cuh"
 
 namespace Falm {
+
+__global__ void kernel_MVMult(const MatrixFrame<REAL> *va, const MatrixFrame<REAL> *vx, const MatrixFrame<REAL> *vax, INT3 pdm_shape, INT3 map_shape, INT3 map_offset) {
+    const MatrixFrame<REAL> &a=*va, &x=*vx, &ax=*vax;
+    INT i, j, k;
+    GLOBAL_THREAD_IDX_3D(i, j, k);
+    if (i < map_shape.x && j < map_shape.y && k < map_shape.z) {
+        i += map_offset.x;
+        j += map_offset.y;
+        k += map_offset.z;
+        INT idxc = IDX(i  , j  , k  , pdm_shape);
+        INT idxe = IDX(i+1, j  , k  , pdm_shape);
+        INT idxw = IDX(i-1, j  , k  , pdm_shape);
+        INT idxn = IDX(i  , j+1, k  , pdm_shape);
+        INT idxs = IDX(i  , j-1, k  , pdm_shape);
+        INT idxt = IDX(i  , j  , k+1, pdm_shape);
+        INT idxb = IDX(i  , j  , k-1, pdm_shape);
+        REAL ac = a(idxc, 0);
+        REAL ae = a(idxc, 1);
+        REAL aw = a(idxc, 2);
+        REAL an = a(idxc, 3);
+        REAL as = a(idxc, 4);
+        REAL at = a(idxc, 5);
+        REAL ab = a(idxc, 6);
+        REAL xc = x(idxc);
+        REAL xe = x(idxe);
+        REAL xw = x(idxw);
+        REAL xn = x(idxn);
+        REAL xs = x(idxs);
+        REAL xt = x(idxt);
+        REAL xb = x(idxb);
+        ax(idxc) = ac * xc + ae * xe + aw * xw + an * xn + as * xs + at * xt + ab * xb;
+    }
+}
+
+void MVDevCall::MVMult(Matrix<REAL> &a, Matrix<REAL> &x, Matrix<REAL> &ax, Region &pdm, const Region &map, dim3 block_dim, STREAM stream) {
+    assert(
+        a.shape.x == x.shape.x && a.shape.x == ax.shape.x &&
+        a.shape.y == 7 && x.shape.y == 1 && ax.shape.y == 1
+    );
+    dim3 grid_dim(
+        (map.shape.x + block_dim.x - 1) / block_dim.x,
+        (map.shape.y + block_dim.y - 1) / block_dim.y,
+        (map.shape.z + block_dim.z - 1) / block_dim.z
+    );
+
+    kernel_MVMult<<<grid_dim, block_dim, 0, stream>>>(a.devptr, x.devptr, ax.devptr, pdm.shape, map.shape, map.offset);
+}
 
 __global__ void kernel_DotProduct(const MatrixFrame<REAL> *va, const MatrixFrame<REAL> *vb, REAL *partial_sum_dev, INT3 pdm_shape, INT3 map_shape, INT3 map_offset) {
     extern __shared__ REAL cache[];
@@ -36,7 +83,7 @@ __global__ void kernel_DotProduct(const MatrixFrame<REAL> *va, const MatrixFrame
     }
 }
 
-REAL L0Dev_DotProduct(Matrix<REAL> &a, Matrix<REAL> &b, Region &pdm, const Region &map, dim3 block_dim) {
+REAL MVDevCall::DotProduct(Matrix<REAL> &a, Matrix<REAL> &b, Region &pdm, const Region &map, dim3 block_dim) {
     dim3 grid_dim(
         (map.shape.x + block_dim.x - 1) / block_dim.x,
         (map.shape.y + block_dim.y - 1) / block_dim.y,
@@ -97,7 +144,7 @@ __global__ void kernel_EuclideanNormSq(const MatrixFrame<REAL> *va, REAL *partia
     }
 }
 
-REAL L0Dev_EuclideanNormSq(Matrix<REAL> &a, Region &pdm, const Region &map, dim3 block_dim) {
+REAL MVDevCall::EuclideanNormSq(Matrix<REAL> &a, Region &pdm, const Region &map, dim3 block_dim) {
     dim3 grid_dim(
         (map.shape.x + block_dim.x - 1) / block_dim.x,
         (map.shape.y + block_dim.y - 1) / block_dim.y,
@@ -326,7 +373,7 @@ __global__ void kernel_MatColAbsMin(const MatrixFrame<REAL> *va, INT col, REAL *
     return maximum;
 } */
 
-REAL L0Dev_MatColMax(Matrix<REAL> &a, INT col, Region &pdm, const Region &map, dim3 block_dim) {
+REAL MVDevCall::MatColMax(Matrix<REAL> &a, INT col, Region &pdm, const Region &map, dim3 block_dim) {
     dim3 grid_dim(
         (map.shape.x + block_dim.x - 1) / block_dim.x,
         (map.shape.y + block_dim.y - 1) / block_dim.y,
@@ -354,7 +401,7 @@ REAL L0Dev_MatColMax(Matrix<REAL> &a, INT col, Region &pdm, const Region &map, d
     return maximum;
 }
 
-REAL L0Dev_MatColMin(Matrix<REAL> &a, INT col, Region &pdm, const Region &map, dim3 block_dim) {
+REAL MVDevCall::MatColMin(Matrix<REAL> &a, INT col, Region &pdm, const Region &map, dim3 block_dim) {
     dim3 grid_dim(
         (map.shape.x + block_dim.x - 1) / block_dim.x,
         (map.shape.y + block_dim.y - 1) / block_dim.y,
@@ -382,7 +429,7 @@ REAL L0Dev_MatColMin(Matrix<REAL> &a, INT col, Region &pdm, const Region &map, d
     return maximum;
 }
 
-REAL L0Dev_MatColAbsMax(Matrix<REAL> &a, INT col, Region &pdm, const Region &map, dim3 block_dim) {
+REAL MVDevCall::MatColAbsMax(Matrix<REAL> &a, INT col, Region &pdm, const Region &map, dim3 block_dim) {
     dim3 grid_dim(
         (map.shape.x + block_dim.x - 1) / block_dim.x,
         (map.shape.y + block_dim.y - 1) / block_dim.y,
@@ -410,7 +457,7 @@ REAL L0Dev_MatColAbsMax(Matrix<REAL> &a, INT col, Region &pdm, const Region &map
     return maximum;
 }
 
-REAL L0Dev_MatColAbsMin(Matrix<REAL> &a, INT col, Region &pdm, const Region &map, dim3 block_dim) {
+REAL MVDevCall::MatColAbsMin(Matrix<REAL> &a, INT col, Region &pdm, const Region &map, dim3 block_dim) {
     dim3 grid_dim(
         (map.shape.x + block_dim.x - 1) / block_dim.x,
         (map.shape.y + block_dim.y - 1) / block_dim.y,
@@ -449,7 +496,7 @@ __global__ void kernel_ScaleMatrix(const MatrixFrame<REAL> *va, REAL scale) {
     }
 }
 
-void L1Dev_ScaleMatrix(Matrix<REAL> &a, REAL scale, dim3 block_dim) {
+void MVDevCall::ScaleMatrix(Matrix<REAL> &a, REAL scale, dim3 block_dim) {
     INT n_threads = PRODUCT3(block_dim);
     INT n_blocks = (a.size + n_threads - 1) / n_threads;
     kernel_ScaleMatrix<<<n_blocks, n_threads, 0, 0>>>(a.devptr, scale);
@@ -532,7 +579,7 @@ __global__ void kernel_VecMin(const MatrixFrame<REAL> *va, REAL *partial_max_dev
     }
 }
 
-REAL L0Dev_VecMax(Matrix<REAL> &a, Region &pdm, const Region &map, dim3 block_dim) {
+REAL MVDevCall::VecMax(Matrix<REAL> &a, Region &pdm, const Region &map, dim3 block_dim) {
     dim3 grid_dim(
         (map.shape.x + block_dim.x - 1) / block_dim.x,
         (map.shape.y + block_dim.y - 1) / block_dim.y,
@@ -560,7 +607,7 @@ REAL L0Dev_VecMax(Matrix<REAL> &a, Region &pdm, const Region &map, dim3 block_di
     return maximum;
 }
 
-REAL L0Dev_VecMin(Matrix<REAL> &a, Region &pdm, const Region &map, dim3 block_dim) {
+REAL MVDevCall::VecMin(Matrix<REAL> &a, Region &pdm, const Region &map, dim3 block_dim) {
     dim3 grid_dim(
         (map.shape.x + block_dim.x - 1) / block_dim.x,
         (map.shape.y + block_dim.y - 1) / block_dim.y,

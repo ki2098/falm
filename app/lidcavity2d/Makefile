@@ -15,6 +15,6 @@ poissonobj = bin/poisson.o
 poisson:
 	$(nvnvcc) -c poisson.cu $(cuflag) -o $(poissonobj)
 
-lc2d: bc coord cfdl1 eql1 poisson
+lc2d: bc coord cfddevcall eqdevcall poisson
 	$(nvnvcc) -c main.cpp $(flag) -o bin/lc2d.o
-	$(nvnvcc) $(bcobj) $(coordobj) $(eql1obj) $(mvl1obj) $(cfdl1obj) $(poissonobj) bin/lc2d.o -o bin/lc2d
+	$(nvnvcc) $(bcobj) $(coordobj) $(eqdevcallobj) $(mvdevcallobj) $(cfddevcallobj) $(poissonobj) bin/lc2d.o -o bin/lc2d

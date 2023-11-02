@@ -6,7 +6,7 @@ cudaflag = --default-stream per-thread
 
 mvl1obj    = bin/MVL1.o
 mvl2obj    = 
-eql1obj    = bin/structEqL1.o
+eql1obj    = bin/FalmEqDevCall.h.o
 eql2obj    = bin/structEqL2.o
 cpml1obj   = bin/CPML1.o
 cpml2obj   = bin/CPML2.o
@@ -24,10 +24,10 @@ mvl1ito:
 	nvcc -c ../src/dev/MVL1.cu $(cudaflag) --std=c++11 -o $(mvl1obj)
 
 eql1:
-	$(nvnvcc) -c ../src/dev/structEqL1.cu $(cudaflag) --std=c++11 -o $(eql1obj)
+	$(nvnvcc) -c ../src/dev/FalmEqDevCall.h.cu $(cudaflag) --std=c++11 -o $(eql1obj)
 
 eql1ito:
-	nvcc -c ../src/dev/structEqL1.cu $(cudaflag) --std=c++11 -o $(eql1obj)
+	nvcc -c ../src/dev/FalmEqDevCall.h.cu $(cudaflag) --std=c++11 -o $(eql1obj)
 
 cpml1:
 	$(nvnvcc) -c ../src/dev/CPML1.cu $(cudaflag) --std=c++11 -o $(cpml1obj)

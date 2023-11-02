@@ -1,6 +1,6 @@
 #include <stdio.h>
-#include "../src/structEqL2.h"
-#include "../src/MVL2.h"
+#include "../src/FalmEq.h"
+#include "../src/MV.h"
 
 using namespace Falm;
 
@@ -75,7 +75,7 @@ void print_xy_slice(Matrix<REAL> &x, INT3 domain_shape, INT slice_at_z) {
 }
 
 int main(int argc, char **argv) {
-    CPML2_Init(&argc, &argv);
+    CPM_Init(&argc, &argv);
 
     Region global(
         INT3{Nx + 2 * Gd, Ny + 2 * Gd, Nz + 2 * Gd},
@@ -115,19 +115,19 @@ int main(int argc, char **argv) {
     CPMBase cpm;
     cpm.use_cuda_aware_mpi = USE_CUDA_AWARE_MPI;
     printf("using cuda aware mpi: %d \n");
-    CPML2_GetRank(MPI_COMM_WORLD, cpm.rank);
-    CPML2_GetSize(MPI_COMM_WORLD, cpm.size);
+    CPM_GetRank(MPI_COMM_WORLD, cpm.rank);
+    CPM_GetSize(MPI_COMM_WORLD, cpm.size);
     cpm.shape = {cpm.size, 1, 1};
     cpm.initNeighbour();
     printf("%d(%u %u %u): E%2d W%2d N%2d S%2d T%2d B%2d\n", cpm.rank, cpm.idx.x, cpm.idx.y, cpm.idx.z, cpm.neighbour[0], cpm.neighbour[1], cpm.neighbour[2], cpm.neighbour[3], cpm.neighbour[4], cpm.neighbour[5]);
     fflush(stdout);
-    CPML2_Barrier(MPI_COMM_WORLD);
+    CPM_Barrier(MPI_COMM_WORLD);
 
     int gpu_count;
     cudaGetDeviceCount(&gpu_count);
     cudaSetDevice(cpm.rank % gpu_count);
     printf("process %d running no device %d\n", cpm.rank, cpm.rank % gpu_count);
-    CPML2_Barrier(MPI_COMM_WORLD);
+    CPM_Barrier(MPI_COMM_WORLD);
 
     INT ox = 0, oy = 0, oz = 0;
     for (INT i = 0; i < cpm.idx.x; i ++) {
@@ -148,7 +148,7 @@ int main(int argc, char **argv) {
             printf("%-2d(%-2u %-2u %-2u): (%-3u %-3u %-3u) (%-3u %-3u %-3u)\n", cpm.rank, cpm.idx.x, cpm.idx.y, cpm.idx.z, process.shape.x, process.shape.y, process.shape.z, process.offset.x, process.offset.y, process.offset.z);
             fflush(stdout);
         }
-        CPML2_Barrier(MPI_COMM_WORLD);
+        CPM_Barrier(MPI_COMM_WORLD);
     }
 
     Matrix<REAL> a, t, b, r;
@@ -189,7 +189,7 @@ int main(int argc, char **argv) {
             printf("\n");
             fflush(stdout);
         }
-        CPML2_Barrier(MPI_COMM_WORLD);
+        CPM_Barrier(MPI_COMM_WORLD);
     }
 
     a.sync(MCpType::Hst2Dev);
@@ -208,14 +208,14 @@ int main(int argc, char **argv) {
             printf("\n");
             fflush(stdout);
         }
-        CPML2_Barrier(MPI_COMM_WORLD);
+        CPM_Barrier(MPI_COMM_WORLD);
     }
     STREAM faceStream[6];
     for (int fid = 0; fid < 6; fid ++) {
         cudaStreamCreate(&faceStream[fid]);
     }
-    L2EqSolver solver(LSType::PBiCGStab, 1000, 1e-9, 1.2, LSType::SOR, 5, 1.5);
-    solver.L2Dev_Struct3d7p_Solve(a, t, b, r, global, process, block_dim, cpm, faceStream);
+    FalmEq solver(LSType::PBiCGStab, 1000, 1e-9, 1.2, LSType::SOR, 5, 1.5);
+    solver.Solve(a, t, b, r, global, process, block_dim, cpm, faceStream);
     t.sync(MCpType::Dev2Hst);
     r.sync(MCpType::Dev2Hst);
     for (INT i = 0; i < cpm.size; i ++) {
@@ -225,12 +225,12 @@ int main(int argc, char **argv) {
             printf("\n");
             fflush(stdout);
         }
-        CPML2_Barrier(MPI_COMM_WORLD);
+        CPM_Barrier(MPI_COMM_WORLD);
     }
     printf("%d %.12lf\n", solver.it, solver.err);
     for (int fid = 0; fid < 6; fid ++) {
         cudaStreamDestroy(faceStream[fid]);
     }
 
-    return CPML2_Finalize();
+    return CPM_Finalize();
 }

@@ -1,5 +1,5 @@
 #include "../typedef.h"
-#include "../CPML1v2.h"
+#include "../CPMDevCall.h"
 #include "devutil.cuh"
 
 namespace Falm {
@@ -60,7 +60,7 @@ __global__ void kernel_CPM_UnpackColoredBuffer(REAL *buffer, INT3 buf_shape, INT
     }
 }
 
-void CPML0Dev_PackBuffer(REAL *buffer, Region &map, REAL *src, Region &pdm, dim3 block_dim, STREAM stream) {
+void CPMDevCall::PackBuffer(REAL *buffer, Region &map, REAL *src, Region &pdm, dim3 block_dim, STREAM stream) {
     dim3 grid_dim(
         (map.shape.x + block_dim.x - 1) / block_dim.x,
         (map.shape.y + block_dim.y - 1) / block_dim.y,
@@ -69,7 +69,7 @@ void CPML0Dev_PackBuffer(REAL *buffer, Region &map, REAL *src, Region &pdm, dim3
     kernel_CPM_PackBuffer<<<grid_dim, block_dim, 0, stream>>>(buffer, map.shape, map.offset, src, pdm.shape);
 }
 
-void CPML0Dev_PackColoredBuffer(REAL *buffer, Region &map, INT color, REAL *src, Region &pdm, dim3 block_dim, STREAM stream) {
+void CPMDevCall::PackColoredBuffer(REAL *buffer, Region &map, INT color, REAL *src, Region &pdm, dim3 block_dim, STREAM stream) {
     dim3 grid_dim(
         (map.shape.x + block_dim.x - 1) / block_dim.x,
         (map.shape.y + block_dim.y - 1) / block_dim.y,
@@ -78,7 +78,7 @@ void CPML0Dev_PackColoredBuffer(REAL *buffer, Region &map, INT color, REAL *src,
     kernel_CPM_PackColoredBuffer<<<grid_dim, block_dim, 0, stream>>>(buffer, map.shape, map.offset, color, src, pdm.shape, pdm.offset);
 }
 
-void CPML0Dev_UnpackBuffer(REAL *buffer, Region &map, REAL *dst, Region &pdm, dim3 block_dim, STREAM stream) {
+void CPMDevCall::UnpackBuffer(REAL *buffer, Region &map, REAL *dst, Region &pdm, dim3 block_dim, STREAM stream) {
     dim3 grid_dim(
         (map.shape.x + block_dim.x - 1) / block_dim.x,
         (map.shape.y + block_dim.y - 1) / block_dim.y,
@@ -87,7 +87,7 @@ void CPML0Dev_UnpackBuffer(REAL *buffer, Region &map, REAL *dst, Region &pdm, di
     kernel_CPM_UnpackBuffer<<<grid_dim, block_dim, 0, stream>>>(buffer, map.shape, map.offset, dst, pdm.shape);
 }
 
-void CPML0Dev_UnpackColoredBuffer(REAL *buffer, Region &map, INT color, REAL *dst, Region &pdm, dim3 block_dim, STREAM stream) {
+void CPMDevCall::UnpackColoredBuffer(REAL *buffer, Region &map, INT color, REAL *dst, Region &pdm, dim3 block_dim, STREAM stream) {
     dim3 grid_dim(
         (map.shape.x + block_dim.x - 1) / block_dim.x,
         (map.shape.y + block_dim.y - 1) / block_dim.y,

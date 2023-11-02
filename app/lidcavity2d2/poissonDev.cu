@@ -1,5 +1,4 @@
 #include "poissonDev.h"
-#include "../../src/MVL1.h"
 #include "../../src/util.h"
 #include "../../src/dev/devutil.cuh"
 

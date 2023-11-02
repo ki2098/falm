@@ -3,8 +3,7 @@
 
 #include <mpi.h>
 #include <typeinfo>
-#include "CPMBv2.h"
-#include "CPML1v2.h"
+#include "CPMDevCall.h"
 #include "CPMBase.h"
 
 namespace Falm {
@@ -34,48 +33,48 @@ template<typename T> inline MPI_Datatype getMPIDtype() {
     return MPI_DATATYPE_NULL;
 }
 
-static inline int CPML2_ISend(CPMBuffer &buffer, MPI_Datatype mpi_dtype, int dst, int tag, MPI_Comm mpi_comm, MPI_Request *mpi_req) {
+static inline int CPM_ISend(CPMBuffer &buffer, MPI_Datatype mpi_dtype, int dst, int tag, MPI_Comm mpi_comm, MPI_Request *mpi_req) {
     return MPI_Isend(buffer.ptr, buffer.count, mpi_dtype, dst, tag, mpi_comm, mpi_req);
 }
 
-static inline int CPML2_IRecv(CPMBuffer &buffer, MPI_Datatype mpi_dtype, int src, int tag, MPI_Comm mpi_comm, MPI_Request *mpi_req) {
+static inline int CPM_IRecv(CPMBuffer &buffer, MPI_Datatype mpi_dtype, int src, int tag, MPI_Comm mpi_comm, MPI_Request *mpi_req) {
     return MPI_Irecv(buffer.ptr, buffer.count, mpi_dtype, src, tag, mpi_comm, mpi_req);
 }
 
-static inline int CPML2_Wait(MPI_Request *mpi_req, MPI_Status *mpi_status) {
+static inline int CPM_Wait(MPI_Request *mpi_req, MPI_Status *mpi_status) {
     return MPI_Wait(mpi_req, mpi_status);
 }
 
-static inline int CPML2_Waitall(int count, MPI_Request *mpi_req, MPI_Status *mpi_status) {
+static inline int CPM_Waitall(int count, MPI_Request *mpi_req, MPI_Status *mpi_status) {
     return MPI_Waitall(count, mpi_req, mpi_status);
 }
 
-static inline int CPML2_Init(int *argc, char ***argv) {
+static inline int CPM_Init(int *argc, char ***argv) {
     return MPI_Init(argc, argv);
 }
 
-static inline int CPML2_Finalize() {
+static inline int CPM_Finalize() {
     return MPI_Finalize();
 }
 
-static inline int CPML2_GetRank(MPI_Comm mpi_comm, int &mpi_rank) {
+static inline int CPM_GetRank(MPI_Comm mpi_comm, int &mpi_rank) {
     return MPI_Comm_rank(mpi_comm, &mpi_rank);
 }
 
-static inline int CPML2_GetSize(MPI_Comm mpi_comm, int &mpi_size) {
+static inline int CPM_GetSize(MPI_Comm mpi_comm, int &mpi_size) {
     return MPI_Comm_size(mpi_comm, &mpi_size);
 }
 
-static inline int CPML2_Barrier(MPI_Comm mpi_comm) {
+static inline int CPM_Barrier(MPI_Comm mpi_comm) {
     return MPI_Barrier(mpi_comm);
 }
 
-static inline int CPML2_AllReduce(void *buffer, int count, MPI_Datatype mpi_dtype, MPI_Op mpi_op, MPI_Comm mpi_comm) {
+static inline int CPM_AllReduce(void *buffer, int count, MPI_Datatype mpi_dtype, MPI_Op mpi_op, MPI_Comm mpi_comm) {
     return MPI_Allreduce(MPI_IN_PLACE, buffer, count, mpi_dtype, mpi_op, mpi_comm);
 }
 
 template<typename T>
-class CPMComm {
+class CPMComm : public CPMDevCall {
 public:
     CPMBase               *base;
     CPMBuffer            buffer[12];
@@ -101,10 +100,10 @@ public:
         }
     }
 
-    void CPML2_Wait6Face() {
+    void Wait6Face() {
         for (INT i = 0; i < 6; i ++) {
             if (base->neighbour[i] >= 0) {
-                CPML2_Waitall(2, &mpi_req[i * 2], &mpi_stat[i * 2]);
+                CPM_Waitall(2, &mpi_req[i * 2], &mpi_stat[i * 2]);
             }
         }
     }
@@ -113,10 +112,10 @@ public:
     // void CPML2Dev_IExchange6ColoredFace(T *data, Mapper &pdm, INT color, INT thick, int grp_tag);
     // void CPML2Dev_PostExchange6Face();
     // void CPML2Dev_PostExchange6ColoredFace();
-    void CPML2Dev_IExchange6Face(T *data, INT thick, INT margin, int grp_tag, STREAM *stream = nullptr);
-    void CPML2Dev_IExchange6ColoredFace(T *data, INT color, INT thick, INT margin, int grp_tag, STREAM *stream = nullptr);
-    void CPML2Dev_PostExchange6Face(STREAM *stream = nullptr);
-    void CPML2Dev_PostExchange6ColoredFace(STREAM *stream = nullptr);
+    void IExchange6Face(T *data, INT thick, INT margin, int grp_tag, STREAM *stream = nullptr);
+    void IExchange6ColoredFace(T *data, INT color, INT thick, INT margin, int grp_tag, STREAM *stream = nullptr);
+    void PostExchange6Face(STREAM *stream = nullptr);
+    void PostExchange6ColoredFace(STREAM *stream = nullptr);
 
 protected:
     void makeBufferShapeOffset(INT thick, INT margin) {
@@ -160,7 +159,7 @@ protected:
 
 };
 
-template<typename T> void CPMComm<T>::CPML2Dev_IExchange6Face(T *data, INT thick, INT margin, int grp_tag, STREAM *stream) {
+template<typename T> void CPMComm<T>::IExchange6Face(T *data, INT thick, INT margin, int grp_tag, STREAM *stream) {
     assert(origin_ptr == nullptr);
     Region &pdm   = base->pdm_list[base->rank];
     origin_ptr    = data;
@@ -186,9 +185,9 @@ template<typename T> void CPMComm<T>::CPML2Dev_IExchange6Face(T *data, INT thick
             CPMBuffer &sbuf = buffer[fid * 2];
             STREAM fstream = (stream)? stream[fid] : (STREAM)0;
             if (buffer_hdctype == HDCType::Device) {
-                CPML0Dev_PackBuffer((T*)sbuf.ptr, sbuf.map, data, pdm, block_dim, fstream);
+                CPMDevCall::PackBuffer((T*)sbuf.ptr, sbuf.map, data, pdm, block_dim, fstream);
             } else if (buffer_hdctype == HDCType::Host) {
-                CPML0Dev_PackBuffer((T*)(packerptr[fid]), sbuf.map, data, pdm, block_dim, fstream);
+                CPMDevCall::PackBuffer((T*)(packerptr[fid]), sbuf.map, data, pdm, block_dim, fstream);
                 falmMemcpyAsync(sbuf.ptr, packerptr[fid], sizeof(T) * sbuf.count, MCpType::Dev2Hst, fstream);
             }
         }
@@ -206,13 +205,13 @@ template<typename T> void CPMComm<T>::CPML2Dev_IExchange6Face(T *data, INT thick
             }
             CPMBuffer   &sbuf =  buffer[fid * 2], &rbuf =  buffer[fid * 2 + 1];
             MPI_Request &sreq = mpi_req[fid * 2], &rreq = mpi_req[fid * 2 + 1];
-            CPML2_ISend(sbuf, mpi_dtype, base->neighbour[fid], base->neighbour[fid] + grp_tag * 12, MPI_COMM_WORLD, &sreq);
-            CPML2_IRecv(rbuf, mpi_dtype, base->neighbour[fid], base->rank           + grp_tag * 12, MPI_COMM_WORLD, &rreq);
+            CPM_ISend(sbuf, mpi_dtype, base->neighbour[fid], base->neighbour[fid] + grp_tag * 12, MPI_COMM_WORLD, &sreq);
+            CPM_IRecv(rbuf, mpi_dtype, base->neighbour[fid], base->rank           + grp_tag * 12, MPI_COMM_WORLD, &rreq);
         }
     }
 }
 
-template<typename T> void CPMComm<T>::CPML2Dev_IExchange6ColoredFace(T *data, INT color, INT thick, INT margin, int grp_tag, STREAM *stream) {
+template<typename T> void CPMComm<T>::IExchange6ColoredFace(T *data, INT color, INT thick, INT margin, int grp_tag, STREAM *stream) {
     assert(origin_ptr == nullptr);
     Region &pdm = base->pdm_list[base->rank];
     origin_ptr    = data;
@@ -238,9 +237,9 @@ template<typename T> void CPMComm<T>::CPML2Dev_IExchange6ColoredFace(T *data, IN
             CPMBuffer &sbuf = buffer[fid * 2];
             STREAM fstream = (stream)? stream[fid] : (STREAM)0;
             if (buffer_hdctype == HDCType::Device) {
-                CPML0Dev_PackColoredBuffer((T*)sbuf.ptr, sbuf.map, color, data, pdm, block_dim, fstream);
+                CPMDevCall::PackColoredBuffer((T*)sbuf.ptr, sbuf.map, color, data, pdm, block_dim, fstream);
             } else if (buffer_hdctype == HDCType::Host) {
-                CPML0Dev_PackColoredBuffer((T*)(packerptr[fid]), sbuf.map, color, data, pdm, block_dim, fstream);
+                CPMDevCall::PackColoredBuffer((T*)(packerptr[fid]), sbuf.map, color, data, pdm, block_dim, fstream);
                 falmMemcpyAsync(sbuf.ptr, packerptr[fid], sizeof(T) * sbuf.count, MCpType::Dev2Hst, fstream);
             }
         }
@@ -259,13 +258,13 @@ template<typename T> void CPMComm<T>::CPML2Dev_IExchange6ColoredFace(T *data, IN
             fflush(stdout);
             CPMBuffer   &sbuf =  buffer[fid * 2], &rbuf =  buffer[fid * 2 + 1];
             MPI_Request &sreq = mpi_req[fid * 2], &rreq = mpi_req[fid * 2 + 1];
-            CPML2_ISend(sbuf, mpi_dtype, base->neighbour[fid], base->neighbour[fid] + grp_tag * 12, MPI_COMM_WORLD, &sreq);
-            CPML2_IRecv(rbuf, mpi_dtype, base->neighbour[fid], base->rank           + grp_tag * 12, MPI_COMM_WORLD, &rreq);
+            CPM_ISend(sbuf, mpi_dtype, base->neighbour[fid], base->neighbour[fid] + grp_tag * 12, MPI_COMM_WORLD, &sreq);
+            CPM_IRecv(rbuf, mpi_dtype, base->neighbour[fid], base->rank           + grp_tag * 12, MPI_COMM_WORLD, &rreq);
         }
     }
 }
 
-template<typename T> void CPMComm<T>::CPML2Dev_PostExchange6Face(STREAM *stream) {
+template<typename T> void CPMComm<T>::PostExchange6Face(STREAM *stream) {
     assert(origin_ptr != nullptr);
     for (INT fid = 0; fid < 6; fid ++) {
         if (base->validNeighbour(fid)) {
@@ -285,10 +284,10 @@ template<typename T> void CPMComm<T>::CPML2Dev_PostExchange6Face(STREAM *stream)
             CPMBuffer &rbuf = buffer[fid * 2 + 1];
             STREAM fstream = (stream)? stream[fid] : (STREAM)0;
             if (buffer_hdctype == HDCType::Device) {
-                CPML0Dev_UnpackBuffer((T*)rbuf.ptr, rbuf.map, origin_ptr, origin_domain, block_dim, fstream);
+                CPMDevCall::UnpackBuffer((T*)rbuf.ptr, rbuf.map, origin_ptr, origin_domain, block_dim, fstream);
             } else if (buffer_hdctype == HDCType::Host) {
                 falmMemcpyAsync(packerptr[fid], rbuf.ptr, sizeof(T) * rbuf.count, MCpType::Hst2Dev, fstream);
-                CPML0Dev_UnpackBuffer((T*)(packerptr[fid]), rbuf.map, origin_ptr, origin_domain, block_dim, fstream);
+                CPMDevCall::UnpackBuffer((T*)(packerptr[fid]), rbuf.map, origin_ptr, origin_domain, block_dim, fstream);
             }
         }
     }
@@ -311,7 +310,7 @@ template<typename T> void CPMComm<T>::CPML2Dev_PostExchange6Face(STREAM *stream)
     origin_ptr = nullptr;
 }
 
-template<typename T> void CPMComm<T>::CPML2Dev_PostExchange6ColoredFace(STREAM *stream) {
+template<typename T> void CPMComm<T>::PostExchange6ColoredFace(STREAM *stream) {
     assert(origin_ptr != nullptr);
     for (INT fid = 0; fid < 6; fid ++) {
         if (base->validNeighbour(fid)) {
@@ -331,10 +330,10 @@ template<typename T> void CPMComm<T>::CPML2Dev_PostExchange6ColoredFace(STREAM *
             CPMBuffer &rbuf = buffer[fid * 2 + 1];
             STREAM fstream = (stream)? stream[fid] : (STREAM)0;
             if (buffer_hdctype == HDCType::Device) {
-                CPML0Dev_UnpackColoredBuffer((T*)rbuf.ptr, rbuf.map, rbuf.color, origin_ptr, origin_domain, block_dim, fstream);
+                CPMDevCall::UnpackColoredBuffer((T*)rbuf.ptr, rbuf.map, rbuf.color, origin_ptr, origin_domain, block_dim, fstream);
             } else if (buffer_hdctype == HDCType::Host) {
                 falmMemcpyAsync(packerptr[fid], rbuf.ptr, sizeof(T) * rbuf.count, MCpType::Hst2Dev, fstream);
-                CPML0Dev_UnpackColoredBuffer((T*)(packerptr[fid]), rbuf.map, rbuf.color, origin_ptr, origin_domain, block_dim, fstream);
+                CPMDevCall::UnpackColoredBuffer((T*)(packerptr[fid]), rbuf.map, rbuf.color, origin_ptr, origin_domain, block_dim, fstream);
             }
         }
     }
