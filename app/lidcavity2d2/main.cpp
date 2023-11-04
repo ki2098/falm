@@ -37,9 +37,9 @@ void field_output(INT i, int rank) {
     x.sync(MCpType::Dev2Hst);
     u.sync(MCpType::Dev2Hst);
     p.sync(MCpType::Dev2Hst);
-    for (INT k = 0; k < pdm.shape.z; k ++) {
-        for (INT j = 0; j < pdm.shape.y; j ++) {
-            for (INT i = 0; i < pdm.shape.x; i ++) {
+    for (INT k = 0; k < pdm.shape[2]; k ++) {
+        for (INT j = 0; j < pdm.shape[1]; j ++) {
+            for (INT i = 0; i < pdm.shape[0]; i ++) {
                 INT idx = IDX(i, j, k, pdm.shape);
                 fprintf(file, "%12.5e,%12.5e,%12.5e,%12.5e,%12.5e,%12.5e,%12.5e\n", x(idx, 0), x(idx, 1), x(idx, 2), u(idx, 0), u(idx, 1), u(idx, 2), p(idx));
             }
@@ -54,7 +54,7 @@ void plt3d_output(int step, int rank, REAL dt, Vcdm::VCDM<float> &vcdm) {
     p.sync(MCpType::Dev2Hst);
     // falmMemcpy(&uvw(0, 0), &u(0, 0), sizeof(REAL) * u.size, MCpType::Hst2Hst);
     // falmMemcpy(&uvwp(0, 3), &p(0)   , sizeof(REAL) * p.size, MCpType::Hst2Hst);
-    for (INT i = 0; i < u.shape.x; i ++) {
+    for (INT i = 0; i < u.shape[0]; i ++) {
         uvw(i, 0) = u(i, 0);
         uvw(i, 1) = u(i, 1);
         uvw(i, 2) = u(i, 2);
@@ -153,7 +153,7 @@ int main(int argc, char **argv) {
 
     Region ginner(global.shape, cpm.gc);
 
-    printf("rank %d, global size = (%d %d %d), proc size = (%d %d %d), proc offset = (%d %d %d)\n", cpm.rank, global.shape.x, global.shape.y, global.shape.z, pdm.shape.x, pdm.shape.y, pdm.shape.z, pdm.offset.x, pdm.offset.y, pdm.offset.z);
+    printf("rank %d, global size = (%d %d %d), proc size = (%d %d %d), proc offset = (%d %d %d)\n", cpm.rank, global.shape[0], global.shape[1], global.shape[2], pdm.shape[0], pdm.shape[1], pdm.shape[2], pdm.offset[0], pdm.offset[1], pdm.offset[2]);
 
     allocVars(pdm);
     setCoord(L, N, pdm, cpm.gc, x, h, kx, g, ja);
@@ -167,7 +167,7 @@ int main(int argc, char **argv) {
             Matrix<REAL> &a = poisson_a;
             a.sync(MCpType::Dev2Hst);
             printf("rank = %d\n", cpm.rank);
-            for (INT i = cpm.gc; i < pdm.shape.x - cpm.gc; i ++) {
+            for (INT i = cpm.gc; i < pdm.shape[0] - cpm.gc; i ++) {
                 INT idx = IDX(i, cpm.gc, cpm.gc, pdm.shape);
                 printf(
                     "%.5e %.5e %.5e %.5e %.5e %.5e %.5e\n",
@@ -193,24 +193,24 @@ int main(int argc, char **argv) {
         printf("------------dfi info------------\n");
         printf("mpi (%d %d)\n", vcdm.dfiMPI.size, vcdm.dfiMPI.ngrp);
         d3 = vcdm.dfiDomain.globalOrigin;
-        printf("gOrigin   (%e %e %e)\n", d3.x, d3.y, d3.z);
+        printf("gOrigin   (%e %e %e)\n", d3[0], d3[1], d3[2]);
         d3 = vcdm.dfiDomain.globalRegion;
-        printf("gRegion   (%e %e %e)\n", d3.x, d3.y, d3.z);
+        printf("gRegion   (%e %e %e)\n", d3[0], d3[1], d3[2]);
         i3 = vcdm.dfiDomain.globalVoxel;
-        printf("gVoxel    (%d %d %d)\n", i3.x, i3.y, i3.z);
+        printf("gVoxel    (%d %d %d)\n", i3[0], i3[1], i3[2]);
         i3 = vcdm.dfiDomain.globalDivision;
-        printf("gDivision (%d %d %d)\n", i3.x, i3.y, i3.z);
+        printf("gDivision (%d %d %d)\n", i3[0], i3[1], i3[2]);
         printf("\n");
         for (int i = 0; i < cpm.size; i ++) {
             Vcdm::VcdmRank &vproc = vcdm.dfiProc[i];
             printf("rank %d\n", vproc.rank);
             printf("host name %s\n", vproc.hostName.c_str());
             i3 = vproc.voxelSize;
-            printf("voxel size (%d %d %d)\n", i3.x, i3.y, i3.z);
+            printf("voxel size (%d %d %d)\n", i3[0], i3[1], i3[2]);
             i3 = vproc.headIdx;
-            printf("head idx   (%d %d %d)\n", i3.x, i3.y, i3.z);
+            printf("head idx   (%d %d %d)\n", i3[0], i3[1], i3[2]);
             i3 = vproc.tailIdx;
-            printf("tail idx   (%d %d %d)\n", i3.x, i3.y, i3.z);
+            printf("tail idx   (%d %d %d)\n", i3[0], i3[1], i3[2]);
             printf("\n");
         }
         printf("------------dfi info------------\n");
@@ -219,7 +219,7 @@ int main(int argc, char **argv) {
     CPM_Barrier(MPI_COMM_WORLD);
 
     x.sync(MCpType::Dev2Hst);
-    Matrix<float> xyz(x.shape.x, x.shape.y, HDCType::Host, "float x");
+    Matrix<float> xyz(x.shape[0], x.shape[1], HDCType::Host, "float x");
     for (INT i = 0; i < x.size; i ++) {
         xyz(i) = x(i);
     }

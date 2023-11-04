@@ -127,26 +127,26 @@ protected:
                 INT gcx2 = 2 * gc;
                 INT __s = fid*2, __r = fid*2+1;
                 INT3 buffer_shape {
-                    (fid / 2 == 0)? thick : pdm.shape.x - gcx2,
-                    (fid / 2 == 1)? thick : pdm.shape.y - gcx2,
-                    (fid / 2 == 2)? thick : pdm.shape.z - gcx2
+                    (fid / 2 == 0)? thick : pdm.shape[0] - gcx2,
+                    (fid / 2 == 1)? thick : pdm.shape[1] - gcx2,
+                    (fid / 2 == 2)? thick : pdm.shape[2] - gcx2
                 };
                 INT3 sendbuffer_offset, recvbuffer_offset;
                 if (fid == 0) {
-                    sendbuffer_offset = {pdm.shape.x - gc - thick - margin, gc, gc};
-                    recvbuffer_offset = {pdm.shape.x - gc         + margin, gc, gc};
+                    sendbuffer_offset = {pdm.shape[0] - gc - thick - margin, gc, gc};
+                    recvbuffer_offset = {pdm.shape[0] - gc         + margin, gc, gc};
                 } else if (fid == 1) {
                     sendbuffer_offset = {              gc         + margin, gc, gc};
                     recvbuffer_offset = {              gc - thick - margin, gc, gc};
                 } else if (fid == 2) {
-                    sendbuffer_offset = {gc, pdm.shape.y - gc - thick - margin, gc};
-                    recvbuffer_offset = {gc, pdm.shape.y - gc         + margin, gc};
+                    sendbuffer_offset = {gc, pdm.shape[1] - gc - thick - margin, gc};
+                    recvbuffer_offset = {gc, pdm.shape[1] - gc         + margin, gc};
                 } else if (fid == 3) {
                     sendbuffer_offset = {gc,               gc         + margin, gc};
                     recvbuffer_offset = {gc,               gc - thick - margin, gc};
                 } else if (fid == 4) {
-                    sendbuffer_offset = {gc, gc, pdm.shape.z - gc - thick - margin};
-                    recvbuffer_offset = {gc, gc, pdm.shape.z - gc         + margin};
+                    sendbuffer_offset = {gc, gc, pdm.shape[2] - gc - thick - margin};
+                    recvbuffer_offset = {gc, gc, pdm.shape[2] - gc         + margin};
                 } else if (fid == 5) {
                     sendbuffer_offset = {gc, gc,               gc         + margin};
                     recvbuffer_offset = {gc, gc,               gc - thick - margin};

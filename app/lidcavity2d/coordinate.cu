@@ -21,7 +21,7 @@ __global__ void kernel_setCoord(
     const MatrixFrame<REAL> &x=*vx, &h=*vh, &kx=*vkx, &g=*vg, &ja=*vja;
     INT i, j, k;
     GLOBAL_THREAD_IDX_3D(i, j, k);
-    if (i < pdm_shape.x && j < pdm_shape.y && k < pdm_shape.z) {
+    if (i < pdm_shape[0] && j < pdm_shape[1] && k < pdm_shape[2]) {
         INT idx = IDX(i, j, k, pdm_shape);
         REAL pitch = side_lenth / side_n_cell;
         REAL dkdx = 1.0 / pitch;
@@ -55,9 +55,9 @@ void setCoord(
     ja.alloc(pdm.shape, 1, HDCType::Device);
 
     dim3 grid_dim(
-        (pdm.shape.x + block_dim.x - 1) / block_dim.x,
-        (pdm.shape.y + block_dim.y - 1) / block_dim.y,
-        (pdm.shape.z + block_dim.z - 1) / block_dim.z
+        (pdm.shape[0] + block_dim.x - 1) / block_dim.x,
+        (pdm.shape[1] + block_dim.y - 1) / block_dim.y,
+        (pdm.shape[2] + block_dim.z - 1) / block_dim.z
     );
     kernel_setCoord<<<grid_dim, block_dim, 0, 0>>>(
         side_lenth,

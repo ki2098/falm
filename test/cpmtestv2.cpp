@@ -18,10 +18,10 @@ Falm::STREAM faceStream[6];
 using namespace Falm;
 
 void print_xy_slice(Matrix<REAL> &x, INT3 domain_shape, INT3 domain_offset) {
-    for (INT j = domain_shape.y - 1; j >= 0; j --) {
+    for (INT j = domain_shape[1] - 1; j >= 0; j --) {
         printf(" ");
-        for (INT i = 0; i < domain_shape.x; i ++) {
-            REAL value = x(IDX(i, j, (Nz + Gdx2) / 2 - domain_offset.z, domain_shape));
+        for (INT i = 0; i < domain_shape[0]; i ++) {
+            REAL value = x(IDX(i, j, (Nz + Gdx2) / 2 - domain_offset[2], domain_shape));
             if (value == 0) {
                 printf(".   ", value);
             } else {
@@ -34,10 +34,10 @@ void print_xy_slice(Matrix<REAL> &x, INT3 domain_shape, INT3 domain_offset) {
 }
 
 void print_xz_slice(Matrix<REAL> &x, INT3 domain_shape, INT3 domain_offset) {
-    for (INT k = domain_shape.z - 1; k >= 0; k --) {
+    for (INT k = domain_shape[2] - 1; k >= 0; k --) {
         printf(" ");
-        for (INT i = 0; i < domain_shape.x; i ++) {
-            REAL value = x(IDX(i, (Ny + Gdx2) / 2 - domain_offset.y, k, domain_shape));
+        for (INT i = 0; i < domain_shape[0]; i ++) {
+            REAL value = x(IDX(i, (Ny + Gdx2) / 2 - domain_offset[1], k, domain_shape));
             if (value == 0) {
                 printf(".   ", value);
             } else {
@@ -70,15 +70,15 @@ int main(int argc, char **argv) {
     CPM_GetSize(MPI_COMM_WORLD, cpm.size);
     cpm.shape = INT3{atoi(argv[1]), atoi(argv[2]), atoi(argv[3])};
     if (PRODUCT3(cpm.shape) != cpm.size) {
-        printf("wrong group shape: %ux%ux%u != %d\n",cpm.shape.x, cpm.shape.y, cpm.shape.z, cpm.size);
+        printf("wrong group shape: %ux%ux%u != %d\n",cpm.shape[0], cpm.shape[1], cpm.shape[2], cpm.size);
         CPM_Finalize();
         return 0;
     }
-    printf("group shape %ux%ux%u\n", cpm.shape.x, cpm.shape.y, cpm.shape.z);
+    printf("group shape %ux%ux%u\n", cpm.shape[0], cpm.shape[1], cpm.shape[2]);
     fflush(stdout);
     CPM_Barrier(MPI_COMM_WORLD);
     cpm.initNeighbour();
-    printf("%d(%u %u %u): E%2d W%2d N%2d S%2d T%2d B%2d\n", cpm.rank, cpm.idx.x, cpm.idx.y, cpm.idx.z, cpm.neighbour[0], cpm.neighbour[1], cpm.neighbour[2], cpm.neighbour[3], cpm.neighbour[4], cpm.neighbour[5]);
+    printf("%d(%u %u %u): E%2d W%2d N%2d S%2d T%2d B%2d\n", cpm.rank, cpm.idx[0], cpm.idx[1], cpm.idx[2], cpm.neighbour[0], cpm.neighbour[1], cpm.neighbour[2], cpm.neighbour[3], cpm.neighbour[4], cpm.neighbour[5]);
     fflush(stdout);
     CPM_Barrier(MPI_COMM_WORLD);
 
@@ -89,35 +89,35 @@ int main(int argc, char **argv) {
     CPM_Barrier(MPI_COMM_WORLD);
 
     INT ox = 0, oy = 0, oz = 0;
-    for (INT i = 0; i < cpm.idx.x; i ++) {
-        ox += dim_division(Nx, cpm.shape.x, i);
+    for (INT i = 0; i < cpm.idx[0]; i ++) {
+        ox += dim_division(Nx, cpm.shape[0], i);
     }
-    for (INT j = 0; j < cpm.idx.y; j ++) {
-        oy += dim_division(Ny, cpm.shape.y, j);
+    for (INT j = 0; j < cpm.idx[1]; j ++) {
+        oy += dim_division(Ny, cpm.shape[1], j);
     }
-    for (INT k = 0; k < cpm.idx.z; k ++) {
-        oz += dim_division(Nz, cpm.shape.z, k);
+    for (INT k = 0; k < cpm.idx[2]; k ++) {
+        oz += dim_division(Nz, cpm.shape[2], k);
     }
     Region process(
-        INT3{dim_division(Nx, cpm.shape.x, cpm.idx.x) + Gdx2, dim_division(Ny, cpm.shape.y, cpm.idx.y) + Gdx2, dim_division(Nz, cpm.shape.z, cpm.idx.z) + Gdx2},
+        INT3{dim_division(Nx, cpm.shape[0], cpm.idx[0]) + Gdx2, dim_division(Ny, cpm.shape[1], cpm.idx[1]) + Gdx2, dim_division(Nz, cpm.shape[2], cpm.idx[2]) + Gdx2},
         INT3{ox, oy, oz}
     );
-    printf("%d(%u %u %u): (%u %u %u) (%u %u %u))\n", cpm.rank, cpm.idx.x, cpm.idx.y, cpm.idx.z, process.shape.x, process.shape.y, process.shape.z, process.offset.x, process.offset.y, process.offset.z);
+    printf("%d(%u %u %u): (%u %u %u) (%u %u %u))\n", cpm.rank, cpm.idx[0], cpm.idx[1], cpm.idx[2], process.shape[0], process.shape[1], process.shape[2], process.offset[0], process.offset[1], process.offset[2]);
     fflush(stdout);
     CPM_Barrier(MPI_COMM_WORLD);
 
     Matrix<REAL> x(process.shape, 1, HDCType::Host, "x");
-    for (INT i = Gd; i < process.shape.x - Gd; i ++) {
-        for (INT j = Gd; j < process.shape.y - Gd; j ++) {
-            for (INT k = Gd; k < process.shape.z - Gd; k ++) {
+    for (INT i = Gd; i < process.shape[0] - Gd; i ++) {
+        for (INT j = Gd; j < process.shape[1] - Gd; j ++) {
+            for (INT k = Gd; k < process.shape[2] - Gd; k ++) {
                 x(IDX(i, j, k, process.shape)) = (i + j + k + SUM3(process.offset)) % 2 + cpm.rank * 10;
             }
         }
     }
     for (INT i = 0; i < cpm.size; i ++) {
         if (cpm.rank == i) {
-            printf("%d(%u %u %u) printing...\n", cpm.rank, cpm.idx.x, cpm.idx.y, cpm.idx.z);
-            if (cpm.shape.y == 1) 
+            printf("%d(%u %u %u) printing...\n", cpm.rank, cpm.idx[0], cpm.idx[1], cpm.idx[2]);
+            if (cpm.shape[1] == 1) 
                 print_xz_slice(x, process.shape, process.offset);
             else
                 print_xy_slice(x, process.shape, process.offset);
@@ -157,8 +157,8 @@ int main(int argc, char **argv) {
     x.sync(MCpType::Dev2Hst);
     for (INT i = 0; i < cpm.size; i ++) {
         if (cpm.rank == i) {
-            printf("%d(%u %u %u) printing...\n", cpm.rank, cpm.idx.x, cpm.idx.y, cpm.idx.z);
-            if (cpm.shape.y == 1) 
+            printf("%d(%u %u %u) printing...\n", cpm.rank, cpm.idx[0], cpm.idx[1], cpm.idx[2]);
+            if (cpm.shape[1] == 1) 
                 print_xz_slice(x, process.shape, process.offset);
             else
                 print_xy_slice(x, process.shape, process.offset);
@@ -188,8 +188,8 @@ int main(int argc, char **argv) {
     x.sync(MCpType::Dev2Hst);
     for (INT i = 0; i < cpm.size; i ++) {
         if (cpm.rank == i) {
-            printf("%d(%u %u %u) printing...\n", cpm.rank, cpm.idx.x, cpm.idx.y, cpm.idx.z);
-            if (cpm.shape.y == 1) 
+            printf("%d(%u %u %u) printing...\n", cpm.rank, cpm.idx[0], cpm.idx[1], cpm.idx[2]);
+            if (cpm.shape[1] == 1) 
                 print_xz_slice(x, process.shape, process.offset);
             else
                 print_xy_slice(x, process.shape, process.offset);
@@ -214,17 +214,17 @@ int main(int argc, char **argv) {
     CPM_Barrier(MPI_COMM_WORLD);
 
     x.alloc(process.shape, 1, HDCType::Host);
-    for (INT i = Gd; i < process.shape.x - Gd; i ++) {
-        for (INT j = Gd; j < process.shape.y - Gd; j ++) {
-            for (INT k = Gd; k < process.shape.z - Gd; k ++) {
+    for (INT i = Gd; i < process.shape[0] - Gd; i ++) {
+        for (INT j = Gd; j < process.shape[1] - Gd; j ++) {
+            for (INT k = Gd; k < process.shape[2] - Gd; k ++) {
                 x(IDX(i, j, k, process.shape)) = (i + j + k + SUM3(process.offset)) % 2 + cpm.rank * 100;
             }
         }
     }
     for (INT i = 0; i < cpm.size; i ++) {
         if (cpm.rank == i) {
-            printf("%d(%u %u %u) printing...\n", cpm.rank, cpm.idx.x, cpm.idx.y, cpm.idx.z);
-            if (cpm.shape.y == 1) 
+            printf("%d(%u %u %u) printing...\n", cpm.rank, cpm.idx[0], cpm.idx[1], cpm.idx[2]);
+            if (cpm.shape[1] == 1) 
                 print_xz_slice(x, process.shape, process.offset);
             else
                 print_xy_slice(x, process.shape, process.offset);
@@ -251,8 +251,8 @@ int main(int argc, char **argv) {
     x.sync(MCpType::Dev2Hst);
     for (INT i = 0; i < cpm.size; i ++) {
         if (cpm.rank == i) {
-            printf("%d(%u %u %u) printing...\n", cpm.rank, cpm.idx.x, cpm.idx.y, cpm.idx.z);
-            if (cpm.shape.y == 1) 
+            printf("%d(%u %u %u) printing...\n", cpm.rank, cpm.idx[0], cpm.idx[1], cpm.idx[2]);
+            if (cpm.shape[1] == 1) 
                 print_xz_slice(x, process.shape, process.offset);
             else
                 print_xy_slice(x, process.shape, process.offset);
@@ -282,8 +282,8 @@ int main(int argc, char **argv) {
     x.sync(MCpType::Dev2Hst);
     for (INT i = 0; i < cpm.size; i ++) {
         if (cpm.rank == i) {
-            printf("%d(%u %u %u) printing...\n", cpm.rank, cpm.idx.x, cpm.idx.y, cpm.idx.z);
-            if (cpm.shape.y == 1) 
+            printf("%d(%u %u %u) printing...\n", cpm.rank, cpm.idx[0], cpm.idx[1], cpm.idx[2]);
+            if (cpm.shape[1] == 1) 
                 print_xz_slice(x, process.shape, process.offset);
             else
                 print_xy_slice(x, process.shape, process.offset);

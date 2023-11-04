@@ -12,38 +12,38 @@ void setVcdm(CPMBase &cpm, Vcdm::VCDM<T> &vcdm, Vcdm::double3 gRegion, Vcdm::dou
     vcdm.dfiDomain.globalOrigin = gOrigin;
     vcdm.dfiDomain.globalRegion = gRegion;
     vcdm.dfiDomain.globalVoxel  = Vcdm::int3{
-        cpm.global.shape.x - cpm.gc*2,
-        cpm.global.shape.y - cpm.gc*2,
-        cpm.global.shape.z - cpm.gc*2
+        cpm.global.shape[0] - cpm.gc*2,
+        cpm.global.shape[1] - cpm.gc*2,
+        cpm.global.shape[2] - cpm.gc*2
     };
     vcdm.dfiDomain.globalDivision = Vcdm::int3{
-        cpm.shape.x, cpm.shape.y, cpm.shape.z
+        cpm.shape[0], cpm.shape[1], cpm.shape[2]
     };
 
     vcdm.dfiMPI.size = cpm.size;
 
     vcdm.dfiProc = std::vector<Vcdm::VcdmRank>(cpm.size, Vcdm::VcdmRank());
-    for (INT k = 0; k < cpm.shape.z; k ++) {
-    for (INT j = 0; j < cpm.shape.y; j ++) {
-    for (INT i = 0; i < cpm.shape.x; i ++) {
+    for (INT k = 0; k < cpm.shape[2]; k ++) {
+    for (INT j = 0; j < cpm.shape[1]; j ++) {
+    for (INT i = 0; i < cpm.shape[0]; i ++) {
         int rank = IDX(i, j, k, cpm.shape);
         Region &pdm = cpm.pdm_list[rank];
         Vcdm::VcdmRank &vproc = vcdm.dfiProc[rank];
         vproc.rank = rank;
         vproc.voxelSize = {
-            pdm.shape.x - cpm.gc*2,
-            pdm.shape.y - cpm.gc*2,
-            pdm.shape.z - cpm.gc*2
+            pdm.shape[0] - cpm.gc*2,
+            pdm.shape[1] - cpm.gc*2,
+            pdm.shape[2] - cpm.gc*2
         };
         vproc.headIdx = {
-            pdm.offset.x + 1,
-            pdm.offset.y + 1,
-            pdm.offset.z + 1
+            pdm.offset[0] + 1,
+            pdm.offset[1] + 1,
+            pdm.offset[2] + 1
         };
         vproc.tailIdx = {
-            vproc.headIdx.x + vproc.voxelSize.x - 1,
-            vproc.headIdx.y + vproc.voxelSize.y - 1,
-            vproc.headIdx.z + vproc.voxelSize.z - 1
+            vproc.headIdx[0] + vproc.voxelSize[0] - 1,
+            vproc.headIdx[1] + vproc.voxelSize[1] - 1,
+            vproc.headIdx[2] + vproc.voxelSize[2] - 1
         };
     }}}
 }

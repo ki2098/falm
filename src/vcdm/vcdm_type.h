@@ -9,9 +9,59 @@
 
 namespace Vcdm {
 
-struct int3 {int x, y, z;};
+template<typename T, size_t N>
+struct VcdmVector {
+    T _m_vector[N];
 
-struct double3 {double x, y, z;};
+    T &operator[](size_t i) {return _m_vector[i];}
+    const T &operator[](size_t i) const {return _m_vector[i];}
+
+    VcdmVector operator+(const VcdmVector &v) const {
+        VcdmVector vv;
+        for (size_t i = 0; i < N; i ++) vv[i] = _m_vector[i] + v[i];
+    }
+
+    VcdmVector operator-(const VcdmVector &v) const {
+        VcdmVector vv;
+        for (size_t i = 0; i < N; i ++) vv[i] = _m_vector[i] - v[i];
+    }
+
+    VcdmVector operator+=(const VcdmVector &v) {
+        for (size_t i = 0; i < N; i ++)  _m_vector[i] += v[i];
+        return *this;
+    }
+
+    VcdmVector operator-=(const VcdmVector &v) {
+        for (size_t i = 0; i < N; i ++)  _m_vector[i] -= v[i];
+        return *this;
+    }
+
+    bool operator==(const VcdmVector &v) const {
+        for (size_t i = 0; i < N; i ++) {
+            if (_m_vector[i] != v[i]) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    bool operator!=(const VcdmVector &v) const {
+        for (size_t i = 0; i < N; i ++) {
+            if (_m_vector[i] == v[i]) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    // VcdmVector &operator=(const VcdmVector &v) {
+    //     for (size_t i = 0; i < N; i ++) _mv[i] = v[i];
+    //     return *this;
+    // }
+};
+
+typedef VcdmVector<int, 3> int3;
+typedef VcdmVector<double, 3> double3;
 
 enum class FileType {BINARY, FBINARY};
 enum class FilenameFormat {RANK, STEP_RANK, RANK_STEP};
@@ -185,15 +235,15 @@ protected:
     void writeTimeSlice(FILE *file);
 
     int IJK_IDX(int i, int j, int k, const int3 &size) {
-        return i + j * size.x + k * size.x * size.y;
+        return i + j * size[0] + k * size[0] * size[1];
     }
 
     int IJKN_IDX(int i, int j, int k, int n, const int3 &size) {
-        return i + j * size.x + k * size.x * size.y + n * size.x * size.y * size.z;
+        return i + j * size[0] + k * size[0] * size[1] + n * size[0] * size[1] * size[2];
     }
 
     int NIJK_IDX(int n, int i, int j, int k, const int3 &size, int dim) {
-        return n + i * dim + j * dim * size.x + k * dim * size.x * size.y;
+        return n + i * dim + j * dim * size[0] + k * dim * size[0] * size[1];
     }
 
     void writeXYZ(T *xyz, int gc, int rank, int step, IdxType idxtype);

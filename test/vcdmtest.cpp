@@ -22,11 +22,11 @@ int main() {
     vcdm.dfiMPI.size              = 8;
 
     int3 &division = vcdm.dfiDomain.globalDivision;
-    for (int k = 0; k < division.z; k ++) {
-        for (int j = 0; j < division.y; j ++) {
-            for (int i = 0; i < division.x; i ++) {
+    for (int k = 0; k < division[2]; k ++) {
+        for (int j = 0; j < division[1]; j ++) {
+            for (int i = 0; i < division[0]; i ++) {
                 VcdmRank rank;
-                rank.rank = i + j * division.x + k * division.x * division.y;
+                rank.rank = i + j * division[0] + k * division[0] * division[1];
                 rank.voxelSize = {64, 64, 64};
                 rank.headIdx   = {i * 64 + 1 , j * 64 + 1 , k * 64 + 1 };
                 rank.tailIdx   = {i * 64 + 64, j * 64 + 64, k * 64 + 64};

@@ -29,28 +29,28 @@ public:
 
         gc     = guideCell;
         global = Region(
-            INT3{gShape.x + gc*2, gShape.y + gc*2, gShape.z + gc*2},
+            INT3{gShape[0] + gc*2, gShape[1] + gc*2, gShape[2] + gc*2},
             INT3{0, 0, 0}
         );
         pdm_list = std::vector<Region>(size, Region());
-        for (INT k = 0; k < shape.z; k ++) {
-        for (INT j = 0; j < shape.y; j ++) {
-        for (INT i = 0; i < shape.x; i ++) {
+        for (INT k = 0; k < shape[2]; k ++) {
+        for (INT j = 0; j < shape[1]; j ++) {
+        for (INT i = 0; i < shape[0]; i ++) {
             INT ox = 0, oy = 0, oz = 0;
             for (INT __x = 0; __x < i; __x ++) {
-                ox += dim_division(gShape.x, shape.x, __x);
+                ox += dim_division(gShape[0], shape[0], __x);
             }
             for (INT __y = 0; __y < j; __y ++) {
-                oy += dim_division(gShape.y, shape.y, __y);
+                oy += dim_division(gShape[1], shape[1], __y);
             }
             for (INT __z = 0; __z < k; __z ++) {
-                oz += dim_division(gShape.z, shape.z, __z);
+                oz += dim_division(gShape[2], shape[2], __z);
             }
             pdm_list[IDX(i, j, k, shape)] = Region(
                 INT3{
-                    dim_division(gShape.x, shape.x, i) + gc*2,
-                    dim_division(gShape.y, shape.y, j) + gc*2,
-                    dim_division(gShape.z, shape.z, k) + gc*2
+                    dim_division(gShape[0], shape[0], i) + gc*2,
+                    dim_division(gShape[1], shape[1], j) + gc*2,
+                    dim_division(gShape[2], shape[2], k) + gc*2
                 },
                 INT3{ox, oy, oz}
             );
@@ -62,37 +62,37 @@ public:
         inner_shape = map.shape;
         inner_offset = map.offset;
         if (neighbour[0] >= 0) {
-            boundary_shape[0]  = {thick, inner_shape.y, inner_shape.z};
-            boundary_offset[0] = {inner_offset.x + inner_shape.x - thick, inner_offset.y, inner_offset.z};
-            inner_shape.x -= thick;
+            boundary_shape[0]  = {thick, inner_shape[1], inner_shape[2]};
+            boundary_offset[0] = {inner_offset[0] + inner_shape[0] - thick, inner_offset[1], inner_offset[2]};
+            inner_shape[0] -= thick;
         }
         if (neighbour[1] >= 0) {
-            boundary_shape[1]  = {thick, inner_shape.y, inner_shape.z};
-            boundary_offset[1] = {inner_offset.x, inner_offset.y, inner_offset.z};
-            inner_shape.x  -= thick;
-            inner_offset.x += thick; 
+            boundary_shape[1]  = {thick, inner_shape[1], inner_shape[2]};
+            boundary_offset[1] = {inner_offset[0], inner_offset[1], inner_offset[2]};
+            inner_shape[0]  -= thick;
+            inner_offset[0] += thick; 
         }
         if (neighbour[2] >= 0) {
-            boundary_shape[2]  = {inner_shape.x, thick, inner_shape.z};
-            boundary_offset[2] = {inner_offset.x, inner_offset.y + inner_shape.y - thick, inner_offset.z};
-            inner_shape.y -= thick;
+            boundary_shape[2]  = {inner_shape[0], thick, inner_shape[2]};
+            boundary_offset[2] = {inner_offset[0], inner_offset[1] + inner_shape[1] - thick, inner_offset[2]};
+            inner_shape[1] -= thick;
         }
         if (neighbour[3] >= 0) {
-            boundary_shape[3]  = {inner_shape.x, thick, inner_shape.z};
-            boundary_offset[3] = {inner_offset.x, inner_offset.y, inner_offset.z};
-            inner_shape.y  -= thick;
-            inner_offset.y += thick;
+            boundary_shape[3]  = {inner_shape[0], thick, inner_shape[2]};
+            boundary_offset[3] = {inner_offset[0], inner_offset[1], inner_offset[2]};
+            inner_shape[1]  -= thick;
+            inner_offset[1] += thick;
         }
         if (neighbour[4] >= 0) {
-            boundary_shape[4]  = {inner_shape.x, inner_shape.y, thick};
-            boundary_offset[4] = {inner_offset.x, inner_offset.y, inner_offset.z + inner_shape.z - thick};
-            inner_shape.z -= thick;
+            boundary_shape[4]  = {inner_shape[0], inner_shape[1], thick};
+            boundary_offset[4] = {inner_offset[0], inner_offset[1], inner_offset[2] + inner_shape[2] - thick};
+            inner_shape[2] -= thick;
         }
         if (neighbour[5] >= 0) {
-            boundary_shape[5]  = {inner_shape.x, inner_shape.y, thick};
-            boundary_offset[5] = {inner_offset.x, inner_offset.y, inner_offset.z};
-            inner_shape.z  -= thick;
-            inner_offset.z += thick;
+            boundary_shape[5]  = {inner_shape[0], inner_shape[1], thick};
+            boundary_offset[5] = {inner_offset[0], inner_offset[1], inner_offset[2]};
+            inner_shape[2]  -= thick;
+            inner_offset[2] += thick;
         }
     }
 
@@ -117,32 +117,32 @@ protected:
     void initNeighbour() {
         int __rank = rank;
         INT i, j, k;
-        k = __rank / (shape.x * shape.y);
-        __rank = __rank % (shape.x * shape.y);
-        j = __rank / shape.x;
-        i = __rank % shape.x;
-        idx.x = i;
-        idx.y = j;
-        idx.z = k;
+        k = __rank / (shape[0] * shape[1]);
+        __rank = __rank % (shape[0] * shape[1]);
+        j = __rank / shape[0];
+        i = __rank % shape[0];
+        idx[0] = i;
+        idx[1] = j;
+        idx[2] = k;
         neighbour[0] = IDX(i + 1, j, k, shape);
         neighbour[1] = IDX(i - 1, j, k, shape);
         neighbour[2] = IDX(i, j + 1, k, shape);
         neighbour[3] = IDX(i, j - 1, k, shape);
         neighbour[4] = IDX(i, j, k + 1, shape);
         neighbour[5] = IDX(i, j, k - 1, shape);
-        if (i == shape.x - 1) {
+        if (i == shape[0] - 1) {
             neighbour[0] = - 1;
         }
         if (i == 0) {
             neighbour[1] = - 1;
         }
-        if (j == shape.y - 1) {
+        if (j == shape[1] - 1) {
             neighbour[2] = - 1;
         }
         if (j == 0) {
             neighbour[3] = - 1;
         }
-        if (k == shape.z - 1) {
+        if (k == shape[2] - 1) {
             neighbour[4] = - 1;
         }
         if (k == 0) {

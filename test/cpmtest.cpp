@@ -36,8 +36,8 @@ unsigned int dim_division(unsigned int dim_size, int mpi_size, int mpi_rank) {
 }
 
 void print_xy_slice(Matrix<double> &x, uint3 domain_shape, unsigned int slice_at_z) {
-    for (int j = domain_shape.y - 1; j >= 0; j --) {
-        for (int i = 0; i < domain_shape.x; i ++) {
+    for (int j = domain_shape[1] - 1; j >= 0; j --) {
+        for (int i = 0; i < domain_shape[0]; i ++) {
             double value = x(IDX(i, j, slice_at_z, domain_shape));
             if (value == 0) {
                 printf(".   ", value);
@@ -50,8 +50,8 @@ void print_xy_slice(Matrix<double> &x, uint3 domain_shape, unsigned int slice_at
 }
 
 void print_xz_slice(Matrix<double> &x, uint3 domain_shape, unsigned int slice_at_y) {
-    for (int k = domain_shape.z - 1; k >= 0; k --) {
-        for (int i = 0; i < domain_shape.x; i ++) {
+    for (int k = domain_shape[2] - 1; k >= 0; k --) {
+        for (int i = 0; i < domain_shape[0]; i ++) {
             double value = x(IDX(i, slice_at_y, k, domain_shape));
             if (value == 0) {
                 printf(".   ", value);
@@ -76,15 +76,15 @@ int main(int argc, char **argv) {
     CPML2_GetSize(MPI_COMM_WORLD, cpm.size);
     cpm.shape = uint3{(unsigned int)atoi(argv[1]), (unsigned int)atoi(argv[2]), (unsigned int)atoi(argv[3])};
     if (PRODUCT3(cpm.shape) != cpm.size) {
-        printf("wrong group shape: %ux%ux%u != %d\n",cpm.shape.x, cpm.shape.y, cpm.shape.z, cpm.size);
+        printf("wrong group shape: %ux%ux%u != %d\n",cpm.shape[0], cpm.shape[1], cpm.shape[2], cpm.size);
         CPML2_Finalize();
         return 0;
     }
-    printf("group shape %ux%ux%u\n", cpm.shape.x, cpm.shape.y, cpm.shape.z);
+    printf("group shape %ux%ux%u\n", cpm.shape[0], cpm.shape[1], cpm.shape[2]);
     fflush(stdout);
     CPML2_Barrier(MPI_COMM_WORLD);
     cpm.init_neighbour();
-    printf("%d(%u %u %u): E%2d W%2d N%2d S%2d T%2d B%2d\n", cpm.rank, cpm.idx.x, cpm.idx.y, cpm.idx.z, cpm.neighbour[0], cpm.neighbour[1], cpm.neighbour[2], cpm.neighbour[3], cpm.neighbour[4], cpm.neighbour[5]);
+    printf("%d(%u %u %u): E%2d W%2d N%2d S%2d T%2d B%2d\n", cpm.rank, cpm.idx[0], cpm.idx[1], cpm.idx[2], cpm.neighbour[0], cpm.neighbour[1], cpm.neighbour[2], cpm.neighbour[3], cpm.neighbour[4], cpm.neighbour[5]);
     fflush(stdout);
     CPML2_Barrier(MPI_COMM_WORLD);
 
@@ -95,27 +95,27 @@ int main(int argc, char **argv) {
     CPML2_Barrier(MPI_COMM_WORLD);
 
     unsigned int ox = 0, oy = 0, oz = 0;
-    for (int i = 0; i < cpm.idx.x; i ++) {
-        ox += dim_division(Nx, cpm.shape.x, i);
+    for (int i = 0; i < cpm.idx[0]; i ++) {
+        ox += dim_division(Nx, cpm.shape[0], i);
     }
-    for (int j = 0; j < cpm.idx.y; j ++) {
-        oy += dim_division(Ny, cpm.shape.y, j);
+    for (int j = 0; j < cpm.idx[1]; j ++) {
+        oy += dim_division(Ny, cpm.shape[1], j);
     }
-    for (int k = 0; k < cpm.idx.z; k ++) {
-        oz += dim_division(Nz, cpm.shape.z, k);
+    for (int k = 0; k < cpm.idx[2]; k ++) {
+        oz += dim_division(Nz, cpm.shape[2], k);
     }
     Mapper process(
-        uint3{dim_division(Nx, cpm.shape.x, cpm.idx.x) + Gdx2, dim_division(Ny, cpm.shape.y, cpm.idx.y) + Gdx2, dim_division(Nz, cpm.shape.z, cpm.idx.z) + Gdx2},
+        uint3{dim_division(Nx, cpm.shape[0], cpm.idx[0]) + Gdx2, dim_division(Ny, cpm.shape[1], cpm.idx[1]) + Gdx2, dim_division(Nz, cpm.shape[2], cpm.idx[2]) + Gdx2},
         uint3{ox, oy, oz}
     );
-    printf("%d(%u %u %u): (%u %u %u) (%u %u %u))\n", cpm.rank, cpm.idx.x, cpm.idx.y, cpm.idx.z, process.shape.x, process.shape.y, process.shape.z, process.offset.x, process.offset.y, process.offset.z);
+    printf("%d(%u %u %u): (%u %u %u) (%u %u %u))\n", cpm.rank, cpm.idx[0], cpm.idx[1], cpm.idx[2], process.shape[0], process.shape[1], process.shape[2], process.offset[0], process.offset[1], process.offset[2]);
     fflush(stdout);
     CPML2_Barrier(MPI_COMM_WORLD);
 
     Matrix<double> x(process.shape, 1, HDCType::Host, 0);
-    for (int i = Gd; i < process.shape.x - Gd; i ++) {
-        for (int j = Gd; j < process.shape.y - Gd; j ++) {
-            for (int k = Gd; k < process.shape.z - Gd; k ++) {
+    for (int i = Gd; i < process.shape[0] - Gd; i ++) {
+        for (int j = Gd; j < process.shape[1] - Gd; j ++) {
+            for (int k = Gd; k < process.shape[2] - Gd; k ++) {
                 x(IDX(i, j, k, process.shape)) = (i + j + k + SUM3(process.offset)) % 2 + cpm.rank * 10;
             }
         }
@@ -123,8 +123,8 @@ int main(int argc, char **argv) {
 
     for (int i = 0; i < cpm.size; i ++) {
         if (cpm.rank == i) {
-            printf("%d(%u %u %u) printing...\n", cpm.rank, cpm.idx.x, cpm.idx.y, cpm.idx.z);
-            print_xz_slice(x, process.shape, process.shape.y / 2);
+            printf("%d(%u %u %u) printing...\n", cpm.rank, cpm.idx[0], cpm.idx[1], cpm.idx[2]);
+            print_xz_slice(x, process.shape, process.shape[1] / 2);
             printf("\n");
         }
         CPML2_Barrier(MPI_COMM_WORLD);
@@ -152,8 +152,8 @@ int main(int argc, char **argv) {
     x.sync(MCpType::Dev2Hst);
     for (int i = 0; i < cpm.size; i ++) {
         if (cpm.rank == i) {
-            printf("%d(%u %u %u) printing...\n", cpm.rank, cpm.idx.x, cpm.idx.y, cpm.idx.z);
-            print_xz_slice(x, process.shape, process.shape.y / 2);
+            printf("%d(%u %u %u) printing...\n", cpm.rank, cpm.idx[0], cpm.idx[1], cpm.idx[2]);
+            print_xz_slice(x, process.shape, process.shape[1] / 2);
             printf("\n");
             // printf("B0: ");
             // print_buffer_dev(buffer[0]);
@@ -180,8 +180,8 @@ int main(int argc, char **argv) {
     // x.sync(MCpType::Dev2Hst);
     // for (int i = 0; i < cpm.size; i ++) {
     //     if (cpm.rank == i) {
-    //         printf("%d(%u %u %u) printing...\n", cpm.rank, cpm.idx.x, cpm.idx.y, cpm.idx.z);
-    //         print_xz_slice(x, process.shape, process.shape.y / 2);
+    //         printf("%d(%u %u %u) printing...\n", cpm.rank, cpm.idx[0], cpm.idx[1], cpm.idx[2]);
+    //         print_xz_slice(x, process.shape, process.shape[1] / 2);
     //         printf("\n");
     //         // printf("B4: ");
     //         // print_buffer_dev(buffer[4]);
@@ -205,17 +205,17 @@ int main(int argc, char **argv) {
     CPML2_Barrier(MPI_COMM_WORLD);
     
     // x.alloc(process.shape, 1, HDCType::Host, 0);
-    // for (int i = Gd; i < process.shape.x - Gd; i ++) {
-    //     for (int j = Gd; j < process.shape.y - Gd; j ++) {
-    //         for (int k = Gd; k < process.shape.z - Gd; k ++) {
+    // for (int i = Gd; i < process.shape[0] - Gd; i ++) {
+    //     for (int j = Gd; j < process.shape[1] - Gd; j ++) {
+    //         for (int k = Gd; k < process.shape[2] - Gd; k ++) {
     //             x(IDX(i, j, k, process.shape)) = (i + j + k + SUM3(process.offset)) % 2 + cpm.rank * 100;
     //         }
     //     }
     // }
     // for (int i = 0; i < cpm.size; i ++) {
     //     if (cpm.rank == i) {
-    //         printf("%d(%u %u %u) printing...\n", cpm.rank, cpm.idx.x, cpm.idx.y, cpm.idx.z);
-    //         print_xz_slice(x, process.shape, process.shape.y / 2);
+    //         printf("%d(%u %u %u) printing...\n", cpm.rank, cpm.idx[0], cpm.idx[1], cpm.idx[2]);
+    //         print_xz_slice(x, process.shape, process.shape[1] / 2);
     //         printf("\n");
     //     }
     //     CPML2_Barrier(MPI_COMM_WORLD);
@@ -235,8 +235,8 @@ int main(int argc, char **argv) {
     // x.sync(MCpType::Dev2Hst);
     // for (int i = 0; i < cpm.size; i ++) {
     //     if (cpm.rank == i) {
-    //         printf("%d(%u %u %u) printing...\n", cpm.rank, cpm.idx.x, cpm.idx.y, cpm.idx.z);
-    //         print_xz_slice(x, process.shape, process.shape.y / 2);
+    //         printf("%d(%u %u %u) printing...\n", cpm.rank, cpm.idx[0], cpm.idx[1], cpm.idx[2]);
+    //         print_xz_slice(x, process.shape, process.shape[1] / 2);
     //         printf("\n");
     //         // printf("B0: ");
     //         // print_buffer_dev(buffer[0]);
@@ -263,8 +263,8 @@ int main(int argc, char **argv) {
     // x.sync(MCpType::Dev2Hst);
     // for (int i = 0; i < cpm.size; i ++) {
     //     if (cpm.rank == i) {
-    //         printf("%d(%u %u %u) printing...\n", cpm.rank, cpm.idx.x, cpm.idx.y, cpm.idx.z);
-    //         print_xz_slice(x, process.shape, process.shape.y / 2);
+    //         printf("%d(%u %u %u) printing...\n", cpm.rank, cpm.idx[0], cpm.idx[1], cpm.idx[2]);
+    //         print_xz_slice(x, process.shape, process.shape[1] / 2);
     //         printf("\n");
     //         // printf("B4: ");
     //         // print_buffer_dev(buffer[4]);

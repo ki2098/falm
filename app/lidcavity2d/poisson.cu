@@ -19,10 +19,10 @@ __global__ void kernel_makePoissonMatrix(
     const MatrixFrame<REAL> &a=*va, &g=*vg, &ja=*vja;
     INT i, j, k;
     GLOBAL_THREAD_IDX_3D(i, j, k);
-    if (i < map_shape.x & j < map_shape.y && k < map_shape.z) {
-        i += map_offset.x;
-        j += map_offset.y;
-        k += map_offset.z;
+    if (i < map_shape[0] & j < map_shape[1] && k < map_shape[2]) {
+        i += map_offset[0];
+        j += map_offset[1];
+        k += map_offset[2];
         REAL ac, ae, aw, an, as;
         ac = ae = aw = an = as = 0.0;
         INT idxcc = IDX(i  , j  , k  , pdm_shape);
@@ -45,7 +45,7 @@ __global__ void kernel_makePoissonMatrix(
         REAL coefficient;
 
         coefficient = 0.5 * (gxcc + gxe1) / jacob;
-        if (i < pdm_shape.x - gc - 1) {
+        if (i < pdm_shape[0] - gc - 1) {
             ac -= coefficient;
             ae = coefficient;
         }
@@ -57,7 +57,7 @@ __global__ void kernel_makePoissonMatrix(
         }
 
         coefficient = 0.5 * (gycc + gyn1) / jacob;
-        if (j < pdm_shape.y - gc - 1) {
+        if (j < pdm_shape[1] - gc - 1) {
             ac -= coefficient;
             an = coefficient;
         }
@@ -87,9 +87,9 @@ REAL makePoissonMatrix(
     INT    &gc  = cpm.gc;
     Region map(pdm.shape, gc);
     dim3 grid_dim(
-        (pdm.shape.x + block_dim.x - 1) / block_dim.x,
-        (pdm.shape.y + block_dim.y - 1) / block_dim.y,
-        (pdm.shape.z + block_dim.z - 1) / block_dim.z
+        (pdm.shape[0] + block_dim.x - 1) / block_dim.x,
+        (pdm.shape[1] + block_dim.y - 1) / block_dim.y,
+        (pdm.shape[2] + block_dim.z - 1) / block_dim.z
     );
     kernel_makePoissonMatrix<<<grid_dim, block_dim, 0, 0>>>(
         a.devptr,
@@ -117,10 +117,10 @@ __global__ void kernel_makePoissonRHS(
     const MatrixFrame<REAL> &p=*vp, &rhs=*vrhs, &g=*vg, &ja=*vja;
     INT i, j, k;
     GLOBAL_THREAD_IDX_3D(i, j, k);
-    if (i < map_shape.x & j < map_shape.y && k < map_shape.z) {
-        i += map_offset.x;
-        j += map_offset.y;
-        k += map_offset.z;
+    if (i < map_shape[0] & j < map_shape[1] && k < map_shape[2]) {
+        i += map_offset[0];
+        j += map_offset[1];
+        k += map_offset[2];
         INT idxcc = IDX(i  , j  , k  , pdm_shape);
         INT idxe1 = IDX(i+1, j  , k  , pdm_shape);
         INT idxw1 = IDX(i-1, j  , k  , pdm_shape);
@@ -145,13 +145,13 @@ __global__ void kernel_makePoissonRHS(
         REAL  pt1  =  p(idxt1);
         REAL  pb1  =  p(idxb1);
         REAL jacob = ja(idxcc);
-        // if (i == pdm_shape.x - gc - 1) {
+        // if (i == pdm_shape[0] - gc - 1) {
         //     rhs(idxcc) -= pe1 * 0.5 * (gxcc + gxe1) / jacob;
         // }
         // if (i == gc) {
         //     rhs(idxcc) -= pw1 * 0.5 * (gxcc + gxw1) / jacob;
         // }
-        // if (j == pdm_shape.y - gc - 1) {
+        // if (j == pdm_shape[1] - gc - 1) {
         //     rhs(idxcc) -= pn1 * 0.5 * (gycc + gyn1) / jacob;
         // }
         // if (j == gc) {
@@ -173,9 +173,9 @@ void makePoissonRHS(
     INT    &gc  = cpm.gc;
     Region map(pdm.shape, gc);
     dim3 grid_dim(
-        (pdm.shape.x + block_dim.x - 1) / block_dim.x,
-        (pdm.shape.y + block_dim.y - 1) / block_dim.y,
-        (pdm.shape.z + block_dim.z - 1) / block_dim.z
+        (pdm.shape[0] + block_dim.x - 1) / block_dim.x,
+        (pdm.shape[1] + block_dim.y - 1) / block_dim.y,
+        (pdm.shape[2] + block_dim.z - 1) / block_dim.z
     );
     kernel_makePoissonRHS<<<grid_dim, block_dim, 0, 0>>>(
         p.devptr,

@@ -13,8 +13,8 @@ struct RmcpTurbine {
     REAL3    pos;
     REAL3 rotpos;
     REAL       R;
-    REAL       W;
-    REAL       D;
+    REAL   width;
+    REAL   thick;
     REAL     tip;
     REAL     hub;
     REAL    roll;
@@ -47,7 +47,7 @@ struct RmcpTurbine {
         c1 = cos(roll);
         c2 = cos(pitch);
         c3 = cos(yaw);
-        REAL x1 = vxyz.x, y1 = vxyz.y, z1 = vxyz.z;
+        REAL x1 = vxyz[0], y1 = vxyz[1], z1 = vxyz[2];
         REAL x2 = (c2 * c3               ) * x1 + (c2 * s3               ) * y1 - (s2     ) * z1;
         REAL y2 = (s1 * s2 * c3 - c1 * s3) * x1 + (s1 * s2 * s3 + c1 * c3) * y1 + (s1 * c2) * z1;
         REAL z2 = (c1 * s2 * c3 + s1 * s3) * x1 + (c1 * s2 * s3 - s1 * c3) * y1 + (c1 * c2) * z1;

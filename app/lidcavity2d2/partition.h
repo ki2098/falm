@@ -26,19 +26,19 @@ static void setPartition(
     );
 
     Falm::INT ox = 0;
-    for (Falm::INT i = 0; i < cpm.idx.x; i ++) {
-        ox += dim_division(side_n_cell, cpm.shape.x, i);
+    for (Falm::INT i = 0; i < cpm.idx[0]; i ++) {
+        ox += dim_division(side_n_cell, cpm.shape[0], i);
     }
     Falm::INT oy = 0;
-    for (Falm::INT j = 0; j < cpm.idx.y; j ++) {
-        oy += dim_division(side_n_cell, cpm.shape.y, j);
+    for (Falm::INT j = 0; j < cpm.idx[1]; j ++) {
+        oy += dim_division(side_n_cell, cpm.shape[1], j);
     }
     Falm::INT oz = 0;
 
     pdm = Falm::Region(
         Falm::INT3{
-            dim_division(side_n_cell, cpm.shape.x, cpm.idx.x) + (cpm.gc*2),
-            dim_division(side_n_cell, cpm.shape.y, cpm.idx.y) + (cpm.gc*2),
+            dim_division(side_n_cell, cpm.shape[0], cpm.idx[0]) + (cpm.gc*2),
+            dim_division(side_n_cell, cpm.shape[1], cpm.idx[1]) + (cpm.gc*2),
             1 + (cpm.gc*2)
         },
         Falm::INT3{ox, oy, oz}

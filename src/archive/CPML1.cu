@@ -7,11 +7,11 @@ namespace Falm {
 __global__ void kernel_CPM_PackBuffer(double *buffer, uint3 buf_shape, uint3 buf_offset, double *src, uint3 src_shape) {
     unsigned int i, j, k;
     GLOBAL_THREAD_IDX_3D(i, j, k);
-    if (i < buf_shape.x && j < buf_shape.y && k < buf_shape.z) {
+    if (i < buf_shape[0] && j < buf_shape[1] && k < buf_shape[2]) {
         unsigned int buf_idx = IDX(i, j, k, buf_shape);
-        i += buf_offset.x;
-        j += buf_offset.y;
-        k += buf_offset.z;
+        i += buf_offset[0];
+        j += buf_offset[1];
+        k += buf_offset[2];
         unsigned int src_idx = IDX(i, j, k, src_shape);
         buffer[buf_idx] = src[src_idx];
     }
@@ -20,9 +20,9 @@ __global__ void kernel_CPM_PackBuffer(double *buffer, uint3 buf_shape, uint3 buf
 void CPML1dev_PackBuffer(CPMBuffer<double> &buffer, double *src, Mapper &pdm, dim3 block_dim) {
     Mapper &map = buffer.map;
     dim3 grid_dim(
-        (map.shape.x + block_dim.x - 1) / block_dim.x,
-        (map.shape.y + block_dim.y - 1) / block_dim.y,
-        (map.shape.z + block_dim.z - 1) / block_dim.z
+        (map.shape[0] + block_dim.x - 1) / block_dim.x,
+        (map.shape[1] + block_dim.y - 1) / block_dim.y,
+        (map.shape[2] + block_dim.z - 1) / block_dim.z
     );
     if (buffer.hdctype == HDCType::Device) {
         kernel_CPM_PackBuffer<<<grid_dim, block_dim, 0, 0>>>(buffer.ptr, buffer.map.shape, buffer.map.offset, src, pdm.shape);
@@ -37,11 +37,11 @@ void CPML1dev_PackBuffer(CPMBuffer<double> &buffer, double *src, Mapper &pdm, di
 __global__ void kernel_CPM_PackColoredBuffer(double *buffer, uint3 buf_shape, uint3 buf_offset, unsigned int color, double *src, uint3 src_shape, uint3 src_offset) {
     unsigned int i, j, k;
     GLOBAL_THREAD_IDX_3D(i, j, k);
-    if (i < buf_shape.x && j < buf_shape.y && k < buf_shape.z) {
+    if (i < buf_shape[0] && j < buf_shape[1] && k < buf_shape[2]) {
         unsigned int buf_idx = IDX(i, j, k, buf_shape);
-        i += buf_offset.x;
-        j += buf_offset.y;
-        k += buf_offset.z;
+        i += buf_offset[0];
+        j += buf_offset[1];
+        k += buf_offset[2];
         unsigned int src_idx = IDX(i, j, k, src_shape);
         if ((i + j + k + SUM3(src_offset)) % 2 == color) {
             buffer[buf_idx / 2] = src[src_idx];
@@ -52,9 +52,9 @@ __global__ void kernel_CPM_PackColoredBuffer(double *buffer, uint3 buf_shape, ui
 void CPML1dev_PackColoredBuffer(CPMBuffer<double> &buffer, double *src, Mapper &pdm, dim3 block_dim) {
     Mapper &map = buffer.map;
     dim3 grid_dim(
-        (map.shape.x + block_dim.x - 1) / block_dim.x,
-        (map.shape.y + block_dim.y - 1) / block_dim.y,
-        (map.shape.z + block_dim.z - 1) / block_dim.z
+        (map.shape[0] + block_dim.x - 1) / block_dim.x,
+        (map.shape[1] + block_dim.y - 1) / block_dim.y,
+        (map.shape[2] + block_dim.z - 1) / block_dim.z
     );
     if (buffer.hdctype == HDCType::Device) {
         kernel_CPM_PackColoredBuffer<<<grid_dim, block_dim, 0, 0>>>(buffer.ptr, buffer.map.shape, buffer.map.offset, buffer.color, src, pdm.shape, pdm.offset);
@@ -69,11 +69,11 @@ void CPML1dev_PackColoredBuffer(CPMBuffer<double> &buffer, double *src, Mapper &
 __global__ void kernel_CPM_UnpackBuffer(double *buffer, uint3 buf_shape, uint3 buf_offset, double *dst, uint3 dst_shape) {
     unsigned int i, j, k;
     GLOBAL_THREAD_IDX_3D(i, j, k);
-    if (i < buf_shape.x && j < buf_shape.y && k < buf_shape.z) {
+    if (i < buf_shape[0] && j < buf_shape[1] && k < buf_shape[2]) {
         unsigned int buf_idx = IDX(i, j, k, buf_shape);
-        i += buf_offset.x;
-        j += buf_offset.y;
-        k += buf_offset.z;
+        i += buf_offset[0];
+        j += buf_offset[1];
+        k += buf_offset[2];
         unsigned int dst_idx = IDX(i, j, k, dst_shape);
         dst[dst_idx] = buffer[buf_idx];
     }
@@ -82,9 +82,9 @@ __global__ void kernel_CPM_UnpackBuffer(double *buffer, uint3 buf_shape, uint3 b
 void CPML1dev_UnpackBuffer(CPMBuffer<double> &buffer, double *dst, Mapper &pdm, dim3 block_dim) {
     Mapper &map = buffer.map;
     dim3 grid_dim(
-        (map.shape.x + block_dim.x - 1) / block_dim.x,
-        (map.shape.y + block_dim.y - 1) / block_dim.y,
-        (map.shape.z + block_dim.z - 1) / block_dim.z
+        (map.shape[0] + block_dim.x - 1) / block_dim.x,
+        (map.shape[1] + block_dim.y - 1) / block_dim.y,
+        (map.shape[2] + block_dim.z - 1) / block_dim.z
     );
     if (buffer.hdctype == HDCType::Device) {
         kernel_CPM_UnpackBuffer<<<grid_dim, block_dim, 0, 0>>>(buffer.ptr, buffer.map.shape, buffer.map.offset, dst, pdm.shape);
@@ -100,11 +100,11 @@ void CPML1dev_UnpackBuffer(CPMBuffer<double> &buffer, double *dst, Mapper &pdm, 
 __global__ void kernel_CPM_UnpackColoredBuffer(double *buffer, uint3 buf_shape, uint3 buf_offset, unsigned int color , double *dst, uint3 dst_shape, uint3 dst_offset) {
     unsigned int i, j, k;
     GLOBAL_THREAD_IDX_3D(i, j, k);
-    if (i < buf_shape.x && j < buf_shape.y && k < buf_shape.z) {
+    if (i < buf_shape[0] && j < buf_shape[1] && k < buf_shape[2]) {
         unsigned int buf_idx = IDX(i, j, k, buf_shape);
-        i += buf_offset.x;
-        j += buf_offset.y;
-        k += buf_offset.z;
+        i += buf_offset[0];
+        j += buf_offset[1];
+        k += buf_offset[2];
         unsigned int dst_idx = IDX(i, j, k, dst_shape);
         if ((i + j + k + SUM3(dst_offset)) % 2 == color) {
             dst[dst_idx] = buffer[buf_idx / 2];
@@ -115,9 +115,9 @@ __global__ void kernel_CPM_UnpackColoredBuffer(double *buffer, uint3 buf_shape, 
 void CPML1dev_UnpackColoredBuffer(CPMBuffer<double> &buffer, double *dst, Mapper &pdm, dim3 block_dim) {
     Mapper &map = buffer.map;
     dim3 grid_dim(
-        (map.shape.x + block_dim.x - 1) / block_dim.x,
-        (map.shape.y + block_dim.y - 1) / block_dim.y,
-        (map.shape.z + block_dim.z - 1) / block_dim.z
+        (map.shape[0] + block_dim.x - 1) / block_dim.x,
+        (map.shape[1] + block_dim.y - 1) / block_dim.y,
+        (map.shape[2] + block_dim.z - 1) / block_dim.z
     );
     if (buffer.hdctype == HDCType::Device) {
         kernel_CPM_UnpackColoredBuffer<<<grid_dim, block_dim, 0, 0>>>(buffer.ptr, buffer.map.shape, buffer.map.offset, buffer.color, dst, pdm.shape, pdm.offset);

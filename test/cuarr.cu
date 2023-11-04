@@ -15,9 +15,9 @@ __global__ void add(double *a, double *b, Size sz) {
     int isz = sz[0];
     int jsz = sz[1];
     int ksz = sz[2];
-    int i = threadIdx.x + blockIdx.x * blockDim.x;
-    int j = threadIdx.y + blockIdx.y * blockDim.y;
-    int k = threadIdx.z + blockIdx.z * blockDim.z;
+    int i = threadIdx[0] + blockIdx[0] * blockDim[0];
+    int j = threadIdx[1] + blockIdx[1] * blockDim[1];
+    int k = threadIdx[2] + blockIdx[2] * blockDim[2];
     if (i < isz && j < jsz && k < ksz) {
         int idx = i + j * isz + k * isz * jsz;
         b[idx] += a[idx];

@@ -8,10 +8,10 @@ namespace Falm {
 //     const MatrixFrame<REAL> &a=*va, &x=*vx, &ax=*vax;
 //     INT i, j, k;
 //     GLOBAL_THREAD_IDX_3D(i, j, k);
-//     if (i < map_shape.x && j < map_shape.y && k < map_shape.z) {
-//         i += map_offset.x;
-//         j += map_offset.y;
-//         k += map_offset.z;
+//     if (i < map_shape[0] && j < map_shape[1] && k < map_shape[2]) {
+//         i += map_offset[0];
+//         j += map_offset[1];
+//         k += map_offset[2];
 //         INT idxc = IDX(i  , j  , k  , pdm_shape);
 //         INT idxe = IDX(i+1, j  , k  , pdm_shape);
 //         INT idxw = IDX(i-1, j  , k  , pdm_shape);
@@ -39,13 +39,13 @@ namespace Falm {
 
 // void MVDevCall::MVMult(Matrix<REAL> &a, Matrix<REAL> &x, Matrix<REAL> &ax, Region &pdm, const Region &map, dim3 block_dim, STREAM stream) {
 //     assert(
-//         a.shape.x == x.shape.x && a.shape.x == ax.shape.x &&
-//         a.shape.y == 7 && x.shape.y == 1 && ax.shape.y == 1
+//         a.shape[0] == x.shape[0] && a.shape[0] == ax.shape[0] &&
+//         a.shape[1] == 7 && x.shape[1] == 1 && ax.shape[1] == 1
 //     );
 //     dim3 grid_dim(
-//         (map.shape.x + block_dim.x - 1) / block_dim.x,
-//         (map.shape.y + block_dim.y - 1) / block_dim.y,
-//         (map.shape.z + block_dim.z - 1) / block_dim.z
+//         (map.shape[0] + block_dim.x - 1) / block_dim.x,
+//         (map.shape[1] + block_dim.y - 1) / block_dim.y,
+//         (map.shape[2] + block_dim.z - 1) / block_dim.z
 //     );
 
 //     kernel_Struct3d7p_MV<<<grid_dim, block_dim, 0, stream>>>(a.devptr, x.devptr, ax.devptr, pdm.shape, map.shape, map.offset);
@@ -55,10 +55,10 @@ __global__ void kernel_Struct3d7p_Res(const MatrixFrame<REAL> *va, const MatrixF
     const MatrixFrame<REAL> &a=*va, &x=*vx, &b=*vb, &r=*vr;
     INT i, j, k;
     GLOBAL_THREAD_IDX_3D(i, j, k);
-    if (i < map_shape.x && j < map_shape.y && k < map_shape.z) {
-        i += map_offset.x;
-        j += map_offset.y;
-        k += map_offset.z;
+    if (i < map_shape[0] && j < map_shape[1] && k < map_shape[2]) {
+        i += map_offset[0];
+        j += map_offset[1];
+        k += map_offset[2];
         INT idxc = IDX(i  , j  , k  , pdm_shape);
         INT idxe = IDX(i+1, j  , k  , pdm_shape);
         INT idxw = IDX(i-1, j  , k  , pdm_shape);
@@ -86,13 +86,13 @@ __global__ void kernel_Struct3d7p_Res(const MatrixFrame<REAL> *va, const MatrixF
 
 void FalmEqDevCall::Res(Matrix<REAL> &a, Matrix<REAL> &x, Matrix<REAL> &b, Matrix<REAL> &r, Region &pdm, const Region &map, dim3 block_dim, STREAM stream) {
     assert(
-        a.shape.x == x.shape.x && a.shape.x == b.shape.x && a.shape.x == r.shape.x &&
-        a.shape.y == 7 && x.shape.y == 1 && b.shape.y == 1 && r.shape.y == 1
+        a.shape[0] == x.shape[0] && a.shape[0] == b.shape[0] && a.shape[0] == r.shape[0] &&
+        a.shape[1] == 7 && x.shape[1] == 1 && b.shape[1] == 1 && r.shape[1] == 1
     );
     dim3 grid_dim(
-        (map.shape.x + block_dim.x - 1) / block_dim.x,
-        (map.shape.y + block_dim.y - 1) / block_dim.y,
-        (map.shape.z + block_dim.z - 1) / block_dim.z
+        (map.shape[0] + block_dim.x - 1) / block_dim.x,
+        (map.shape[1] + block_dim.y - 1) / block_dim.y,
+        (map.shape[2] + block_dim.z - 1) / block_dim.z
     );
 
     kernel_Struct3d7p_Res<<<grid_dim, block_dim, 0, stream>>>(a.devptr, x.devptr, b.devptr, r.devptr, pdm.shape, map.shape, map.offset);
@@ -102,10 +102,10 @@ __global__ void kernel_Struct3d7p_Jacobi(const MatrixFrame<REAL> *va, const Matr
     const MatrixFrame<REAL> &a=*va, &x=*vx, &xp=*vxp, &b=*vb;
     INT i, j, k;
     GLOBAL_THREAD_IDX_3D(i, j, k);
-    if (i < map_shape.x && j < map_shape.y && k < map_shape.z) {
-        i += map_offset.x;
-        j += map_offset.y;
-        k += map_offset.z;
+    if (i < map_shape[0] && j < map_shape[1] && k < map_shape[2]) {
+        i += map_offset[0];
+        j += map_offset[1];
+        k += map_offset[2];
         INT idxc = IDX(i  , j  , k  , pdm_shape);
         INT idxe = IDX(i+1, j  , k  , pdm_shape);
         INT idxw = IDX(i-1, j  , k  , pdm_shape);
@@ -133,9 +133,9 @@ __global__ void kernel_Struct3d7p_Jacobi(const MatrixFrame<REAL> *va, const Matr
 
 void FalmEqDevCall::JacobiSweep(Matrix<REAL> &a, Matrix<REAL> &x, Matrix<REAL> &xp, Matrix<REAL> &b, Region &pdm, const Region &map, dim3 block_dim, STREAM stream) {
     dim3 grid_dim(
-        (map.shape.x + block_dim.x - 1) / block_dim.x,
-        (map.shape.y + block_dim.y - 1) / block_dim.y,
-        (map.shape.z + block_dim.z - 1) / block_dim.z
+        (map.shape[0] + block_dim.x - 1) / block_dim.x,
+        (map.shape[1] + block_dim.y - 1) / block_dim.y,
+        (map.shape[2] + block_dim.z - 1) / block_dim.z
     );
 
     kernel_Struct3d7p_Jacobi<<<grid_dim, block_dim, 0, stream>>>(a.devptr, x.devptr, xp.devptr, b.devptr, pdm.shape, map.shape, map.offset);
@@ -145,11 +145,11 @@ void FalmEqDevCall::JacobiSweep(Matrix<REAL> &a, Matrix<REAL> &x, Matrix<REAL> &
 //     Region &pdm = cpm.pdm_list[cpm.rank];
 //     Region map(pdm.shape, cpm.gc);
 //     assert(
-//         a.shape.x == x.shape.x && a.shape.x == b.shape.x && a.shape.x == r.shape.x &&
-//         a.shape.y == 7 && x.shape.y == 1 && b.shape.y == 1 && r.shape.y == 1
+//         a.shape[0] == x.shape[0] && a.shape[0] == b.shape[0] && a.shape[0] == r.shape[0] &&
+//         a.shape[1] == 7 && x.shape[1] == 1 && b.shape[1] == 1 && r.shape[1] == 1
 //     );
 
-//     Matrix<REAL> xp(x.shape.x, x.shape.y, HDCType::Device, "Jacobi" + x.name + "Previous");
+//     Matrix<REAL> xp(x.shape[0], x.shape[1], HDCType::Device, "Jacobi" + x.name + "Previous");
 //     it = 0;
 //     do {
 //         xp.cpy(x, HDCType::Device);
@@ -163,7 +163,7 @@ void FalmEqDevCall::JacobiSweep(Matrix<REAL> &a, Matrix<REAL> &x, Matrix<REAL> &
 // void FalmEqDevCall::L1Dev_Struct3d7p_JacobiPC(Matrix<REAL> &a, Matrix<REAL> &x, Matrix<REAL> &b, CPMBase &cpm, dim3 block_dim) {
 //     Region &pdm = cpm.pdm_list[cpm.rank];
 //     Region map(pdm.shape, cpm.gc);
-//     Matrix<REAL> xp(x.shape.x, x.shape.y, HDCType::Device, "Jacobi" + x.name + "Previous");
+//     Matrix<REAL> xp(x.shape[0], x.shape[1], HDCType::Device, "Jacobi" + x.name + "Previous");
 //     INT __it = 0;
 //     do {
 //         xp.cpy(x, HDCType::Device);
@@ -176,10 +176,10 @@ __global__ void kernel_Struct3d7p_SOR(const MatrixFrame<REAL> *va, const MatrixF
     const MatrixFrame<REAL> &a=*va, &x=*vx, &b=*vb;
     INT i, j, k;
     GLOBAL_THREAD_IDX_3D(i, j, k);
-    if (i < map_shape.x && j < map_shape.y && k < map_shape.z) {
-        i += map_offset.x;
-        j += map_offset.y;
-        k += map_offset.z;
+    if (i < map_shape[0] && j < map_shape[1] && k < map_shape[2]) {
+        i += map_offset[0];
+        j += map_offset[1];
+        k += map_offset[2];
         INT idxc = IDX(i  , j  , k  , pdm_shape);
         INT idxe = IDX(i+1, j  , k  , pdm_shape);
         INT idxw = IDX(i-1, j  , k  , pdm_shape);
@@ -212,9 +212,9 @@ __global__ void kernel_Struct3d7p_SOR(const MatrixFrame<REAL> *va, const MatrixF
 
 void FalmEqDevCall::SORSweep(Matrix<REAL> &a, Matrix<REAL> &x, Matrix<REAL> &b, REAL omega, INT color, Region &pdm, const Region &map, dim3 block_dim, STREAM stream) {
     dim3 grid_dim(
-        (map.shape.x + block_dim.x - 1) / block_dim.x,
-        (map.shape.y + block_dim.y - 1) / block_dim.y,
-        (map.shape.z + block_dim.z - 1) / block_dim.z
+        (map.shape[0] + block_dim.x - 1) / block_dim.x,
+        (map.shape[1] + block_dim.y - 1) / block_dim.y,
+        (map.shape[2] + block_dim.z - 1) / block_dim.z
     );
 
     kernel_Struct3d7p_SOR<<<grid_dim, block_dim, 0, stream>>>(a.devptr, x.devptr, b.devptr, omega, color, pdm.shape, pdm.offset, map.shape, map.offset);
@@ -224,8 +224,8 @@ void FalmEqDevCall::SORSweep(Matrix<REAL> &a, Matrix<REAL> &x, Matrix<REAL> &b, 
 //     Region &pdm = cpm.pdm_list[cpm.rank];
 //     Region map(pdm.shape, cpm.gc);
 //     assert(
-//         a.shape.x == x.shape.x && a.shape.x == b.shape.x && a.shape.x == r.shape.x &&
-//         a.shape.y == 7 && x.shape.y == 1 && b.shape.y == 1 && r.shape.y == 1
+//         a.shape[0] == x.shape[0] && a.shape[0] == b.shape[0] && a.shape[0] == r.shape[0] &&
+//         a.shape[1] == 7 && x.shape[1] == 1 && b.shape[1] == 1 && r.shape[1] == 1
 //     );
 
 //     it = 0;
@@ -253,10 +253,10 @@ __global__ void kernel_PBiCGStab_1(const MatrixFrame<REAL> *vp, const MatrixFram
     const MatrixFrame<REAL> &p=*vp, &q=*vq, &r=*vr;
     INT i, j, k;
     GLOBAL_THREAD_IDX_3D(i, j, k);
-    if (i < map_shape.x && j < map_shape.y && k < map_shape.z) {
-        i += map_offset.x;
-        j += map_offset.y;
-        k += map_offset.z;
+    if (i < map_shape[0] && j < map_shape[1] && k < map_shape[2]) {
+        i += map_offset[0];
+        j += map_offset[1];
+        k += map_offset[2];
         INT idx = IDX(i, j, k, pdm_shape);
         p(idx) = r(idx) + beta * (p(idx) - omega * q(idx));
     }
@@ -264,9 +264,9 @@ __global__ void kernel_PBiCGStab_1(const MatrixFrame<REAL> *vp, const MatrixFram
 
 void FalmEqDevCall::PBiCGStab1(Matrix<REAL> &p, Matrix<REAL> &q, Matrix<REAL> &r, REAL beta, REAL omega, Region &pdm, const Region &map, dim3 block_dim) {
     dim3 grid_dim(
-        (map.shape.x + block_dim.x - 1) / block_dim.x,
-        (map.shape.y + block_dim.y - 1) / block_dim.y,
-        (map.shape.z + block_dim.z - 1) / block_dim.z
+        (map.shape[0] + block_dim.x - 1) / block_dim.x,
+        (map.shape[1] + block_dim.y - 1) / block_dim.y,
+        (map.shape[2] + block_dim.z - 1) / block_dim.z
     );
     kernel_PBiCGStab_1<<<grid_dim, block_dim, 0, 0>>>(p.devptr, q.devptr, r.devptr, beta, omega, pdm.shape, map.shape, map.offset);
 }
@@ -275,10 +275,10 @@ __global__ void kernel_PBiCGStab_2(const MatrixFrame<REAL> *vs, const MatrixFram
     const MatrixFrame<REAL> &s=*vs, &q=*vq, &r=*vr;
     INT i, j, k;
     GLOBAL_THREAD_IDX_3D(i, j, k);
-    if (i < map_shape.x && j < map_shape.y && k < map_shape.z) {
-        i += map_offset.x;
-        j += map_offset.y;
-        k += map_offset.z;
+    if (i < map_shape[0] && j < map_shape[1] && k < map_shape[2]) {
+        i += map_offset[0];
+        j += map_offset[1];
+        k += map_offset[2];
         INT idx = IDX(i, j, k, pdm_shape);
         s(idx) = r(idx) - alpha * q(idx);
     }
@@ -286,9 +286,9 @@ __global__ void kernel_PBiCGStab_2(const MatrixFrame<REAL> *vs, const MatrixFram
 
 void FalmEqDevCall::PBiCGStab2(Matrix<REAL> &s, Matrix<REAL> &q, Matrix<REAL> &r, REAL alpha, Region &pdm, const Region &map, dim3 block_dim) {
     dim3 grid_dim(
-        (map.shape.x + block_dim.x - 1) / block_dim.x,
-        (map.shape.y + block_dim.y - 1) / block_dim.y,
-        (map.shape.z + block_dim.z - 1) / block_dim.z
+        (map.shape[0] + block_dim.x - 1) / block_dim.x,
+        (map.shape[1] + block_dim.y - 1) / block_dim.y,
+        (map.shape[2] + block_dim.z - 1) / block_dim.z
     );
     kernel_PBiCGStab_2<<<grid_dim, block_dim, 0, 0>>>(s.devptr, q.devptr, r.devptr, alpha, pdm.shape, map.shape, map.offset);
 }
@@ -297,10 +297,10 @@ __global__ void kernel_PBiCGStab_3(const MatrixFrame<REAL> *vx, const MatrixFram
     const MatrixFrame<REAL> &x=*vx, &pp=*vpp, &ss=*vss;
     INT i, j, k;
     GLOBAL_THREAD_IDX_3D(i, j, k);
-    if (i < map_shape.x && j < map_shape.y && k < map_shape.z) {
-        i += map_offset.x;
-        j += map_offset.y;
-        k += map_offset.z;
+    if (i < map_shape[0] && j < map_shape[1] && k < map_shape[2]) {
+        i += map_offset[0];
+        j += map_offset[1];
+        k += map_offset[2];
         INT idx = IDX(i, j, k, pdm_shape);
         x(idx) += alpha * pp(idx) + omega * ss(idx);
     }
@@ -308,9 +308,9 @@ __global__ void kernel_PBiCGStab_3(const MatrixFrame<REAL> *vx, const MatrixFram
 
 void FalmEqDevCall::PBiCGStab3(Matrix<REAL> &x, Matrix<REAL> &pp, Matrix<REAL> &ss, REAL alpha, REAL omega, Region &pdm, const Region &map, dim3 block_dim) {
     dim3 grid_dim(
-        (map.shape.x + block_dim.x - 1) / block_dim.x,
-        (map.shape.y + block_dim.y - 1) / block_dim.y,
-        (map.shape.z + block_dim.z - 1) / block_dim.z
+        (map.shape[0] + block_dim.x - 1) / block_dim.x,
+        (map.shape[1] + block_dim.y - 1) / block_dim.y,
+        (map.shape[2] + block_dim.z - 1) / block_dim.z
     );
     kernel_PBiCGStab_3<<<grid_dim, block_dim, 0, 0>>>(x.devptr, pp.devptr, ss.devptr, alpha, omega, pdm.shape, map.shape, map.offset);
 } 
@@ -319,10 +319,10 @@ __global__ void kernel_PBiCGStab_4(const MatrixFrame<REAL> *vr, const MatrixFram
     const MatrixFrame<REAL> &r=*vr, &s=*vs, &t=*vt;
     INT i, j, k;
     GLOBAL_THREAD_IDX_3D(i, j, k);
-    if (i < map_shape.x && j < map_shape.y && k < map_shape.z) {
-        i += map_offset.x;
-        j += map_offset.y;
-        k += map_offset.z;
+    if (i < map_shape[0] && j < map_shape[1] && k < map_shape[2]) {
+        i += map_offset[0];
+        j += map_offset[1];
+        k += map_offset[2];
         INT idx = IDX(i, j, k, pdm_shape);
         r(idx) = s(idx) - omega * t(idx);
     }
@@ -330,9 +330,9 @@ __global__ void kernel_PBiCGStab_4(const MatrixFrame<REAL> *vr, const MatrixFram
 
 void FalmEqDevCall::PBiCGStab4(Matrix<REAL> &r, Matrix<REAL> &s, Matrix<REAL> &t, REAL omega, Region &pdm, const Region &map, dim3 block_dim) {
     dim3 grid_dim(
-        (map.shape.x + block_dim.x - 1) / block_dim.x,
-        (map.shape.y + block_dim.y - 1) / block_dim.y,
-        (map.shape.z + block_dim.z - 1) / block_dim.z
+        (map.shape[0] + block_dim.x - 1) / block_dim.x,
+        (map.shape[1] + block_dim.y - 1) / block_dim.y,
+        (map.shape[2] + block_dim.z - 1) / block_dim.z
     );
     kernel_PBiCGStab_4<<<grid_dim, block_dim, 0, 0>>>(r.devptr, s.devptr, t.devptr, omega, pdm.shape, map.shape, map.offset);
 }
@@ -341,13 +341,13 @@ void FalmEqDevCall::PBiCGStab4(Matrix<REAL> &r, Matrix<REAL> &s, Matrix<REAL> &t
 //     Region &pdm = cpm.pdm_list[cpm.rank];
 //     Region map(pdm.shape, cpm.gc);
 //     assert(
-//         a.shape.x == x.shape.x && a.shape.x == b.shape.x && a.shape.x == r.shape.x &&
-//         a.shape.y == 7 && x.shape.y == 1 && b.shape.y == 1 && r.shape.y == 1
+//         a.shape[0] == x.shape[0] && a.shape[0] == b.shape[0] && a.shape[0] == r.shape[0] &&
+//         a.shape[1] == 7 && x.shape[1] == 1 && b.shape[1] == 1 && r.shape[1] == 1
 //     );
 //     dim3 grid_dim(
-//         (map.shape.x + block_dim.x - 1) / block_dim.x,
-//         (map.shape.y + block_dim.y - 1) / block_dim.y,
-//         (map.shape.z + block_dim.z - 1) / block_dim.z
+//         (map.shape[0] + block_dim.x - 1) / block_dim.x,
+//         (map.shape[1] + block_dim.y - 1) / block_dim.y,
+//         (map.shape[2] + block_dim.z - 1) / block_dim.z
 //     );
 
 //     Matrix<REAL> rr(pdm.shape, 1, HDCType::Device, "PBiCGStab rr");

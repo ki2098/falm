@@ -31,14 +31,14 @@ void copyZ5(
 );
 
 // static inline void forceZComponentZero(Falm::Matrix<Falm::REAL> &field, Falm::FLAG hdctype) {
-//     assert(field.shape.y == 3);
+//     assert(field.shape[1] == 3);
 //     if (hdctype & Falm::HDCType::Host) {
 //         assert(field.hdctype & Falm::HDCType::Host);
-//         Falm::falmMemset(&field(0, 2), 0, sizeof(Falm::REAL) * field.shape.x);
+//         Falm::falmMemset(&field(0, 2), 0, sizeof(Falm::REAL) * field.shape[0]);
 //     }
 //     if (hdctype & Falm::HDCType::Device) {
 //         assert(field.hdctype & Falm::HDCType::Device);
-//         Falm::falmMemsetDevice(&field.dev(0, 2), 0, sizeof(Falm::REAL) * field.shape.x);
+//         Falm::falmMemsetDevice(&field.dev(0, 2), 0, sizeof(Falm::REAL) * field.shape[0]);
 //     }
 // }
 

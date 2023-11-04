@@ -15,7 +15,7 @@ struct MatrixFrame {
     FLAG          hdctype;
     StencilMatrix stencil;
     __host__ __device__ T &operator()(INT _idx) const {return ptr[_idx];}
-    __host__ __device__ T &operator()(INT _row, INT _col) const {return ptr[_row + _col * shape.x];}
+    __host__ __device__ T &operator()(INT _row, INT _col) const {return ptr[_row + _col * shape[0]];}
 
     MatrixFrame(const MatrixFrame<T> &_mat) = delete;
     MatrixFrame<T>& operator=(const MatrixFrame<T> &_mat) = delete;
@@ -251,7 +251,7 @@ template<typename T> void Matrix<T>::sync(FLAG _mcptype) {
         if (hdctype & HDCType::Device) {
             falmMemcpy(dev.ptr, host.ptr, sizeof(T) * size, MCpType::Hst2Dev);
         } else {
-            dev.alloc(shape.x, shape.y, HDCType::Device, stencil);
+            dev.alloc(shape[0], shape[1], HDCType::Device, stencil);
             falmMemcpy(dev.ptr, host.ptr, sizeof(T) * size, MCpType::Hst2Dev);
             devptr = (MatrixFrame<T>*)falmMallocDevice(sizeof(MatrixFrame<T>));
             falmMemcpy(devptr, &dev, sizeof(MatrixFrame<T>), MCpType::Hst2Dev);
@@ -262,7 +262,7 @@ template<typename T> void Matrix<T>::sync(FLAG _mcptype) {
         if (hdctype & HDCType::Host) {
             falmMemcpy(host.ptr, dev.ptr, sizeof(T) * size, MCpType::Dev2Hst);
         } else {
-            host.alloc(shape.x, shape.y, HDCType::Host, stencil);
+            host.alloc(shape[0], shape[1], HDCType::Host, stencil);
             falmMemcpy(host.ptr, dev.ptr, sizeof(T) * size, MCpType::Dev2Hst);
             hdctype |= HDCType::Host;
         }

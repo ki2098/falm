@@ -10,19 +10,19 @@ void CPM::CPML2dev_IExchange6Face(double *data, Region &pdm, unsigned int thick,
     buffer = new CPMBuffer<double>[12];
     req    = new MPI_Request[12];
     nP2P   = 0;
-    uint3 yz_inner_slice{thick, pdm.shape.y - Gdx2, pdm.shape.z - Gdx2};
+    uint3 yz_inner_slice{thick, pdm.shape[1] - Gdx2, pdm.shape[2] - Gdx2};
     dim3 yz_block_dim(1, 8, 8);
     if (neighbour[0] >= 0) {
         buffer[nP2P].alloc(
             yz_inner_slice,
-            uint3{pdm.shape.x - Gd - thick, Gd, Gd},
+            uint3{pdm.shape[0] - Gd - thick, Gd, Gd},
             BufType::Out,
             buf_hdctype
         );
         CPML1dev_PackBuffer(buffer[nP2P], data, pdm, yz_block_dim);
         buffer[nP2P + 1].alloc(
             yz_inner_slice,
-            uint3{pdm.shape.x - Gd        , Gd, Gd},
+            uint3{pdm.shape[0] - Gd        , Gd, Gd},
             BufType::In,
             buf_hdctype
         );
@@ -48,19 +48,19 @@ void CPM::CPML2dev_IExchange6Face(double *data, Region &pdm, unsigned int thick,
         CPML2_IRecv(buffer[nP2P+1], neighbour[1], rank         + grp_tag, MPI_COMM_WORLD, &req[nP2P+1]);
         nP2P += 2;
     }
-    uint3 xz_inner_slice{pdm.shape.x - Gdx2, thick, pdm.shape.z - Gdx2};
+    uint3 xz_inner_slice{pdm.shape[0] - Gdx2, thick, pdm.shape[2] - Gdx2};
     dim3 xz_block_dim(8, 1, 8);
     if (neighbour[2] >= 0) {
         buffer[nP2P].alloc(
             xz_inner_slice,
-            uint3{Gd, pdm.shape.y - Gd - thick, Gd},
+            uint3{Gd, pdm.shape[1] - Gd - thick, Gd},
             BufType::Out,
             buf_hdctype
         );
         CPML1dev_PackBuffer(buffer[nP2P], data, pdm, xz_block_dim);
         buffer[nP2P + 1].alloc(
             xz_inner_slice,
-            uint3{Gd, pdm.shape.y - Gd       , Gd},
+            uint3{Gd, pdm.shape[1] - Gd       , Gd},
             BufType::In,
             buf_hdctype
         );
@@ -86,19 +86,19 @@ void CPM::CPML2dev_IExchange6Face(double *data, Region &pdm, unsigned int thick,
         CPML2_IRecv(buffer[nP2P+1], neighbour[3], rank         + grp_tag, MPI_COMM_WORLD, &req[nP2P+1]);
         nP2P += 2;
     }
-    uint3 xy_inner_slice{pdm.shape.x - Gdx2, pdm.shape.x - Gdx2, thick};
+    uint3 xy_inner_slice{pdm.shape[0] - Gdx2, pdm.shape[0] - Gdx2, thick};
     dim3 xy_block_dim(8, 8, 1);
     if (neighbour[4] >= 0) {
         buffer[nP2P].alloc(
             xy_inner_slice,
-            uint3{Gd, Gd, pdm.shape.z - Gd - thick},
+            uint3{Gd, Gd, pdm.shape[2] - Gd - thick},
             BufType::Out,
             buf_hdctype
         );
         CPML1dev_PackBuffer(buffer[nP2P], data, pdm, xy_block_dim);
         buffer[nP2P + 1].alloc(
             xy_inner_slice,
-            uint3{Gd, Gd, pdm.shape.z - Gd        },
+            uint3{Gd, Gd, pdm.shape[2] - Gd        },
             BufType::In,
             buf_hdctype
         );
@@ -130,12 +130,12 @@ void CPM::CPML2dev_IExchange6ColoredFace(double *data, Region &pdm, unsigned int
     buffer = new CPMBuffer<double>[12];
     req    = new MPI_Request[12];
     nP2P   = 0;
-    uint3 yz_inner_slice{thick, pdm.shape.y - Gdx2, pdm.shape.z - Gdx2};
+    uint3 yz_inner_slice{thick, pdm.shape[1] - Gdx2, pdm.shape[2] - Gdx2};
     dim3 yz_block_dim(1, 8, 8);
     if (neighbour[0] >= 0) {
         buffer[nP2P].alloc(
             yz_inner_slice,
-            uint3{pdm.shape.x - Gd - thick, Gd, Gd},
+            uint3{pdm.shape[0] - Gd - thick, Gd, Gd},
             BufType::Out,
             buf_hdctype,
             pdm, color
@@ -143,7 +143,7 @@ void CPM::CPML2dev_IExchange6ColoredFace(double *data, Region &pdm, unsigned int
         CPML1dev_PackColoredBuffer(buffer[nP2P], data, pdm, yz_block_dim);
         buffer[nP2P + 1].alloc(
             yz_inner_slice,
-            uint3{pdm.shape.x - Gd        , Gd, Gd},
+            uint3{pdm.shape[0] - Gd        , Gd, Gd},
             BufType::In,
             buf_hdctype,
             pdm, color
@@ -172,12 +172,12 @@ void CPM::CPML2dev_IExchange6ColoredFace(double *data, Region &pdm, unsigned int
         CPML2_IRecv(buffer[nP2P+1], neighbour[1], rank         + grp_tag, MPI_COMM_WORLD, &req[nP2P+1]);
         nP2P += 2;
     }
-    uint3 xz_inner_slice{pdm.shape.x - Gdx2, thick, pdm.shape.z - Gdx2};
+    uint3 xz_inner_slice{pdm.shape[0] - Gdx2, thick, pdm.shape[2] - Gdx2};
     dim3 xz_block_dim(8, 1, 8);
     if (neighbour[2] >= 0) {
         buffer[nP2P].alloc(
             xz_inner_slice,
-            uint3{Gd, pdm.shape.y - Gd - thick, Gd},
+            uint3{Gd, pdm.shape[1] - Gd - thick, Gd},
             BufType::Out,
             buf_hdctype,
             pdm, color
@@ -185,7 +185,7 @@ void CPM::CPML2dev_IExchange6ColoredFace(double *data, Region &pdm, unsigned int
         CPML1dev_PackColoredBuffer(buffer[nP2P], data, pdm, xz_block_dim);
         buffer[nP2P + 1].alloc(
             xz_inner_slice,
-            uint3{Gd, pdm.shape.y - Gd       , Gd},
+            uint3{Gd, pdm.shape[1] - Gd       , Gd},
             BufType::In,
             buf_hdctype,
             pdm, color
@@ -214,12 +214,12 @@ void CPM::CPML2dev_IExchange6ColoredFace(double *data, Region &pdm, unsigned int
         CPML2_IRecv(buffer[nP2P+1], neighbour[3], rank         + grp_tag, MPI_COMM_WORLD, &req[nP2P+1]);
         nP2P += 2;
     }
-    uint3 xy_inner_slice{pdm.shape.x - Gdx2, pdm.shape.x - Gdx2, thick};
+    uint3 xy_inner_slice{pdm.shape[0] - Gdx2, pdm.shape[0] - Gdx2, thick};
     dim3 xy_block_dim(8, 8, 1);
     if (neighbour[4] >= 0) {
         buffer[nP2P].alloc(
             xy_inner_slice,
-            uint3{Gd, Gd, pdm.shape.z - Gd - thick},
+            uint3{Gd, Gd, pdm.shape[2] - Gd - thick},
             BufType::Out,
             buf_hdctype,
             pdm, color
@@ -227,7 +227,7 @@ void CPM::CPML2dev_IExchange6ColoredFace(double *data, Region &pdm, unsigned int
         CPML1dev_PackColoredBuffer(buffer[nP2P], data, pdm, xy_block_dim);
         buffer[nP2P + 1].alloc(
             xy_inner_slice,
-            uint3{Gd, Gd, pdm.shape.z - Gd        },
+            uint3{Gd, Gd, pdm.shape[2] - Gd        },
             BufType::In,
             buf_hdctype,
             pdm, color

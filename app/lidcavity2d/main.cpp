@@ -38,9 +38,9 @@ void output(INT i) {
     p.sync(MCpType::Dev2Hst);
     uu.sync(MCpType::Dev2Hst);
     uua.sync(MCpType::Dev2Hst);
-    for (INT k = gc - 1; k < pdm.shape.z - gc + 1; k ++) {
-        for (INT j = gc - 1; j < pdm.shape.y - gc + 1; j ++) {
-            for (INT i = gc - 1; i < pdm.shape.x - gc + 1; i ++) {
+    for (INT k = gc - 1; k < pdm.shape[2] - gc + 1; k ++) {
+        for (INT j = gc - 1; j < pdm.shape[1] - gc + 1; j ++) {
+            for (INT i = gc - 1; i < pdm.shape[0] - gc + 1; i ++) {
                 INT idx = IDX(i, j, k, pdm.shape);
                 fprintf(file, "%12.5e,%12.5e,%12.5e,%12.5e,%12.5e,%12.5e,%12.5e\n", x(idx, 0), x(idx, 1), x(idx, 2), u(idx, 0), u(idx, 1), u(idx, 2), p(idx));
             }
@@ -68,7 +68,7 @@ void main_loop(FalmCFD &cfdsolver, FalmEq &eqsolver, dim3 block_dim = dim3{8, 8,
     Region &pdm = cpm.pdm_list[cpm.rank];
     INT    &gc  = cpm.gc;
     Region  map(pdm.shape, gc);
-    Matrix<REAL> un(u.shape.x, u.shape.y, HDCType::Device, "un");
+    Matrix<REAL> un(u.shape[0], u.shape[1], HDCType::Device, "un");
     un.cpy(u, HDCType::Device);
 
     FalmCFD rk2fs1(cfdsolver.Re, cfdsolver.dt * 0.5, cfdsolver.AdvScheme, cfdsolver.SGSModel, cfdsolver.CSmagorinsky);
@@ -143,7 +143,7 @@ int main() {
     INT    &gc  = cpm.gc;
     Region  map(pdm.shape, gc);
     setCoord(L, N, cpm, x, h, kx, g, ja);
-    printf("%d %d %d\n", pdm.shape.x, pdm.shape.y, pdm.shape.z);
+    printf("%d %d %d\n", pdm.shape[0], pdm.shape[1], pdm.shape[2]);
 
     poisson_a.alloc(pdm.shape, 7, HDCType::Device);
 
@@ -154,7 +154,7 @@ int main() {
     Matrix<REAL> &a = poisson_a;
 
     // a.sync(MCpType::Dev2Hst);
-    // for (INT i = gc; i < pdm.shape.x - gc; i ++) {
+    // for (INT i = gc; i < pdm.shape[0] - gc; i ++) {
     //     INT idx = IDX(i, gc, gc, pdm.shape);
     //     printf(
     //         "%.5e %.5e %.5e %.5e %.5e %.5e %.5e\n",

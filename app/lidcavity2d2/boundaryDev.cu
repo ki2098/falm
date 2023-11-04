@@ -14,8 +14,8 @@ __global__ void kernel_pressureBC_E(
     const MatrixFrame<REAL> &p=*vp;
     INT i, j, k;
     GLOBAL_THREAD_IDX_3D(i, j, k);
-    if (i < 1 && j < pdm_shape.y - (gc*2) && k < pdm_shape.z - (gc*2)) {
-        i += pdm_shape.x - gc;
+    if (i < 1 && j < pdm_shape[1] - (gc*2) && k < pdm_shape[2] - (gc*2)) {
+        i += pdm_shape[0] - gc;
         j += gc;
         k += gc;
         p(IDX(i, j, k, pdm_shape)) = p(IDX(i-1, j, k, pdm_shape));
@@ -30,7 +30,7 @@ __global__ void kernel_pressureBC_W(
     const MatrixFrame<REAL> &p=*vp;
     INT i, j, k;
     GLOBAL_THREAD_IDX_3D(i, j, k);
-    if (i < 1 && j < pdm_shape.y - (gc*2) && k < pdm_shape.z - (gc*2)) {
+    if (i < 1 && j < pdm_shape[1] - (gc*2) && k < pdm_shape[2] - (gc*2)) {
         i += gc - 1;
         j += gc;
         k += gc;
@@ -46,9 +46,9 @@ __global__ void kernel_pressureBC_N(
     const MatrixFrame<REAL> &p=*vp;
     INT i, j, k;
     GLOBAL_THREAD_IDX_3D(i, j, k);
-    if (i < pdm_shape.x - (gc*2) && j < 1 && k < pdm_shape.z - (gc*2)) {
+    if (i < pdm_shape[0] - (gc*2) && j < 1 && k < pdm_shape[2] - (gc*2)) {
         i += gc;
-        j += pdm_shape.y - gc;
+        j += pdm_shape[1] - gc;
         k += gc;
         p(IDX(i, j, k, pdm_shape)) = p(IDX(i, j-1, k, pdm_shape));
     }
@@ -62,7 +62,7 @@ __global__ void kernel_pressureBC_S(
     const MatrixFrame<REAL> &p=*vp;
     INT i, j, k;
     GLOBAL_THREAD_IDX_3D(i, j, k);
-    if (i < pdm_shape.x - (gc*2) && j < 1 && k < pdm_shape.z - (gc*2)) {
+    if (i < pdm_shape[0] - (gc*2) && j < 1 && k < pdm_shape[2] - (gc*2)) {
         i += gc;
         j += gc - 1;
         k += gc;
@@ -76,7 +76,7 @@ void dev_pressureBC_E(
     INT           gc,
     STREAM        stream
 ) {
-    dim3 grid_dim_ew(1, (pdm.shape.y - (gc*2) + 7) / 8, (pdm.shape.z - (gc*2) + 7) / 8);
+    dim3 grid_dim_ew(1, (pdm.shape[1] - (gc*2) + 7) / 8, (pdm.shape[2] - (gc*2) + 7) / 8);
     dim3 block_dim_ew(1, 8, 8);
     kernel_pressureBC_E<<<grid_dim_ew, block_dim_ew, 0, stream>>>(p.devptr, pdm.shape, gc);
 }
@@ -87,7 +87,7 @@ void dev_pressureBC_W(
     INT           gc,
     STREAM        stream
 ) {
-    dim3 grid_dim_ew(1, (pdm.shape.y - (gc*2) + 7) / 8, (pdm.shape.z - (gc*2) + 7) / 8);
+    dim3 grid_dim_ew(1, (pdm.shape[1] - (gc*2) + 7) / 8, (pdm.shape[2] - (gc*2) + 7) / 8);
     dim3 block_dim_ew(1, 8, 8);
     kernel_pressureBC_W<<<grid_dim_ew, block_dim_ew, 0, stream>>>(p.devptr, pdm.shape, gc);
 }
@@ -98,7 +98,7 @@ void dev_pressureBC_N(
     INT           gc,
     STREAM        stream
 ) {
-    dim3 grid_dim_ns((pdm.shape.x - (gc*2) + 7) / 8, 1, (pdm.shape.z - (gc*2) + 7) / 8);
+    dim3 grid_dim_ns((pdm.shape[0] - (gc*2) + 7) / 8, 1, (pdm.shape[2] - (gc*2) + 7) / 8);
     dim3 block_dim_ns(8, 1, 8);
     kernel_pressureBC_N<<<grid_dim_ns, block_dim_ns, 0, stream>>>(p.devptr, pdm.shape, gc);
 }
@@ -109,7 +109,7 @@ void dev_pressureBC_S(
     INT           gc,
     STREAM        stream
 ) {
-    dim3 grid_dim_ns((pdm.shape.x - (gc*2) + 7) / 8, 1, (pdm.shape.z - (gc*2) + 7) / 8);
+    dim3 grid_dim_ns((pdm.shape[0] - (gc*2) + 7) / 8, 1, (pdm.shape[2] - (gc*2) + 7) / 8);
     dim3 block_dim_ns(8, 1, 8);
     kernel_pressureBC_S<<<grid_dim_ns, block_dim_ns, 0, stream>>>(p.devptr, pdm.shape, gc);
 }
@@ -122,8 +122,8 @@ __global__ void kernel_velocityBC_E(
     const MatrixFrame<REAL> &u=*vu;
     INT i, j, k;
     GLOBAL_THREAD_IDX_3D(i, j, k);
-    if (i < 1 && j < pdm_shape.y - (gc*2) && k < pdm_shape.z - (gc*2)) {
-        i += pdm_shape.x - gc;
+    if (i < 1 && j < pdm_shape[1] - (gc*2) && k < pdm_shape[2] - (gc*2)) {
+        i += pdm_shape[0] - gc;
         j += gc;
         k += gc;
         REAL uboundary[] = {0.0, 0.0, 0.0};
@@ -142,7 +142,7 @@ __global__ void kernel_velocityBC_W(
     const MatrixFrame<REAL> &u=*vu;
     INT i, j, k;
     GLOBAL_THREAD_IDX_3D(i, j, k);
-    if (i < 1 && j < pdm_shape.y - (gc*2) && k < pdm_shape.z - (gc*2)) {
+    if (i < 1 && j < pdm_shape[1] - (gc*2) && k < pdm_shape[2] - (gc*2)) {
         i += gc - 1;
         j += gc;
         k += gc;
@@ -162,9 +162,9 @@ __global__ void kernel_velocityBC_N(
     const MatrixFrame<REAL> &u=*vu;
     INT i, j, k;
     GLOBAL_THREAD_IDX_3D(i, j, k);
-    if (i < pdm_shape.x - (gc*2) && j < 1 && k < pdm_shape.z - (gc*2)) {
+    if (i < pdm_shape[0] - (gc*2) && j < 1 && k < pdm_shape[2] - (gc*2)) {
         i += gc;
-        j += pdm_shape.y - gc;
+        j += pdm_shape[1] - gc;
         k += gc;
         REAL uboundary[] = {1.0, 0.0, 0.0};
         for (INT d = 0; d < 3; d ++) {
@@ -182,7 +182,7 @@ __global__ void kernel_velocityBC_S(
     const MatrixFrame<REAL> &u=*vu;
     INT i, j, k;
     GLOBAL_THREAD_IDX_3D(i, j, k);
-    if (i < pdm_shape.x - (gc*2) && j < 1 && k < pdm_shape.z - (gc*2)) {
+    if (i < pdm_shape[0] - (gc*2) && j < 1 && k < pdm_shape[2] - (gc*2)) {
         i += gc;
         j += gc - 1;
         k += gc;
@@ -200,7 +200,7 @@ void dev_velocityBC_E(
     INT           gc,
     STREAM        stream
 ) {
-    dim3 grid_dim_ew(1, (pdm.shape.y - (gc*2) + 7) / 8, (pdm.shape.z - (gc*2) + 7) / 8);
+    dim3 grid_dim_ew(1, (pdm.shape[1] - (gc*2) + 7) / 8, (pdm.shape[2] - (gc*2) + 7) / 8);
     dim3 block_dim_ew(1, 8, 8);
     kernel_velocityBC_E<<<grid_dim_ew, block_dim_ew, 0, stream>>>(u.devptr, pdm.shape, gc);
 }
@@ -211,7 +211,7 @@ void dev_velocityBC_W(
     INT           gc,
     STREAM        stream
 ) {
-    dim3 grid_dim_ew(1, (pdm.shape.y - (gc*2) + 7) / 8, (pdm.shape.z - (gc*2) + 7) / 8);
+    dim3 grid_dim_ew(1, (pdm.shape[1] - (gc*2) + 7) / 8, (pdm.shape[2] - (gc*2) + 7) / 8);
     dim3 block_dim_ew(1, 8, 8);
     kernel_velocityBC_W<<<grid_dim_ew, block_dim_ew, 0, stream>>>(u.devptr, pdm.shape, gc);
 }
@@ -222,7 +222,7 @@ void dev_velocityBC_N(
     INT           gc,
     STREAM        stream
 ) {
-    dim3 grid_dim_ns((pdm.shape.x - (gc*2) + 7) / 8, 1, (pdm.shape.z - (gc*2) + 7) / 8);
+    dim3 grid_dim_ns((pdm.shape[0] - (gc*2) + 7) / 8, 1, (pdm.shape[2] - (gc*2) + 7) / 8);
     dim3 block_dim_ns(8, 1, 8);
     kernel_velocityBC_N<<<grid_dim_ns, block_dim_ns, 0, stream>>>(u.devptr, pdm.shape, gc);
 }
@@ -233,7 +233,7 @@ void dev_velocityBC_S(
     INT           gc,
     STREAM        stream
 ) {
-    dim3 grid_dim_ns((pdm.shape.x - (gc*2) + 7) / 8, 1, (pdm.shape.z - (gc*2) + 7) / 8);
+    dim3 grid_dim_ns((pdm.shape[0] - (gc*2) + 7) / 8, 1, (pdm.shape[2] - (gc*2) + 7) / 8);
     dim3 block_dim_ns(8, 1, 8);
     kernel_velocityBC_S<<<grid_dim_ns, block_dim_ns, 0, stream>>>(u.devptr, pdm.shape, gc);
 }
@@ -246,8 +246,8 @@ __global__ void kernel_forceFaceVelocityZero_E(
     const MatrixFrame<REAL> &uu=*vuu;
     INT i, j, k;
     GLOBAL_THREAD_IDX_3D(i, j, k);
-    if (i < 1 && j < pdm_shape.y - (gc*2) && k < pdm_shape.z - (gc*2)) {
-        i += pdm_shape.x - gc - 1;
+    if (i < 1 && j < pdm_shape[1] - (gc*2) && k < pdm_shape[2] - (gc*2)) {
+        i += pdm_shape[0] - gc - 1;
         j += gc;
         k += gc;
         uu(IDX(i, j, k, pdm_shape), 0) = 0;
@@ -262,7 +262,7 @@ __global__ void kernel_forceFaceVelocityZero_W(
     const MatrixFrame<REAL> &uu=*vuu;
     INT i, j, k;
     GLOBAL_THREAD_IDX_3D(i, j, k);
-    if (i < 1 && j < pdm_shape.y - (gc*2) && k < pdm_shape.z - (gc*2)) {
+    if (i < 1 && j < pdm_shape[1] - (gc*2) && k < pdm_shape[2] - (gc*2)) {
         i += gc - 1;
         j += gc;
         k += gc;
@@ -278,9 +278,9 @@ __global__ void kernel_forceFaceVelocityZero_N(
     const MatrixFrame<REAL> &uu=*vuu;
     INT i, j, k;
     GLOBAL_THREAD_IDX_3D(i, j, k);
-    if (i < pdm_shape.x - (gc*2) && j < 1 && k < pdm_shape.z - (gc*2)) {
+    if (i < pdm_shape[0] - (gc*2) && j < 1 && k < pdm_shape[2] - (gc*2)) {
         i += gc;
-        j += pdm_shape.y - gc - 1;
+        j += pdm_shape[1] - gc - 1;
         k += gc;
         uu(IDX(i, j, k, pdm_shape), 1) = 0;
     }
@@ -294,7 +294,7 @@ __global__ void kernel_forceFaceVelocityZero_S(
     const MatrixFrame<REAL> &uu=*vuu;
     INT i, j, k;
     GLOBAL_THREAD_IDX_3D(i, j, k);
-    if (i < pdm_shape.x - (gc*2) && j < 1 && k < pdm_shape.z - (gc*2)) {
+    if (i < pdm_shape[0] - (gc*2) && j < 1 && k < pdm_shape[2] - (gc*2)) {
         i += gc;
         j += gc - 1;
         k += gc;
@@ -308,7 +308,7 @@ void dev_forceFaceVelocityZero_E(
     INT           gc,
     STREAM        stream
 ) {
-    dim3 grid_dim_ew(1, (pdm.shape.y - (gc*2) + 7) / 8, (pdm.shape.z - (gc*2) + 7) / 8);
+    dim3 grid_dim_ew(1, (pdm.shape[1] - (gc*2) + 7) / 8, (pdm.shape[2] - (gc*2) + 7) / 8);
     dim3 block_dim_ew(1, 8, 8);
     kernel_forceFaceVelocityZero_E<<<grid_dim_ew, block_dim_ew, 0, stream>>>(uu.devptr, pdm.shape, gc);
 }
@@ -319,7 +319,7 @@ void dev_forceFaceVelocityZero_W(
     INT           gc,
     STREAM        stream
 ) {
-    dim3 grid_dim_ew(1, (pdm.shape.y - (gc*2) + 7) / 8, (pdm.shape.z - (gc*2) + 7) / 8);
+    dim3 grid_dim_ew(1, (pdm.shape[1] - (gc*2) + 7) / 8, (pdm.shape[2] - (gc*2) + 7) / 8);
     dim3 block_dim_ew(1, 8, 8);
     kernel_forceFaceVelocityZero_W<<<grid_dim_ew, block_dim_ew, 0, stream>>>(uu.devptr, pdm.shape, gc);
 }
@@ -330,7 +330,7 @@ void dev_forceFaceVelocityZero_N(
     INT           gc,
     STREAM        stream
 ) {
-    dim3 grid_dim_ns((pdm.shape.x - (gc*2) + 7) / 8, 1, (pdm.shape.z - (gc*2) + 7) / 8);
+    dim3 grid_dim_ns((pdm.shape[0] - (gc*2) + 7) / 8, 1, (pdm.shape[2] - (gc*2) + 7) / 8);
     dim3 block_dim_ns(8, 1, 8);
     kernel_forceFaceVelocityZero_N<<<grid_dim_ns, block_dim_ns, 0, stream>>>(uu.devptr, pdm.shape, gc);
 }
@@ -341,7 +341,7 @@ void dev_forceFaceVelocityZero_S(
     INT           gc,
     STREAM        stream
 ) {
-    dim3 grid_dim_ns((pdm.shape.x - (gc*2) + 7) / 8, 1, (pdm.shape.z - (gc*2) + 7) / 8);
+    dim3 grid_dim_ns((pdm.shape[0] - (gc*2) + 7) / 8, 1, (pdm.shape[2] - (gc*2) + 7) / 8);
     dim3 block_dim_ns(8, 1, 8);
     kernel_forceFaceVelocityZero_S<<<grid_dim_ns, block_dim_ns, 0, stream>>>(uu.devptr, pdm.shape, gc);
 }

@@ -7,10 +7,10 @@ __global__ void kernel_MV(const MatrixFrame<REAL> *va, const MatrixFrame<REAL> *
     const MatrixFrame<REAL> &a=*va, &x=*vx, &ax=*vax;
     INT i, j, k;
     GLOBAL_THREAD_IDX_3D(i, j, k);
-    if (i < map_shape.x && j < map_shape.y && k < map_shape.z) {
-        i += map_offset.x;
-        j += map_offset.y;
-        k += map_offset.z;
+    if (i < map_shape[0] && j < map_shape[1] && k < map_shape[2]) {
+        i += map_offset[0];
+        j += map_offset[1];
+        k += map_offset[2];
         INT idxc = IDX(i  , j  , k  , pdm_shape);
         INT idxe = IDX(i+1, j  , k  , pdm_shape);
         INT idxw = IDX(i-1, j  , k  , pdm_shape);
@@ -38,13 +38,13 @@ __global__ void kernel_MV(const MatrixFrame<REAL> *va, const MatrixFrame<REAL> *
 
 void FalmMVDevCall::MV(Matrix<REAL> &a, Matrix<REAL> &x, Matrix<REAL> &ax, Region &pdm, const Region &map, dim3 block_dim, STREAM stream) {
     assert(
-        a.shape.x == x.shape.x && a.shape.x == ax.shape.x &&
-        a.shape.y == 7 && x.shape.y == 1 && ax.shape.y == 1
+        a.shape[0] == x.shape[0] && a.shape[0] == ax.shape[0] &&
+        a.shape[1] == 7 && x.shape[1] == 1 && ax.shape[1] == 1
     );
     dim3 grid_dim(
-        (map.shape.x + block_dim.x - 1) / block_dim.x,
-        (map.shape.y + block_dim.y - 1) / block_dim.y,
-        (map.shape.z + block_dim.z - 1) / block_dim.z
+        (map.shape[0] + block_dim.x - 1) / block_dim.x,
+        (map.shape[1] + block_dim.y - 1) / block_dim.y,
+        (map.shape[2] + block_dim.z - 1) / block_dim.z
     );
 
     kernel_MV<<<grid_dim, block_dim, 0, stream>>>(a.devptr, x.devptr, ax.devptr, pdm.shape, map.shape, map.offset);
@@ -57,10 +57,10 @@ __global__ void kernel_DotProduct(const MatrixFrame<REAL> *va, const MatrixFrame
     GLOBAL_THREAD_IDX_3D(i, j, k);
     INT tidx = IDX(threadIdx, blockDim);
     REAL tmp = 0;
-    if (i < map_shape.x && j < map_shape.y && k < map_shape.z) {
-        i += map_offset.x;
-        j += map_offset.y;
-        k += map_offset.z;
+    if (i < map_shape[0] && j < map_shape[1] && k < map_shape[2]) {
+        i += map_offset[0];
+        j += map_offset[1];
+        k += map_offset[2];
         INT idx = IDX(i, j, k, pdm_shape);
         tmp = a(idx) * b(idx);
     }
@@ -85,9 +85,9 @@ __global__ void kernel_DotProduct(const MatrixFrame<REAL> *va, const MatrixFrame
 
 REAL FalmMVDevCall::DotProduct(Matrix<REAL> &a, Matrix<REAL> &b, Region &pdm, const Region &map, dim3 block_dim) {
     dim3 grid_dim(
-        (map.shape.x + block_dim.x - 1) / block_dim.x,
-        (map.shape.y + block_dim.y - 1) / block_dim.y,
-        (map.shape.z + block_dim.z - 1) / block_dim.z
+        (map.shape[0] + block_dim.x - 1) / block_dim.x,
+        (map.shape[1] + block_dim.y - 1) / block_dim.y,
+        (map.shape[2] + block_dim.z - 1) / block_dim.z
     );
     INT n_blocks = PRODUCT3(grid_dim);
     INT n_threads = PRODUCT3(block_dim);
@@ -116,12 +116,12 @@ __global__ void kernel_EuclideanNormSq(const MatrixFrame<REAL> *va, REAL *partia
     GLOBAL_THREAD_IDX_3D(i, j, k);
     INT tidx = IDX(threadIdx, blockDim);
     REAL tmp = 0;
-    if (i < map_shape.x && j < map_shape.y && k < map_shape.z) {
-        i += map_offset.x;
-        j += map_offset.y;
-        k += map_offset.z;
+    if (i < map_shape[0] && j < map_shape[1] && k < map_shape[2]) {
+        i += map_offset[0];
+        j += map_offset[1];
+        k += map_offset[2];
         INT idx = IDX(i, j, k, pdm_shape);
-        for (INT __d = 0; __d < a.shape.y; __d ++) {
+        for (INT __d = 0; __d < a.shape[1]; __d ++) {
             tmp += a(idx, __d) * a(idx, __d);
         }
     }
@@ -146,9 +146,9 @@ __global__ void kernel_EuclideanNormSq(const MatrixFrame<REAL> *va, REAL *partia
 
 REAL FalmMVDevCall::EuclideanNormSq(Matrix<REAL> &a, Region &pdm, const Region &map, dim3 block_dim) {
     dim3 grid_dim(
-        (map.shape.x + block_dim.x - 1) / block_dim.x,
-        (map.shape.y + block_dim.y - 1) / block_dim.y,
-        (map.shape.z + block_dim.z - 1) / block_dim.z
+        (map.shape[0] + block_dim.x - 1) / block_dim.x,
+        (map.shape[1] + block_dim.y - 1) / block_dim.y,
+        (map.shape[2] + block_dim.z - 1) / block_dim.z
     );
     INT n_blocks = PRODUCT3(grid_dim);
     INT n_threads = PRODUCT3(block_dim);
@@ -177,10 +177,10 @@ REAL FalmMVDevCall::EuclideanNormSq(Matrix<REAL> &a, Region &pdm, const Region &
     GLOBAL_THREAD_IDX_3D(i, j, k);
     INT tidx = IDX(threadIdx, blockDim);
     REAL tmp = 0;
-    if (i < map_shape.x && j < map_shape.y && k < map_shape.z) {
-        i += map_offset.x;
-        j += map_offset.y;
-        k += map_offset.z;
+    if (i < map_shape[0] && j < map_shape[1] && k < map_shape[2]) {
+        i += map_offset[0];
+        j += map_offset[1];
+        k += map_offset[2];
         INT idx = IDX(i, j, k, pdm_shape);
         tmp = fabs(a(idx, 0));
     }
@@ -212,10 +212,10 @@ __global__ void kernel_MatColMax(const MatrixFrame<REAL> *va, INT col, REAL *par
     GLOBAL_THREAD_IDX_3D(i, j, k);
     INT tidx = IDX(threadIdx, blockDim);
     REAL tmp = 0;
-    if (i < map_shape.x && j < map_shape.y && k < map_shape.z) {
-        i += map_offset.x;
-        j += map_offset.y;
-        k += map_offset.z;
+    if (i < map_shape[0] && j < map_shape[1] && k < map_shape[2]) {
+        i += map_offset[0];
+        j += map_offset[1];
+        k += map_offset[2];
         INT idx = IDX(i, j, k, pdm_shape);
         tmp = a(idx, col);
     }
@@ -247,10 +247,10 @@ __global__ void kernel_MatColMin(const MatrixFrame<REAL> *va, INT col, REAL *par
     GLOBAL_THREAD_IDX_3D(i, j, k);
     INT tidx = IDX(threadIdx, blockDim);
     REAL tmp = 0;
-    if (i < map_shape.x && j < map_shape.y && k < map_shape.z) {
-        i += map_offset.x;
-        j += map_offset.y;
-        k += map_offset.z;
+    if (i < map_shape[0] && j < map_shape[1] && k < map_shape[2]) {
+        i += map_offset[0];
+        j += map_offset[1];
+        k += map_offset[2];
         INT idx = IDX(i, j, k, pdm_shape);
         tmp = a(idx, col);
     }
@@ -282,10 +282,10 @@ __global__ void kernel_MatColAbsMax(const MatrixFrame<REAL> *va, INT col, REAL *
     GLOBAL_THREAD_IDX_3D(i, j, k);
     INT tidx = IDX(threadIdx, blockDim);
     REAL tmp = 0;
-    if (i < map_shape.x && j < map_shape.y && k < map_shape.z) {
-        i += map_offset.x;
-        j += map_offset.y;
-        k += map_offset.z;
+    if (i < map_shape[0] && j < map_shape[1] && k < map_shape[2]) {
+        i += map_offset[0];
+        j += map_offset[1];
+        k += map_offset[2];
         INT idx = IDX(i, j, k, pdm_shape);
         tmp = fabs(a(idx, col));
     }
@@ -317,10 +317,10 @@ __global__ void kernel_MatColAbsMin(const MatrixFrame<REAL> *va, INT col, REAL *
     GLOBAL_THREAD_IDX_3D(i, j, k);
     INT tidx = IDX(threadIdx, blockDim);
     REAL tmp = 0;
-    if (i < map_shape.x && j < map_shape.y && k < map_shape.z) {
-        i += map_offset.x;
-        j += map_offset.y;
-        k += map_offset.z;
+    if (i < map_shape[0] && j < map_shape[1] && k < map_shape[2]) {
+        i += map_offset[0];
+        j += map_offset[1];
+        k += map_offset[2];
         INT idx = IDX(i, j, k, pdm_shape);
         tmp = fabs(a(idx, col));
     }
@@ -347,9 +347,9 @@ __global__ void kernel_MatColAbsMin(const MatrixFrame<REAL> *va, INT col, REAL *
 
 /* REAL L0Dev_MaxDiag(Matrix<REAL> &a, Region &pdm, const Region &map, dim3 block_dim) {
     dim3 grid_dim(
-        (map.shape.x + block_dim.x - 1) / block_dim.x,
-        (map.shape.y + block_dim.y - 1) / block_dim.y,
-        (map.shape.z + block_dim.z - 1) / block_dim.z
+        (map.shape[0] + block_dim.x - 1) / block_dim.x,
+        (map.shape[1] + block_dim.y - 1) / block_dim.y,
+        (map.shape[2] + block_dim.z - 1) / block_dim.z
     );
     INT n_blocks = PRODUCT3(grid_dim);
     INT n_threads = PRODUCT3(block_dim);
@@ -375,9 +375,9 @@ __global__ void kernel_MatColAbsMin(const MatrixFrame<REAL> *va, INT col, REAL *
 
 REAL FalmMVDevCall::MatColMax(Matrix<REAL> &a, INT col, Region &pdm, const Region &map, dim3 block_dim) {
     dim3 grid_dim(
-        (map.shape.x + block_dim.x - 1) / block_dim.x,
-        (map.shape.y + block_dim.y - 1) / block_dim.y,
-        (map.shape.z + block_dim.z - 1) / block_dim.z
+        (map.shape[0] + block_dim.x - 1) / block_dim.x,
+        (map.shape[1] + block_dim.y - 1) / block_dim.y,
+        (map.shape[2] + block_dim.z - 1) / block_dim.z
     );
     INT n_blocks = PRODUCT3(grid_dim);
     INT n_threads = PRODUCT3(block_dim);
@@ -403,9 +403,9 @@ REAL FalmMVDevCall::MatColMax(Matrix<REAL> &a, INT col, Region &pdm, const Regio
 
 REAL FalmMVDevCall::MatColMin(Matrix<REAL> &a, INT col, Region &pdm, const Region &map, dim3 block_dim) {
     dim3 grid_dim(
-        (map.shape.x + block_dim.x - 1) / block_dim.x,
-        (map.shape.y + block_dim.y - 1) / block_dim.y,
-        (map.shape.z + block_dim.z - 1) / block_dim.z
+        (map.shape[0] + block_dim.x - 1) / block_dim.x,
+        (map.shape[1] + block_dim.y - 1) / block_dim.y,
+        (map.shape[2] + block_dim.z - 1) / block_dim.z
     );
     INT n_blocks = PRODUCT3(grid_dim);
     INT n_threads = PRODUCT3(block_dim);
@@ -431,9 +431,9 @@ REAL FalmMVDevCall::MatColMin(Matrix<REAL> &a, INT col, Region &pdm, const Regio
 
 REAL FalmMVDevCall::MatColAbsMax(Matrix<REAL> &a, INT col, Region &pdm, const Region &map, dim3 block_dim) {
     dim3 grid_dim(
-        (map.shape.x + block_dim.x - 1) / block_dim.x,
-        (map.shape.y + block_dim.y - 1) / block_dim.y,
-        (map.shape.z + block_dim.z - 1) / block_dim.z
+        (map.shape[0] + block_dim.x - 1) / block_dim.x,
+        (map.shape[1] + block_dim.y - 1) / block_dim.y,
+        (map.shape[2] + block_dim.z - 1) / block_dim.z
     );
     INT n_blocks = PRODUCT3(grid_dim);
     INT n_threads = PRODUCT3(block_dim);
@@ -459,9 +459,9 @@ REAL FalmMVDevCall::MatColAbsMax(Matrix<REAL> &a, INT col, Region &pdm, const Re
 
 REAL FalmMVDevCall::MatColAbsMin(Matrix<REAL> &a, INT col, Region &pdm, const Region &map, dim3 block_dim) {
     dim3 grid_dim(
-        (map.shape.x + block_dim.x - 1) / block_dim.x,
-        (map.shape.y + block_dim.y - 1) / block_dim.y,
-        (map.shape.z + block_dim.z - 1) / block_dim.z
+        (map.shape[0] + block_dim.x - 1) / block_dim.x,
+        (map.shape[1] + block_dim.y - 1) / block_dim.y,
+        (map.shape[2] + block_dim.z - 1) / block_dim.z
     );
     INT n_blocks = PRODUCT3(grid_dim);
     INT n_threads = PRODUCT3(block_dim);
@@ -510,12 +510,12 @@ __global__ void kernel_VecMax(const MatrixFrame<REAL> *va, REAL *partial_max_dev
     GLOBAL_THREAD_IDX_3D(i, j, k);
     INT tidx = IDX(threadIdx, blockDim);
     REAL tmp = 0;
-    if (i < map_shape.x && j < map_shape.y && k < map_shape.z) {
-        i += map_offset.x;
-        j += map_offset.y;
-        k += map_offset.z;
+    if (i < map_shape[0] && j < map_shape[1] && k < map_shape[2]) {
+        i += map_offset[0];
+        j += map_offset[1];
+        k += map_offset[2];
         INT idx = IDX(i, j, k, pdm_shape);
-        for (INT n = 0; n < a.shape.y; n ++) {
+        for (INT n = 0; n < a.shape[1]; n ++) {
             tmp += a(idx, n) * a(idx, n);
         }
         tmp = sqrt(tmp);
@@ -548,12 +548,12 @@ __global__ void kernel_VecMin(const MatrixFrame<REAL> *va, REAL *partial_max_dev
     GLOBAL_THREAD_IDX_3D(i, j, k);
     INT tidx = IDX(threadIdx, blockDim);
     REAL tmp = 0;
-    if (i < map_shape.x && j < map_shape.y && k < map_shape.z) {
-        i += map_offset.x;
-        j += map_offset.y;
-        k += map_offset.z;
+    if (i < map_shape[0] && j < map_shape[1] && k < map_shape[2]) {
+        i += map_offset[0];
+        j += map_offset[1];
+        k += map_offset[2];
         INT idx = IDX(i, j, k, pdm_shape);
-        for (INT n = 0; n < a.shape.y; n ++) {
+        for (INT n = 0; n < a.shape[1]; n ++) {
             tmp += a(idx, n) * a(idx, n);
         }
         tmp = sqrt(tmp);
@@ -581,9 +581,9 @@ __global__ void kernel_VecMin(const MatrixFrame<REAL> *va, REAL *partial_max_dev
 
 REAL FalmMVDevCall::VecMax(Matrix<REAL> &a, Region &pdm, const Region &map, dim3 block_dim) {
     dim3 grid_dim(
-        (map.shape.x + block_dim.x - 1) / block_dim.x,
-        (map.shape.y + block_dim.y - 1) / block_dim.y,
-        (map.shape.z + block_dim.z - 1) / block_dim.z
+        (map.shape[0] + block_dim.x - 1) / block_dim.x,
+        (map.shape[1] + block_dim.y - 1) / block_dim.y,
+        (map.shape[2] + block_dim.z - 1) / block_dim.z
     );
     INT n_blocks = PRODUCT3(grid_dim);
     INT n_threads = PRODUCT3(block_dim);
@@ -609,9 +609,9 @@ REAL FalmMVDevCall::VecMax(Matrix<REAL> &a, Region &pdm, const Region &map, dim3
 
 REAL FalmMVDevCall::VecMin(Matrix<REAL> &a, Region &pdm, const Region &map, dim3 block_dim) {
     dim3 grid_dim(
-        (map.shape.x + block_dim.x - 1) / block_dim.x,
-        (map.shape.y + block_dim.y - 1) / block_dim.y,
-        (map.shape.z + block_dim.z - 1) / block_dim.z
+        (map.shape[0] + block_dim.x - 1) / block_dim.x,
+        (map.shape[1] + block_dim.y - 1) / block_dim.y,
+        (map.shape[2] + block_dim.z - 1) / block_dim.z
     );
     INT n_blocks = PRODUCT3(grid_dim);
     INT n_threads = PRODUCT3(block_dim);

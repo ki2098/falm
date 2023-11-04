@@ -22,8 +22,8 @@ int main() {
     printf("%s\n", h.name.c_str());
     for (int i = 0; i < 3; i ++) {
         STRUCT &s = h.structList[i];
-        printf("%ld %ld %ld ", s.size.x, s.size.y, s.size.z);
-        printf("%e %e %e\n", s.coord.x, s.coord.y, s.coord.z);
+        printf("%ld %ld %ld ", s.size[0], s.size[1], s.size[2]);
+        printf("%e %e %e\n", s.coord[0], s.coord[1], s.coord[2]);
     }
 
     return 0;

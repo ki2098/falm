@@ -14,12 +14,12 @@ using namespace Falm;
 #define TE 100.0
 
 void set_matrix_value(Matrix<REAL> &x, INT3 range_shape, INT3 range_offset, INT3 pshape, REAL value) {
-    for (INT i = 0; i < range_shape.x; i ++) {
-        for (INT j = 0; j < range_shape.y; j ++) {
-            for (INT k = 0; k < range_shape.z; k ++) {
-                INT _i = i + range_offset.x;
-                INT _j = j + range_offset.y;
-                INT _k = k + range_offset.z;
+    for (INT i = 0; i < range_shape[0]; i ++) {
+        for (INT j = 0; j < range_shape[1]; j ++) {
+            for (INT k = 0; k < range_shape[2]; k ++) {
+                INT _i = i + range_offset[0];
+                INT _j = j + range_offset[1];
+                INT _k = k + range_offset[2];
                 x(IDX(_i, _j, _k, pshape)) = value;
             }
         }
@@ -28,11 +28,11 @@ void set_matrix_value(Matrix<REAL> &x, INT3 range_shape, INT3 range_offset, INT3
 
 void print_eq(Matrix<REAL> &a, Matrix<REAL> &b, INT3 shape) {
     printf("%s = %s\n", a.cname(), b.cname());
-    for (INT i = Gd; i < shape.x - Gd; i ++) {
-        for (INT j = Gd; j < shape.y - Gd; j ++) {
-            for (INT k = Gd; k < shape.z - Gd; k ++) {
+    for (INT i = Gd; i < shape[0] - Gd; i ++) {
+        for (INT j = Gd; j < shape[1] - Gd; j ++) {
+            for (INT k = Gd; k < shape[2] - Gd; k ++) {
                 INT idx = IDX(i, j, k, shape);
-                for (INT m = 0; m < a.shape.y; m ++) {
+                for (INT m = 0; m < a.shape[1]; m ++) {
                     printf("%12lf ", a(idx, m));
                 }
                 printf("= %12lf\n", b(idx));
@@ -42,9 +42,9 @@ void print_eq(Matrix<REAL> &a, Matrix<REAL> &b, INT3 shape) {
 }
 
 void print_result(Matrix<REAL> &x, Matrix<REAL> &r, INT3 shape) {
-    for (INT i = Gd; i < shape.x - Gd; i ++) {
-        for (INT j = Gd; j < shape.y - Gd; j ++) {
-            for (INT k = Gd; k < shape.z - Gd; k ++) {
+    for (INT i = Gd; i < shape[0] - Gd; i ++) {
+        for (INT j = Gd; j < shape[1] - Gd; j ++) {
+            for (INT k = Gd; k < shape[2] - Gd; k ++) {
                 INT idx = IDX(i, j, k, shape);
                 printf("%12.4lf %12.4lf\n", x(idx), r(idx));
             }
@@ -61,8 +61,8 @@ INT dim_division(INT dim_size, INT mpi_size, INT mpi_rank) {
 }
 
 void print_xy_slice(Matrix<REAL> &x, INT3 domain_shape, INT slice_at_z) {
-    for (INT j = domain_shape.y - 1; j >= 0; j --) {
-        for (INT i = 0; i < domain_shape.x; i ++) {
+    for (INT j = domain_shape[1] - 1; j >= 0; j --) {
+        for (INT i = 0; i < domain_shape[0]; i ++) {
             REAL value = x(IDX(i, j, slice_at_z, domain_shape));
             if (value == 0) {
                 printf(".   ", value);
@@ -119,7 +119,7 @@ int main(int argc, char **argv) {
     CPM_GetSize(MPI_COMM_WORLD, cpm.size);
     cpm.shape = {cpm.size, 1, 1};
     cpm.initNeighbour();
-    printf("%d(%u %u %u): E%2d W%2d N%2d S%2d T%2d B%2d\n", cpm.rank, cpm.idx.x, cpm.idx.y, cpm.idx.z, cpm.neighbour[0], cpm.neighbour[1], cpm.neighbour[2], cpm.neighbour[3], cpm.neighbour[4], cpm.neighbour[5]);
+    printf("%d(%u %u %u): E%2d W%2d N%2d S%2d T%2d B%2d\n", cpm.rank, cpm.idx[0], cpm.idx[1], cpm.idx[2], cpm.neighbour[0], cpm.neighbour[1], cpm.neighbour[2], cpm.neighbour[3], cpm.neighbour[4], cpm.neighbour[5]);
     fflush(stdout);
     CPM_Barrier(MPI_COMM_WORLD);
 
@@ -130,22 +130,22 @@ int main(int argc, char **argv) {
     CPM_Barrier(MPI_COMM_WORLD);
 
     INT ox = 0, oy = 0, oz = 0;
-    for (INT i = 0; i < cpm.idx.x; i ++) {
-        ox += dim_division(Nx, cpm.shape.x, i);
+    for (INT i = 0; i < cpm.idx[0]; i ++) {
+        ox += dim_division(Nx, cpm.shape[0], i);
     }
-    for (INT j = 0; j < cpm.idx.y; j ++) {
-        oy += dim_division(Ny, cpm.shape.y, j);
+    for (INT j = 0; j < cpm.idx[1]; j ++) {
+        oy += dim_division(Ny, cpm.shape[1], j);
     }
-    for (INT k = 0; k < cpm.idx.z; k ++) {
-        oz += dim_division(Nz, cpm.shape.z, k);
+    for (INT k = 0; k < cpm.idx[2]; k ++) {
+        oz += dim_division(Nz, cpm.shape[2], k);
     }
     Region process(
-        INT3{dim_division(Nx, cpm.shape.x, cpm.idx.x) + Gdx2, dim_division(Ny, cpm.shape.y, cpm.idx.y) + Gdx2, dim_division(Nz, cpm.shape.z, cpm.idx.z) + Gdx2},
+        INT3{dim_division(Nx, cpm.shape[0], cpm.idx[0]) + Gdx2, dim_division(Ny, cpm.shape[1], cpm.idx[1]) + Gdx2, dim_division(Nz, cpm.shape[2], cpm.idx[2]) + Gdx2},
         INT3{ox, oy, oz}
     );
     for (INT i = 0; i < cpm.size; i ++) {
         if (i == cpm.rank) {
-            printf("%-2d(%-2u %-2u %-2u): (%-3u %-3u %-3u) (%-3u %-3u %-3u)\n", cpm.rank, cpm.idx.x, cpm.idx.y, cpm.idx.z, process.shape.x, process.shape.y, process.shape.z, process.offset.x, process.offset.y, process.offset.z);
+            printf("%-2d(%-2u %-2u %-2u): (%-3u %-3u %-3u) (%-3u %-3u %-3u)\n", cpm.rank, cpm.idx[0], cpm.idx[1], cpm.idx[2], process.shape[0], process.shape[1], process.shape[2], process.offset[0], process.offset[1], process.offset[2]);
             fflush(stdout);
         }
         CPM_Barrier(MPI_COMM_WORLD);
@@ -156,12 +156,12 @@ int main(int argc, char **argv) {
     t.alloc(process.shape, 1, HDCType::Device, "t");
     b.alloc(process.shape, 1, HDCType::Host  , "b");
     r.alloc(process.shape, 1, HDCType::Device, "r");
-    for (INT i = Gd; i < process.shape.x - Gd; i ++) {
-        for (INT j = Gd; j < process.shape.y - Gd; j ++) {
-            for (INT k = Gd; k < process.shape.z - Gd; k ++) {
-                INT gi = i + process.offset.x;
-                INT gj = j + process.offset.y;
-                INT gk = k + process.offset.z;
+    for (INT i = Gd; i < process.shape[0] - Gd; i ++) {
+        for (INT j = Gd; j < process.shape[1] - Gd; j ++) {
+            for (INT k = Gd; k < process.shape[2] - Gd; k ++) {
+                INT gi = i + process.offset[0];
+                INT gj = j + process.offset[1];
+                INT gk = k + process.offset[2];
                 INT idx = IDX(i, j, k, process.shape);
                 INT gidx = IDX(gi, gj, gk, global.shape);
                 for (INT m = 0; m < 7; m ++) {
@@ -184,8 +184,8 @@ int main(int argc, char **argv) {
 
     for (INT i = 0; i < cpm.size; i ++) {
         if (cpm.rank == i) {
-            printf("%d(%u %u %u) printing...\n", cpm.rank, cpm.idx.x, cpm.idx.y, cpm.idx.z);
-            print_xy_slice(region, process.shape, process.shape.z / 2);
+            printf("%d(%u %u %u) printing...\n", cpm.rank, cpm.idx[0], cpm.idx[1], cpm.idx[2]);
+            print_xy_slice(region, process.shape, process.shape[2] / 2);
             printf("\n");
             fflush(stdout);
         }
@@ -203,7 +203,7 @@ int main(int argc, char **argv) {
     b.sync(MCpType::Dev2Hst);
     for (INT i = 0; i < cpm.size; i ++) {
         if (cpm.rank == i) {
-            printf("%d(%u %u %u) printing...\n", cpm.rank, cpm.idx.x, cpm.idx.y, cpm.idx.z);
+            printf("%d(%u %u %u) printing...\n", cpm.rank, cpm.idx[0], cpm.idx[1], cpm.idx[2]);
             print_eq(a, b, process.shape);
             printf("\n");
             fflush(stdout);
@@ -220,7 +220,7 @@ int main(int argc, char **argv) {
     r.sync(MCpType::Dev2Hst);
     for (INT i = 0; i < cpm.size; i ++) {
         if (i == cpm.rank) {
-            printf("%d(%u %u %u) printing...\n", cpm.rank, cpm.idx.x, cpm.idx.y, cpm.idx.z);
+            printf("%d(%u %u %u) printing...\n", cpm.rank, cpm.idx[0], cpm.idx[1], cpm.idx[2]);
             print_result(t, r, process.shape);
             printf("\n");
             fflush(stdout);

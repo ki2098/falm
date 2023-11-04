@@ -62,32 +62,32 @@ public:
     void init_neighbour() {
         int __rank = rank;
         int i, j, k;
-        k = __rank / (shape.x * shape.y);
-        __rank = __rank % (shape.x * shape.y);
-        j = __rank / shape.x;
-        i = __rank % shape.x;
-        idx.x = i;
-        idx.y = j;
-        idx.z = k;
+        k = __rank / (shape[0] * shape[1]);
+        __rank = __rank % (shape[0] * shape[1]);
+        j = __rank / shape[0];
+        i = __rank % shape[0];
+        idx[0] = i;
+        idx[1] = j;
+        idx[2] = k;
         neighbour[0] = IDX(i + 1, j, k, shape);
         neighbour[1] = IDX(i - 1, j, k, shape);
         neighbour[2] = IDX(i, j + 1, k, shape);
         neighbour[3] = IDX(i, j - 1, k, shape);
         neighbour[4] = IDX(i, j, k + 1, shape);
         neighbour[5] = IDX(i, j, k - 1, shape);
-        if (i == shape.x - 1) {
+        if (i == shape[0] - 1) {
             neighbour[0] = - 1;
         }
         if (i == 0) {
             neighbour[1] = - 1;
         }
-        if (j == shape.y - 1) {
+        if (j == shape[1] - 1) {
             neighbour[2] = - 1;
         }
         if (j == 0) {
             neighbour[3] = - 1;
         }
-        if (k == shape.z - 1) {
+        if (k == shape[2] - 1) {
             neighbour[4] = - 1;
         }
         if (k == 0) {
@@ -103,43 +103,43 @@ public:
 
     void setRegions(uint3 &inner_shape, uint3 &inner_offset, uint3 *boundary_shape, uint3 *boundary_offset, unsigned int thick, Region &pdm) {
         inner_shape = {
-            pdm.shape.x - Gdx2,
-            pdm.shape.y - Gdx2,
-            pdm.shape.z - Gdx2
+            pdm.shape[0] - Gdx2,
+            pdm.shape[1] - Gdx2,
+            pdm.shape[2] - Gdx2
         };
         inner_offset = {Gd, Gd, Gd};
         if (neighbour[0] >= 0) {
-            boundary_shape[0]  = {thick, inner_shape.y, inner_shape.z};
-            boundary_offset[0] = {inner_offset.x + inner_shape.x - thick, inner_offset.y, inner_offset.z};
-            inner_shape.x -= thick;
+            boundary_shape[0]  = {thick, inner_shape[1], inner_shape[2]};
+            boundary_offset[0] = {inner_offset[0] + inner_shape[0] - thick, inner_offset[1], inner_offset[2]};
+            inner_shape[0] -= thick;
         }
         if (neighbour[1] >= 0) {
-            boundary_shape[1]  = {thick, inner_shape.y, inner_shape.z};
-            boundary_offset[1] = {inner_offset.x, inner_offset.y, inner_offset.z};
-            inner_shape.x  -= thick;
-            inner_offset.x += thick; 
+            boundary_shape[1]  = {thick, inner_shape[1], inner_shape[2]};
+            boundary_offset[1] = {inner_offset[0], inner_offset[1], inner_offset[2]};
+            inner_shape[0]  -= thick;
+            inner_offset[0] += thick; 
         }
         if (neighbour[2] >= 0) {
-            boundary_shape[2]  = {inner_shape.x, thick, inner_shape.z};
-            boundary_offset[2] = {inner_offset.x, inner_offset.y + inner_shape.y - thick, inner_offset.z};
-            inner_shape.y -= thick;
+            boundary_shape[2]  = {inner_shape[0], thick, inner_shape[2]};
+            boundary_offset[2] = {inner_offset[0], inner_offset[1] + inner_shape[1] - thick, inner_offset[2]};
+            inner_shape[1] -= thick;
         }
         if (neighbour[3] >= 0) {
-            boundary_shape[3]  = {inner_shape.x, thick, inner_shape.z};
-            boundary_offset[3] = {inner_offset.x, inner_offset.y, inner_offset.z};
-            inner_shape.y  -= thick;
-            inner_offset.y += thick;
+            boundary_shape[3]  = {inner_shape[0], thick, inner_shape[2]};
+            boundary_offset[3] = {inner_offset[0], inner_offset[1], inner_offset[2]};
+            inner_shape[1]  -= thick;
+            inner_offset[1] += thick;
         }
         if (neighbour[4] >= 0) {
-            boundary_shape[4]  = {inner_shape.x, inner_shape.y, thick};
-            boundary_offset[4] = {inner_offset.x, inner_offset.y, inner_offset.z + inner_shape.z - thick};
-            inner_shape.z -= thick;
+            boundary_shape[4]  = {inner_shape[0], inner_shape[1], thick};
+            boundary_offset[4] = {inner_offset[0], inner_offset[1], inner_offset[2] + inner_shape[2] - thick};
+            inner_shape[2] -= thick;
         }
         if (neighbour[5] >= 0) {
-            boundary_shape[5]  = {inner_shape.x, inner_shape.y, thick};
-            boundary_offset[5] = {inner_offset.x, inner_offset.y, inner_offset.z};
-            inner_shape.z  -= thick;
-            inner_offset.z += thick;
+            boundary_shape[5]  = {inner_shape[0], inner_shape[1], thick};
+            boundary_offset[5] = {inner_offset[0], inner_offset[1], inner_offset[2]};
+            inner_shape[2]  -= thick;
+            inner_offset[2] += thick;
         }
     }
 };

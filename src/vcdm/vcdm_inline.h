@@ -10,10 +10,10 @@ inline void VcdmDomain::write(FILE *file) {
     crdFileEndian = getEndian();
 
     fprintf(file, "Domain {\n");
-    fprintf(file, "  GlobalOrigin            = (%e, %e, %e)\n", globalOrigin.x  , globalOrigin.y  , globalOrigin.z  );
-    fprintf(file, "  GlobalRegion            = (%e, %e, %e)\n", globalRegion.x  , globalRegion.y  , globalRegion.z  );
-    fprintf(file, "  GlobalVoxel             = (%d, %d, %d)\n", globalVoxel.x   , globalVoxel.y   , globalVoxel.z   );
-    fprintf(file, "  GlobalDivision          = (%d, %d, %d)\n", globalDivision.x, globalDivision.y, globalDivision.z);
+    fprintf(file, "  GlobalOrigin            = (%e, %e, %e)\n", globalOrigin[0]  , globalOrigin[1]  , globalOrigin[2]  );
+    fprintf(file, "  GlobalRegion            = (%e, %e, %e)\n", globalRegion[0]  , globalRegion[1]  , globalRegion[2]  );
+    fprintf(file, "  GlobalVoxel             = (%d, %d, %d)\n", globalVoxel[0]   , globalVoxel[1]   , globalVoxel[2]   );
+    fprintf(file, "  GlobalDivision          = (%d, %d, %d)\n", globalDivision[0], globalDivision[1], globalDivision[2]);
     fprintf(file, "  ActiveSubdomainFile     = \"%s\"\n", activeSubdomainFile.c_str());
     fprintf(file, "  CoordinateFile          = \"%s\"\n", crdFile.c_str());
     fprintf(file, "  CoordinateFileType      = \"binary\"\n");
@@ -44,9 +44,9 @@ inline void VcdmRank::write(FILE *file) {
     fprintf(file, "  Rank[@] {\n");
     fprintf(file, "    ID                    = %d\n", rank);
     fprintf(file, "    HostName              = \"%s\"\n", hostName.c_str());
-    fprintf(file, "    VoxelSize             = (%d, %d, %d)\n", voxelSize.x, voxelSize.y, voxelSize.z);
-    fprintf(file, "    HeadIndex             = (%d, %d, %d)\n", headIdx.x, headIdx.y, headIdx.z);
-    fprintf(file, "    TailIndex             = (%d, %d, %d)\n", tailIdx.x, tailIdx.y, tailIdx.z);
+    fprintf(file, "    VoxelSize             = (%d, %d, %d)\n", voxelSize[0], voxelSize[1], voxelSize[2]);
+    fprintf(file, "    HeadIndex             = (%d, %d, %d)\n", headIdx[0], headIdx[1], headIdx[2]);
+    fprintf(file, "    TailIndex             = (%d, %d, %d)\n", tailIdx[0], tailIdx[1], tailIdx[2]);
     fprintf(file, "  }\n");
 }
 
@@ -244,17 +244,17 @@ void VCDM<T>::writeXYZ(T *xyz, int gc, int rank, int step, IdxType idxtype) {
     FILE *file = fopen(fname.c_str(), "wb");
 
     int3 size = dfiProc[rank].voxelSize;
-    size.x += 2 * gc;
-    size.y += 2 * gc;
-    size.z += 2 * gc;
-    int sz3d_gc = size.x * size.y * size.z;
+    size[0] += 2 * gc;
+    size[1] += 2 * gc;
+    size[2] += 2 * gc;
+    int sz3d_gc = size[0] * size[1] * size[2];
     int rsz;
 
     rsz = sizeof(int) * 3;
     fwrite(&rsz, sizeof(int), 1, file);
-    fwrite(&size.x, sizeof(int), 1, file);
-    fwrite(&size.y, sizeof(int), 1, file);
-    fwrite(&size.z, sizeof(int), 1, file);
+    fwrite(&size[0], sizeof(int), 1, file);
+    fwrite(&size[1], sizeof(int), 1, file);
+    fwrite(&size[2], sizeof(int), 1, file);
     fwrite(&rsz, sizeof(int), 1, file);
 
     rsz = sz3d_gc * 3 * sizeof(T);
@@ -263,9 +263,9 @@ void VCDM<T>::writeXYZ(T *xyz, int gc, int rank, int step, IdxType idxtype) {
         fwrite(xyz, sizeof(T), sz3d_gc * 3, file);
     } else if (idxtype == IdxType::NIJK) {
         for (int n = 0; n < 3; n ++) {
-        for (int k = 0; k < size.z; k ++) {
-        for (int j = 0; j < size.y; j ++) {
-        for (int i = 0; i < size.x; i ++) {
+        for (int k = 0; k < size[2]; k ++) {
+        for (int j = 0; j < size[1]; j ++) {
+        for (int i = 0; i < size[0]; i ++) {
             fwrite(&xyz[NIJK_IDX(n, i, j, k, size, 3)], sizeof(T), 1, file);
         }}}}
     }
@@ -288,17 +288,17 @@ void VCDM<T>::writeFunc(T *data, int gc, int dim, int rank, int step, IdxType id
     FILE *file = fopen(fname.c_str(), "wb");
 
     int3 size = dfiProc[rank].voxelSize;
-    size.x += 2 * gc;
-    size.y += 2 * gc;
-    size.z += 2 * gc;
-    int sz3d_gc = size.x * size.y * size.z;
+    size[0] += 2 * gc;
+    size[1] += 2 * gc;
+    size[2] += 2 * gc;
+    int sz3d_gc = size[0] * size[1] * size[2];
     int rsz;
 
     rsz = sizeof(int) * 4;
     fwrite(&rsz, sizeof(int), 1, file);
-    fwrite(&size.x, sizeof(int), 1, file);
-    fwrite(&size.y, sizeof(int), 1, file);
-    fwrite(&size.z, sizeof(int), 1, file);
+    fwrite(&size[0], sizeof(int), 1, file);
+    fwrite(&size[1], sizeof(int), 1, file);
+    fwrite(&size[2], sizeof(int), 1, file);
     fwrite(&dim, sizeof(int), 1, file);
     fwrite(&rsz, sizeof(int), 1, file);
 
@@ -308,9 +308,9 @@ void VCDM<T>::writeFunc(T *data, int gc, int dim, int rank, int step, IdxType id
         fwrite(data, sizeof(T), sz3d_gc * dim, file);
     } else {
         for (int n = 0; n < dim; n ++) {
-        for (int k = 0; k < size.z; k ++) {
-        for (int j = 0; j < size.y; j ++) {
-        for (int i = 0; i < size.x; i ++) {
+        for (int k = 0; k < size[2]; k ++) {
+        for (int j = 0; j < size[1]; j ++) {
+        for (int i = 0; i < size[0]; i ++) {
             fwrite(&data[NIJK_IDX(n, i, j, k,size, dim)], sizeof(T), 1, file);
         }}}}
     }

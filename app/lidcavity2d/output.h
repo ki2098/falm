@@ -23,9 +23,9 @@ static void outputGridInfo(
     ja.sync(Falm::MCpType::Dev2Hst);
     FILE *file = fopen("grid.csv", "w");
     fprintf(file, "x,y,z,h1,h2,h3,k1,k2,k3,g1,g2,g3,ja\n");
-    for (Falm::INT k = 0; k < pdm.shape.z; k ++) {
-        for (Falm::INT j = 0; j < pdm.shape.y; j ++) {
-            for (Falm::INT i = 0; i < pdm.shape.x; i ++) {
+    for (Falm::INT k = 0; k < pdm.shape[2]; k ++) {
+        for (Falm::INT j = 0; j < pdm.shape[1]; j ++) {
+            for (Falm::INT i = 0; i < pdm.shape[0]; i ++) {
                 Falm::INT idx = Falm::IDX(i, j, k, pdm.shape);
                 Falm::REAL x0 =  x(idx, 0);
                 Falm::REAL x1 =  x(idx, 1);

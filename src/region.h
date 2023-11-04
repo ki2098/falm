@@ -11,19 +11,19 @@ struct Region {
     INT   size;
     Region() : shape(INT3{0, 0, 0}), offset(INT3{0, 0, 0}), size(0) {}
     Region(INT3 _shape, INT3 _offset) : shape(_shape), offset(_offset), size(PRODUCT3(_shape)) {}
-    Region(INT3 _shape, INT gc) : Region({_shape.x - gc*2, _shape.y - gc*2, _shape.z - gc*2}, {gc, gc, gc}) {}
-    // Region(const Region &omap, INT guide) : Region(INTx3{omap.shape.x - guide * 2, omap.shape.y - guide * 2, omap.shape.z - guide * 2}, INTx3{guide, guide, guide}) {}
+    Region(INT3 _shape, INT gc) : Region({_shape[0] - gc*2, _shape[1] - gc*2, _shape[2] - gc*2}, {gc, gc, gc}) {}
+    // Region(const Region &omap, INT guide) : Region(INTx3{omap.shape[0] - guide * 2, omap.shape[1] - guide * 2, omap.shape[2] - guide * 2}, INTx3{guide, guide, guide}) {}
 
     Region transform(INT3 shape_trans, INT3 offset_trans) {
         INT3 new_shape = {
-            shape.x + shape_trans.x,
-            shape.y + shape_trans.y,
-            shape.z + shape_trans.z
+            shape[0] + shape_trans[0],
+            shape[1] + shape_trans[1],
+            shape[2] + shape_trans[2]
         };
         INT3 new_offset = {
-            offset.x + offset_trans.x,
-            offset.y + offset_trans.y,
-            offset.z + offset_trans.z
+            offset[0] + offset_trans[0],
+            offset[1] + offset_trans[1],
+            offset[2] + offset_trans[2]
         };
         return Region(new_shape, new_offset);
     }

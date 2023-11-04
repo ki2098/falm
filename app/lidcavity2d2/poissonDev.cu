@@ -20,14 +20,14 @@ __global__ void kernel_makePoissonMatrix(
     const MatrixFrame<REAL> &a = *va, &g = *vg, &ja = *vja;
     INT i, j, k;
     GLOBAL_THREAD_IDX_3D(i, j, k);
-    if (i < map_shape.x && j < map_shape.y && k < map_shape.z) {
-        i += map_offset.x;
-        j += map_offset.y;
-        k += map_offset.z;
+    if (i < map_shape[0] && j < map_shape[1] && k < map_shape[2]) {
+        i += map_offset[0];
+        j += map_offset[1];
+        k += map_offset[2];
         INT gi, gj, gk;
-        gi = i + pdm_offset.x;
-        gj = j + pdm_offset.y;
-        gk = k + pdm_offset.z;
+        gi = i + pdm_offset[0];
+        gj = j + pdm_offset[1];
+        gk = k + pdm_offset[2];
         REAL ac, ae, aw, an, as;
         ac = ae = aw = an = as = 0.0;
         INT idxcc = IDX(i  , j  , k  , pdm_shape);
@@ -50,7 +50,7 @@ __global__ void kernel_makePoissonMatrix(
         REAL coefficient;
 
         coefficient = 0.5 * (gxcc + gxe1) / jacob;
-        if (gi < global_shape.x - gc - 1) {
+        if (gi < global_shape[0] - gc - 1) {
             ac -= coefficient;
             ae  = coefficient;
         }
@@ -62,7 +62,7 @@ __global__ void kernel_makePoissonMatrix(
         }
 
         coefficient = 0.5 * (gycc + gyn1) / jacob;
-        if (gj < global_shape.y - gc - 1) {
+        if (gj < global_shape[1] - gc - 1) {
             ac -= coefficient;
             an  = coefficient;
         }
@@ -92,9 +92,9 @@ void dev_makePoissonMatrix(
 ) {
     Region map(pdm.shape, gc);
     dim3 grid_dim(
-        (map.shape.x + block_dim.x - 1) / block_dim.x,
-        (map.shape.y + block_dim.y - 1) / block_dim.y,
-        (map.shape.z + block_dim.z - 1) / block_dim.z
+        (map.shape[0] + block_dim.x - 1) / block_dim.x,
+        (map.shape[1] + block_dim.y - 1) / block_dim.y,
+        (map.shape[2] + block_dim.z - 1) / block_dim.z
     );
     kernel_makePoissonMatrix<<<grid_dim, block_dim, 0, 0>>>(
         a.devptr,

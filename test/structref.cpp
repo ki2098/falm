@@ -17,11 +17,11 @@ void func(uintx3 *uptr, int n) {
 int main() {
     uintx3 u{0, 0, 0};
     func(u);
-    printf("%u %u %u\n", u.x, u.y, u.z);
+    printf("%u %u %u\n", u[0], u[1], u[2]);
     uintx3 ux[5];
     func(ux, 5);
     for (int i = 0; i < 5; i ++) {
-        printf("%u %u %u\n", ux[i].x, ux[i].y, ux[i].z);
+        printf("%u %u %u\n", ux[i][0], ux[i][1], ux[i][2]);
     }
 
     return 0;
