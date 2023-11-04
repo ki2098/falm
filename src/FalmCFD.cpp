@@ -17,47 +17,52 @@ void FalmCFD::FSPseudoU(
     STREAM       *stream
 ) {
     Region &pdm = cpm.pdm_list[cpm.rank];
-    CPMComm<REAL> ucpm(&cpm);
-    CPMComm<REAL> vcpm(&cpm);
-    CPMComm<REAL> wcpm(&cpm);
-    CPMComm<REAL> nutcpm(&cpm);
+    if (cpm.size == 1) {
+        Region  map(pdm.shape, cpm.gc);
+        FalmCFDDevCall::FSPseudoU(un, u, uu, ua, nut, kx, g, ja, ff, pdm, map, block_dim);
+    } else {
+        CPMComm<REAL> ucpm(&cpm);
+        CPMComm<REAL> vcpm(&cpm);
+        CPMComm<REAL> wcpm(&cpm);
+        CPMComm<REAL> nutcpm(&cpm);
 
-    ucpm.IExchange6Face(&u.dev(0,0), 2, 0, 0, stream);
-    vcpm.IExchange6Face(&u.dev(0,1), 2, 0, 1, stream);
-    wcpm.IExchange6Face(&u.dev(0,2), 2, 0, 2, stream);
-    nutcpm.IExchange6Face(&nut.dev(0), 1, 0, 3, stream);
+        ucpm.IExchange6Face(&u.dev(0,0), 2, 0, 0, stream);
+        vcpm.IExchange6Face(&u.dev(0,1), 2, 0, 1, stream);
+        wcpm.IExchange6Face(&u.dev(0,2), 2, 0, 2, stream);
+        nutcpm.IExchange6Face(&nut.dev(0), 1, 0, 3, stream);
 
-    INT3 inner_shape, inner_offset, boundary_shape[6], boundary_offset[6];
-    cpm.set6Region(inner_shape, inner_offset, boundary_shape, boundary_offset, 2, Region(pdm.shape, cpm.gc));
+        INT3 inner_shape, inner_offset, boundary_shape[6], boundary_offset[6];
+        cpm.set6Region(inner_shape, inner_offset, boundary_shape, boundary_offset, 2, Region(pdm.shape, cpm.gc));
 
 
-    FalmCFDDevCall::FSPseudoU(un, u, uu, ua, nut, kx, g, ja, ff, pdm, Region(inner_shape, inner_offset), block_dim);
+        FalmCFDDevCall::FSPseudoU(un, u, uu, ua, nut, kx, g, ja, ff, pdm, Region(inner_shape, inner_offset), block_dim);
 
-    ucpm.Wait6Face();
-    vcpm.Wait6Face();
-    wcpm.Wait6Face();
-    nutcpm.Wait6Face();
+        ucpm.Wait6Face();
+        vcpm.Wait6Face();
+        wcpm.Wait6Face();
+        nutcpm.Wait6Face();
 
-    ucpm.PostExchange6Face();
-    vcpm.PostExchange6Face();
-    wcpm.PostExchange6Face();
-    nutcpm.PostExchange6Face();
+        ucpm.PostExchange6Face();
+        vcpm.PostExchange6Face();
+        wcpm.PostExchange6Face();
+        nutcpm.PostExchange6Face();
 
-    for (INT fid = 0; fid < 6; fid ++) {
-        if (cpm.validNeighbour(fid)) {
-            dim3 __block(
-                (fid / 2 == 0)? 1U : 8U,
-                (fid / 2 == 1)? 1U : 8U,
-                (fid / 2 == 2)? 1U : 8U
-            );
-            STREAM fstream = (stream)? stream[fid] : (STREAM)0;
-            FalmCFDDevCall::FSPseudoU(un, u, uu, ua, nut, kx, g, ja, ff, pdm, Region(boundary_shape[fid], boundary_offset[fid]), __block, fstream);
-        }
-    }
-    if (stream) {
         for (INT fid = 0; fid < 6; fid ++) {
             if (cpm.validNeighbour(fid)) {
-                falmWaitStream(stream[fid]);
+                dim3 __block(
+                    (fid / 2 == 0)? 1U : 8U,
+                    (fid / 2 == 1)? 1U : 8U,
+                    (fid / 2 == 2)? 1U : 8U
+                );
+                STREAM fstream = (stream)? stream[fid] : (STREAM)0;
+                FalmCFDDevCall::FSPseudoU(un, u, uu, ua, nut, kx, g, ja, ff, pdm, Region(boundary_shape[fid], boundary_offset[fid]), __block, fstream);
+            }
+        }
+        if (stream) {
+            for (INT fid = 0; fid < 6; fid ++) {
+                if (cpm.validNeighbour(fid)) {
+                    falmWaitStream(stream[fid]);
+                }
             }
         }
     }
@@ -74,42 +79,48 @@ void FalmCFD::UtoUU(
     STREAM       *stream
 ) {
     Region &pdm = cpm.pdm_list[cpm.rank];
-    INT3 inner_shape, inner_offset, boundary_shape[6], boundary_offset[6];
-    cpm.set6Region(inner_shape, inner_offset, boundary_shape, boundary_offset, 1, Region(pdm.shape, cpm.gc - 1));
     Matrix<REAL> uc(pdm.shape, 3, HDCType::Device, "contra u at grid");
+    if (cpm.size == 1) {
+        Region map(pdm.shape, cpm.gc - 1);
+        FalmCFDDevCall::UtoCU(u, uc, kx, ja, pdm, map, block_dim);
+    } else {
+        Region &pdm = cpm.pdm_list[cpm.rank];
+        INT3 inner_shape, inner_offset, boundary_shape[6], boundary_offset[6];
+        cpm.set6Region(inner_shape, inner_offset, boundary_shape, boundary_offset, 1, Region(pdm.shape, cpm.gc - 1));
 
-    CPMComm<REAL> ucpm(&cpm);
-    CPMComm<REAL> vcpm(&cpm);
-    CPMComm<REAL> wcpm(&cpm);
+        CPMComm<REAL> ucpm(&cpm);
+        CPMComm<REAL> vcpm(&cpm);
+        CPMComm<REAL> wcpm(&cpm);
 
-    ucpm.IExchange6Face(&u.dev(0,0), 1, 0, 0, stream);
-    vcpm.IExchange6Face(&u.dev(0,1), 1, 0, 1, stream);
-    wcpm.IExchange6Face(&u.dev(0,2), 1, 0, 2, stream);
+        ucpm.IExchange6Face(&u.dev(0,0), 1, 0, 0, stream);
+        vcpm.IExchange6Face(&u.dev(0,1), 1, 0, 1, stream);
+        wcpm.IExchange6Face(&u.dev(0,2), 1, 0, 2, stream);
 
-    FalmCFDDevCall::UtoCU(u, uc, kx, ja, pdm, Region(inner_shape, inner_offset), block_dim);
+        FalmCFDDevCall::UtoCU(u, uc, kx, ja, pdm, Region(inner_shape, inner_offset), block_dim);
 
-    ucpm.Wait6Face();
-    vcpm.Wait6Face();
-    wcpm.Wait6Face();
+        ucpm.Wait6Face();
+        vcpm.Wait6Face();
+        wcpm.Wait6Face();
 
-    ucpm.PostExchange6Face();
-    vcpm.PostExchange6Face();
-    wcpm.PostExchange6Face();
-    for (INT fid = 0; fid < 6; fid ++) {
-        if (cpm.validNeighbour(fid)) {
-            dim3 __block(
-                (fid / 2 == 0)? 1U : 8U,
-                (fid / 2 == 1)? 1U : 8U,
-                (fid / 2 == 2)? 1U : 8U
-            );
-            STREAM fstream = (stream)? stream[fid] : (STREAM)0;
-            FalmCFDDevCall::UtoCU(u, uc, kx, ja, pdm, Region(boundary_shape[fid], boundary_offset[fid]), __block, fstream);
-        }
-    }
-    if (stream) {
+        ucpm.PostExchange6Face();
+        vcpm.PostExchange6Face();
+        wcpm.PostExchange6Face();
         for (INT fid = 0; fid < 6; fid ++) {
             if (cpm.validNeighbour(fid)) {
-                falmWaitStream(stream[fid]);
+                dim3 __block(
+                    (fid / 2 == 0)? 1U : 8U,
+                    (fid / 2 == 1)? 1U : 8U,
+                    (fid / 2 == 2)? 1U : 8U
+                );
+                STREAM fstream = (stream)? stream[fid] : (STREAM)0;
+                FalmCFDDevCall::UtoCU(u, uc, kx, ja, pdm, Region(boundary_shape[fid], boundary_offset[fid]), __block, fstream);
+            }
+        }
+        if (stream) {
+            for (INT fid = 0; fid < 6; fid ++) {
+                if (cpm.validNeighbour(fid)) {
+                    falmWaitStream(stream[fid]);
+                }
             }
         }
     }
@@ -139,33 +150,37 @@ void FalmCFD::ProjectP(
     STREAM       *stream
 ) {
     Region &pdm = cpm.pdm_list[cpm.rank];
-    INT3 inner_shape, inner_offset, boundary_shape[6], boundary_offset[6];
-    cpm.set6Region(inner_shape, inner_offset, boundary_shape, boundary_offset, 1, Region(pdm.shape, cpm.gc));
+    if (cpm.size == 1) {
+        Region map(pdm.shape, cpm.gc);
+        FalmCFDDevCall::ProjectPGrid(u, ua, p, kx, pdm, map, block_dim);
+    } else {
+        INT3 inner_shape, inner_offset, boundary_shape[6], boundary_offset[6];
+        cpm.set6Region(inner_shape, inner_offset, boundary_shape, boundary_offset, 1, Region(pdm.shape, cpm.gc));
 
-    CPMComm<REAL> pcpm(&cpm);
+        CPMComm<REAL> pcpm(&cpm);
+        pcpm.IExchange6Face(p.dev.ptr, 1, 0, 0, stream);
 
-    pcpm.IExchange6Face(p.dev.ptr, 1, 0, 0, stream);
+        FalmCFDDevCall::ProjectPGrid(u, ua, p, kx, pdm, Region(inner_shape, inner_offset), block_dim);
 
-    FalmCFDDevCall::ProjectPGrid(u, ua, p, kx, pdm, Region(inner_shape, inner_offset), block_dim);
+        pcpm.Wait6Face();
+        pcpm.PostExchange6Face();
 
-    pcpm.Wait6Face();
-    pcpm.PostExchange6Face();
-
-    for (INT fid = 0; fid < 6; fid ++) {
-        if (cpm.validNeighbour(fid)) {
-            dim3 __block(
-                (fid / 2 == 0)? 1U : 8U,
-                (fid / 2 == 1)? 1U : 8U,
-                (fid / 2 == 2)? 1U : 8U
-            );
-            STREAM fstream = (stream)? stream[fid] : (STREAM)0;
-            FalmCFDDevCall::ProjectPGrid(u, ua, p, kx, pdm, Region(boundary_shape[fid], boundary_offset[fid]), __block, fstream);
-        }
-    }
-    if (stream) {
         for (INT fid = 0; fid < 6; fid ++) {
             if (cpm.validNeighbour(fid)) {
-                falmWaitStream(stream[fid]);
+                dim3 __block(
+                    (fid / 2 == 0)? 1U : 8U,
+                    (fid / 2 == 1)? 1U : 8U,
+                    (fid / 2 == 2)? 1U : 8U
+                );
+                STREAM fstream = (stream)? stream[fid] : (STREAM)0;
+                FalmCFDDevCall::ProjectPGrid(u, ua, p, kx, pdm, Region(boundary_shape[fid], boundary_offset[fid]), __block, fstream);
+            }
+        }
+        if (stream) {
+            for (INT fid = 0; fid < 6; fid ++) {
+                if (cpm.validNeighbour(fid)) {
+                    falmWaitStream(stream[fid]);
+                }
             }
         }
     }
@@ -192,46 +207,51 @@ void FalmCFD::SGS(
     dim3          block_dim,
     STREAM       *stream
 ) {
-    Region &pdm = cpm.pdm_list[cpm.rank];
     if (SGSModel == SGSType::Empty) {
         return;
     }
-    INT3 inner_shape, inner_offset, boundary_shape[6], boundary_offset[6];
-    cpm.set6Region(inner_shape, inner_offset, boundary_shape, boundary_offset, 1, Region(pdm.shape, cpm.gc));
+    Region &pdm = cpm.pdm_list[cpm.rank];
+    if (cpm.size == 1) {
+        Region map(pdm.shape, cpm.gc);
+        FalmCFDDevCall::SGS(u, nut, x, kx, ja, pdm, map, block_dim);
+    } else {
+        INT3 inner_shape, inner_offset, boundary_shape[6], boundary_offset[6];
+        cpm.set6Region(inner_shape, inner_offset, boundary_shape, boundary_offset, 1, Region(pdm.shape, cpm.gc));
 
-    CPMComm<REAL> ucpm;
-    CPMComm<REAL> vcpm;
-    CPMComm<REAL> wcpm;
+        CPMComm<REAL> ucpm;
+        CPMComm<REAL> vcpm;
+        CPMComm<REAL> wcpm;
 
-    ucpm.IExchange6Face(&u.dev(0, 0), 1, 0, 0, stream);
-    vcpm.IExchange6Face(&u.dev(0, 1), 1, 0, 1, stream);
-    wcpm.IExchange6Face(&u.dev(0, 2), 1, 0, 2, stream);
+        ucpm.IExchange6Face(&u.dev(0, 0), 1, 0, 0, stream);
+        vcpm.IExchange6Face(&u.dev(0, 1), 1, 0, 1, stream);
+        wcpm.IExchange6Face(&u.dev(0, 2), 1, 0, 2, stream);
 
-    FalmCFDDevCall::SGS(u, nut, x, kx, ja, pdm, Region(inner_shape, inner_offset), block_dim);
+        FalmCFDDevCall::SGS(u, nut, x, kx, ja, pdm, Region(inner_shape, inner_offset), block_dim);
 
-    ucpm.Wait6Face();
-    vcpm.Wait6Face();
-    wcpm.Wait6Face();
+        ucpm.Wait6Face();
+        vcpm.Wait6Face();
+        wcpm.Wait6Face();
 
-    ucpm.PostExchange6Face();
-    vcpm.PostExchange6Face();
-    wcpm.PostExchange6Face();
+        ucpm.PostExchange6Face();
+        vcpm.PostExchange6Face();
+        wcpm.PostExchange6Face();
 
-    for (INT fid = 0; fid < 6; fid ++) {
-        if (cpm.validNeighbour(fid)) {
-            dim3 __block(
-                (fid / 2 == 0)? 1U : 8U,
-                (fid / 2 == 1)? 1U : 8U,
-                (fid / 2 == 2)? 1U : 8U
-            );
-            STREAM fstream = (stream)? stream[fid] : (STREAM)0;
-            FalmCFDDevCall::SGS(u, nut, x, kx, ja, pdm, Region(boundary_shape[fid], boundary_offset[fid]), __block, fstream);
-        }
-    }
-    if (stream) {
         for (INT fid = 0; fid < 6; fid ++) {
             if (cpm.validNeighbour(fid)) {
-                falmWaitStream(stream[fid]);
+                dim3 __block(
+                    (fid / 2 == 0)? 1U : 8U,
+                    (fid / 2 == 1)? 1U : 8U,
+                    (fid / 2 == 2)? 1U : 8U
+                );
+                STREAM fstream = (stream)? stream[fid] : (STREAM)0;
+                FalmCFDDevCall::SGS(u, nut, x, kx, ja, pdm, Region(boundary_shape[fid], boundary_offset[fid]), __block, fstream);
+            }
+        }
+        if (stream) {
+            for (INT fid = 0; fid < 6; fid ++) {
+                if (cpm.validNeighbour(fid)) {
+                    falmWaitStream(stream[fid]);
+                }
             }
         }
     }

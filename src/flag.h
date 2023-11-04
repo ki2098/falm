@@ -28,6 +28,8 @@ public:
     static const INT Red   = 1;
 };
 
+enum class StencilMatrix {Empty, D3P7, D3P13, D2P5, D2P9, D1P3, D1P5};
+
 }
 
 #endif

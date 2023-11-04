@@ -62,16 +62,16 @@ void plt3d_output(int step, int rank, REAL dt, Vcdm::VCDM<float> &vcdm) {
     }
     vcdm.writeFileData(&uvw(0, 0), cpm.gc, 4, rank, step, Vcdm::IdxType::IJKN);
     dim3 bdim(8, 8, 1);
-    double umax = MV::MatColMax(u, 0, cpm, bdim);
-    double vmax = MV::MatColMax(u, 1, cpm, bdim);
-    double wmax = MV::MatColMax(u, 2, cpm, bdim);
+    double umax = FalmMV::MatColMax(u, 0, cpm, bdim);
+    double vmax = FalmMV::MatColMax(u, 1, cpm, bdim);
+    double wmax = FalmMV::MatColMax(u, 2, cpm, bdim);
     // double _max = L2Dev_VecMax(u, cpm, bdim);
-    double pmax = MV::MatColMax(p, 0, cpm, bdim);
-    double umin = MV::MatColMin(u, 0, cpm, bdim);
-    double vmin = MV::MatColMin(u, 1, cpm, bdim);
-    double wmin = MV::MatColMin(u, 2, cpm, bdim);
+    double pmax = FalmMV::MatColMax(p, 0, cpm, bdim);
+    double umin = FalmMV::MatColMin(u, 0, cpm, bdim);
+    double vmin = FalmMV::MatColMin(u, 1, cpm, bdim);
+    double wmin = FalmMV::MatColMin(u, 2, cpm, bdim);
     // double _min = L2Dev_VecMin(u, cpm, bdim);
-    double pmin = MV::MatColMin(p, 0, cpm, bdim);
+    double pmin = FalmMV::MatColMin(p, 0, cpm, bdim);
     Vcdm::VcdmSlice slice;
     slice.step = step;
     slice.time = step * dt;
@@ -124,7 +124,7 @@ REAL main_loop(FalmCFD &cfd, FalmEq &eqsolver, CPMBase &cpm, dim3 block_dim, STR
 
     cfd.Divergence(uu, dvr, ja, cpm, block_dim);
 
-    return MV::EuclideanNormSq(dvr, cpm, block_dim);
+    return FalmMV::EuclideanNormSq(dvr, cpm, block_dim);
 }
 
 int main(int argc, char **argv) {
@@ -136,13 +136,18 @@ int main(int argc, char **argv) {
     cpm.use_cuda_aware_mpi = true;
     CPM_GetRank(MPI_COMM_WORLD, mpi_rank);
     CPM_GetSize(MPI_COMM_WORLD, mpi_size);
-    cpm.initPartition(
-        {N, N, 1},
-        GuideCell,
-        mpi_rank,
-        mpi_size,
-        {atoi(argv[1]), atoi(argv[2]), 1}
-    );
+    if (argc < 3) {
+        assert(mpi_size == 1);
+        cpm.initPartition({N, N, 1}, GuideCell);
+    } else {
+        cpm.initPartition(
+            {N, N, 1},
+            GuideCell,
+            mpi_rank,
+            mpi_size,
+            {atoi(argv[1]), atoi(argv[2]), 1}
+        );
+    }
     Region &pdm = cpm.pdm_list[cpm.rank];
     Region &global = cpm.global;
 
@@ -152,12 +157,12 @@ int main(int argc, char **argv) {
 
     allocVars(pdm);
     setCoord(L, N, pdm, cpm.gc, x, h, kx, g, ja);
-    poisson_a.alloc(pdm.shape, 7, HDCType::Device);
+    poisson_a.alloc(pdm.shape, 7, HDCType::Device, StencilMatrix::D3P7);
     maxdiag = makePoissonMatrix(poisson_a, g, ja, cpm);
 
     printf("%lf\n", maxdiag);
 
-    for (int i = 0; i < cpm.size; i ++) {
+    /* for (int i = 0; i < cpm.size; i ++) {
         if (i == cpm.rank) {
             Matrix<REAL> &a = poisson_a;
             a.sync(MCpType::Dev2Hst);
@@ -172,7 +177,7 @@ int main(int argc, char **argv) {
             fflush(stdout);
         }
         CPM_Barrier(MPI_COMM_WORLD);
-    }
+    } */
 
     Vcdm::VCDM<float> vcdm;
     // setVcdm<REAL>(cpm, vcdm, Vcdm::doublex3{L, L, L/N});
@@ -220,7 +225,7 @@ int main(int argc, char **argv) {
     }
     vcdm.writeGridData(&xyz(0, 0), cpm.gc, cpm.rank, 0, Vcdm::IdxType::IJKN);
     
-    FalmCFD cfdsolver(7500, DT, AdvectionSchemeType::Upwind3, SGSType::Empty, 0.1);
+    FalmCFD cfdsolver(10000, DT, AdvectionSchemeType::Upwind3, SGSType::Empty, 0.1);
     FalmEq eqsolver(LSType::PBiCGStab, 10000, 1e-8, 1.2, LSType::SOR, 5, 1.5);
 
     if (cpm.rank == 0) {
@@ -234,7 +239,7 @@ int main(int argc, char **argv) {
     const INT __oIT = int(1.0/DT);
     
     plt3d_output(__it, cpm.rank, DT, vcdm);
-    field_output(__it, cpm.rank);
+    // field_output(__it, cpm.rank);
     while (__it < __IT) {
         REAL dvr_norm = sqrt(main_loop(cfdsolver, eqsolver, cpm, dim3(8, 8, 1), nullptr)) / ginner.size;
         __t += DT;

@@ -16,8 +16,8 @@ static Falm::REAL makePoissonMatrix(
     Falm::Region &global = cpm.global;
     Falm::Region &pdm = cpm.pdm_list[cpm.rank];
     dev_makePoissonMatrix(a, g, ja, global, pdm, cpm.gc, block_dim);
-    Falm::REAL maxdiag = Falm::MV::MaxDiag(a, cpm, block_dim);
-    Falm::MV::ScaleMatrix(a, 1.0 / maxdiag, block_dim);
+    Falm::REAL maxdiag = Falm::FalmMV::MaxDiag(a, cpm, block_dim);
+    Falm::FalmMV::ScaleMatrix(a, 1.0 / maxdiag, block_dim);
     return maxdiag;
 }
 

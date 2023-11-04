@@ -41,33 +41,38 @@ namespace Falm {
 
 void FalmEq::Res(Matrix<REAL> &a, Matrix<REAL> &x, Matrix<REAL> &b, Matrix<REAL> &r, CPMBase &cpm, dim3 block_dim, STREAM *stream) {
     Region &pdm = cpm.pdm_list[cpm.rank];
-    CPMComm<REAL> cpmop(&cpm);
-    cpmop.IExchange6Face(x.dev.ptr, 1, 0, 0);
-    INT3 inner_shape, inner_offset, boundary_shape[6], boundary_offset[6];
-    cpm.set6Region(inner_shape, inner_offset, boundary_shape, boundary_offset, 1, Region(pdm.shape, cpm.gc));
+    if (cpm.size == 1) {
+        Region map(pdm.shape, cpm.gc);
+        FalmEqDevCall::Res(a, x, b, r, pdm, map, block_dim);
+    } else {
+        CPMComm<REAL> cpmop(&cpm);
+        cpmop.IExchange6Face(x.dev.ptr, 1, 0, 0);
+        INT3 inner_shape, inner_offset, boundary_shape[6], boundary_offset[6];
+        cpm.set6Region(inner_shape, inner_offset, boundary_shape, boundary_offset, 1, Region(pdm.shape, cpm.gc));
 
-    // Mapper inner_map(inner_shape, inner_offset);
-    FalmEqDevCall::Res(a, x, b, r, pdm, Region(inner_shape, inner_offset), block_dim);
+        // Mapper inner_map(inner_shape, inner_offset);
+        FalmEqDevCall::Res(a, x, b, r, pdm, Region(inner_shape, inner_offset), block_dim);
 
-    cpmop.Wait6Face();
-    cpmop.PostExchange6Face();
+        cpmop.Wait6Face();
+        cpmop.PostExchange6Face();
 
-    for (INT fid = 0; fid < 6; fid ++) {
-        if (cpm.neighbour[fid] >= 0) {
-            dim3 __block(
-                (fid / 2 == 0)? 1U : 8U,
-                (fid / 2 == 1)? 1U : 8U,
-                (fid / 2 == 2)? 1U : 8U
-            );
-            // Mapper map(boundary_shape[fid], boundary_offset[fid]);
-            STREAM fstream = (stream)? stream[fid] : (STREAM)0;
-            FalmEqDevCall::Res(a, x, b, r, pdm, Region(boundary_shape[fid], boundary_offset[fid]), __block, fstream);
-        }
-    }
-    if (stream) {
         for (INT fid = 0; fid < 6; fid ++) {
             if (cpm.neighbour[fid] >= 0) {
-                falmWaitStream(stream[fid]);
+                dim3 __block(
+                    (fid / 2 == 0)? 1U : 8U,
+                    (fid / 2 == 1)? 1U : 8U,
+                    (fid / 2 == 2)? 1U : 8U
+                );
+                // Mapper map(boundary_shape[fid], boundary_offset[fid]);
+                STREAM fstream = (stream)? stream[fid] : (STREAM)0;
+                FalmEqDevCall::Res(a, x, b, r, pdm, Region(boundary_shape[fid], boundary_offset[fid]), __block, fstream);
+            }
+        }
+        if (stream) {
+            for (INT fid = 0; fid < 6; fid ++) {
+                if (cpm.neighbour[fid] >= 0) {
+                    falmWaitStream(stream[fid]);
+                }
             }
         }
     }
@@ -75,227 +80,278 @@ void FalmEq::Res(Matrix<REAL> &a, Matrix<REAL> &x, Matrix<REAL> &b, Matrix<REAL>
 }
 
 void FalmEq::Jacobi(Matrix<REAL> &a, Matrix<REAL> &x, Matrix<REAL> &b, Matrix<REAL> &r, CPMBase &cpm, dim3 block_dim, STREAM *stream) {
-    Region &global = cpm.global;
+    
     Region &pdm = cpm.pdm_list[cpm.rank];
-    Region gmap(global.shape, cpm.gc);
-    CPMComm<REAL> cpmop(&cpm);
-    INT3 inner_shape, inner_offset, boundary_shape[6], boundary_offset[6];
-    cpm.set6Region(inner_shape, inner_offset, boundary_shape, boundary_offset, 1, Region(pdm.shape, cpm.gc));
+    
+    if (cpm.size == 1) {
+        Region map(pdm.shape, cpm.gc);
+        Matrix<REAL> xp(x.shape.x, x.shape.y, HDCType::Device, "Jacobi" + x.name + "Previous");
+        it = 0;
+        do {
+            xp.cpy(x, HDCType::Device);
+            JacobiSweep(a, x, xp, b, pdm, map, block_dim);
+            FalmEqDevCall::Res(a, x, b, r, pdm, map, block_dim);
+            err = sqrt(FalmMVDevCall::EuclideanNormSq(r, pdm, map, block_dim)) / map.size;
+            it ++;
+        } while (it < maxit && err > tol);
+        falmWaitStream();
+    } else {
+        Region &global = cpm.global;
+        Region gmap(global.shape, cpm.gc);
+    
+        CPMComm<REAL> cpmop(&cpm);
+        INT3 inner_shape, inner_offset, boundary_shape[6], boundary_offset[6];
+        cpm.set6Region(inner_shape, inner_offset, boundary_shape, boundary_offset, 1, Region(pdm.shape, cpm.gc));
 
-    Region inner_map(inner_shape, inner_offset);
+        Region inner_map(inner_shape, inner_offset);
 
-    Matrix<REAL> xp(x.shape.x, x.shape.y, HDCType::Device, "Jacobi" + x.name + "Previous");
-    it = 0;
-    do {
-        xp.cpy(x, HDCType::Device);
-        cpmop.IExchange6Face(xp.dev.ptr, 1, 0, 0);
+        Matrix<REAL> xp(x.shape.x, x.shape.y, HDCType::Device, "Jacobi" + x.name + "Previous");
+        it = 0;
+        do {
+            xp.cpy(x, HDCType::Device);
+            cpmop.IExchange6Face(xp.dev.ptr, 1, 0, 0);
 
-        JacobiSweep(a, x, xp, b, pdm, inner_map, block_dim);
+            JacobiSweep(a, x, xp, b, pdm, inner_map, block_dim);
 
-        cpmop.Wait6Face();
-        cpmop.PostExchange6Face();
+            cpmop.Wait6Face();
+            cpmop.PostExchange6Face();
 
-        for (INT fid = 0; fid < 6; fid ++) {
-            if (cpm.neighbour[fid] >= 0) {
-                dim3 __block(
-                    (fid / 2 == 0)? 1U : 8U,
-                    (fid / 2 == 1)? 1U : 8U,
-                    (fid / 2 == 2)? 1U : 8U
-                );
-                // Mapper map(boundary_shape[fid], boundary_offset[fid]);
-                STREAM fstream = (stream)? stream[fid] : (STREAM)0;
-                JacobiSweep(a, x, xp, b, pdm, Region(boundary_shape[fid], boundary_offset[fid]), __block, fstream);
-            }
-        }
-        if (stream) {
             for (INT fid = 0; fid < 6; fid ++) {
                 if (cpm.neighbour[fid] >= 0) {
-                    falmWaitStream(stream[fid]);
+                    dim3 __block(
+                        (fid / 2 == 0)? 1U : 8U,
+                        (fid / 2 == 1)? 1U : 8U,
+                        (fid / 2 == 2)? 1U : 8U
+                    );
+                    // Mapper map(boundary_shape[fid], boundary_offset[fid]);
+                    STREAM fstream = (stream)? stream[fid] : (STREAM)0;
+                    JacobiSweep(a, x, xp, b, pdm, Region(boundary_shape[fid], boundary_offset[fid]), __block, fstream);
                 }
             }
-        }
-        falmWaitStream();
-
-        Res(a, x, b, r, cpm, block_dim);
-        err = sqrt(MV::EuclideanNormSq(r, cpm, block_dim)) / gmap.size;
-        it ++;
-    } while (it < maxit && err > tol);
+            if (stream) {
+                for (INT fid = 0; fid < 6; fid ++) {
+                    if (cpm.neighbour[fid] >= 0) {
+                        falmWaitStream(stream[fid]);
+                    }
+                }
+            }
+            
+            Res(a, x, b, r, cpm, block_dim);
+            err = sqrt(FalmMV::EuclideanNormSq(r, cpm, block_dim)) / gmap.size;
+            it ++;
+            falmWaitStream();
+        } while (it < maxit && err > tol);
+    }
 }
 
 void FalmEq::JacobiPC(Matrix<REAL> &a, Matrix<REAL> &x, Matrix<REAL> &b, CPMBase &cpm, dim3 block_dim, STREAM *stream) {
     Region &pdm = cpm.pdm_list[cpm.rank];
-    CPMComm<REAL> cpmop(&cpm);
-    INT3 inner_shape, inner_offset, boundary_shape[6], boundary_offset[6];
-    cpm.set6Region(inner_shape, inner_offset, boundary_shape, boundary_offset, 1, Region(pdm.shape, cpm.gc));
-
-    Region inner_map(inner_shape, inner_offset);
-
     Matrix<REAL> xp(x.shape.x, x.shape.y, HDCType::Device, "Jacobi" + x.name + "Previous");
-    INT __it = 0;
-    do {
-        xp.cpy(x, HDCType::Device);
-        cpmop.IExchange6Face(xp.dev.ptr, 1, 0, 0);
-
-        JacobiSweep(a, x, xp, b, pdm, inner_map, block_dim);
-
-        cpmop.Wait6Face();
-        cpmop.PostExchange6Face();
-
-        for (INT fid = 0; fid < 6; fid ++) {
-            if (cpm.neighbour[fid] >= 0) {
-                dim3 __block(
-                    (fid / 2 == 0)? 1U : 8U,
-                    (fid / 2 == 1)? 1U : 8U,
-                    (fid / 2 == 2)? 1U : 8U
-                );
-                // Mapper map(boundary_shape[fid], boundary_offset[fid]);
-                STREAM fstream = (stream)? stream[fid] : (STREAM)0;
-                JacobiSweep(a, x, xp, b, pdm, Region(boundary_shape[fid], boundary_offset[fid]), __block, fstream);
-            }
-        }
-        if (stream) {
+    if (cpm.size == 1) {
+        Region map(pdm.shape, cpm.gc);
+        INT __it = 0;
+        do {
+            xp.cpy(x, HDCType::Device);
+            JacobiSweep(a, x, xp, b, pdm, map, block_dim);
+            __it ++;
+        } while (__it < pc_maxit);
+        falmWaitStream();
+    } else {
+        CPMComm<REAL> cpmop(&cpm);
+        INT3 inner_shape, inner_offset, boundary_shape[6], boundary_offset[6];
+        cpm.set6Region(inner_shape, inner_offset, boundary_shape, boundary_offset, 1, Region(pdm.shape, cpm.gc));
+    
+        Region inner_map(inner_shape, inner_offset);
+    
+        
+        INT __it = 0;
+        do {
+            xp.cpy(x, HDCType::Device);
+            cpmop.IExchange6Face(xp.dev.ptr, 1, 0, 0);
+    
+            JacobiSweep(a, x, xp, b, pdm, inner_map, block_dim);
+    
+            cpmop.Wait6Face();
+            cpmop.PostExchange6Face();
+    
             for (INT fid = 0; fid < 6; fid ++) {
                 if (cpm.neighbour[fid] >= 0) {
-                    falmWaitStream(stream[fid]);
+                    dim3 __block(
+                        (fid / 2 == 0)? 1U : 8U,
+                        (fid / 2 == 1)? 1U : 8U,
+                        (fid / 2 == 2)? 1U : 8U
+                    );
+                    // Mapper map(boundary_shape[fid], boundary_offset[fid]);
+                    STREAM fstream = (stream)? stream[fid] : (STREAM)0;
+                    JacobiSweep(a, x, xp, b, pdm, Region(boundary_shape[fid], boundary_offset[fid]), __block, fstream);
                 }
             }
-        }
-        falmWaitStream();
-        
-        __it ++;
-    } while (__it < pc_maxit);
+            if (stream) {
+                for (INT fid = 0; fid < 6; fid ++) {
+                    if (cpm.neighbour[fid] >= 0) {
+                        falmWaitStream(stream[fid]);
+                    }
+                }
+            }
+            __it ++;
+            falmWaitStream();
+        } while (__it < pc_maxit);
+    }
 }
 
 void FalmEq::SOR(Matrix<REAL> &a, Matrix<REAL> &x, Matrix<REAL> &b, Matrix<REAL> &r, CPMBase &cpm, dim3 block_dim, STREAM *stream) {
-    Region &global = cpm.global;
     Region &pdm = cpm.pdm_list[cpm.rank];
-    Region gmap(global.shape, cpm.gc);
-    CPMComm<REAL> cpmop(&cpm);
-    INT3 inner_shape, inner_offset, boundary_shape[6], boundary_offset[6];
-    cpm.set6Region(inner_shape, inner_offset, boundary_shape, boundary_offset, 1, Region(pdm.shape, cpm.gc));
+    if (cpm.size == 1) {
+        Region map(pdm.shape, cpm.gc);
+        it = 0;
+        do {
+            SORSweep(a, x, b, relax_factor, Color::Black, pdm, map, block_dim);
+            SORSweep(a, x, b, relax_factor, Color::Red  , pdm, map, block_dim);
+            FalmEqDevCall::Res(a, x, b, r, pdm, map, block_dim);
+            err = sqrt(FalmMVDevCall::EuclideanNormSq(r, pdm, map, block_dim)) / map.size;
+            it ++;
+        } while (it < maxit && err > tol);
+        falmWaitStream();
+    } else {
+        Region &global = cpm.global;
+        Region  gmap(global.shape, cpm.gc);
+        CPMComm<REAL> cpmop(&cpm);
+        INT3 inner_shape, inner_offset, boundary_shape[6], boundary_offset[6];
+        cpm.set6Region(inner_shape, inner_offset, boundary_shape, boundary_offset, 1, Region(pdm.shape, cpm.gc));
 
-    Region inner_map(inner_shape, inner_offset);
+        Region inner_map(inner_shape, inner_offset);
 
-    it = 0;
-    do {
-        cpmop.IExchange6ColoredFace(x.dev.ptr, Color::Red, 1, 0, 0);
-        SORSweep(a, x, b, relax_factor, Color::Black, pdm, inner_map, block_dim);
-        cpmop.Wait6Face();
-        cpmop.PostExchange6ColoredFace();
-        for (INT fid = 0; fid < 6; fid ++) {
-            if (cpm.neighbour[fid] >= 0) {
-                dim3 __block(
-                    (fid / 2 == 0)? 1U : 8U,
-                    (fid / 2 == 1)? 1U : 8U,
-                    (fid / 2 == 2)? 1U : 8U
-                );
-                // Mapper map(boundary_shape[fid], boundary_offset[fid]);
-                STREAM fstream = (stream)? stream[fid] : (STREAM)0;
-                SORSweep(a, x, b, relax_factor, Color::Black, pdm, Region(boundary_shape[fid], boundary_offset[fid]), __block, fstream);
-            }
-        }
-        if (stream) {
+        it = 0;
+        do {
+            cpmop.IExchange6ColoredFace(x.dev.ptr, Color::Red, 1, 0, 0);
+            SORSweep(a, x, b, relax_factor, Color::Black, pdm, inner_map, block_dim);
+            cpmop.Wait6Face();
+            cpmop.PostExchange6ColoredFace();
             for (INT fid = 0; fid < 6; fid ++) {
                 if (cpm.neighbour[fid] >= 0) {
-                    falmWaitStream(stream[fid]);
+                    dim3 __block(
+                        (fid / 2 == 0)? 1U : 8U,
+                        (fid / 2 == 1)? 1U : 8U,
+                        (fid / 2 == 2)? 1U : 8U
+                    );
+                    // Mapper map(boundary_shape[fid], boundary_offset[fid]);
+                    STREAM fstream = (stream)? stream[fid] : (STREAM)0;
+                    SORSweep(a, x, b, relax_factor, Color::Black, pdm, Region(boundary_shape[fid], boundary_offset[fid]), __block, fstream);
                 }
             }
-        }
-        falmWaitStream();
-
-        cpmop.IExchange6ColoredFace(x.dev.ptr, Color::Black, 1, 0, 0);
-        SORSweep(a, x, b, relax_factor, Color::Red, pdm, inner_map, block_dim);
-        cpmop.Wait6Face();
-        cpmop.PostExchange6ColoredFace();
-        for (INT fid = 0; fid < 6; fid ++) {
-            if (cpm.neighbour[fid] >= 0) {
-                dim3 __block(
-                    (fid / 2 == 0)? 1U : 8U,
-                    (fid / 2 == 1)? 1U : 8U,
-                    (fid / 2 == 2)? 1U : 8U
-                );
-                // Mapper map(boundary_shape[fid], boundary_offset[fid]);
-                STREAM fstream = (stream)? stream[fid] : (STREAM)0;
-                SORSweep(a, x, b, relax_factor, Color::Red, pdm, Region(boundary_shape[fid], boundary_offset[fid]), __block, fstream);
+            if (stream) {
+                for (INT fid = 0; fid < 6; fid ++) {
+                    if (cpm.neighbour[fid] >= 0) {
+                        falmWaitStream(stream[fid]);
+                    }
+                }
             }
-        }
-        if (stream) {
+
+            falmWaitStream();
+
+            cpmop.IExchange6ColoredFace(x.dev.ptr, Color::Black, 1, 0, 0);
+            SORSweep(a, x, b, relax_factor, Color::Red, pdm, inner_map, block_dim);
+            cpmop.Wait6Face();
+            cpmop.PostExchange6ColoredFace();
             for (INT fid = 0; fid < 6; fid ++) {
                 if (cpm.neighbour[fid] >= 0) {
-                    falmWaitStream(stream[fid]);
+                    dim3 __block(
+                        (fid / 2 == 0)? 1U : 8U,
+                        (fid / 2 == 1)? 1U : 8U,
+                        (fid / 2 == 2)? 1U : 8U
+                    );
+                    // Mapper map(boundary_shape[fid], boundary_offset[fid]);
+                    STREAM fstream = (stream)? stream[fid] : (STREAM)0;
+                    SORSweep(a, x, b, relax_factor, Color::Red, pdm, Region(boundary_shape[fid], boundary_offset[fid]), __block, fstream);
                 }
             }
-        }
-        falmWaitStream();
+            if (stream) {
+                for (INT fid = 0; fid < 6; fid ++) {
+                    if (cpm.neighbour[fid] >= 0) {
+                        falmWaitStream(stream[fid]);
+                    }
+                }
+            }
 
-        Res(a, x, b, r, cpm, block_dim);
-        err = sqrt(MV::EuclideanNormSq(r, cpm, block_dim)) / gmap.size;
-        it ++;
-    } while (it < maxit && err > tol);
+            Res(a, x, b, r, cpm, block_dim);
+            err = sqrt(FalmMV::EuclideanNormSq(r, cpm, block_dim)) / gmap.size;
+            it ++;
+            falmWaitStream();
+        } while (it < maxit && err > tol);
+    }
 }
 
 void FalmEq::SORPC(Matrix<REAL> &a, Matrix<REAL> &x, Matrix<REAL> &b, CPMBase &cpm, dim3 block_dim, STREAM *stream) {
     Region &pdm = cpm.pdm_list[cpm.rank];
-    CPMComm<REAL> cpmop(&cpm);
-    INT3 inner_shape, inner_offset, boundary_shape[6], boundary_offset[6];
-    cpm.set6Region(inner_shape, inner_offset, boundary_shape, boundary_offset, 1, Region(pdm.shape, cpm.gc));
+    if (cpm.size == 1) {
+        Region map(pdm.shape, cpm.gc);
+        INT __it = 0;
+        do {
+            SORSweep(a, x, b, pc_relax_factor, Color::Black, pdm, map, block_dim);
+            SORSweep(a, x, b, pc_relax_factor, Color::Red  , pdm, map, block_dim);
+             __it ++;
+        } while (__it < pc_maxit);
+    } else {
+        CPMComm<REAL> cpmop(&cpm);
+        INT3 inner_shape, inner_offset, boundary_shape[6], boundary_offset[6];
+        cpm.set6Region(inner_shape, inner_offset, boundary_shape, boundary_offset, 1, Region(pdm.shape, cpm.gc));
 
-    Region inner_map(inner_shape, inner_offset);
+        Region inner_map(inner_shape, inner_offset);
 
-    INT __it = 0;
-    do {
-        cpmop.IExchange6ColoredFace(x.dev.ptr, Color::Red, 1, 0, 0);
-        SORSweep(a, x, b, pc_relax_factor, Color::Black, pdm, inner_map, block_dim);
-        cpmop.Wait6Face();
-        cpmop.PostExchange6ColoredFace();
-        for (INT fid = 0; fid < 6; fid ++) {
-            if (cpm.neighbour[fid] >= 0) {
-                dim3 __block(
-                    (fid / 2 == 0)? 1U : 8U,
-                    (fid / 2 == 1)? 1U : 8U,
-                    (fid / 2 == 2)? 1U : 8U
-                );
-                // Mapper map(boundary_shape[fid], boundary_offset[fid]);
-                STREAM fstream = (stream)? stream[fid] : (STREAM)0;
-                SORSweep(a, x, b, relax_factor, Color::Black, pdm, Region(boundary_shape[fid], boundary_offset[fid]), __block, fstream);
-            }
-        }
-        if (stream) {
+        INT __it = 0;
+        do {
+            cpmop.IExchange6ColoredFace(x.dev.ptr, Color::Red, 1, 0, 0);
+            SORSweep(a, x, b, pc_relax_factor, Color::Black, pdm, inner_map, block_dim);
+            cpmop.Wait6Face();
+            cpmop.PostExchange6ColoredFace();
             for (INT fid = 0; fid < 6; fid ++) {
                 if (cpm.neighbour[fid] >= 0) {
-                    falmWaitStream(stream[fid]);
+                    dim3 __block(
+                        (fid / 2 == 0)? 1U : 8U,
+                        (fid / 2 == 1)? 1U : 8U,
+                        (fid / 2 == 2)? 1U : 8U
+                    );
+                    // Mapper map(boundary_shape[fid], boundary_offset[fid]);
+                    STREAM fstream = (stream)? stream[fid] : (STREAM)0;
+                    SORSweep(a, x, b, relax_factor, Color::Black, pdm, Region(boundary_shape[fid], boundary_offset[fid]), __block, fstream);
                 }
             }
-        }
-        falmWaitStream();
-
-        cpmop.IExchange6ColoredFace(x.dev.ptr, Color::Black, 1, 0, 0);
-        SORSweep(a, x, b, pc_relax_factor, Color::Red, pdm, inner_map, block_dim);
-        cpmop.Wait6Face();
-        cpmop.PostExchange6ColoredFace();
-        for (INT fid = 0; fid < 6; fid ++) {
-            if (cpm.neighbour[fid] >= 0) {
-                dim3 __block(
-                    (fid / 2 == 0)? 1U : 8U,
-                    (fid / 2 == 1)? 1U : 8U,
-                    (fid / 2 == 2)? 1U : 8U
-                );
-                // Mapper map(boundary_shape[fid], boundary_offset[fid]);
-                STREAM fstream = (stream)? stream[fid] : (STREAM)0;
-                SORSweep(a, x, b, relax_factor, Color::Red, pdm, Region(boundary_shape[fid], boundary_offset[fid]), __block, fstream);
+            if (stream) {
+                for (INT fid = 0; fid < 6; fid ++) {
+                    if (cpm.neighbour[fid] >= 0) {
+                        falmWaitStream(stream[fid]);
+                    }
+                }
             }
-        }
-        if (stream) {
+            falmWaitStream();
+
+            cpmop.IExchange6ColoredFace(x.dev.ptr, Color::Black, 1, 0, 0);
+            SORSweep(a, x, b, pc_relax_factor, Color::Red, pdm, inner_map, block_dim);
+            cpmop.Wait6Face();
+            cpmop.PostExchange6ColoredFace();
             for (INT fid = 0; fid < 6; fid ++) {
                 if (cpm.neighbour[fid] >= 0) {
-                    falmWaitStream(stream[fid]);
+                    dim3 __block(
+                        (fid / 2 == 0)? 1U : 8U,
+                        (fid / 2 == 1)? 1U : 8U,
+                        (fid / 2 == 2)? 1U : 8U
+                    );
+                    // Mapper map(boundary_shape[fid], boundary_offset[fid]);
+                    STREAM fstream = (stream)? stream[fid] : (STREAM)0;
+                    SORSweep(a, x, b, relax_factor, Color::Red, pdm, Region(boundary_shape[fid], boundary_offset[fid]), __block, fstream);
                 }
             }
-        }
-        falmWaitStream();
-
-        __it ++;
-    } while (__it < pc_maxit);
+            if (stream) {
+                for (INT fid = 0; fid < 6; fid ++) {
+                    if (cpm.neighbour[fid] >= 0) {
+                        falmWaitStream(stream[fid]);
+                    }
+                }
+            }
+            falmWaitStream();
+            __it ++;
+        } while (__it < pc_maxit);
+    }
 }
 
 void FalmEq::PBiCGStab(Matrix<REAL> &a, Matrix<REAL> &x, Matrix<REAL> &b, Matrix<REAL> &r, CPMBase &cpm, dim3 block_dim, STREAM *stream) {
@@ -314,7 +370,7 @@ void FalmEq::PBiCGStab(Matrix<REAL> &a, Matrix<REAL> &x, Matrix<REAL> &b, Matrix
     REAL rho, rrho, alpha, beta, omega;
 
     Res(a, x, b, r, cpm, block_dim);
-    err = sqrt(MV::EuclideanNormSq(r, cpm, block_dim)) / gmap.size;
+    err = sqrt(FalmMV::EuclideanNormSq(r, cpm, block_dim)) / gmap.size;
 
     rr.cpy(r, HDCType::Device);
     rrho  = 1.0;
@@ -327,7 +383,7 @@ void FalmEq::PBiCGStab(Matrix<REAL> &a, Matrix<REAL> &x, Matrix<REAL> &b, Matrix
         //     break;
         // }
 
-        rho = MV::DotProduct(r, rr, cpm, block_dim);
+        rho = FalmMV::DotProduct(r, rr, cpm, block_dim);
         if (fabs(rho) < __FLT_MIN__) {
             err = rho;
             break;
@@ -341,21 +397,21 @@ void FalmEq::PBiCGStab(Matrix<REAL> &a, Matrix<REAL> &x, Matrix<REAL> &b, Matrix
         }
         pp.clear(HDCType::Device);
         Precondition(a, pp, p, cpm, block_dim);
-        MV::MVMult(a, pp, q, cpm, block_dim);
-        alpha = rho / MV::DotProduct(rr, q, cpm, block_dim);
+        FalmMV::MV(a, pp, q, cpm, block_dim);
+        alpha = rho / FalmMV::DotProduct(rr, q, cpm, block_dim);
 
         PBiCGStab2(s, q, r, alpha, pdm, map, block_dim);
         ss.clear(HDCType::Device);
         Precondition(a, ss, s, cpm, block_dim);
-        MV::MVMult(a, ss, t, cpm, block_dim);
-        omega = MV::DotProduct(t, s, cpm, block_dim) / MV::DotProduct(t, t, cpm, block_dim);
+        FalmMV::MV(a, ss, t, cpm, block_dim);
+        omega = FalmMV::DotProduct(t, s, cpm, block_dim) / FalmMV::DotProduct(t, t, cpm, block_dim);
 
         PBiCGStab3(x, pp, ss, alpha, omega, pdm, map, block_dim);
         PBiCGStab4(r, s, t, omega, pdm, map, block_dim);
 
         rrho = rho;
 
-        err = sqrt(MV::EuclideanNormSq(r, cpm, block_dim)) / gmap.size;
+        err = sqrt(FalmMV::EuclideanNormSq(r, cpm, block_dim)) / gmap.size;
         it ++;
     } while (it < maxit && err > tol);
 }

@@ -58,7 +58,7 @@ public:
 
     }
 
-    void set6Region(INT3 &inner_shape, INT3 &inner_offset, INT3 *boundary_shape, INT3 *boundary_offset, INT thick, const Region &map) {
+    void set6Region(INT3 &inner_shape, INT3 &inner_offset, INT3 *boundary_shape, INT3 *boundary_offset, INT thick, const Region &map) const {
         inner_shape = map.shape;
         inner_offset = map.offset;
         if (neighbour[0] >= 0) {

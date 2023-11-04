@@ -11,11 +11,15 @@ struct RmcpTurbine {
     REAL  torque;
     REAL  cpower;
     REAL3    pos;
+    REAL3 rotpos;
     REAL       R;
     REAL       W;
     REAL       D;
     REAL     tip;
     REAL     hub;
+    REAL    roll;
+    REAL   pitch;
+    REAL     yaw;
     REAL chord_a[6];
     REAL angle_a[6];
 
@@ -33,6 +37,21 @@ struct RmcpTurbine {
         REAL r4 = r * r3;
         REAL r5 = r * r4;
         return angle_a[0] + angle_a[1] * r + angle_a[2] * r2 + angle_a[3] * r3 + angle_a[4] * r4 + angle_a[5] * r5;
+    }
+
+    __host__ __device__ REAL3 transform(const REAL3 &vxyz) {
+        REAL s1, s2, s3, c1, c2, c3;
+        s1 = sin(roll);
+        s2 = sin(pitch);
+        s3 = sin(yaw);
+        c1 = cos(roll);
+        c2 = cos(pitch);
+        c3 = cos(yaw);
+        REAL x1 = vxyz.x, y1 = vxyz.y, z1 = vxyz.z;
+        REAL x2 = (c2 * c3               ) * x1 + (c2 * s3               ) * y1 - (s2     ) * z1;
+        REAL y2 = (s1 * s2 * c3 - c1 * s3) * x1 + (s1 * s2 * s3 + c1 * c3) * y1 + (s1 * c2) * z1;
+        REAL z2 = (c1 * s2 * c3 + s1 * s3) * x1 + (c1 * s2 * s3 - s1 * c3) * y1 + (c1 * c2) * z1;
+        return {x2, y2, z2};
     }
 };
 

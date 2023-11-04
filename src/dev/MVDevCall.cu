@@ -3,7 +3,7 @@
 
 namespace Falm {
 
-__global__ void kernel_MVMult(const MatrixFrame<REAL> *va, const MatrixFrame<REAL> *vx, const MatrixFrame<REAL> *vax, INT3 pdm_shape, INT3 map_shape, INT3 map_offset) {
+__global__ void kernel_MV(const MatrixFrame<REAL> *va, const MatrixFrame<REAL> *vx, const MatrixFrame<REAL> *vax, INT3 pdm_shape, INT3 map_shape, INT3 map_offset) {
     const MatrixFrame<REAL> &a=*va, &x=*vx, &ax=*vax;
     INT i, j, k;
     GLOBAL_THREAD_IDX_3D(i, j, k);
@@ -36,7 +36,7 @@ __global__ void kernel_MVMult(const MatrixFrame<REAL> *va, const MatrixFrame<REA
     }
 }
 
-void MVDevCall::MVMult(Matrix<REAL> &a, Matrix<REAL> &x, Matrix<REAL> &ax, Region &pdm, const Region &map, dim3 block_dim, STREAM stream) {
+void FalmMVDevCall::MV(Matrix<REAL> &a, Matrix<REAL> &x, Matrix<REAL> &ax, Region &pdm, const Region &map, dim3 block_dim, STREAM stream) {
     assert(
         a.shape.x == x.shape.x && a.shape.x == ax.shape.x &&
         a.shape.y == 7 && x.shape.y == 1 && ax.shape.y == 1
@@ -47,7 +47,7 @@ void MVDevCall::MVMult(Matrix<REAL> &a, Matrix<REAL> &x, Matrix<REAL> &ax, Regio
         (map.shape.z + block_dim.z - 1) / block_dim.z
     );
 
-    kernel_MVMult<<<grid_dim, block_dim, 0, stream>>>(a.devptr, x.devptr, ax.devptr, pdm.shape, map.shape, map.offset);
+    kernel_MV<<<grid_dim, block_dim, 0, stream>>>(a.devptr, x.devptr, ax.devptr, pdm.shape, map.shape, map.offset);
 }
 
 __global__ void kernel_DotProduct(const MatrixFrame<REAL> *va, const MatrixFrame<REAL> *vb, REAL *partial_sum_dev, INT3 pdm_shape, INT3 map_shape, INT3 map_offset) {
@@ -83,7 +83,7 @@ __global__ void kernel_DotProduct(const MatrixFrame<REAL> *va, const MatrixFrame
     }
 }
 
-REAL MVDevCall::DotProduct(Matrix<REAL> &a, Matrix<REAL> &b, Region &pdm, const Region &map, dim3 block_dim) {
+REAL FalmMVDevCall::DotProduct(Matrix<REAL> &a, Matrix<REAL> &b, Region &pdm, const Region &map, dim3 block_dim) {
     dim3 grid_dim(
         (map.shape.x + block_dim.x - 1) / block_dim.x,
         (map.shape.y + block_dim.y - 1) / block_dim.y,
@@ -144,7 +144,7 @@ __global__ void kernel_EuclideanNormSq(const MatrixFrame<REAL> *va, REAL *partia
     }
 }
 
-REAL MVDevCall::EuclideanNormSq(Matrix<REAL> &a, Region &pdm, const Region &map, dim3 block_dim) {
+REAL FalmMVDevCall::EuclideanNormSq(Matrix<REAL> &a, Region &pdm, const Region &map, dim3 block_dim) {
     dim3 grid_dim(
         (map.shape.x + block_dim.x - 1) / block_dim.x,
         (map.shape.y + block_dim.y - 1) / block_dim.y,
@@ -373,7 +373,7 @@ __global__ void kernel_MatColAbsMin(const MatrixFrame<REAL> *va, INT col, REAL *
     return maximum;
 } */
 
-REAL MVDevCall::MatColMax(Matrix<REAL> &a, INT col, Region &pdm, const Region &map, dim3 block_dim) {
+REAL FalmMVDevCall::MatColMax(Matrix<REAL> &a, INT col, Region &pdm, const Region &map, dim3 block_dim) {
     dim3 grid_dim(
         (map.shape.x + block_dim.x - 1) / block_dim.x,
         (map.shape.y + block_dim.y - 1) / block_dim.y,
@@ -401,7 +401,7 @@ REAL MVDevCall::MatColMax(Matrix<REAL> &a, INT col, Region &pdm, const Region &m
     return maximum;
 }
 
-REAL MVDevCall::MatColMin(Matrix<REAL> &a, INT col, Region &pdm, const Region &map, dim3 block_dim) {
+REAL FalmMVDevCall::MatColMin(Matrix<REAL> &a, INT col, Region &pdm, const Region &map, dim3 block_dim) {
     dim3 grid_dim(
         (map.shape.x + block_dim.x - 1) / block_dim.x,
         (map.shape.y + block_dim.y - 1) / block_dim.y,
@@ -429,7 +429,7 @@ REAL MVDevCall::MatColMin(Matrix<REAL> &a, INT col, Region &pdm, const Region &m
     return maximum;
 }
 
-REAL MVDevCall::MatColAbsMax(Matrix<REAL> &a, INT col, Region &pdm, const Region &map, dim3 block_dim) {
+REAL FalmMVDevCall::MatColAbsMax(Matrix<REAL> &a, INT col, Region &pdm, const Region &map, dim3 block_dim) {
     dim3 grid_dim(
         (map.shape.x + block_dim.x - 1) / block_dim.x,
         (map.shape.y + block_dim.y - 1) / block_dim.y,
@@ -457,7 +457,7 @@ REAL MVDevCall::MatColAbsMax(Matrix<REAL> &a, INT col, Region &pdm, const Region
     return maximum;
 }
 
-REAL MVDevCall::MatColAbsMin(Matrix<REAL> &a, INT col, Region &pdm, const Region &map, dim3 block_dim) {
+REAL FalmMVDevCall::MatColAbsMin(Matrix<REAL> &a, INT col, Region &pdm, const Region &map, dim3 block_dim) {
     dim3 grid_dim(
         (map.shape.x + block_dim.x - 1) / block_dim.x,
         (map.shape.y + block_dim.y - 1) / block_dim.y,
@@ -496,7 +496,7 @@ __global__ void kernel_ScaleMatrix(const MatrixFrame<REAL> *va, REAL scale) {
     }
 }
 
-void MVDevCall::ScaleMatrix(Matrix<REAL> &a, REAL scale, dim3 block_dim) {
+void FalmMVDevCall::ScaleMatrix(Matrix<REAL> &a, REAL scale, dim3 block_dim) {
     INT n_threads = PRODUCT3(block_dim);
     INT n_blocks = (a.size + n_threads - 1) / n_threads;
     kernel_ScaleMatrix<<<n_blocks, n_threads, 0, 0>>>(a.devptr, scale);
@@ -579,7 +579,7 @@ __global__ void kernel_VecMin(const MatrixFrame<REAL> *va, REAL *partial_max_dev
     }
 }
 
-REAL MVDevCall::VecMax(Matrix<REAL> &a, Region &pdm, const Region &map, dim3 block_dim) {
+REAL FalmMVDevCall::VecMax(Matrix<REAL> &a, Region &pdm, const Region &map, dim3 block_dim) {
     dim3 grid_dim(
         (map.shape.x + block_dim.x - 1) / block_dim.x,
         (map.shape.y + block_dim.y - 1) / block_dim.y,
@@ -607,7 +607,7 @@ REAL MVDevCall::VecMax(Matrix<REAL> &a, Region &pdm, const Region &map, dim3 blo
     return maximum;
 }
 
-REAL MVDevCall::VecMin(Matrix<REAL> &a, Region &pdm, const Region &map, dim3 block_dim) {
+REAL FalmMVDevCall::VecMin(Matrix<REAL> &a, Region &pdm, const Region &map, dim3 block_dim) {
     dim3 grid_dim(
         (map.shape.x + block_dim.x - 1) / block_dim.x,
         (map.shape.y + block_dim.y - 1) / block_dim.y,

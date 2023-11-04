@@ -15,9 +15,9 @@ public:
 
     void Rmcp_ALM(Matrix<REAL> &u, Matrix<REAL> &x, Matrix<REAL> &ff, REAL t, RmcpWindfarm &wf, CPMBase &cpm);
 
-    void Rmcp_SetALMFlag(Matrix<REAL> &x, Matrix<INT> &alf, RmcpWindfarm &wf, CPMBase &cpm);
+    void Rmcp_SetALMFlag(Matrix<REAL> &x, RmcpWindfarm &wf, CPMBase &cpm);
 
-    void Rmcp_CalcTorque(Matrix<INT> &alf, Matrix<REAL> &ff, RmcpWindfarm &wf, CPMBase &cpm);
+    void Rmcp_CalcTorque(Matrix<REAL> &ff, RmcpWindfarm &wf, CPMBase &cpm);
 
 };
 

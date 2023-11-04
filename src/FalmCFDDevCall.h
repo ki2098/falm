@@ -160,7 +160,7 @@ public:
     //     L1Dev_ScaleMatrix(rhs, 1.0 / (dt * maxdiag), block_dim);
     // }
 
-public:
+protected:
     void FSPseudoU(
         Matrix<REAL> &un,
         Matrix<REAL> &u,

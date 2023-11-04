@@ -6,8 +6,8 @@
 #include "output.h"
 #include "poisson.h"
 #include "boundaryCondition.h"
-#include "../../src/FalmCFDDevCall.h"
-#include "../../src/FalmEqDevCall.h"
+#include "../../src/FalmCFD.h"
+#include "../../src/FalmEq.h"
 
 #define L 1.0
 #define N 128
@@ -64,77 +64,15 @@ void allocVars(Region &pdm) {
 
 }
 
-void pbicgstab(FalmEqDevCall &eq, Matrix<REAL> &a, Matrix<REAL> &x, Matrix<REAL> &b, Matrix<REAL> &r, CPMBase &cpm, dim3 block_dim) {
-    Region &global = cpm.global;
-    Region &pdm = cpm.pdm_list[cpm.rank];
-    Region gmap(global.shape, cpm.gc);
-    Region map(pdm.shape, cpm.gc);
-
-    Matrix<REAL> rr(pdm.shape, 1, HDCType::Device, "PBiCGStab rr");
-    Matrix<REAL>  p(pdm.shape, 1, HDCType::Device, "PBiCGStab  p");
-    Matrix<REAL>  q(pdm.shape, 1, HDCType::Device, "PBiCGStab  q");
-    Matrix<REAL>  s(pdm.shape, 1, HDCType::Device, "PBiCGStab  s");
-    Matrix<REAL> pp(pdm.shape, 1, HDCType::Device, "PBiCGStab pp");
-    Matrix<REAL> ss(pdm.shape, 1, HDCType::Device, "PBiCGStab ss");
-    Matrix<REAL>  t(pdm.shape, 1, HDCType::Device, "PBiCGStab  t");
-    REAL rho, rrho, alpha, beta, omega;
-
-    eq.Res(a, x, b, r, pdm, map, block_dim);
-    eq.err = sqrt(MVDevCall::EuclideanNormSq(r, pdm, map, block_dim)) / gmap.size;
-
-    rr.cpy(r, HDCType::Device);
-    rrho  = 1.0;
-    alpha = 0.0;
-    omega = 1.0;
-
-    it = 0;
-    do {
-        // if (err < tol) {
-        //     break;
-        // }
-
-        rho = MV::DotProduct(r, rr, cpm, block_dim);
-        if (fabs(rho) < __FLT_MIN__) {
-            err = rho;
-            break;
-        }
-
-        if (it == 0) {
-            p.cpy(r, HDCType::Device);
-        } else {
-            beta = (rho * alpha) / (rrho * omega);
-            PBiCGStab1(p, q, r, beta, omega, pdm, map, block_dim);
-        }
-        pp.clear(HDCType::Device);
-        Precondition(a, pp, p, cpm, block_dim);
-        MV::MVMult(a, pp, q, cpm, block_dim);
-        alpha = rho / MV::DotProduct(rr, q, cpm, block_dim);
-
-        PBiCGStab2(s, q, r, alpha, pdm, map, block_dim);
-        ss.clear(HDCType::Device);
-        Precondition(a, ss, s, cpm, block_dim);
-        MV::MVMult(a, ss, t, cpm, block_dim);
-        omega = MV::DotProduct(t, s, cpm, block_dim) / MV::DotProduct(t, t, cpm, block_dim);
-
-        PBiCGStab3(x, pp, ss, alpha, omega, pdm, map, block_dim);
-        PBiCGStab4(r, s, t, omega, pdm, map, block_dim);
-
-        rrho = rho;
-
-        err = sqrt(MV::EuclideanNormSq(r, cpm, block_dim)) / gmap.size;
-        it ++;
-    } while (it < maxit && err > tol);
-}
-
-void main_loop(FalmCFDDevCall &cfdsolver, FalmEqDevCall &eqsolver, dim3 block_dim = dim3{8, 8, 1}) {
+void main_loop(FalmCFD &cfdsolver, FalmEq &eqsolver, dim3 block_dim = dim3{8, 8, 1}) {
     Region &pdm = cpm.pdm_list[cpm.rank];
     INT    &gc  = cpm.gc;
     Region  map(pdm.shape, gc);
     Matrix<REAL> un(u.shape.x, u.shape.y, HDCType::Device, "un");
     un.cpy(u, HDCType::Device);
 
-    FalmCFDDevCall rk2fs1(cfdsolver.Re, cfdsolver.dt * 0.5, cfdsolver.AdvScheme, cfdsolver.SGSModel, cfdsolver.CSmagorinsky);
-    FalmCFDDevCall rk2fs2(cfdsolver.Re, cfdsolver.dt      , cfdsolver.AdvScheme, cfdsolver.SGSModel, cfdsolver.CSmagorinsky);
+    FalmCFD rk2fs1(cfdsolver.Re, cfdsolver.dt * 0.5, cfdsolver.AdvScheme, cfdsolver.SGSModel, cfdsolver.CSmagorinsky);
+    FalmCFD rk2fs2(cfdsolver.Re, cfdsolver.dt      , cfdsolver.AdvScheme, cfdsolver.SGSModel, cfdsolver.CSmagorinsky);
 
     // rk2fs1.L1Dev_Cartesian3d_FSCalcPseudoU(un, u, uu, ua, nut, kx, g, ja, ff, pdm, block_dim);
     // rk2fs1.L1Dev_Cartesian3d_UtoCU(ua, uc, kx, ja, pdm, block_dim);
@@ -151,23 +89,21 @@ void main_loop(FalmCFDDevCall &cfdsolver, FalmEqDevCall &eqsolver, dim3 block_di
     // rk2fs1.L1Dev_Cartesian3d_SGS(u, nut, x, kx, ja, pdm, block_dim);
     // copyZ5(nut, pdm);
 
-    rk2fs2.FSPseudoU(un, u, uu, ua, nut, kx, g, ja, ff, pdm, map, block_dim);
-    rk2fs2.UtoCU(ua, uc, kx, ja, pdm, map, block_dim);
-    rk2fs2.InterpolateCU(uua, uc, pdm, map, block_dim);
+    rk2fs2.FSPseudoU(un, u, uu, ua, nut, kx, g, ja, ff, cpm, block_dim);
+    rk2fs2.UtoUU(ua, uua, kx, ja, cpm, block_dim);
     forceFaceVelocityZero(uua, cpm);
-    rk2fs2.Divergence(uua, rhs, ja, pdm, map, block_dim);
-    MVDevCall::ScaleMatrix(rhs, 1.0 / (DT * maxdiag), block_dim);
-    eqsolver.L1Dev_Struct3d7p_Solve(poisson_a, p, rhs, res, cpm, block_dim);
+    rk2fs2.Divergence(uua, rhs, ja, cpm, block_dim);
+    FalmMVDevCall::ScaleMatrix(rhs, 1.0 / (DT * maxdiag), block_dim);
+    eqsolver.Solve(poisson_a, p, rhs, res, cpm, block_dim);
     pressureBC(p, cpm);
     copyZ5(p, cpm);
-    rk2fs2.ProjectPGrid(u, ua, p, kx,  pdm, map, block_dim);
-    rk2fs2.ProjectPFace(uu, uua, p, g,  pdm, map, block_dim);
+    rk2fs2.ProjectP(u, ua, uu, uua, p, kx, g, cpm, block_dim);
     velocityBC(u, cpm);
     copyZ5(u, cpm);
-    rk2fs2.SGS(u, nut, x, kx, ja,  pdm, map, block_dim);
+    rk2fs2.SGS(u, nut, x, kx, ja,  cpm, block_dim);
     copyZ5(nut, cpm);
 
-    rk2fs2.Divergence(uu, diver, ja,  pdm, map, block_dim);
+    rk2fs2.Divergence(uu, diver, ja, cpm, block_dim);
     // cfdsolver.L1Dev_Cartesian3d_FSCalcPseudoU(u, u, uu, ua, nut, kx, g, ja, ff, pdm, block_dim);
 
     // cfdsolver.L1Dev_Cartesian3d_UtoCU(ua, uc, kx, ja, pdm, block_dim);
@@ -226,8 +162,8 @@ int main() {
     //     );
     // }
 
-    FalmCFDDevCall cfdsolver(3200, DT, AdvectionSchemeType::Upwind3, SGSType::Empty, 0.1);
-    FalmEqDevCall eqsolver(LSType::PBiCGStab, 1000, 1e-8, 1.2, LSType::SOR, 5, 1.5);
+    FalmCFD cfdsolver(3200, DT, AdvectionSchemeType::Upwind3, SGSType::Empty, 0.1);
+    FalmEq eqsolver(LSType::PBiCGStab, 1000, 1e-8, 1.2, LSType::SOR, 5, 1.5);
 
     printf("running on %dx%d grid with Re=%lf until t=%lf\n", N, N, cfdsolver.Re, T);
 
@@ -245,10 +181,10 @@ int main() {
     output(__it / INT(output_interval / DT));
     while (__it < __IT) {
         main_loop(cfdsolver, eqsolver);
-        REAL tke = sqrt(MVDevCall::EuclideanNormSq(u,  pdm, map, dim3(8, 8, 1))) / inner.size;
+        REAL tke = sqrt(FalmMVDevCall::EuclideanNormSq(u,  pdm, map, dim3(8, 8, 1))) / inner.size;
         __t += DT;
         __it ++;
-        REAL divernorm = sqrt(MVDevCall::EuclideanNormSq(diver,  pdm, map, dim3(8, 8, 1))) / inner.size;
+        REAL divernorm = sqrt(FalmMVDevCall::EuclideanNormSq(diver,  pdm, map, dim3(8, 8, 1))) / inner.size;
 
         REAL probeu, probev;
         INT probeidx = IDX(monitor_i + gc, monitor_j + gc, gc, pdm.shape);

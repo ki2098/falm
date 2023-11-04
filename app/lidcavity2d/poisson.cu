@@ -1,5 +1,5 @@
 #include "poisson.h"
-#include "../../src/MVL1.h"
+#include "../../src/MV.h"
 #include "../../src/util.h"
 #include "../../src/dev/devutil.cuh"
 
@@ -100,8 +100,8 @@ REAL makePoissonMatrix(
         map.offset,
         gc
     );
-    REAL maxdiag = L1Dev_MaxDiag(a, cpm, block_dim);
-    L1Dev_ScaleMatrix(a, 1.0 / maxdiag, block_dim);
+    REAL maxdiag = FalmMV::MaxDiag(a, cpm, block_dim);
+    FalmMV::ScaleMatrix(a, 1.0 / maxdiag, block_dim);
     return maxdiag;
 }
 
@@ -186,7 +186,7 @@ void makePoissonRHS(
         map.shape,
         map.offset
     );
-    L1Dev_ScaleMatrix(rhs, 1.0 / maxdiag, block_dim);
+    FalmMV::ScaleMatrix(rhs, 1.0 / maxdiag, block_dim);
 }
 
 }

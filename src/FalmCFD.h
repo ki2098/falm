@@ -85,7 +85,7 @@ public:
         Region &pdm = cpm.pdm_list[cpm.rank];
         Region map(pdm.shape, cpm.gc);
         FalmCFDDevCall::Divergence(uu, rhs, ja, pdm, map, block_dim);
-        MV::ScaleMatrix(rhs, 1.0 / (dt * maxdiag), block_dim);
+        FalmMV::ScaleMatrix(rhs, 1.0 / (dt * maxdiag), block_dim);
     }
     
 };

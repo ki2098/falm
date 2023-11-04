@@ -69,6 +69,57 @@ struct VECTOR2 {
     }
 };
 
+template<typename T, size_t N>
+struct VECTOR {
+    T _mv[N];
+
+    T &operator[](size_t i) {return _mv[i];}
+    const T &operator[](size_t i) const {return _mv[i];}
+
+    VECTOR operator+(const VECTOR &v) const {
+        VECTOR vv;
+        for (size_t i = 0; i < N; i ++) vv[i] = _mv[i] + v[i];
+    }
+
+    VECTOR operator-(const VECTOR &v) const {
+        VECTOR vv;
+        for (size_t i = 0; i < N; i ++) vv[i] = _mv[i] - v[i];
+    }
+
+    VECTOR operator+=(const VECTOR &v) {
+        for (size_t i = 0; i < N; i ++)  _mv[i] += v[i];
+        return *this;
+    }
+
+    VECTOR operator-=(const VECTOR &v) {
+        for (size_t i = 0; i < N; i ++)  _mv[i] -= v[i];
+        return *this;
+    }
+
+    bool operator==(const VECTOR &v) const {
+        for (size_t i = 0; i < N; i ++) {
+            if (_mv[i] != v[i]) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    bool operator!=(const VECTOR &v) const {
+        for (size_t i = 0; i < N; i ++) {
+            if _mv[i] == v[i] {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    VECTOR &operator=(const VECTOR &v) {
+        for (size_t i = 0; i < N; i ++) _mv[i] = v[i];
+        return *this;
+    }
+};
+
 }
 
 #endif

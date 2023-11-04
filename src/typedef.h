@@ -15,10 +15,10 @@ typedef unsigned       FLAG;
 typedef int             INT;
 
 
-typedef VECTOR3<INT>   INT3;
-typedef VECTOR3<REAL> REAL3;
-typedef VECTOR2<INT>   INT2;
-typedef VECTOR2<REAL> REAL2;
+typedef VECTOR3<INT >   INT3;
+typedef VECTOR3<REAL>  REAL3;
+typedef VECTOR2<INT >   INT2;
+typedef VECTOR2<REAL>  REAL2;
 
 typedef cudaStream_t STREAM;
 
