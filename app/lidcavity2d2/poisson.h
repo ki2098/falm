@@ -10,7 +10,7 @@ static Falm::REAL makePoissonMatrix(
     Falm::Matrix<Falm::REAL> &a,
     Falm::Matrix<Falm::REAL> &g,
     Falm::Matrix<Falm::REAL> &ja,
-    Falm::CPMBase            &cpm,
+    Falm::CPM            &cpm,
     dim3                      block_dim = dim3(8, 8, 1)
 ) {
     Falm::Region &global = cpm.global;

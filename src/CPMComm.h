@@ -76,7 +76,7 @@ static inline int CPM_AllReduce(void *buffer, int count, MPI_Datatype mpi_dtype,
 template<typename T>
 class CPMComm : public CPMDevCall {
 public:
-    CPMBase               *base;
+    CPM               *base;
     CPMBuffer            buffer[12];
     MPI_Request         mpi_req[12];
     MPI_Status         mpi_stat[12];
@@ -88,7 +88,7 @@ public:
     
 
     CPMComm() : origin_ptr(nullptr) {}
-    CPMComm(CPMBase *_base) : 
+    CPMComm(CPM *_base) : 
         base(_base),
         origin_ptr(nullptr)
     {
@@ -127,27 +127,27 @@ protected:
                 INT gcx2 = 2 * gc;
                 INT __s = fid*2, __r = fid*2+1;
                 INT3 buffer_shape {
-                    (fid / 2 == 0)? thick : pdm.shape[0] - gcx2,
-                    (fid / 2 == 1)? thick : pdm.shape[1] - gcx2,
-                    (fid / 2 == 2)? thick : pdm.shape[2] - gcx2
+                    (fid == CPM::XPLUS || fid == CPM::XMINUS)? thick : pdm.shape[0] - gcx2,
+                    (fid == CPM::YPLUS || fid == CPM::YMINUS)? thick : pdm.shape[1] - gcx2,
+                    (fid == CPM::ZPLUS || fid == CPM::ZMINUS)? thick : pdm.shape[2] - gcx2
                 };
                 INT3 sendbuffer_offset, recvbuffer_offset;
-                if (fid == 0) {
+                if (fid == CPM::XPLUS) {
                     sendbuffer_offset = {pdm.shape[0] - gc - thick - margin, gc, gc};
                     recvbuffer_offset = {pdm.shape[0] - gc         + margin, gc, gc};
-                } else if (fid == 1) {
+                } else if (fid == CPM::XMINUS) {
                     sendbuffer_offset = {              gc         + margin, gc, gc};
                     recvbuffer_offset = {              gc - thick - margin, gc, gc};
-                } else if (fid == 2) {
+                } else if (fid == CPM::YPLUS) {
                     sendbuffer_offset = {gc, pdm.shape[1] - gc - thick - margin, gc};
                     recvbuffer_offset = {gc, pdm.shape[1] - gc         + margin, gc};
-                } else if (fid == 3) {
+                } else if (fid == CPM::YMINUS) {
                     sendbuffer_offset = {gc,               gc         + margin, gc};
                     recvbuffer_offset = {gc,               gc - thick - margin, gc};
-                } else if (fid == 4) {
+                } else if (fid == CPM::ZPLUS) {
                     sendbuffer_offset = {gc, gc, pdm.shape[2] - gc - thick - margin};
                     recvbuffer_offset = {gc, gc, pdm.shape[2] - gc         + margin};
-                } else if (fid == 5) {
+                } else if (fid == CPM::ZMINUS) {
                     sendbuffer_offset = {gc, gc,               gc         + margin};
                     recvbuffer_offset = {gc, gc,               gc - thick - margin};
                 }
@@ -178,9 +178,9 @@ template<typename T> void CPMComm<T>::IExchange6Face(T *data, INT thick, INT mar
     for (INT fid = 0; fid < 6; fid ++) {
         if (base->validNeighbour(fid)) {
             dim3 block_dim(
-                (fid / 2 == 0)? 1U : 8U,
-                (fid / 2 == 1)? 1U : 8U,
-                (fid / 2 == 2)? 1U : 8U
+                (fid == CPM::XPLUS || fid == CPM::XMINUS)? 1U : 8U,
+                (fid == CPM::YPLUS || fid == CPM::YMINUS)? 1U : 8U,
+                (fid == CPM::ZPLUS || fid == CPM::ZMINUS)? 1U : 8U
             );
             CPMBuffer &sbuf = buffer[fid * 2];
             STREAM fstream = (stream)? stream[fid] : (STREAM)0;
@@ -230,9 +230,9 @@ template<typename T> void CPMComm<T>::IExchange6ColoredFace(T *data, INT color, 
     for (INT fid = 0; fid < 6; fid ++) {
         if (base->validNeighbour(fid)) {
             dim3 block_dim(
-                (fid / 2 == 0)? 1U : 8U,
-                (fid / 2 == 1)? 1U : 8U,
-                (fid / 2 == 2)? 1U : 8U
+                (fid == CPM::XPLUS || fid == CPM::XMINUS)? 1U : 8U,
+                (fid == CPM::YPLUS || fid == CPM::YMINUS)? 1U : 8U,
+                (fid == CPM::ZPLUS || fid == CPM::ZMINUS)? 1U : 8U
             );
             CPMBuffer &sbuf = buffer[fid * 2];
             STREAM fstream = (stream)? stream[fid] : (STREAM)0;
@@ -277,9 +277,9 @@ template<typename T> void CPMComm<T>::PostExchange6Face(STREAM *stream) {
     for (INT fid = 0; fid < 6; fid ++) {
         if (base->validNeighbour(fid)) {
             dim3 block_dim(
-                (fid / 2 == 0)? 1U : 8U,
-                (fid / 2 == 1)? 1U : 8U,
-                (fid / 2 == 2)? 1U : 8U
+                (fid == CPM::XPLUS || fid == CPM::XMINUS)? 1U : 8U,
+                (fid == CPM::YPLUS || fid == CPM::YMINUS)? 1U : 8U,
+                (fid == CPM::ZPLUS || fid == CPM::ZMINUS)? 1U : 8U
             );
             CPMBuffer &rbuf = buffer[fid * 2 + 1];
             STREAM fstream = (stream)? stream[fid] : (STREAM)0;
@@ -323,9 +323,9 @@ template<typename T> void CPMComm<T>::PostExchange6ColoredFace(STREAM *stream) {
     for (INT fid = 0; fid < 6; fid ++) {
         if (base->validNeighbour(fid)) {
             dim3 block_dim(
-                (fid / 2 == 0)? 1U : 8U,
-                (fid / 2 == 1)? 1U : 8U,
-                (fid / 2 == 2)? 1U : 8U
+                (fid == CPM::XPLUS || fid == CPM::XMINUS)? 1U : 8U,
+                (fid == CPM::YPLUS || fid == CPM::YMINUS)? 1U : 8U,
+                (fid == CPM::ZPLUS || fid == CPM::ZMINUS)? 1U : 8U
             );
             CPMBuffer &rbuf = buffer[fid * 2 + 1];
             STREAM fstream = (stream)? stream[fid] : (STREAM)0;

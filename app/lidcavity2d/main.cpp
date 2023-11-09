@@ -25,7 +25,7 @@ Matrix<REAL> x, h, kx, g, ja;
 Matrix<REAL> u, ua, uc, uu, uua, p, nut, ff, rhs, res, diver, w;
 Matrix<REAL> poisson_a;
 REAL maxdiag;
-CPMBase cpm;
+CPM cpm;
 
 void output(INT i) {
     Region &pdm = cpm.pdm_list[cpm.rank];

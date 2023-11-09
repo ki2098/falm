@@ -9,7 +9,7 @@ namespace LidCavity2d {
 void setCoord(
     Falm::REAL                side_lenth,
     Falm::INT                 side_n_cell,
-    Falm::CPMBase            &cpm,
+    Falm::CPM            &cpm,
     Falm::Matrix<Falm::REAL> &x,
     Falm::Matrix<Falm::REAL> &h,
     Falm::Matrix<Falm::REAL> &kx,

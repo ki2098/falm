@@ -8,29 +8,29 @@ namespace LidCavity2d2 {
 
 static void pressureBC(
     Falm::Matrix<Falm::REAL> &p,
-    Falm::CPMBase            &cpm,
+    Falm::CPM            &cpm,
     Falm::STREAM             *stream = nullptr
 ) {
     Falm::Region &pdm = cpm.pdm_list[cpm.rank];
-    if (!cpm.validNeighbour(0)) {
+    if (!cpm.validNeighbour(Falm::CPM::XPLUS)) {
         Falm::STREAM estream = (stream)? stream[0] : 0;
         dev_pressureBC_E(p, pdm, cpm.gc, estream);
     }
-    if (!cpm.validNeighbour(1)) {
+    if (!cpm.validNeighbour(Falm::CPM::XMINUS)) {
         Falm::STREAM wstream = (stream)? stream[1] : 0;
         dev_pressureBC_W(p, pdm, cpm.gc, wstream);
     }
-    if (!cpm.validNeighbour(2)) {
+    if (!cpm.validNeighbour(Falm::CPM::YPLUS)) {
         Falm::STREAM nstream = (stream)? stream[2] : 0;
         dev_pressureBC_N(p, pdm, cpm.gc, nstream);
     }
-    if (!cpm.validNeighbour(3)) {
+    if (!cpm.validNeighbour(Falm::CPM::YMINUS)) {
         Falm::STREAM sstream = (stream)? stream[3] : 0;
         dev_pressureBC_S(p, pdm, cpm.gc, sstream);
     }
 
     if (stream) {
-        for (Falm::INT fid = 0; fid < 4; fid ++) {
+        for (Falm::INT fid = 0; fid < 6; fid ++) {
             if (!cpm.validNeighbour(fid)) {
                 Falm::falmWaitStream(stream[fid]);
             }
@@ -42,29 +42,29 @@ static void pressureBC(
 
 static void velocityBC(
     Falm::Matrix<Falm::REAL> &u,
-    Falm::CPMBase            &cpm,
+    Falm::CPM            &cpm,
     Falm::STREAM             *stream = nullptr
 ) {
     Falm::Region &pdm = cpm.pdm_list[cpm.rank];
-    if (!cpm.validNeighbour(0)) {
+    if (!cpm.validNeighbour(Falm::CPM::XPLUS)) {
         Falm::STREAM estream = (stream)? stream[0] : 0;
         dev_velocityBC_E(u, pdm, cpm.gc, estream);
     }
-    if (!cpm.validNeighbour(1)) {
+    if (!cpm.validNeighbour(Falm::CPM::XMINUS)) {
         Falm::STREAM wstream = (stream)? stream[1] : 0;
         dev_velocityBC_W(u, pdm, cpm.gc, wstream);
     }
-    if (!cpm.validNeighbour(2)) {
+    if (!cpm.validNeighbour(Falm::CPM::YPLUS)) {
         Falm::STREAM nstream = (stream)? stream[2] : 0;
         dev_velocityBC_N(u, pdm, cpm.gc, nstream);
     }
-    if (!cpm.validNeighbour(3)) {
+    if (!cpm.validNeighbour(Falm::CPM::YMINUS)) {
         Falm::STREAM sstream = (stream)? stream[3] : 0;
         dev_velocityBC_S(u, pdm, cpm.gc, sstream);
     }
 
     if (stream) {
-        for (Falm::INT fid = 0; fid < 4; fid ++) {
+        for (Falm::INT fid = 0; fid < 6; fid ++) {
             if (!cpm.validNeighbour(fid)) {
                 Falm::falmWaitStream(stream[fid]);
             }
@@ -76,29 +76,29 @@ static void velocityBC(
 
 static void forceFaceVelocityZero(
     Falm::Matrix<Falm::REAL> &uu,
-    Falm::CPMBase            &cpm,
+    Falm::CPM            &cpm,
     Falm::STREAM             *stream = nullptr
 ) {
     Falm::Region &pdm = cpm.pdm_list[cpm.rank];
-    if (!cpm.validNeighbour(0)) {
+    if (!cpm.validNeighbour(Falm::CPM::XPLUS)) {
         Falm::STREAM fstream = (stream)? stream[0] : 0;
         dev_forceFaceVelocityZero_E(uu, pdm, cpm.gc, fstream);
     }
-    if (!cpm.validNeighbour(1)) {
+    if (!cpm.validNeighbour(Falm::CPM::XMINUS)) {
         Falm::STREAM fstream = (stream)? stream[1] : 0;
         dev_forceFaceVelocityZero_W(uu, pdm, cpm.gc, fstream);
     }
-    if (!cpm.validNeighbour(2)) {
+    if (!cpm.validNeighbour(Falm::CPM::YPLUS)) {
         Falm::STREAM fstream = (stream)? stream[2] : 0;
         dev_forceFaceVelocityZero_N(uu, pdm, cpm.gc, fstream);
     }
-    if (!cpm.validNeighbour(3)) {
+    if (!cpm.validNeighbour(Falm::CPM::YMINUS)) {
         Falm::STREAM fstream = (stream)? stream[3] : 0;
         dev_forceFaceVelocityZero_S(uu, pdm, cpm.gc, fstream);
     }
 
     if (stream) {
-        for (Falm::INT fid = 0; fid < 4; fid ++) {
+        for (Falm::INT fid = 0; fid < 6; fid ++) {
             if (!cpm.validNeighbour(fid)) {
                 Falm::falmWaitStream(stream[fid]);
             }
@@ -110,7 +110,7 @@ static void forceFaceVelocityZero(
 
 static void copyZ5(
     Falm::Matrix<Falm::REAL> &field,
-    Falm::CPMBase            &cpm,
+    Falm::CPM            &cpm,
     Falm::STREAM             *stream = nullptr
 ) {
     Falm::Region &pdm = cpm.pdm_list[cpm.rank];

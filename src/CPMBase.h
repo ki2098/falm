@@ -7,7 +7,16 @@
 
 namespace Falm {
 
-class CPMBase {
+class CPM {
+public:
+    static const INT XMINUS = 0;
+    static const INT XPLUS  = 1;
+    static const INT YMINUS = 2;
+    static const INT YPLUS  = 3;
+    static const INT ZMINUS = 4;
+    static const INT ZPLUS  = 5;
+    static const INT NFACE  = 6;
+
 public:
     int neighbour[6];
     INT3   shape;
@@ -61,36 +70,36 @@ public:
     void set6Region(INT3 &inner_shape, INT3 &inner_offset, INT3 *boundary_shape, INT3 *boundary_offset, INT thick, const Region &map) const {
         inner_shape = map.shape;
         inner_offset = map.offset;
-        if (neighbour[0] >= 0) {
-            boundary_shape[0]  = {thick, inner_shape[1], inner_shape[2]};
-            boundary_offset[0] = {inner_offset[0] + inner_shape[0] - thick, inner_offset[1], inner_offset[2]};
+        if (neighbour[XPLUS] >= 0) {
+            boundary_shape[XPLUS]  = {thick, inner_shape[1], inner_shape[2]};
+            boundary_offset[XPLUS] = {inner_offset[0] + inner_shape[0] - thick, inner_offset[1], inner_offset[2]};
             inner_shape[0] -= thick;
         }
-        if (neighbour[1] >= 0) {
-            boundary_shape[1]  = {thick, inner_shape[1], inner_shape[2]};
-            boundary_offset[1] = {inner_offset[0], inner_offset[1], inner_offset[2]};
+        if (neighbour[XMINUS] >= 0) {
+            boundary_shape[XMINUS]  = {thick, inner_shape[1], inner_shape[2]};
+            boundary_offset[XMINUS] = {inner_offset[0], inner_offset[1], inner_offset[2]};
             inner_shape[0]  -= thick;
             inner_offset[0] += thick; 
         }
-        if (neighbour[2] >= 0) {
-            boundary_shape[2]  = {inner_shape[0], thick, inner_shape[2]};
-            boundary_offset[2] = {inner_offset[0], inner_offset[1] + inner_shape[1] - thick, inner_offset[2]};
+        if (neighbour[YPLUS] >= 0) {
+            boundary_shape[YPLUS]  = {inner_shape[0], thick, inner_shape[2]};
+            boundary_offset[YPLUS] = {inner_offset[0], inner_offset[1] + inner_shape[1] - thick, inner_offset[2]};
             inner_shape[1] -= thick;
         }
-        if (neighbour[3] >= 0) {
-            boundary_shape[3]  = {inner_shape[0], thick, inner_shape[2]};
-            boundary_offset[3] = {inner_offset[0], inner_offset[1], inner_offset[2]};
+        if (neighbour[YMINUS] >= 0) {
+            boundary_shape[YMINUS]  = {inner_shape[0], thick, inner_shape[2]};
+            boundary_offset[YMINUS] = {inner_offset[0], inner_offset[1], inner_offset[2]};
             inner_shape[1]  -= thick;
             inner_offset[1] += thick;
         }
-        if (neighbour[4] >= 0) {
-            boundary_shape[4]  = {inner_shape[0], inner_shape[1], thick};
-            boundary_offset[4] = {inner_offset[0], inner_offset[1], inner_offset[2] + inner_shape[2] - thick};
+        if (neighbour[ZPLUS] >= 0) {
+            boundary_shape[ZPLUS]  = {inner_shape[0], inner_shape[1], thick};
+            boundary_offset[ZPLUS] = {inner_offset[0], inner_offset[1], inner_offset[2] + inner_shape[2] - thick};
             inner_shape[2] -= thick;
         }
-        if (neighbour[5] >= 0) {
-            boundary_shape[5]  = {inner_shape[0], inner_shape[1], thick};
-            boundary_offset[5] = {inner_offset[0], inner_offset[1], inner_offset[2]};
+        if (neighbour[ZMINUS] >= 0) {
+            boundary_shape[ZMINUS]  = {inner_shape[0], inner_shape[1], thick};
+            boundary_offset[ZMINUS] = {inner_offset[0], inner_offset[1], inner_offset[2]};
             inner_shape[2]  -= thick;
             inner_offset[2] += thick;
         }
@@ -124,29 +133,29 @@ protected:
         idx[0] = i;
         idx[1] = j;
         idx[2] = k;
-        neighbour[0] = IDX(i + 1, j, k, shape);
-        neighbour[1] = IDX(i - 1, j, k, shape);
-        neighbour[2] = IDX(i, j + 1, k, shape);
-        neighbour[3] = IDX(i, j - 1, k, shape);
-        neighbour[4] = IDX(i, j, k + 1, shape);
-        neighbour[5] = IDX(i, j, k - 1, shape);
+        neighbour[XPLUS ] = IDX(i + 1, j, k, shape);
+        neighbour[XMINUS] = IDX(i - 1, j, k, shape);
+        neighbour[YPLUS ] = IDX(i, j + 1, k, shape);
+        neighbour[YMINUS] = IDX(i, j - 1, k, shape);
+        neighbour[ZPLUS ] = IDX(i, j, k + 1, shape);
+        neighbour[ZMINUS] = IDX(i, j, k - 1, shape);
         if (i == shape[0] - 1) {
-            neighbour[0] = - 1;
+            neighbour[XPLUS] = - 1;
         }
         if (i == 0) {
-            neighbour[1] = - 1;
+            neighbour[XMINUS] = - 1;
         }
         if (j == shape[1] - 1) {
-            neighbour[2] = - 1;
+            neighbour[YPLUS] = - 1;
         }
         if (j == 0) {
-            neighbour[3] = - 1;
+            neighbour[YMINUS] = - 1;
         }
         if (k == shape[2] - 1) {
-            neighbour[4] = - 1;
+            neighbour[ZPLUS] = - 1;
         }
         if (k == 0) {
-            neighbour[5] = - 1;
+            neighbour[ZMINUS] = - 1;
         }
     }
 

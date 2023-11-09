@@ -8,7 +8,7 @@ namespace Falm {
 
 class FalmMV : public FalmMVDevCall {
 public:
-static void MV(Matrix<REAL> &a, Matrix<REAL> &x, Matrix<REAL> &ax, CPMBase &cpm, dim3 block_dim, STREAM *stream = nullptr) {
+static void MV(Matrix<REAL> &a, Matrix<REAL> &x, Matrix<REAL> &ax, CPM &cpm, dim3 block_dim, STREAM *stream = nullptr) {
     Region &pdm = cpm.pdm_list[cpm.rank];
     if (cpm.size == 1) {
         Region map(pdm.shape, cpm.gc);
@@ -28,9 +28,9 @@ static void MV(Matrix<REAL> &a, Matrix<REAL> &x, Matrix<REAL> &ax, CPMBase &cpm,
         for (INT fid = 0; fid < 6; fid ++) {
             if (cpm.neighbour[fid] >= 0) {
                 dim3 __block(
-                    (fid / 2 == 0)? 1U : 8U,
-                    (fid / 2 == 1)? 1U : 8U,
-                    (fid / 2 == 2)? 1U : 8U
+                    (fid == CPM::XPLUS || fid == CPM::XMINUS)? 1U : 8U,
+                    (fid == CPM::YPLUS || fid == CPM::YMINUS)? 1U : 8U,
+                    (fid == CPM::ZPLUS || fid == CPM::ZMINUS)? 1U : 8U
                 );
                 // Mapper map(boundary_shape[fid], boundary_offset[fid]);
                 STREAM fstream = (stream)? stream[fid] : (STREAM)0;
@@ -48,7 +48,7 @@ static void MV(Matrix<REAL> &a, Matrix<REAL> &x, Matrix<REAL> &ax, CPMBase &cpm,
     falmWaitStream();
 }
 
-static REAL DotProduct(Matrix<REAL> &a, Matrix<REAL> &b, CPMBase &cpm, dim3 block_dim) {
+static REAL DotProduct(Matrix<REAL> &a, Matrix<REAL> &b, CPM &cpm, dim3 block_dim) {
     Region &pdm = cpm.pdm_list[cpm.rank];
     Region map(pdm.shape, cpm.gc);
     REAL r = FalmMVDevCall::DotProduct(a, b, pdm, map, block_dim);
@@ -58,7 +58,7 @@ static REAL DotProduct(Matrix<REAL> &a, Matrix<REAL> &b, CPMBase &cpm, dim3 bloc
     return r;
 }
 
-static REAL EuclideanNormSq(Matrix<REAL> &a, CPMBase &cpm, dim3 block_dim) {
+static REAL EuclideanNormSq(Matrix<REAL> &a, CPM &cpm, dim3 block_dim) {
     Region &pdm = cpm.pdm_list[cpm.rank];
     Region map(pdm.shape, cpm.gc);
     REAL r = FalmMVDevCall::EuclideanNormSq(a, pdm, map, block_dim);
@@ -68,7 +68,7 @@ static REAL EuclideanNormSq(Matrix<REAL> &a, CPMBase &cpm, dim3 block_dim) {
     return r;
 }
 
-static REAL MaxDiag(Matrix<REAL> &a, CPMBase &cpm, dim3 block_dim) {
+static REAL MaxDiag(Matrix<REAL> &a, CPM &cpm, dim3 block_dim) {
     Region &pdm = cpm.pdm_list[cpm.rank];
     Region map(pdm.shape, cpm.gc);
     REAL r = FalmMVDevCall::MatColAbsMax(a, 0, pdm, map, block_dim);
@@ -78,7 +78,7 @@ static REAL MaxDiag(Matrix<REAL> &a, CPMBase &cpm, dim3 block_dim) {
     return r;
 }
 
-static REAL MatColMax(Matrix<REAL> &a, INT col, CPMBase &cpm, dim3 block_dim) {
+static REAL MatColMax(Matrix<REAL> &a, INT col, CPM &cpm, dim3 block_dim) {
     Region &pdm = cpm.pdm_list[cpm.rank];
     Region map(pdm.shape, cpm.gc);
     REAL cmax = FalmMVDevCall::MatColMax(a, col, pdm, map, block_dim);
@@ -88,7 +88,7 @@ static REAL MatColMax(Matrix<REAL> &a, INT col, CPMBase &cpm, dim3 block_dim) {
     return cmax;
 }
 
-static REAL MatColMin(Matrix<REAL> &a, INT col, CPMBase &cpm, dim3 block_dim) {
+static REAL MatColMin(Matrix<REAL> &a, INT col, CPM &cpm, dim3 block_dim) {
     Region &pdm = cpm.pdm_list[cpm.rank];
     Region map(pdm.shape, cpm.gc);
     REAL cmin = FalmMVDevCall::MatColMin(a, col, pdm, map, block_dim);
@@ -98,7 +98,7 @@ static REAL MatColMin(Matrix<REAL> &a, INT col, CPMBase &cpm, dim3 block_dim) {
     return cmin;
 }
 
-static REAL MatColAbsMax(Matrix<REAL> &a, INT col, CPMBase &cpm, dim3 block_dim) {
+static REAL MatColAbsMax(Matrix<REAL> &a, INT col, CPM &cpm, dim3 block_dim) {
     Region &pdm = cpm.pdm_list[cpm.rank];
     Region map(pdm.shape, cpm.gc);
     REAL cmax = FalmMVDevCall::MatColAbsMax(a, col, pdm, map, block_dim);
@@ -108,7 +108,7 @@ static REAL MatColAbsMax(Matrix<REAL> &a, INT col, CPMBase &cpm, dim3 block_dim)
     return cmax;
 }
 
-static REAL MatColAbsMin(Matrix<REAL> &a, INT col, CPMBase &cpm, dim3 block_dim) {
+static REAL MatColAbsMin(Matrix<REAL> &a, INT col, CPM &cpm, dim3 block_dim) {
     Region &pdm = cpm.pdm_list[cpm.rank];
     Region map(pdm.shape, cpm.gc);
     REAL cmin = FalmMVDevCall::MatColAbsMin(a, col, pdm, map, block_dim);
@@ -118,7 +118,7 @@ static REAL MatColAbsMin(Matrix<REAL> &a, INT col, CPMBase &cpm, dim3 block_dim)
     return cmin;
 }
 
-static REAL VecMax(Matrix<REAL> &a, CPMBase &cpm, dim3 block_dim) {
+static REAL VecMax(Matrix<REAL> &a, CPM &cpm, dim3 block_dim) {
     Region &pdm = cpm.pdm_list[cpm.rank];
     Region map(pdm.shape, cpm.gc);
     REAL vmax = FalmMVDevCall::VecMax(a, pdm, map, block_dim);
@@ -128,7 +128,7 @@ static REAL VecMax(Matrix<REAL> &a, CPMBase &cpm, dim3 block_dim) {
     return vmax;
 }
 
-static REAL VecMin(Matrix<REAL> &a, CPMBase &cpm, dim3 block_dim) {
+static REAL VecMin(Matrix<REAL> &a, CPM &cpm, dim3 block_dim) {
     Region &pdm = cpm.pdm_list[cpm.rank];
     Region map(pdm.shape, cpm.gc);
     REAL vmax = FalmMVDevCall::VecMin(a, pdm, map, block_dim);

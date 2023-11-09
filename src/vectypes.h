@@ -82,11 +82,13 @@ struct VECTOR {
     __host__ __device__ VECTOR operator+(const VECTOR &v) const {
         VECTOR vv;
         for (size_t i = 0; i < N; i ++) vv[i] = _m_vector[i] + v[i];
+        return vv;
     }
 
     __host__ __device__ VECTOR operator-(const VECTOR &v) const {
         VECTOR vv;
         for (size_t i = 0; i < N; i ++) vv[i] = _m_vector[i] - v[i];
+        return vv;
     }
 
     __host__ __device__ VECTOR operator+=(const VECTOR &v) {

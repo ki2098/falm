@@ -5,20 +5,27 @@ nvnvcc = /opt/nvidia/hpc_sdk/Linux_x86_64/23.3/cuda/bin/nvcc
 
 flag   = --std=c++11
 
+include $(falmdir)/src/rmcp/Makefile
+
 mvdevcallobj    = $(falmdir)/bin/MVDevCall.o
-mvobj    = 
 eqdevcallobj    = $(falmdir)/bin/FalmEqDevCall.o
-eqobj    = $(falmdir)/bin/FalmEq.o
 cpmdevcallobj   = $(falmdir)/bin/CPMDevCall.o
-cpmcommobj   = 
 cfddevcallobj   = $(falmdir)/bin/CFDDevCall.o
-cfdobj   = $(falmdir)/bin/CFD.o
+
+mvobj           = 
+eqobj           = $(falmdir)/bin/FalmEq.o
+cpmobj          = 
+cfdobj          = $(falmdir)/bin/CFD.o
+
+alm_obj         = $(rmcp_obj)
 
 mv_obj      = $(mvdevcallobj) $(mvobj)
 eq_obj      = $(eqdevcallobj) $(eqobj)
-cpm_obj     = $(cpmdevcallobj) $(cpmcommobj)
+cpm_obj     = $(cpmdevcallobj) $(cpmobj)
 cfd_obj     = $(cfddevcallobj) $(cfdobj)
-falmobj    = $(mv_obj) $(eq_obj) $(cpm_obj) $(cfd_obj)
+falmobj    = $(mv_obj) $(eq_obj) $(cpm_obj) $(cfd_obj) $(alm_obj)
+
+alm: rmcp
 
 cpmdevcall:
 	$(nvnvcc) -c $(falmdir)/src/dev/CPMDevCall.cu $(cuflag) -o $(cpmdevcallobj)
@@ -45,5 +52,5 @@ cfd: cfddevcall cpm
 	$(nvmpicxx) -cuda -c $(falmdir)/src/FalmCFD.cpp $(flag) -o $(cfdobj)
 
 
-Falm: cfd eq
+Falm: cfd eq alm
 

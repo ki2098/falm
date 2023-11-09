@@ -12,7 +12,7 @@ void FalmCFD::FSPseudoU(
     Matrix<REAL> &g,
     Matrix<REAL> &ja,
     Matrix<REAL> &ff,
-    CPMBase      &cpm,
+    CPM      &cpm,
     dim3          block_dim,
     STREAM       *stream
 ) {
@@ -50,9 +50,9 @@ void FalmCFD::FSPseudoU(
         for (INT fid = 0; fid < 6; fid ++) {
             if (cpm.validNeighbour(fid)) {
                 dim3 __block(
-                    (fid / 2 == 0)? 1U : 8U,
-                    (fid / 2 == 1)? 1U : 8U,
-                    (fid / 2 == 2)? 1U : 8U
+                    (fid == CPM::XPLUS || fid == CPM::XMINUS)? 1U : 8U,
+                    (fid == CPM::YPLUS || fid == CPM::YMINUS)? 1U : 8U,
+                    (fid == CPM::ZPLUS || fid == CPM::ZMINUS)? 1U : 8U
                 );
                 STREAM fstream = (stream)? stream[fid] : (STREAM)0;
                 FalmCFDDevCall::FSPseudoU(un, u, uu, ua, nut, kx, g, ja, ff, pdm, Region(boundary_shape[fid], boundary_offset[fid]), __block, fstream);
@@ -74,7 +74,7 @@ void FalmCFD::UtoUU(
     Matrix<REAL> &uu,
     Matrix<REAL> &kx,
     Matrix<REAL> &ja,
-    CPMBase      &cpm,
+    CPM      &cpm,
     dim3          block_dim,
     STREAM       *stream
 ) {
@@ -108,9 +108,9 @@ void FalmCFD::UtoUU(
         for (INT fid = 0; fid < 6; fid ++) {
             if (cpm.validNeighbour(fid)) {
                 dim3 __block(
-                    (fid / 2 == 0)? 1U : 8U,
-                    (fid / 2 == 1)? 1U : 8U,
-                    (fid / 2 == 2)? 1U : 8U
+                    (fid == CPM::XPLUS || fid == CPM::XMINUS)? 1U : 8U,
+                    (fid == CPM::YPLUS || fid == CPM::YMINUS)? 1U : 8U,
+                    (fid == CPM::ZPLUS || fid == CPM::ZMINUS)? 1U : 8U
                 );
                 STREAM fstream = (stream)? stream[fid] : (STREAM)0;
                 FalmCFDDevCall::UtoCU(u, uc, kx, ja, pdm, Region(boundary_shape[fid], boundary_offset[fid]), __block, fstream);
@@ -145,7 +145,7 @@ void FalmCFD::ProjectP(
     Matrix<REAL> &p,
     Matrix<REAL> &kx,
     Matrix<REAL> &g,
-    CPMBase      &cpm,
+    CPM      &cpm,
     dim3          block_dim,
     STREAM       *stream
 ) {
@@ -168,9 +168,9 @@ void FalmCFD::ProjectP(
         for (INT fid = 0; fid < 6; fid ++) {
             if (cpm.validNeighbour(fid)) {
                 dim3 __block(
-                    (fid / 2 == 0)? 1U : 8U,
-                    (fid / 2 == 1)? 1U : 8U,
-                    (fid / 2 == 2)? 1U : 8U
+                    (fid == CPM::XPLUS || fid == CPM::XMINUS)? 1U : 8U,
+                    (fid == CPM::YPLUS || fid == CPM::YMINUS)? 1U : 8U,
+                    (fid == CPM::ZPLUS || fid == CPM::ZMINUS)? 1U : 8U
                 );
                 STREAM fstream = (stream)? stream[fid] : (STREAM)0;
                 FalmCFDDevCall::ProjectPGrid(u, ua, p, kx, pdm, Region(boundary_shape[fid], boundary_offset[fid]), __block, fstream);
@@ -203,7 +203,7 @@ void FalmCFD::SGS(
     Matrix<REAL> &x,
     Matrix<REAL> &kx,
     Matrix<REAL> &ja,
-    CPMBase      &cpm,
+    CPM      &cpm,
     dim3          block_dim,
     STREAM       *stream
 ) {
@@ -239,9 +239,9 @@ void FalmCFD::SGS(
         for (INT fid = 0; fid < 6; fid ++) {
             if (cpm.validNeighbour(fid)) {
                 dim3 __block(
-                    (fid / 2 == 0)? 1U : 8U,
-                    (fid / 2 == 1)? 1U : 8U,
-                    (fid / 2 == 2)? 1U : 8U
+                    (fid == CPM::XPLUS || fid == CPM::XMINUS)? 1U : 8U,
+                    (fid == CPM::YPLUS || fid == CPM::YMINUS)? 1U : 8U,
+                    (fid == CPM::ZPLUS || fid == CPM::ZMINUS)? 1U : 8U
                 );
                 STREAM fstream = (stream)? stream[fid] : (STREAM)0;
                 FalmCFDDevCall::SGS(u, nut, x, kx, ja, pdm, Region(boundary_shape[fid], boundary_offset[fid]), __block, fstream);

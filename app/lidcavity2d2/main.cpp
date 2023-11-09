@@ -27,7 +27,8 @@ Matrix<REAL> u, ua, uu, uua, p, nut, ff, rhs, res, dvr, w;
 Matrix<REAL> poisson_a;
 // Mapper pdm, global;
 REAL maxdiag;
-CPMBase cpm;
+CPM cpm;
+STREAM facestream[6];
 
 void field_output(INT i, int rank) {
     Region &pdm = cpm.pdm_list[cpm.rank];
@@ -105,7 +106,7 @@ void allocVars(Region &pdm) {
     dvr.alloc(pdm.shape, 1, HDCType::Device);
 }
 
-REAL main_loop(FalmCFD &cfd, FalmEq &eqsolver, CPMBase &cpm, dim3 block_dim, STREAM *stream) {
+REAL main_loop(FalmCFD &cfd, FalmEq &eqsolver, CPM &cpm, dim3 block_dim, STREAM *stream) {
     cfd.FSPseudoU(u, u, uu, ua, nut, kx, g, ja, ff, cpm, block_dim, stream);
     cfd.UtoUU(ua, uua, kx, ja, cpm, block_dim, stream);
     forceFaceVelocityZero(uua, cpm);
@@ -152,6 +153,10 @@ int main(int argc, char **argv) {
     Region &global = cpm.global;
 
     Region ginner(global.shape, cpm.gc);
+
+    for (int fid = 0; fid < 6; fid ++) {
+        cudaStreamCreate(&facestream[fid]);
+    }
 
     printf("rank %d, global size = (%d %d %d), proc size = (%d %d %d), proc offset = (%d %d %d)\n", cpm.rank, global.shape[0], global.shape[1], global.shape[2], pdm.shape[0], pdm.shape[1], pdm.shape[2], pdm.offset[0], pdm.offset[1], pdm.offset[2]);
 
@@ -241,7 +246,7 @@ int main(int argc, char **argv) {
     plt3d_output(__it, cpm.rank, DT, vcdm);
     // field_output(__it, cpm.rank);
     while (__it < __IT) {
-        REAL dvr_norm = sqrt(main_loop(cfdsolver, eqsolver, cpm, dim3(8, 8, 1), nullptr)) / ginner.size;
+        REAL dvr_norm = sqrt(main_loop(cfdsolver, eqsolver, cpm, dim3(8, 8, 1), facestream)) / ginner.size;
         __t += DT;
         __it ++;
         if (cpm.rank == 0) {
@@ -264,6 +269,10 @@ int main(int argc, char **argv) {
         vcdm.writeProcDfi();
     }
     // field_output(__IT, cpm.rank);
+
+    for (int fid = 0; fid < 6; fid ++) {
+        cudaStreamDestroy(facestream[fid]);
+    }
 
     return CPM_Finalize();
 }

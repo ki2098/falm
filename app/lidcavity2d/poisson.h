@@ -10,7 +10,7 @@ Falm::REAL makePoissonMatrix(
     Falm::Matrix<Falm::REAL> &a,
     Falm::Matrix<Falm::REAL> &g,
     Falm::Matrix<Falm::REAL> &ja,
-    Falm::CPMBase            &cpm,
+    Falm::CPM            &cpm,
     dim3                      block_dim = dim3(8, 8, 1)
 );
 
@@ -20,7 +20,7 @@ void makePoissonRHS(
     Falm::Matrix<Falm::REAL> &g,
     Falm::Matrix<Falm::REAL> &ja,
     Falm::REAL                maxdiag,
-    Falm::CPMBase            &cpm,
+    Falm::CPM            &cpm,
     dim3                      block_dim = dim3(8, 8, 1)
 );
 

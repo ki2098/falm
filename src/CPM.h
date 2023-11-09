@@ -7,7 +7,7 @@
 namespace Falm {
 
 template<typename T>
-void setVcdm(CPMBase &cpm, Vcdm::VCDM<T> &vcdm, Vcdm::double3 gRegion, Vcdm::double3 gOrigin = {0, 0, 0}) {
+void setVcdm(CPM &cpm, Vcdm::VCDM<T> &vcdm, Vcdm::double3 gRegion, Vcdm::double3 gOrigin = {0, 0, 0}) {
     vcdm.dfiFinfo.gc = cpm.gc;
     vcdm.dfiDomain.globalOrigin = gOrigin;
     vcdm.dfiDomain.globalRegion = gRegion;

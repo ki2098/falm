@@ -18,7 +18,7 @@ static void setPartition(
     Falm::INT           side_n_cell,
     Falm::Region       &global,
     Falm::Region       &pdm,
-    Falm::CPMBase      &cpm
+    Falm::CPM      &cpm
 ) {
     global = Falm::Region(
         Falm::INT3{side_n_cell + (cpm.gc*2), side_n_cell + (cpm.gc*2), 1 + (cpm.gc*2)},

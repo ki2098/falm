@@ -72,7 +72,7 @@ __global__ void kernel_pressureBC_S(
 
 void pressureBC(
     Matrix<REAL> &p,
-    CPMBase      &cpm,
+    CPM      &cpm,
     STREAM       *streamptr
 ) {
     Region &pdm = cpm.pdm_list[cpm.rank];
@@ -182,7 +182,7 @@ __global__ void kernel_velocityBC_S(
 
 void velocityBC(
     Matrix<REAL> &u,
-    CPMBase      &cpm,
+    CPM      &cpm,
     STREAM       *streamptr
 ) {
     Region &pdm = cpm.pdm_list[cpm.rank];
@@ -276,7 +276,7 @@ __global__ void kernel_forceFaceVelocityZero_S(
 
 void forceFaceVelocityZero(
     Matrix<REAL> &uu,
-    CPMBase      &cpm,
+    CPM      &cpm,
     STREAM       *streamptr
 ) {
     Region &pdm = cpm.pdm_list[cpm.rank];
@@ -306,7 +306,7 @@ void forceFaceVelocityZero(
 
 void copyZ5(
     Matrix<REAL> &field,
-    CPMBase      &cpm,
+    CPM      &cpm,
     STREAM       *streamptr
 ) {
     Region &pdm = cpm.pdm_list[cpm.rank];

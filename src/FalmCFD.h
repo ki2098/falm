@@ -23,7 +23,7 @@ public:
         Matrix<REAL> &g,
         Matrix<REAL> &ja,
         Matrix<REAL> &ff,
-        CPMBase      &cpm,
+        CPM      &cpm,
         dim3          block_dim,
         STREAM       *stream = nullptr
     );
@@ -33,7 +33,7 @@ public:
         Matrix<REAL> &uu,
         Matrix<REAL> &kx,
         Matrix<REAL> &ja,
-        CPMBase      &cpm,
+        CPM      &cpm,
         dim3          block_dim,
         STREAM       *stream = nullptr
     );
@@ -46,7 +46,7 @@ public:
         Matrix<REAL> &p,
         Matrix<REAL> &kx,
         Matrix<REAL> &g,
-        CPMBase      &cpm,
+        CPM      &cpm,
         dim3          block_dim,
         STREAM       *stream = nullptr
     );
@@ -57,7 +57,7 @@ public:
         Matrix<REAL> &x,
         Matrix<REAL> &kx,
         Matrix<REAL> &ja,
-        CPMBase      &cpm,
+        CPM      &cpm,
         dim3          block_dim,
         STREAM       *stream = nullptr
     );
@@ -66,7 +66,7 @@ public:
         Matrix<REAL> &uu,
         Matrix<REAL> &dvr,
         Matrix<REAL> &ja,
-        CPMBase      &cpm,
+        CPM      &cpm,
         dim3          block_dim
     ) {
         Region &pdm = cpm.pdm_list[cpm.rank];
@@ -78,7 +78,7 @@ public:
         Matrix<REAL> &uu,
         Matrix<REAL> &rhs,
         Matrix<REAL> &ja,
-        CPMBase      &cpm,
+        CPM      &cpm,
         dim3          block_dim,
         REAL          maxdiag = 1.0
     ) {

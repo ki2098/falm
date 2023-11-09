@@ -80,7 +80,7 @@ REAL makePoissonMatrix(
     Matrix<REAL> &a,
     Matrix<REAL> &g,
     Matrix<REAL> &ja,
-    CPMBase      &cpm,
+    CPM      &cpm,
     dim3          block_dim
 ) {
     Region &pdm = cpm.pdm_list[cpm.rank];
@@ -166,7 +166,7 @@ void makePoissonRHS(
     Matrix<REAL> &g,
     Matrix<REAL> &ja,
     REAL          maxdiag,
-    CPMBase      &cpm,
+    CPM      &cpm,
     dim3          block_dim
 ) {
     Region &pdm = cpm.pdm_list[cpm.rank];

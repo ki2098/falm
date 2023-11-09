@@ -112,7 +112,7 @@ int main(int argc, char **argv) {
         gb(idx)    = bc;
     }
 
-    CPMBase cpm;
+    CPM cpm;
     cpm.use_cuda_aware_mpi = USE_CUDA_AWARE_MPI;
     printf("using cuda aware mpi: %d \n");
     CPM_GetRank(MPI_COMM_WORLD, cpm.rank);
