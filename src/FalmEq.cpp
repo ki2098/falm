@@ -88,7 +88,7 @@ void FalmEq::Jacobi(Matrix<REAL> &a, Matrix<REAL> &x, Matrix<REAL> &b, Matrix<RE
         Matrix<REAL> xp(x.shape[0], x.shape[1], HDCType::Device, "Jacobi" + x.name + "Previous");
         it = 0;
         do {
-            xp.cpy(x, HDCType::Device);
+            xp.copy(x, HDCType::Device);
             JacobiSweep(a, x, xp, b, pdm, map, block_dim);
             FalmEqDevCall::Res(a, x, b, r, pdm, map, block_dim);
             err = sqrt(FalmMVDevCall::EuclideanNormSq(r, pdm, map, block_dim)) / map.size;
@@ -108,7 +108,7 @@ void FalmEq::Jacobi(Matrix<REAL> &a, Matrix<REAL> &x, Matrix<REAL> &b, Matrix<RE
         Matrix<REAL> xp(x.shape[0], x.shape[1], HDCType::Device, "Jacobi" + x.name + "Previous");
         it = 0;
         do {
-            xp.cpy(x, HDCType::Device);
+            xp.copy(x, HDCType::Device);
             cpmop.IExchange6Face(xp.dev.ptr, 1, 0, 0);
 
             JacobiSweep(a, x, xp, b, pdm, inner_map, block_dim);
@@ -151,7 +151,7 @@ void FalmEq::JacobiPC(Matrix<REAL> &a, Matrix<REAL> &x, Matrix<REAL> &b, CPM &cp
         Region map(pdm.shape, cpm.gc);
         INT __it = 0;
         do {
-            xp.cpy(x, HDCType::Device);
+            xp.copy(x, HDCType::Device);
             JacobiSweep(a, x, xp, b, pdm, map, block_dim);
             __it ++;
         } while (__it < pc_maxit);
@@ -166,7 +166,7 @@ void FalmEq::JacobiPC(Matrix<REAL> &a, Matrix<REAL> &x, Matrix<REAL> &b, CPM &cp
         
         INT __it = 0;
         do {
-            xp.cpy(x, HDCType::Device);
+            xp.copy(x, HDCType::Device);
             cpmop.IExchange6Face(xp.dev.ptr, 1, 0, 0);
     
             JacobiSweep(a, x, xp, b, pdm, inner_map, block_dim);
@@ -372,7 +372,7 @@ void FalmEq::PBiCGStab(Matrix<REAL> &a, Matrix<REAL> &x, Matrix<REAL> &b, Matrix
     Res(a, x, b, r, cpm, block_dim);
     err = sqrt(FalmMV::EuclideanNormSq(r, cpm, block_dim)) / gmap.size;
 
-    rr.cpy(r, HDCType::Device);
+    rr.copy(r, HDCType::Device);
     rrho  = 1.0;
     alpha = 0.0;
     omega = 1.0;
@@ -390,7 +390,7 @@ void FalmEq::PBiCGStab(Matrix<REAL> &a, Matrix<REAL> &x, Matrix<REAL> &b, Matrix
         }
 
         if (it == 0) {
-            p.cpy(r, HDCType::Device);
+            p.copy(r, HDCType::Device);
         } else {
             beta = (rho * alpha) / (rrho * omega);
             PBiCGStab1(p, q, r, beta, omega, pdm, map, block_dim);

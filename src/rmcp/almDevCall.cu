@@ -61,7 +61,7 @@ __global__ void kernel_SetALMFlag(
     }
 }
 
-void RmcpAlmDevCall::SetALMFlag(Matrix<REAL> &x, REAL t, RmcpWindfarm &wf, const Region &pdm, const Region &map, dim3 block_dim) {
+void RmcpAlmDevCall::SetALMFlag(Matrix<REAL> &x, REAL t, RmcpTurbineArray &wf, const Region &pdm, const Region &map, dim3 block_dim) {
     dim3 grid_dim(
         (map.shape[0] + block_dim.x - 1) / block_dim.x,
         (map.shape[1] + block_dim.y - 1) / block_dim.y,
@@ -130,7 +130,7 @@ __global__ void kernel_ALM(
     }
 }
 
-void RmcpAlmDevCall::ALM(Matrix<REAL> &u, Matrix<REAL> &x, Matrix<REAL> &ff, REAL t, RmcpWindfarm &wf, const Region &pdm, const Region &map, dim3 block_dim) {
+void RmcpAlmDevCall::ALM(Matrix<REAL> &u, Matrix<REAL> &x, Matrix<REAL> &ff, REAL t, RmcpTurbineArray &wf, const Region &pdm, const Region &map, dim3 block_dim) {
     dim3 grid_dim(
         (map.shape[0] + block_dim.x - 1) / block_dim.x,
         (map.shape[1] + block_dim.y - 1) / block_dim.y,
@@ -197,7 +197,7 @@ __global__ void kernel_CalcTorque(
     }
 }
 
-void RmcpAlmDevCall::CalcTorque(Matrix<REAL> &x, Matrix<REAL> &ff, RmcpWindfarm &wf, const Region &pdm, const Region &map, dim3 block_dim) {
+void RmcpAlmDevCall::CalcTorque(Matrix<REAL> &x, Matrix<REAL> &ff, RmcpTurbineArray &wf, const Region &pdm, const Region &map, dim3 block_dim) {
     dim3 grid_dim(
         (map.shape[0] + block_dim.x - 1) / block_dim.x,
         (map.shape[1] + block_dim.y - 1) / block_dim.y,

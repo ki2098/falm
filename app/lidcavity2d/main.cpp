@@ -69,7 +69,7 @@ void main_loop(FalmCFD &cfdsolver, FalmEq &eqsolver, dim3 block_dim = dim3{8, 8,
     INT    &gc  = cpm.gc;
     Region  map(pdm.shape, gc);
     Matrix<REAL> un(u.shape[0], u.shape[1], HDCType::Device, "un");
-    un.cpy(u, HDCType::Device);
+    un.copy(u, HDCType::Device);
 
     FalmCFD rk2fs1(cfdsolver.Re, cfdsolver.dt * 0.5, cfdsolver.AdvScheme, cfdsolver.SGSModel, cfdsolver.CSmagorinsky);
     FalmCFD rk2fs2(cfdsolver.Re, cfdsolver.dt      , cfdsolver.AdvScheme, cfdsolver.SGSModel, cfdsolver.CSmagorinsky);

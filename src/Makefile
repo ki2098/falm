@@ -1,6 +1,12 @@
-nvmpicxx = /opt/nvidia/hpc_sdk/Linux_x86_64/23.3/comm_libs/mpi/bin/mpic++
-nvnvcxx = /opt/nvidia/hpc_sdk/Linux_x86_64/23.3/compilers/bin/nvc++
-nvnvcc = /opt/nvidia/hpc_sdk/Linux_x86_64/23.3/cuda/bin/nvcc
+ifeq ($(platform),ito)
+	nvmpicxx = mpic++
+	nvnvcxx = nvc++
+	nvnvcc = nvcc
+else
+	nvmpicxx = /opt/nvidia/hpc_sdk/Linux_x86_64/23.3/comm_libs/mpi/bin/mpic++
+	nvnvcxx = /opt/nvidia/hpc_sdk/Linux_x86_64/23.3/compilers/bin/nvc++
+	nvnvcc = /opt/nvidia/hpc_sdk/Linux_x86_64/23.3/cuda/bin/nvcc
+endif
 
 
 flag   = --std=c++11
@@ -54,3 +60,7 @@ cfd: cfddevcall cpm
 
 Falm: cfd eq alm
 
+showenv:
+	@echo $(nvmpicxx)
+	@echo $(nvnvcc)
+	@echo $(nvnvcxx)

@@ -205,6 +205,8 @@ template<typename T> void CPMComm<T>::IExchange6Face(T *data, INT thick, INT mar
             }
             CPMBuffer   &sbuf =  buffer[fid * 2], &rbuf =  buffer[fid * 2 + 1];
             MPI_Request &sreq = mpi_req[fid * 2], &rreq = mpi_req[fid * 2 + 1];
+            // printf("rank %d face %d group %d sbuf(%d %d %d) rbuf(%d %d %d)\n", base->rank, fid, grp_tag, sbuf.map.shape[0], sbuf.map.shape[1], sbuf.map.shape[2], rbuf.map.shape[0], rbuf.map.shape[1], rbuf.map.shape[2]);
+            // fflush(stdout);
             CPM_ISend(sbuf, mpi_dtype, base->neighbour[fid], base->neighbour[fid] + grp_tag * 12, MPI_COMM_WORLD, &sreq);
             CPM_IRecv(rbuf, mpi_dtype, base->neighbour[fid], base->rank           + grp_tag * 12, MPI_COMM_WORLD, &rreq);
         }

@@ -3,6 +3,10 @@ include $(falmdir)/src/Makefile
 
 cuflag = $(flag) --default-stream per-thread
 
-main: Falm
+bcobj = bin/bc.o
+bc:
+	$(nvnvcc) -c bcdev.cu $(cuflag) -o $(bcobj);
+
+lid3: bc Falm
 	$(nvmpicxx) -cuda -c main.cpp $(flag) -o bin/main.o
-	$(nvmpicxx) -cuda $(falmobj) bin/main.o -o bin/t1
+	$(nvmpicxx) -cuda $(bcobj) $(falmobj) bin/main.o -o bin/lid3

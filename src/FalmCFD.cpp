@@ -27,8 +27,14 @@ void FalmCFD::FSPseudoU(
         CPMComm<REAL> nutcpm(&cpm);
 
         ucpm.IExchange6Face(&u.dev(0,0), 2, 0, 0, stream);
+        // printf("rank %d, [%d %d %d], [%d %d %d %d %d %d]\n", cpm.rank, cpm.idx[0], cpm.idx[1], cpm.idx[2], cpm.neighbour[0], cpm.neighbour[1], cpm.neighbour[2], cpm.neighbour[3], cpm.neighbour[4], cpm.neighbour[5]);
+        // fflush(stdout);
         vcpm.IExchange6Face(&u.dev(0,1), 2, 0, 1, stream);
+        // printf("rank %d, [%d %d %d], [%d %d %d %d %d %d]\n", cpm.rank, cpm.idx[0], cpm.idx[1], cpm.idx[2], cpm.neighbour[0], cpm.neighbour[1], cpm.neighbour[2], cpm.neighbour[3], cpm.neighbour[4], cpm.neighbour[5]);
+        // fflush(stdout);
         wcpm.IExchange6Face(&u.dev(0,2), 2, 0, 2, stream);
+        // printf("rank %d, [%d %d %d], [%d %d %d %d %d %d]\n", cpm.rank, cpm.idx[0], cpm.idx[1], cpm.idx[2], cpm.neighbour[0], cpm.neighbour[1], cpm.neighbour[2], cpm.neighbour[3], cpm.neighbour[4], cpm.neighbour[5]);
+        // fflush(stdout);
         nutcpm.IExchange6Face(&nut.dev(0), 1, 0, 3, stream);
 
         INT3 inner_shape, inner_offset, boundary_shape[6], boundary_offset[6];
@@ -218,13 +224,16 @@ void FalmCFD::SGS(
         INT3 inner_shape, inner_offset, boundary_shape[6], boundary_offset[6];
         cpm.set6Region(inner_shape, inner_offset, boundary_shape, boundary_offset, 1, Region(pdm.shape, cpm.gc));
 
-        CPMComm<REAL> ucpm;
-        CPMComm<REAL> vcpm;
-        CPMComm<REAL> wcpm;
+        CPMComm<REAL> ucpm(&cpm);
+        CPMComm<REAL> vcpm(&cpm);
+        CPMComm<REAL> wcpm(&cpm);
 
         ucpm.IExchange6Face(&u.dev(0, 0), 1, 0, 0, stream);
+        // printf("6.5.1\n"); fflush(stdout);
         vcpm.IExchange6Face(&u.dev(0, 1), 1, 0, 1, stream);
+        // printf("6.5.2\n"); fflush(stdout);
         wcpm.IExchange6Face(&u.dev(0, 2), 1, 0, 2, stream);
+        // printf("6.5.3\n"); fflush(stdout);
 
         FalmCFDDevCall::SGS(u, nut, x, kx, ja, pdm, Region(inner_shape, inner_offset), block_dim);
 

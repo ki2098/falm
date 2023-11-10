@@ -19,12 +19,12 @@ __global__ void kernel_MV(const MatrixFrame<REAL> *va, const MatrixFrame<REAL> *
         INT idxt = IDX(i  , j  , k+1, pdm_shape);
         INT idxb = IDX(i  , j  , k-1, pdm_shape);
         REAL ac = a(idxc, 0);
-        REAL ae = a(idxc, 1);
-        REAL aw = a(idxc, 2);
-        REAL an = a(idxc, 3);
-        REAL as = a(idxc, 4);
-        REAL at = a(idxc, 5);
-        REAL ab = a(idxc, 6);
+        REAL aw = a(idxc, 1);
+        REAL ae = a(idxc, 2);
+        REAL as = a(idxc, 3);
+        REAL an = a(idxc, 4);
+        REAL ab = a(idxc, 5);
+        REAL at = a(idxc, 6);
         REAL xc = x(idxc);
         REAL xe = x(idxe);
         REAL xw = x(idxw);
@@ -499,8 +499,8 @@ __global__ void kernel_ScaleMatrix(const MatrixFrame<REAL> *va, REAL scale) {
 void FalmMVDevCall::ScaleMatrix(Matrix<REAL> &a, REAL scale, dim3 block_dim) {
     INT n_threads = PRODUCT3(block_dim);
     INT n_blocks = (a.size + n_threads - 1) / n_threads;
-    kernel_ScaleMatrix<<<n_blocks, n_threads, 0, 0>>>(a.devptr, scale);
-    falmWaitStream(0);
+    kernel_ScaleMatrix<<<n_blocks, n_threads>>>(a.devptr, scale);
+    falmWaitStream();
 }
 
 __global__ void kernel_VecMax(const MatrixFrame<REAL> *va, REAL *partial_max_dev, INT3 pdm_shape, INT3 map_shape, INT3 map_offset ) {

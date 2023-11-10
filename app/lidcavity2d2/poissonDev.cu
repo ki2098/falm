@@ -74,10 +74,10 @@ __global__ void kernel_makePoissonMatrix(
         }
 
         a(idxcc, 0) = ac;
-        a(idxcc, 1) = ae;
-        a(idxcc, 2) = aw;
-        a(idxcc, 3) = an;
-        a(idxcc, 4) = as;
+        a(idxcc, 1) = aw;
+        a(idxcc, 2) = ae;
+        a(idxcc, 3) = as;
+        a(idxcc, 4) = an;
     }
 }
 

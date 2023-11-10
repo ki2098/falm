@@ -9,20 +9,20 @@
 namespace Falm {
 
 struct RmcpTurbine {
-    REAL  torque;
-    REAL  cpower;
-    REAL3    pos;
-    REAL3 rotpos;
-    REAL       R;
+    REAL  torque = 0;
+    REAL  cpower = 0;
+    REAL3    pos = {0, 0, 0};
+    REAL3 rotpos = {0, 0, 0};
+    REAL       R = 1.0;
     REAL   width;
     REAL   thick;
     REAL     tip;
     REAL     hub;
-    REAL    roll;
-    REAL   pitch;
-    REAL     yaw;
-    REAL chord_a[6];
-    REAL angle_a[6];
+    REAL    roll = 0.0;
+    REAL   pitch = 0.0;
+    REAL     yaw = 0.0;
+    VECTOR<REAL, 6> chord_a;
+    VECTOR<REAL, 6> angle_a;
 
     __host__ __device__ REAL chord(REAL r) {
         REAL r2 = r * r;
@@ -85,16 +85,16 @@ struct RmcpTurbine {
     }
 };
 
-struct RmcpWindfarm {
+struct RmcpTurbineArray {
     RmcpTurbine *tptr;
     RmcpTurbine *tdevptr;
     FLAG     hdctype;
     INT     nTurbine;
 
-    RmcpWindfarm(const RmcpWindfarm &_wf) = delete;
-    RmcpWindfarm &operator=(const RmcpWindfarm &_wf) = delete;
+    RmcpTurbineArray(const RmcpTurbineArray &_wf) = delete;
+    RmcpTurbineArray &operator=(const RmcpTurbineArray &_wf) = delete;
 
-    RmcpWindfarm(INT _n) {
+    RmcpTurbineArray(INT _n) {
         nTurbine = _n;
         hdctype  = HDCType::Host;
         tptr     = (RmcpTurbine*)falmMallocPinned(sizeof(RmcpTurbine) * nTurbine);
@@ -134,7 +134,7 @@ struct RmcpWindfarm {
         }
     }
 
-    ~RmcpWindfarm() {
+    ~RmcpTurbineArray() {
         if (hdctype & HDCType::Device) {
             falmFreeDevice(tdevptr);
         }

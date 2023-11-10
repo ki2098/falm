@@ -7,6 +7,8 @@
 
 namespace Falm {
 
+enum class StencilMatrix {Empty, D3P7, D3P13, D2P5, D2P9, D1P3, D1P5};
+
 template<typename T>
 struct MatrixFrame {
     T                *ptr;
@@ -156,7 +158,7 @@ struct Matrix {
     void release(FLAG _hdctype);
     void sync(FLAG _mcptype);
 
-    void cpy(Matrix<T> &src, FLAG _hdctype);
+    void copy(Matrix<T> &src, FLAG _hdctype);
     void clear(FLAG _hdctype);
 
     const char *cname() {return name.c_str();}
@@ -269,7 +271,7 @@ template<typename T> void Matrix<T>::sync(FLAG _mcptype) {
     }
 }
 
-template<typename T> void Matrix<T>::cpy(Matrix<T> &src, FLAG _hdctype) {
+template<typename T> void Matrix<T>::copy(Matrix<T> &src, FLAG _hdctype) {
     if (_hdctype & HDCType::Host) {
         assert((hdctype & src.hdctype & HDCType::Host) && (size == src.size));
         falmMemcpy(host.ptr, src.host.ptr, sizeof(T) * size, MCpType::Hst2Hst);
