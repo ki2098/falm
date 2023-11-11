@@ -1,4 +1,5 @@
 #include <math.h>
+#include <fstream>
 #include "../../src/FalmCFD.h"
 #include "../../src/FalmEq.h"
 #include "../../src/rmcp/alm.h"
@@ -9,12 +10,13 @@ using namespace Falm;
 
 const dim3 block(8, 8, 8);
 const REAL3 Lxyz{{24.0, 8.0, 8.0}};
-const INT3  Nxyz{{480, 160, 160}};
+const INT3  Nxyz{{750, 250, 250}};
 const REAL3 origin{{-4,-4,-4}};
 
 const REAL endtime = 100;
 const REAL dt = 5e-3;
 
+Matrix<REAL> gx, gy, gz, ghx, ghy, ghz;
 Matrix<REAL> x, h, kx, g, ja;
 Matrix<REAL> u, uprev, uu, ua, uua, p, nut, ff ,rhs, res, dvr, vrt;
 Matrix<REAL> poisson_a;
@@ -22,6 +24,90 @@ REAL maxdiag;
 CPM cpm;
 Vcdm::VCDM<float> vcdm;
 STREAM facestream[CPM::NFACE];
+
+void read_grid() {
+    const INT3 &shape = cpm.pdm_list[cpm.rank].shape;
+    const INT3 &gshape = cpm.global.shape;
+    std::ifstream xfile("x.txt");
+    std::ifstream yfile("y.txt");
+    std::ifstream zfile("z.txt");
+    if (!xfile || !yfile || !zfile) {
+        printf("Cannot open grid file\n");
+    }
+    std::string line;
+    int nx, ny, nz;
+    std::getline(xfile, line);
+    nx = std::stoi(line);
+    std::getline(yfile, line);
+    ny = std::stoi(line);
+    std::getline(zfile, line);
+    nz = std::stoi(line);
+    printf("%d %d %d\n", nx, ny, nz);
+    if (nx != gshape[0] - 2 || ny != gshape[1] - 2 || nz != gshape[2] - 2) {
+        printf("Wrong domain size\n");
+    }
+    gx.alloc(gshape[0], 1, HDCType::Host);
+    gy.alloc(gshape[1], 1, HDCType::Host);
+    gz.alloc(gshape[2], 1, HDCType::Host);
+    ghx.alloc(gshape[0], 1, HDCType::Host);
+    ghy.alloc(gshape[1], 1, HDCType::Host);
+    ghz.alloc(gshape[2], 1, HDCType::Host);
+    for (int id = 1; id < gshape[0] - 1; id ++) {
+        std::getline(xfile, line);
+        gx(id) = std::stod(line);
+    }
+    gx(0         ) = 3 * gx(1         ) - 3 * gx(2         ) +     gx(3         );
+    gx(gshape[0]-1) =     gx(gshape[0]-4) - 3 * gx(gshape[0]-3) + 3 * gx(gshape[0]-2);
+    for (int id = 1; id < gshape[0] - 1; id ++) {
+        ghx(id) = 0.5 * (gx(id+1) - gx(id-1));
+    }
+    ghx(0         ) = 2 * ghx(1         ) - ghx(2         );
+    ghx(gshape[0]-1) = 2 * ghx(gshape[0]-2) - ghx(gshape[0]-3);
+
+    for (int id = 1; id < gshape[1] - 1; id ++) {
+        std::getline(yfile, line);
+        gy(id) = std::stod(line);
+    }
+    gy(0         ) = 3 * gy(1         ) - 3 * gy(2         ) +     gy(3         );
+    gy(gshape[1]-1) =     gy(gshape[1]-4) - 3 * gy(gshape[1]-3) + 3 * gy(gshape[1]-2);
+    for (int id = 1; id < gshape[1] - 1; id ++) {
+        ghy(id) = 0.5 * (gy(id+1) - gy(id-1));
+    }
+    ghy(0         ) = 2 * ghy(1         ) - ghy(2         );
+    ghy(gshape[1]-1) = 2 * ghy(gshape[1]-2) - ghy(gshape[1]-3);
+
+    for (int id = 1; id < gshape[2] - 1; id ++) {
+        std::getline(zfile, line);
+        gz(id) = std::stod(line);
+    }
+    gz(0         ) = 3 * gz(1         ) - 3 * gz(2         ) +     gz(3         );
+    gz(gshape[2]-1) =     gz(gshape[2]-4) - 3 * gz(gshape[2]-3) + 3 * gz(gshape[2]-2);
+    for (int id = 1; id < gshape[2] - 1; id ++) {
+        ghz(id) = 0.5 * (gz(id+1) - gz(id-1));
+    }
+    ghz(0         ) = 2 * ghz(1         ) - ghz(2         );
+    ghz(gshape[2]-1) = 2 * ghz(gshape[2]-2) - ghz(gshape[2]-3);
+
+    const INT3 &offset = cpm.pdm_list[cpm.rank].offset;
+    for (INT k = 0; k < shape[2]; k ++) {
+    for (INT j = 0; j < shape[1]; j ++) {
+    for (INT i = 0; i < shape[0]; i ++) {
+        REAL idx = IDX(i, j, k, shape);
+        x(idx, 0) = gx(i + offset[0]);
+        x(idx, 1) = gy(j + offset[1]);
+        x(idx, 2) = gz(k + offset[2]);
+        h(idx, 0) = ghx(i + offset[0]);
+        h(idx, 1) = ghy(j + offset[1]);
+        h(idx, 2) = ghz(k + offset[2]);
+    }}}
+
+    gx.release(HDCType::Host);
+    gy.release(HDCType::Host);
+    gz.release(HDCType::Host);
+    ghx.release(HDCType::Host);
+    ghy.release(HDCType::Host);
+    ghz.release(HDCType::Host);
+}
 
 void plt3d_output(int step, int rank, double dt) {
     Matrix<float> uvw(cpm.pdm_list[cpm.rank].shape, 7, HDCType::Host, "uvw");
@@ -92,6 +178,7 @@ REAL main_loop(FalmCFD &cfd, FalmEq &eq, RmcpAlm &alm, RmcpTurbineArray &turbine
 }
 
 int main(int argc, char **argv) {
+    assert(GuideCell == 2);
     CPM_Init(&argc, &argv);
     int mpi_rank, mpi_size;
     cpm.use_cuda_aware_mpi = true;
@@ -167,19 +254,17 @@ int main(int argc, char **argv) {
     kx.alloc(pdm.shape, 3, HDCType::Host);
     ja.alloc(pdm.shape, 1, HDCType::Host);
     g.alloc(pdm.shape, 3, HDCType::Host);
-    const REAL3 pitch = {{Lxyz[0]/Nxyz[0], Lxyz[1]/Nxyz[1], Lxyz[2]/Nxyz[2]}};
-    const REAL volume = pitch[0] * pitch[1] * pitch[2];
-    const REAL3 dkdx  = {{1.0/pitch[0], 1.0/pitch[1], 1.0/pitch[2]}};
+    read_grid();
     for (INT k = 0; k < pdm.shape[2]; k ++) {
     for (INT j = 0; j < pdm.shape[1]; j ++) {
     for (INT i = 0; i < pdm.shape[0]; i ++) {
         INT idx = IDX(i, j, k, pdm.shape);
-        x(idx, 0) = origin[0] + (i + pdm.offset[0] - cpm.gc + 0.5) * pitch[0];
-        x(idx, 1) = origin[1] + (j + pdm.offset[1] - cpm.gc + 0.5) * pitch[1];
-        x(idx, 2) = origin[2] + (k + pdm.offset[2] - cpm.gc + 0.5) * pitch[2];
-        h(idx, 0) = pitch[0];
-        h(idx, 1) = pitch[1];
-        h(idx, 2) = pitch[2];
+        REAL3 pitch;
+        pitch[0] = h(idx, 0);
+        pitch[1] = h(idx, 1);
+        pitch[2] = h(idx, 2);
+        const REAL volume = pitch[0] * pitch[1] * pitch[2];
+        const REAL3 dkdx  = {{1.0/pitch[0], 1.0/pitch[1], 1.0/pitch[2]}};
         g(idx, 0) = volume * (dkdx[0] * dkdx[0]);
         g(idx, 1) = volume * (dkdx[1] * dkdx[1]);
         g(idx, 2) = volume * (dkdx[2] * dkdx[2]);
