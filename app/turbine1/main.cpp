@@ -311,22 +311,25 @@ int main(int argc, char **argv) {
         fflush(stdout);
     }
     cfdsolver.UtoUU(u, uu, kx, ja, cpm, block, facestream);
+    double t_start = MPI_Wtime();
     while (__it < __IT) {
         REAL dvr_norm = sqrt(main_loop(cfdsolver, eqsolver, alm, turbineArray, __it, dt, facestream)) / ginner.size;
         __t += dt;
         __it ++;
         if (cpm.rank == 0) {
-            printf("\r%8d %12.5e, %12.5e, %3d, %12.5e", __it, __t, dvr_norm, eqsolver.it, eqsolver.err);
+            printf("%8d %12.5e, %12.5e, %3d, %12.5e\n", __it, __t, dvr_norm, eqsolver.it, eqsolver.err);
             fflush(stdout);
         }
         if (__it % __oIT == 0) {
             plt3d_output(__it, cpm.rank, dt);
         }
     }
+    double t_end = MPI_Wtime();
     printf("\n");
     if (cpm.rank == 0) {
         vcdm.writeIndexDfi();
         vcdm.writeProcDfi();
+        printf("wall time = %lf\n", t_end - t_start);
     }
 
 
