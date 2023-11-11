@@ -12,8 +12,9 @@ module load nvhpc/nvhpc_20.11
 
 date
 
-mpirun -np 8 --map-by ppr:2:socket -display-devel-map -display-devel-map --mca btl_smcuda_use_cuda_ipc 0 --mca plm_rsh_agent /bin/pjrsh -machinefile ${PJM_O_NODEINF} nvprof --log-file %q{OMPI_COMM_WORLD_RANK}.prof ./bin/t1
+mpirun -np 8 --map-by ppr:2:socket -display-devel-map -display-devel-map --mca btl_smcuda_use_cuda_ipc 0 --mca plm_rsh_agent /bin/pjrsh -machinefile ${PJM_O_NODEINF} ./bin/t1
 
 #  --mca btl_smcuda_use_cuda_ipc 0
+#  nvprof --log-file %q{OMPI_COMM_WORLD_RANK}.prof
 
 tar cvzf data.tar.gz data
