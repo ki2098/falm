@@ -160,7 +160,7 @@ public:
     //     L1Dev_ScaleMatrix(rhs, 1.0 / (dt * maxdiag), block_dim);
     // }
 
-protected:
+
     void FSPseudoU(
         Matrix<REAL> &un,
         Matrix<REAL> &u,
@@ -233,6 +233,15 @@ protected:
         const Region &map,
         dim3          block_dim,
         STREAM        stream = (STREAM)0
+    );
+    void Vortcity(
+        Matrix<REAL> &u,
+        Matrix<REAL> &kx,
+        Matrix<REAL> &vrt,
+        Region       &pdm,
+        const Region &map,
+        dim3          block_dim,
+        STREAM        stream = 0
     );
 };
 

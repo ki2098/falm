@@ -471,6 +471,37 @@ __global__ void kernel_Cartesian_Divergence(
     }
 }
 
+__global__ void kernel_Vortcity(
+    const MatrixFrame<REAL> *vu,
+    const MatrixFrame<REAL> *vkx,
+    const MatrixFrame<REAL> *vvrt,
+    INT3              pdm_shap,
+    INT3              map_shap,
+    INT3              map_offset
+) {
+    const MatrixFrame<REAL> &u = *vu, &kx = *vkx, &vrt = *vvrt;
+    INT i, j, k;
+    GLOBAL_THREAD_IDX_3D(i, j, k);
+    if (i < map_shap[0] && j < map_shap[1] && k < map_shap[2]) {
+        i += map_offset[0];
+        j += map_offset[1];
+        k += map_offset[2];
+        INT idxc = IDX(i, j, k, pdm_shap);
+        REAL kxx = kx(idxc, 0);
+        REAL kxy = kx(idxc, 1);
+        REAL kxz = kx(idxc, 2);
+        REAL dvdx = 0.5 * kxx * (u(IDX(i+1,j,k,pdm_shap),1) - u(IDX(i-1,j,k,pdm_shap),1));
+        REAL dwdx = 0.5 * kxx * (u(IDX(i+1,j,k,pdm_shap),2) - u(IDX(i-1,j,k,pdm_shap),2));
+        REAL dudy = 0.5 * kxy * (u(IDX(i,j+1,k,pdm_shap),0) - u(IDX(i,j-1,k,pdm_shap),0));
+        REAL dwdy = 0.5 * kxy * (u(IDX(i,j+1,k,pdm_shap),2) - u(IDX(i,j-1,k,pdm_shap),2));
+        REAL dudz = 0.5 * kxz * (u(IDX(i,j,k+1,pdm_shap),0) - u(IDX(i,j,k-1,pdm_shap),0));
+        REAL dvdz = 0.5 * kxz * (u(IDX(i,j,k+1,pdm_shap),1) - u(IDX(i,j,k-1,pdm_shap),1));
+        vrt(idxc, 0) = dwdy - dvdz;
+        vrt(idxc, 1) = dudz - dwdx;
+        vrt(idxc, 2) = dvdx - dudy;
+    }
+}
+
 void FalmCFDDevCall::FSPseudoU(
     Matrix<REAL> &un,
     Matrix<REAL> &u,
@@ -674,6 +705,26 @@ void FalmCFDDevCall::Divergence(
         pdm.shape,
         map.shape,
         map.offset
+    );
+}
+
+void FalmCFDDevCall::Vortcity(
+    Matrix<REAL> &u,
+    Matrix<REAL> &kx,
+    Matrix<REAL> &vrt,
+    Region       &pdm,
+    const Region &map,
+    dim3          block_dim,
+    STREAM        stream
+) {
+    dim3 grid_dim(
+        (map.shape[0] + block_dim.x - 1) / block_dim.x,
+        (map.shape[1] + block_dim.y - 1) / block_dim.y,
+        (map.shape[2] + block_dim.z - 1) / block_dim.z
+    );
+    kernel_Vortcity<<<grid_dim, block_dim, 0, stream>>>(
+        u.devptr, kx.devptr, vrt.devptr,
+        pdm.shape, map.shape, map.offset
     );
 }
 

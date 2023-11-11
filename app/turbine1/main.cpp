@@ -16,7 +16,7 @@ const REAL endtime = 100;
 const REAL dt = 5e-3;
 
 Matrix<REAL> x, h, kx, g, ja;
-Matrix<REAL> u, uprev, uu, ua, uua, p, nut, ff ,rhs, res, dvr;
+Matrix<REAL> u, uprev, uu, ua, uua, p, nut, ff ,rhs, res, dvr, vrt;
 Matrix<REAL> poisson_a;
 REAL maxdiag;
 CPM cpm;
@@ -24,32 +24,34 @@ Vcdm::VCDM<float> vcdm;
 STREAM facestream[CPM::NFACE];
 
 void plt3d_output(int step, int rank, double dt) {
-    Matrix<float> uvw(cpm.pdm_list[cpm.rank].shape, 6, HDCType::Host, "uvw");
+    Matrix<float> uvw(cpm.pdm_list[cpm.rank].shape, 7, HDCType::Host, "uvw");
     u.sync(MCpType::Dev2Hst);
     p.sync(MCpType::Dev2Hst);
-    nut.sync(MCpType::Dev2Hst);
-    dvr.sync(MCpType::Dev2Hst);
+    vrt.sync(MCpType::Dev2Hst);
     for (INT i = 0; i < u.shape[0]; i ++) {
         uvw(i, 0) = u(i, 0);
         uvw(i, 1) = u(i, 1);
         uvw(i, 2) = u(i, 2);
         uvw(i, 3) = p(i);
-        uvw(i, 4) = nut(i);
-        uvw(i, 5) = dvr(i);
+        uvw(i, 4) = vrt(i, 0);
+        uvw(i, 5) = vrt(i, 1);
+        uvw(i, 6) = vrt(i, 2);
     }
-    vcdm.writeFileData(&uvw(0, 0), cpm.gc, 6, rank, step, Vcdm::IdxType::IJKN);
+    vcdm.writeFileData(&uvw(0, 0), cpm.gc, 7, rank, step, Vcdm::IdxType::IJKN);
     double umax = FalmMV::MatColMax(u, 0, cpm, block);
     double vmax = FalmMV::MatColMax(u, 1, cpm, block);
     double wmax = FalmMV::MatColMax(u, 2, cpm, block);
     double pmax = FalmMV::MatColMax(p, 0, cpm, block);
-    double nmax = FalmMV::MatColMax(nut, 0, cpm, block);
-    double dmax = FalmMV::MatColMax(dvr, 0, cpm, block);
+    double vxmax = FalmMV::MatColMax(vrt, 0, cpm, block);
+    double vymax = FalmMV::MatColMax(vrt, 1, cpm, block);
+    double vzmax = FalmMV::MatColMax(vrt, 2, cpm, block);
     double umin = FalmMV::MatColMin(u, 0, cpm, block);
     double vmin = FalmMV::MatColMin(u, 1, cpm, block);
     double wmin = FalmMV::MatColMin(u, 2, cpm, block);
     double pmin = FalmMV::MatColMin(p, 0, cpm, block);
-    double nmin = FalmMV::MatColMin(nut, 0, cpm, block);
-    double dmin = FalmMV::MatColMin(dvr, 0, cpm, block);
+    double vxmin = FalmMV::MatColMin(vrt, 0, cpm, block);
+    double vymin = FalmMV::MatColMin(vrt, 1, cpm, block);
+    double vzmin = FalmMV::MatColMin(vrt, 2, cpm, block);
     Vcdm::VcdmSlice slice;
     slice.step = step;
     slice.time = step * dt;
@@ -58,8 +60,8 @@ void plt3d_output(int step, int rank, double dt) {
     slice.avgMode = true;
     // slice.vectorMax = _max;
     // slice.vectorMin = _min;
-    slice.varMax = {umax, vmax, wmax, pmax, nmax, dmax};
-    slice.varMin = {umin, vmin, wmin, pmin, nmin, dmin};
+    slice.varMax = {umax, vmax, wmax, pmax, vxmax, vymax, vzmax};
+    slice.varMin = {umin, vmin, wmin, pmin, vxmin, vymin, vzmin};
     vcdm.timeSlice.push_back(slice);
 }
 
@@ -84,6 +86,8 @@ REAL main_loop(FalmCFD &cfd, FalmEq &eq, RmcpAlm &alm, RmcpTurbineArray &turbine
 
     cfd.Divergence(uu, dvr, ja, cpm, block);
 
+    cfd.FalmCFDDevCall::Vortcity(u, kx, vrt, cpm.pdm_list[cpm.rank], Region(cpm.pdm_list[cpm.rank].shape, cpm.gc), block);
+
     return FalmMV::EuclideanNormSq(dvr, cpm, block);
 }
 
@@ -101,7 +105,7 @@ int main(int argc, char **argv) {
     fflush(stdout); CPM_Barrier(MPI_COMM_WORLD);
     vcdm.setPath("data", "lid3d");
     setVcdm(cpm, vcdm, {{Lxyz[0],Lxyz[1],Lxyz[2]}}, {{origin[0], origin[1], origin[2]}});
-    vcdm.dfiFinfo.varList = {"u", "v", "w", "p", "nut", "divergence"};
+    vcdm.dfiFinfo.varList = {"u", "v", "w", "p", "vorticityX", "vorticityY", "vorticityZ"};
     if (cpm.rank == 0) {
         Vcdm::double3 d3;
         Vcdm::int3    i3;
@@ -150,6 +154,7 @@ int main(int argc, char **argv) {
     rhs.alloc(pdm.shape, 1, HDCType::Device);
     res.alloc(pdm.shape, 1, HDCType::Device);
     dvr.alloc(pdm.shape, 1, HDCType::Device);
+    vrt.alloc(pdm.shape, 3, HDCType::Device);
     for (INT id = 0; id < u.shape[0]; id ++) {
         u(id, 0) = 1.0;
         u(id, 1) = u(id, 2) = 0.0;
@@ -272,7 +277,6 @@ int main(int argc, char **argv) {
     turbine.R = 1;
     turbine.width = 0.2;
     turbine.thick = 0.1;
-    turbine.pitch = Pi/6;
     turbine.tip = 4;
     turbine.hub = 0.1;
     turbine.chord_a = {{
@@ -295,7 +299,7 @@ int main(int argc, char **argv) {
     turbineArray.sync(MCpType::Hst2Dev);
 
     FalmCFD cfdsolver(10000, dt, AdvectionSchemeType::Upwind3, SGSType::Smagorinsky);
-    FalmEq eqsolver(LSType::PBiCGStab, 1000, 1e-6, 1.2, LSType::SOR, 5, 1.5);
+    FalmEq eqsolver(LSType::PBiCGStab, 1000, 1e-6, 1.2, LSType::SOR, 3, 1.5);
     RmcpAlm alm(cpm);
     if (cpm.rank == 0) {
         printf("running on %dx%dx%d grid with Re=%lf until t=%lf\n", Nxyz[0], Nxyz[1], Nxyz[1], cfdsolver.Re, endtime);
