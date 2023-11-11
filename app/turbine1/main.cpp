@@ -228,6 +228,11 @@ int main(int argc, char **argv) {
         vcdm.writeProcDfi();
     }
     CPM_Barrier(MPI_COMM_WORLD);
+    int ngpu;
+    cudaGetDeviceCount(&ngpu);
+    cudaSetDevice(cpm.rank % ngpu);
+    printf("rank %d on gpu %d\n", cpm.rank, cpm.rank % ngpu); fflush(stdout);
+    CPM_Barrier(MPI_COMM_WORLD);
 
     for (int fid = 0; fid < 6; fid ++) {
         cudaStreamCreate(&facestream[fid]);
@@ -276,9 +281,9 @@ int main(int argc, char **argv) {
         kx(idx, 2) = dkdx[2];
         ja(idx) = volume;
 
-        xyz(idx, 0) = origin[0] + (i + pdm.offset[0] - cpm.gc + 0.5) * pitch[0];
-        xyz(idx, 1) = origin[1] + (j + pdm.offset[1] - cpm.gc + 0.5) * pitch[1];
-        xyz(idx, 2) = origin[2] + (k + pdm.offset[2] - cpm.gc + 0.5) * pitch[2];
+        xyz(idx, 0) = x(idx, 0);
+        xyz(idx, 1) = x(idx, 1);
+        xyz(idx, 2) = x(idx, 2);
     }}}
     x.sync(MCpType::Hst2Dev);
     // h.sync(MCpType::Hst2Dev);
@@ -286,6 +291,7 @@ int main(int argc, char **argv) {
     ja.sync(MCpType::Hst2Dev);
     g.sync(MCpType::Hst2Dev);
     vcdm.writeGridData(&xyz(0), cpm.gc, cpm.rank, 0, Vcdm::IdxType::IJKN);
+    xyz.release(HDCType::Host);
 
     poisson_a.alloc(pdm.shape, 7, HDCType::Host, "poisson matrix", StencilMatrix::D3P7);
     for (INT k = cpm.gc; k < pdm.shape[2] - cpm.gc; k ++) {
@@ -351,8 +357,11 @@ int main(int argc, char **argv) {
         poisson_a(idxcc, 6) = at;
     }}}
     poisson_a.sync(MCpType::Hst2Dev);
+    printf("OK1\n");
     maxdiag = FalmMV::MaxDiag(poisson_a, cpm, {8, 8, 8});
+    printf("OK2\n");
     FalmMV::ScaleMatrix(poisson_a, 1.0 / maxdiag, {8, 8, 8});
+    printf("OK3\n");
     if (cpm.rank == 0) {
         printf("max diag = %lf\n", maxdiag);
         fflush(stdout);
@@ -424,7 +433,7 @@ int main(int argc, char **argv) {
         printf("wall time = %lf\n", t_end - t_start);
     }
 
-
+End:
     for (INT fid = 0; fid < CPM::NFACE; fid ++) {
         cudaStreamDestroy(facestream[fid]);
     }
