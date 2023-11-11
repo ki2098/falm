@@ -268,6 +268,15 @@ int main(int argc, char **argv) {
     for (INT i = 0; i < pdm.shape[0]; i ++) {
         INT idx = IDX(i, j, k, pdm.shape);
         REAL3 pitch;
+        /* pitch[0] = Lxyz[0] / Nxyz[0];
+        pitch[1] = Lxyz[1] / Nxyz[1];
+        pitch[2] = Lxyz[2] / Nxyz[2];
+        h(idx, 0) = pitch[0];
+        h(idx, 1) = pitch[1];
+        h(idx, 2) = pitch[2];
+        x(idx, 0) = origin[0] + (i + pdm.offset[0] - cpm.gc + 1) * pitch[0];
+        x(idx, 1) = origin[1] + (j + pdm.offset[1] - cpm.gc + 1) * pitch[1];
+        x(idx, 2) = origin[2] + (k + pdm.offset[2] - cpm.gc + 1) * pitch[2]; */
         pitch[0] = h(idx, 0);
         pitch[1] = h(idx, 1);
         pitch[2] = h(idx, 2);
