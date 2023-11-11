@@ -13,7 +13,7 @@ const REAL3 Lxyz{{24.0, 8.0, 8.0}};
 const INT3  Nxyz{{750, 250, 250}};
 const REAL3 origin{{-4,-4,-4}};
 
-const REAL endtime = 1.0;
+const REAL endtime = 2.0;
 const REAL dt = 5e-3;
 
 Matrix<REAL> gx, gy, gz, ghx, ghy, ghz;
