@@ -97,7 +97,7 @@ struct RmcpTurbineArray {
     RmcpTurbineArray(INT _n) {
         nTurbine = _n;
         hdctype  = HDCType::Host;
-        tptr     = (RmcpTurbine*)falmMallocPinned(sizeof(RmcpTurbine) * nTurbine);
+        tptr     = (RmcpTurbine*)falmMalloc(sizeof(RmcpTurbine) * nTurbine);
         tdevptr  = nullptr;
     }
 
@@ -114,7 +114,7 @@ struct RmcpTurbineArray {
             if (hdctype & HDCType::Host) {
                 falmMemcpy(tptr, tdevptr, sizeof(RmcpTurbine) * nTurbine, MCpType::Dev2Hst);
             } else {
-                tptr = (RmcpTurbine*)falmMallocPinned(sizeof(RmcpTurbine) * nTurbine);
+                tptr = (RmcpTurbine*)falmMalloc(sizeof(RmcpTurbine) * nTurbine);
                 falmMemcpy(tptr, tdevptr, sizeof(RmcpTurbine) * nTurbine, MCpType::Dev2Hst);
                 hdctype &= HDCType::Host;
             }
@@ -123,7 +123,7 @@ struct RmcpTurbineArray {
 
     void release(FLAG _hdctype) {
         if (_hdctype & HDCType::Host) {
-            falmFreePinned(tptr);
+            falmFree(tptr);
             hdctype &= ~(HDCType::Host);
             tptr = nullptr;
         }
@@ -139,7 +139,7 @@ struct RmcpTurbineArray {
             falmFreeDevice(tdevptr);
         }
         if (hdctype & HDCType::Host) {
-            falmFreePinned(tptr);
+            falmFree(tptr);
         }
     }
 

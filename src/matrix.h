@@ -46,7 +46,7 @@ template<typename T> MatrixFrame<T>::MatrixFrame(INT3 _dom, INT _dim, FLAG _hdct
     stencil(_stencil)
 {
     if (hdctype == HDCType::Host) {
-        ptr = (T*)falmMallocPinned(sizeof(T) * size);
+        ptr = (T*)falmMalloc(sizeof(T) * size);
         falmMemset(ptr, 0, sizeof(T) * size);
     } else if (hdctype == HDCType::Device) {
         ptr = (T*)falmMallocDevice(sizeof(T) * size);
@@ -61,7 +61,7 @@ template<typename T> MatrixFrame<T>::MatrixFrame(INT _row, INT _col, FLAG _hdcty
     stencil(_stencil)
 {
     if (hdctype == HDCType::Host) {
-        ptr = (T*)falmMallocPinned(sizeof(T) * size);
+        ptr = (T*)falmMalloc(sizeof(T) * size);
         falmMemset(ptr, 0, sizeof(T) * size);
     } else if (hdctype == HDCType::Device) {
         ptr = (T*)falmMallocDevice(sizeof(T) * size);
@@ -71,7 +71,7 @@ template<typename T> MatrixFrame<T>::MatrixFrame(INT _row, INT _col, FLAG _hdcty
 
 template<typename T> MatrixFrame<T>::~MatrixFrame() {
     if (hdctype == HDCType::Host) {
-        falmFreePinned(ptr);
+        falmFree(ptr);
     } else if (hdctype == HDCType::Device) {
         falmFreeDevice(ptr);
     }
@@ -86,7 +86,7 @@ template<typename T> void MatrixFrame<T>::alloc(INT3 _dom, INT _dim, FLAG _hdcty
     hdctype = _hdctype;
     stencil = _stencil;
     if (hdctype == HDCType::Host) {
-        ptr = (T*)falmMallocPinned(sizeof(T) * size);
+        ptr = (T*)falmMalloc(sizeof(T) * size);
         falmMemset(ptr, 0, sizeof(T) * size);
     } else if (hdctype == HDCType::Device) {
         ptr = (T*)falmMallocDevice(sizeof(T) * size);
@@ -101,7 +101,7 @@ template<typename T> void MatrixFrame<T>::alloc(INT _row, INT _col, FLAG _hdctyp
     hdctype = _hdctype;
     stencil = _stencil;
     if (hdctype == HDCType::Host) {
-        ptr = (T*)falmMallocPinned(sizeof(T) * size);
+        ptr = (T*)falmMalloc(sizeof(T) * size);
         falmMemset(ptr, 0, sizeof(T) * size);
     } else if (hdctype == HDCType::Device) {
         ptr = (T*)falmMallocDevice(sizeof(T) * size);
@@ -111,7 +111,7 @@ template<typename T> void MatrixFrame<T>::alloc(INT _row, INT _col, FLAG _hdctyp
 
 template<typename T> void MatrixFrame<T>::release() {
     if (hdctype == HDCType::Host) {
-        falmFreePinned(ptr);
+        falmFree(ptr);
     } else if (hdctype == HDCType::Device) {
         falmFreeDevice(ptr);
     }

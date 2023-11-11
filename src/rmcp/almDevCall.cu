@@ -205,7 +205,7 @@ void RmcpAlmDevCall::CalcTorque(Matrix<REAL> &x, Matrix<REAL> &ff, RmcpTurbineAr
     );
     INT n_blocks = PRODUCT3(grid_dim);
     INT n_threads = PRODUCT3(block_dim);
-    REAL *partial_sum = (REAL*)falmMallocPinned(sizeof(REAL) * n_blocks);
+    REAL *partial_sum = (REAL*)falmMalloc(sizeof(REAL) * n_blocks);
     REAL *partial_sum_dev = (REAL*)falmMallocDevice(sizeof(REAL) * n_blocks);
     size_t shared_size = n_threads * sizeof(REAL);
 
@@ -218,7 +218,7 @@ void RmcpAlmDevCall::CalcTorque(Matrix<REAL> &x, Matrix<REAL> &ff, RmcpTurbineAr
         }
         wf.tptr[__ti].torque = sum;
     }
-    falmFreePinned(partial_sum);
+    falmFree(partial_sum);
     falmFreeDevice(partial_sum_dev);
 }
 

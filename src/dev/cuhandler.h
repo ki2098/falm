@@ -12,11 +12,11 @@ static inline void *falmMalloc(size_t size) {
     return malloc(size);
 }
 
-static inline void *falmMallocPinned(size_t size) {
-    void *ptr;
-    cudaMallocHost(&ptr, size);
-    return ptr;
-}
+// static inline void *falmMallocPinned(size_t size) {
+//     void *ptr;
+//     cudaMallocHost(&ptr, size);
+//     return ptr;
+// }
 
 static inline void *falmMallocDevice(size_t size) {
     void *ptr;
@@ -44,9 +44,9 @@ static inline void falmFree(void *ptr) {
     free(ptr);
 }
 
-static inline void falmFreePinned(void *ptr) {
-    cudaFreeHost(ptr);
-}
+// static inline void falmFreePinned(void *ptr) {
+//     cudaFreeHost(ptr);
+// }
 
 static inline void falmFreeDevice(void *ptr) {
     cudaFree(ptr);

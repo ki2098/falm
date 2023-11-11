@@ -96,72 +96,72 @@ void CPMDevCall::UnpackColoredBuffer(REAL *buffer, Region &map, INT color, REAL 
     kernel_CPM_UnpackColoredBuffer<<<grid_dim, block_dim, 0, stream>>>(buffer, map.shape, map.offset, color, dst, pdm.shape, pdm.offset);
 }
 
-void CPML1Dev_PackBuffer(CPMBuffer &buffer, REAL *src, Region &pdm, dim3 block_dim) {
-    Region &map = buffer.map;
-    dim3 grid_dim(
-        (map.shape[0] + block_dim.x - 1) / block_dim.x,
-        (map.shape[1] + block_dim.y - 1) / block_dim.y,
-        (map.shape[2] + block_dim.z - 1) / block_dim.z
-    );
-    if (buffer.hdctype == HDCType::Device) {
-        kernel_CPM_PackBuffer<<<grid_dim, block_dim, 0, 0>>>((REAL*)buffer.ptr, buffer.map.shape, buffer.map.offset, src, pdm.shape);
-    } else if (buffer.hdctype == HDCType::Host) {
-        REAL *ptr = (REAL*)falmMallocDevice(sizeof(REAL) * buffer.count);
-        kernel_CPM_PackBuffer<<<grid_dim, block_dim, 0, 0>>>(ptr, buffer.map.shape, buffer.map.offset, src, pdm.shape);
-        falmMemcpy(buffer.ptr, ptr, sizeof(REAL) * buffer.count, MCpType::Dev2Hst);
-        falmFreeDevice(ptr);
-    }
-}
+// void CPML1Dev_PackBuffer(CPMBuffer &buffer, REAL *src, Region &pdm, dim3 block_dim) {
+//     Region &map = buffer.map;
+//     dim3 grid_dim(
+//         (map.shape[0] + block_dim.x - 1) / block_dim.x,
+//         (map.shape[1] + block_dim.y - 1) / block_dim.y,
+//         (map.shape[2] + block_dim.z - 1) / block_dim.z
+//     );
+//     if (buffer.hdctype == HDCType::Device) {
+//         kernel_CPM_PackBuffer<<<grid_dim, block_dim, 0, 0>>>((REAL*)buffer.ptr, buffer.map.shape, buffer.map.offset, src, pdm.shape);
+//     } else if (buffer.hdctype == HDCType::Host) {
+//         REAL *ptr = (REAL*)falmMallocDevice(sizeof(REAL) * buffer.count);
+//         kernel_CPM_PackBuffer<<<grid_dim, block_dim, 0, 0>>>(ptr, buffer.map.shape, buffer.map.offset, src, pdm.shape);
+//         falmMemcpy(buffer.ptr, ptr, sizeof(REAL) * buffer.count, MCpType::Dev2Hst);
+//         falmFreeDevice(ptr);
+//     }
+// }
 
-void CPML1Dev_PackColoredBuffer(CPMBuffer &buffer, REAL *src, Region &pdm, dim3 block_dim) {
-    Region &map = buffer.map;
-    dim3 grid_dim(
-        (map.shape[0] + block_dim.x - 1) / block_dim.x,
-        (map.shape[1] + block_dim.y - 1) / block_dim.y,
-        (map.shape[2] + block_dim.z - 1) / block_dim.z
-    );
-    if (buffer.hdctype == HDCType::Device) {
-        kernel_CPM_PackColoredBuffer<<<grid_dim, block_dim, 0, 0>>>((REAL*)buffer.ptr, buffer.map.shape, buffer.map.offset, buffer.color, src, pdm.shape, pdm.offset);
-    } else if (buffer.hdctype == HDCType::Host) {
-        REAL *ptr = (REAL*)falmMallocDevice(sizeof(REAL) * buffer.count);
-        kernel_CPM_PackColoredBuffer<<<grid_dim, block_dim, 0, 0>>>(ptr, buffer.map.shape, buffer.map.offset, buffer.color, src, pdm.shape, pdm.offset);
-        falmMemcpy(buffer.ptr, ptr, sizeof(REAL) * buffer.count, MCpType::Dev2Hst);
-        falmFreeDevice(ptr);
-    }
-}
+// void CPML1Dev_PackColoredBuffer(CPMBuffer &buffer, REAL *src, Region &pdm, dim3 block_dim) {
+//     Region &map = buffer.map;
+//     dim3 grid_dim(
+//         (map.shape[0] + block_dim.x - 1) / block_dim.x,
+//         (map.shape[1] + block_dim.y - 1) / block_dim.y,
+//         (map.shape[2] + block_dim.z - 1) / block_dim.z
+//     );
+//     if (buffer.hdctype == HDCType::Device) {
+//         kernel_CPM_PackColoredBuffer<<<grid_dim, block_dim, 0, 0>>>((REAL*)buffer.ptr, buffer.map.shape, buffer.map.offset, buffer.color, src, pdm.shape, pdm.offset);
+//     } else if (buffer.hdctype == HDCType::Host) {
+//         REAL *ptr = (REAL*)falmMallocDevice(sizeof(REAL) * buffer.count);
+//         kernel_CPM_PackColoredBuffer<<<grid_dim, block_dim, 0, 0>>>(ptr, buffer.map.shape, buffer.map.offset, buffer.color, src, pdm.shape, pdm.offset);
+//         falmMemcpy(buffer.ptr, ptr, sizeof(REAL) * buffer.count, MCpType::Dev2Hst);
+//         falmFreeDevice(ptr);
+//     }
+// }
 
-void CPML1Dev_UnpackBuffer(CPMBuffer &buffer, REAL *dst, Region &pdm, dim3 block_dim) {
-    Region &map = buffer.map;
-    dim3 grid_dim(
-        (map.shape[0] + block_dim.x - 1) / block_dim.x,
-        (map.shape[1] + block_dim.y - 1) / block_dim.y,
-        (map.shape[2] + block_dim.z - 1) / block_dim.z
-    );
-    if (buffer.hdctype == HDCType::Device) {
-        kernel_CPM_UnpackBuffer<<<grid_dim, block_dim, 0, 0>>>((REAL*)buffer.ptr, buffer.map.shape, buffer.map.offset, dst, pdm.shape);
-    } else if (buffer.hdctype == HDCType::Host) {
-        REAL *ptr = (REAL*)falmMallocDevice(sizeof(REAL) * buffer.count);
-        falmMemcpy(ptr, buffer.ptr, sizeof(REAL) * buffer.count, MCpType::Hst2Dev);
-        kernel_CPM_UnpackBuffer<<<grid_dim, block_dim, 0, 0>>>(ptr, buffer.map.shape, buffer.map.offset, dst, pdm.shape);
-        falmFreeDevice(ptr);
-    }
-}
+// void CPML1Dev_UnpackBuffer(CPMBuffer &buffer, REAL *dst, Region &pdm, dim3 block_dim) {
+//     Region &map = buffer.map;
+//     dim3 grid_dim(
+//         (map.shape[0] + block_dim.x - 1) / block_dim.x,
+//         (map.shape[1] + block_dim.y - 1) / block_dim.y,
+//         (map.shape[2] + block_dim.z - 1) / block_dim.z
+//     );
+//     if (buffer.hdctype == HDCType::Device) {
+//         kernel_CPM_UnpackBuffer<<<grid_dim, block_dim, 0, 0>>>((REAL*)buffer.ptr, buffer.map.shape, buffer.map.offset, dst, pdm.shape);
+//     } else if (buffer.hdctype == HDCType::Host) {
+//         REAL *ptr = (REAL*)falmMallocDevice(sizeof(REAL) * buffer.count);
+//         falmMemcpy(ptr, buffer.ptr, sizeof(REAL) * buffer.count, MCpType::Hst2Dev);
+//         kernel_CPM_UnpackBuffer<<<grid_dim, block_dim, 0, 0>>>(ptr, buffer.map.shape, buffer.map.offset, dst, pdm.shape);
+//         falmFreeDevice(ptr);
+//     }
+// }
 
-void CPML1Dev_UnpackColoredBuffer(CPMBuffer &buffer, REAL *dst, Region &pdm, dim3 block_dim) {
-    Region &map = buffer.map;
-    dim3 grid_dim(
-        (map.shape[0] + block_dim.x - 1) / block_dim.x,
-        (map.shape[1] + block_dim.y - 1) / block_dim.y,
-        (map.shape[2] + block_dim.z - 1) / block_dim.z
-    );
-    if (buffer.hdctype == HDCType::Device) {
-        kernel_CPM_UnpackColoredBuffer<<<grid_dim, block_dim, 0, 0>>>((REAL*)buffer.ptr, buffer.map.shape, buffer.map.offset, buffer.color, dst, pdm.shape, pdm.offset);
-    } else if (buffer.hdctype == HDCType::Host) {
-        REAL *ptr = (REAL*)falmMallocDevice(sizeof(REAL) * buffer.count);
-        falmMemcpy(ptr, buffer.ptr, sizeof(REAL) * buffer.count, MCpType::Hst2Dev);
-        kernel_CPM_UnpackColoredBuffer<<<grid_dim, block_dim, 0, 0>>>(ptr, buffer.map.shape, buffer.map.offset, buffer.color, dst, pdm.shape, pdm.offset);
-        falmFreeDevice(ptr);
-    }
-}
+// void CPML1Dev_UnpackColoredBuffer(CPMBuffer &buffer, REAL *dst, Region &pdm, dim3 block_dim) {
+//     Region &map = buffer.map;
+//     dim3 grid_dim(
+//         (map.shape[0] + block_dim.x - 1) / block_dim.x,
+//         (map.shape[1] + block_dim.y - 1) / block_dim.y,
+//         (map.shape[2] + block_dim.z - 1) / block_dim.z
+//     );
+//     if (buffer.hdctype == HDCType::Device) {
+//         kernel_CPM_UnpackColoredBuffer<<<grid_dim, block_dim, 0, 0>>>((REAL*)buffer.ptr, buffer.map.shape, buffer.map.offset, buffer.color, dst, pdm.shape, pdm.offset);
+//     } else if (buffer.hdctype == HDCType::Host) {
+//         REAL *ptr = (REAL*)falmMallocDevice(sizeof(REAL) * buffer.count);
+//         falmMemcpy(ptr, buffer.ptr, sizeof(REAL) * buffer.count, MCpType::Hst2Dev);
+//         kernel_CPM_UnpackColoredBuffer<<<grid_dim, block_dim, 0, 0>>>(ptr, buffer.map.shape, buffer.map.offset, buffer.color, dst, pdm.shape, pdm.offset);
+//         falmFreeDevice(ptr);
+//     }
+// }
 
 }
