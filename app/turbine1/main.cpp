@@ -13,7 +13,7 @@ const REAL3 Lxyz{{24.0, 8.0, 8.0}};
 const INT3  Nxyz{{750, 250, 250}};
 const REAL3 origin{{-4,-4,-4}};
 
-const REAL endtime = 100;
+const REAL endtime = 1.0;
 const REAL dt = 5e-3;
 
 Matrix<REAL> gx, gy, gz, ghx, ghy, ghz;
@@ -405,7 +405,7 @@ int main(int argc, char **argv) {
     REAL __t = 0;
     INT  __it = 0;
     const INT __IT = int(endtime / dt);
-    const INT __oIT = int(1 / dt);
+    const INT __oIT = int(0.25 / dt);
     plt3d_output(__it, cpm.rank, dt);
     if (cpm.rank == 0) {
         printf("time advance start\n");
