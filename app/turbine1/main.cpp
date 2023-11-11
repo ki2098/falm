@@ -188,6 +188,11 @@ int main(int argc, char **argv) {
     CPM_GetRank(MPI_COMM_WORLD, mpi_rank);
     CPM_GetSize(MPI_COMM_WORLD, mpi_size);
     cpm.initPartition(Nxyz - INT3{{1,1,1}}, GuideCell, mpi_rank, mpi_size, {{mpi_size, 1, 1}});
+    int ngpu;
+    cudaGetDeviceCount(&ngpu);
+    cudaSetDevice(cpm.rank % ngpu);
+    printf("rank %d on gpu %d\n", cpm.rank, cpm.rank % ngpu); fflush(stdout);
+    CPM_Barrier(MPI_COMM_WORLD);
     Region &pdm = cpm.pdm_list[cpm.rank];
     Region &global = cpm.global;
     Region ginner(global.shape, cpm.gc);
@@ -227,11 +232,6 @@ int main(int argc, char **argv) {
         vcdm.writeIndexDfi();
         vcdm.writeProcDfi();
     }
-    CPM_Barrier(MPI_COMM_WORLD);
-    int ngpu;
-    cudaGetDeviceCount(&ngpu);
-    cudaSetDevice(cpm.rank % ngpu);
-    printf("rank %d on gpu %d\n", cpm.rank, cpm.rank % ngpu); fflush(stdout);
     CPM_Barrier(MPI_COMM_WORLD);
 
     for (int fid = 0; fid < 6; fid ++) {
