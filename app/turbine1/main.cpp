@@ -2,14 +2,15 @@
 #include "../../src/FalmCFD.h"
 #include "../../src/FalmEq.h"
 #include "../../src/rmcp/alm.h"
+#include "../../src/falmath.h"
 #include "bc.h"
 
 using namespace Falm;
 
 const dim3 block(8, 8, 8);
-const REAL3 Lxyz{12.0, 6.0, 6.0};
-const INT3  Nxyz{240, 120, 120};
-const REAL3 origin{0,0,0};
+const REAL3 Lxyz{24.0, 8.0, 8.0};
+const INT3  Nxyz{480, 160, 160};
+const REAL3 origin{-4,-4,-4};
 
 const REAL endtime = 100;
 const REAL dt = 5e-3;
@@ -266,11 +267,12 @@ int main(int argc, char **argv) {
 
     RmcpTurbineArray turbineArray(1);
     RmcpTurbine turbine;
-    turbine.pos = {2, 3, 3};
+    turbine.pos = {0, 0, 0};
     turbine.rotpos = {0, 0, 0};
     turbine.R = 1;
     turbine.width = 0.2;
     turbine.thick = 0.1;
+    turbine.pitch = Pi/6;
     turbine.tip = 4;
     turbine.hub = 0.1;
     turbine.chord_a = {

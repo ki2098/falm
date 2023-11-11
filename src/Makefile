@@ -61,6 +61,6 @@ cfd: cfddevcall cpm
 Falm: cfd eq alm
 
 showenv:
-	@echo $(nvmpicxx)
-	@echo $(nvnvcc)
-	@echo $(nvnvcxx)
+	@echo nvmpicxx = $(nvmpicxx)
+	@echo nvnvcc = $(nvnvcc)  
+	@echo nvnvcxx = $(nvnvcxx) 
