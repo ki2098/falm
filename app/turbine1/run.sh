@@ -10,6 +10,8 @@
 
 module load nvhpc/nvhpc_20.11
 
+date
+
 mpirun -np 4 --map-by ppr:2:socket -display-devel-map -display-devel-map --mca plm_rsh_agent /bin/pjrsh -machinefile ${PJM_O_NODEINF} ./bin/t1
 
-date
+tar cvzf data.tar.gz data
