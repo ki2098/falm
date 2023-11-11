@@ -107,6 +107,9 @@ void read_grid() {
     ghx.release(HDCType::Host);
     ghy.release(HDCType::Host);
     ghz.release(HDCType::Host);
+    xfile.close();
+    yfile.close();
+    zfile.close();
 }
 
 void plt3d_output(int step, int rank, double dt) {
