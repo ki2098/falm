@@ -22,7 +22,7 @@ struct MatrixFrame {
     MatrixFrame(const MatrixFrame<T> &_mat) = delete;
     MatrixFrame<T>& operator=(const MatrixFrame<T> &_mat) = delete;
 
-    MatrixFrame() : ptr(nullptr), shape(INT2{0, 0}), size(0), hdctype(HDCType::Empty), stencil(StencilMatrix::Empty) {}
+    MatrixFrame() : ptr(nullptr), shape(INT2{{0, 0}}), size(0), hdctype(HDCType::Empty), stencil(StencilMatrix::Empty) {}
     MatrixFrame(INT3 _dom, INT _dim, FLAG _hdctype, StencilMatrix _stencil = StencilMatrix::Empty);
     MatrixFrame(INT _row, INT _col, FLAG _hdctype, StencilMatrix _stencil = StencilMatrix::Empty);
     ~MatrixFrame();
@@ -139,7 +139,7 @@ struct Matrix {
     Matrix(const Matrix<T> &_mat) = delete;
     Matrix<T>& operator=(const Matrix<T> &_mat) = delete;
 
-    Matrix(std::string _name = "") : shape(INT2{0, 0}), size(0), hdctype(HDCType::Empty), name(_name), devptr(nullptr), stencil(StencilMatrix::Empty) {}
+    Matrix(std::string _name = "") : shape(INT2{{0, 0}}), size(0), hdctype(HDCType::Empty), name(_name), devptr(nullptr), stencil(StencilMatrix::Empty) {}
     Matrix(INT3 _dom, INT _dim, FLAG _hdctype, const std::string &_name, StencilMatrix _stencil = StencilMatrix::Empty);
     Matrix(INT _row, INT _col, FLAG _hdctype, const std::string &_name, StencilMatrix _stencil = StencilMatrix::Empty);
     Matrix(INT3 _dom, INT _dim, FLAG _hdctype, StencilMatrix _stencil = StencilMatrix::Empty) : Matrix(_dom, _dim, _hdctype, "", _stencil) {}

@@ -132,8 +132,8 @@ void FalmCFD::UtoUU(
     }
 
     Region uumap(pdm.shape, cpm.gc);
-    uumap.shape  += {1, 1, 1};
-    uumap.offset -= {1, 1, 1};
+    uumap.shape  += {{1, 1, 1}};
+    uumap.offset -= {{1, 1, 1}};
     // uumap = uumap.transform(
     //     INT3{ 1,  1,  1},
     //     INT3{-1, -1, -1}
@@ -192,8 +192,8 @@ void FalmCFD::ProjectP(
     }
 
     Region uumap(pdm.shape, cpm.gc);
-    uumap.shape  += {1, 1, 1};
-    uumap.offset -= {1, 1, 1};
+    uumap.shape  += {{1, 1, 1}};
+    uumap.offset -= {{1, 1, 1}};
     // uumap = uumap.transform(
     //     INT3{ 1,  1,  1},
     //     INT3{-1, -1, -1}

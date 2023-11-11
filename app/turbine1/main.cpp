@@ -8,9 +8,9 @@
 using namespace Falm;
 
 const dim3 block(8, 8, 8);
-const REAL3 Lxyz{24.0, 8.0, 8.0};
-const INT3  Nxyz{480, 160, 160};
-const REAL3 origin{-4,-4,-4};
+const REAL3 Lxyz{{24.0, 8.0, 8.0}};
+const INT3  Nxyz{{480, 160, 160}};
+const REAL3 origin{{-4,-4,-4}};
 
 const REAL endtime = 100;
 const REAL dt = 5e-3;
@@ -93,14 +93,14 @@ int main(int argc, char **argv) {
     cpm.use_cuda_aware_mpi = true;
     CPM_GetRank(MPI_COMM_WORLD, mpi_rank);
     CPM_GetSize(MPI_COMM_WORLD, mpi_size);
-    cpm.initPartition(Nxyz - INT3{1,1,1}, GuideCell, mpi_rank, mpi_size, {mpi_size, 1, 1});
+    cpm.initPartition(Nxyz - INT3{{1,1,1}}, GuideCell, mpi_rank, mpi_size, {{mpi_size, 1, 1}});
     Region &pdm = cpm.pdm_list[cpm.rank];
     Region &global = cpm.global;
     Region ginner(global.shape, cpm.gc);
     printf("rank %d, global size = (%d %d %d), proc size = (%d %d %d), proc offset = (%d %d %d)\n", cpm.rank, global.shape[0], global.shape[1], global.shape[2], pdm.shape[0], pdm.shape[1], pdm.shape[2], pdm.offset[0], pdm.offset[1], pdm.offset[2]);
     fflush(stdout); CPM_Barrier(MPI_COMM_WORLD);
     vcdm.setPath("data", "lid3d");
-    setVcdm(cpm, vcdm, {Lxyz[0],Lxyz[1],Lxyz[2]}, {origin[0], origin[1], origin[2]});
+    setVcdm(cpm, vcdm, {{Lxyz[0],Lxyz[1],Lxyz[2]}}, {{origin[0], origin[1], origin[2]}});
     vcdm.dfiFinfo.varList = {"u", "v", "w", "p", "nut", "divergence"};
     if (cpm.rank == 0) {
         Vcdm::double3 d3;
@@ -162,9 +162,9 @@ int main(int argc, char **argv) {
     kx.alloc(pdm.shape, 3, HDCType::Host);
     ja.alloc(pdm.shape, 1, HDCType::Host);
     g.alloc(pdm.shape, 3, HDCType::Host);
-    const REAL3 pitch = {Lxyz[0]/Nxyz[0], Lxyz[1]/Nxyz[1], Lxyz[2]/Nxyz[2]};
+    const REAL3 pitch = {{Lxyz[0]/Nxyz[0], Lxyz[1]/Nxyz[1], Lxyz[2]/Nxyz[2]}};
     const REAL volume = pitch[0] * pitch[1] * pitch[2];
-    const REAL3 dkdx  = {1.0/pitch[0], 1.0/pitch[1], 1.0/pitch[2]};
+    const REAL3 dkdx  = {{1.0/pitch[0], 1.0/pitch[1], 1.0/pitch[2]}};
     for (INT k = 0; k < pdm.shape[2]; k ++) {
     for (INT j = 0; j < pdm.shape[1]; j ++) {
     for (INT i = 0; i < pdm.shape[0]; i ++) {
@@ -198,7 +198,7 @@ int main(int argc, char **argv) {
     for (INT k = cpm.gc; k < pdm.shape[2] - cpm.gc; k ++) {
     for (INT j = cpm.gc; j < pdm.shape[1] - cpm.gc; j ++) {
     for (INT i = cpm.gc; i < pdm.shape[0] - cpm.gc; i ++) {
-        INT3 gijk = INT3{i, j, k} + pdm.offset;
+        INT3 gijk = INT3{{i, j, k}} + pdm.offset;
         REAL ac, ae, aw, an, as, at, ab;
         ac = ae = aw = an = as = at = ab = 0.0;
         INT idxcc = IDX(i  , j  , k  , pdm.shape);
@@ -267,30 +267,30 @@ int main(int argc, char **argv) {
 
     RmcpTurbineArray turbineArray(1);
     RmcpTurbine turbine;
-    turbine.pos = {0, 0, 0};
-    turbine.rotpos = {0, 0, 0};
+    turbine.pos = {{0, 0, 0}};
+    turbine.rotpos = {{0, 0, 0}};
     turbine.R = 1;
     turbine.width = 0.2;
     turbine.thick = 0.1;
     turbine.pitch = Pi/6;
     turbine.tip = 4;
     turbine.hub = 0.1;
-    turbine.chord_a = {
+    turbine.chord_a = {{
           0.2876200,
         - 0.2795100,
           0.1998600,
         - 0.1753800,
           0.1064600,
         - 0.0025213
-    };
-    turbine.angle_a = {
+    }};
+    turbine.angle_a = {{
           49.992000,
         - 70.551000,
           45.603000,
         - 40.018000,
           24.292000,
         -  0.575430
-    };
+    }};
     turbineArray[0] = turbine;
     turbineArray.sync(MCpType::Hst2Dev);
 

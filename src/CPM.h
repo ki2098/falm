@@ -7,18 +7,18 @@
 namespace Falm {
 
 template<typename T>
-void setVcdm(CPM &cpm, Vcdm::VCDM<T> &vcdm, Vcdm::double3 gRegion, Vcdm::double3 gOrigin = {0, 0, 0}) {
+void setVcdm(CPM &cpm, Vcdm::VCDM<T> &vcdm, Vcdm::double3 gRegion, Vcdm::double3 gOrigin = {{0, 0, 0}}) {
     vcdm.dfiFinfo.gc = cpm.gc;
     vcdm.dfiDomain.globalOrigin = gOrigin;
     vcdm.dfiDomain.globalRegion = gRegion;
-    vcdm.dfiDomain.globalVoxel  = Vcdm::int3{
+    vcdm.dfiDomain.globalVoxel  = Vcdm::int3{{
         cpm.global.shape[0] - cpm.gc*2,
         cpm.global.shape[1] - cpm.gc*2,
         cpm.global.shape[2] - cpm.gc*2
-    };
-    vcdm.dfiDomain.globalDivision = Vcdm::int3{
+    }};
+    vcdm.dfiDomain.globalDivision = Vcdm::int3{{
         cpm.shape[0], cpm.shape[1], cpm.shape[2]
-    };
+    }};
 
     vcdm.dfiMPI.size = cpm.size;
 
@@ -30,21 +30,21 @@ void setVcdm(CPM &cpm, Vcdm::VCDM<T> &vcdm, Vcdm::double3 gRegion, Vcdm::double3
         Region &pdm = cpm.pdm_list[rank];
         Vcdm::VcdmRank &vproc = vcdm.dfiProc[rank];
         vproc.rank = rank;
-        vproc.voxelSize = {
+        vproc.voxelSize = {{
             pdm.shape[0] - cpm.gc*2,
             pdm.shape[1] - cpm.gc*2,
             pdm.shape[2] - cpm.gc*2
-        };
-        vproc.headIdx = {
+        }};
+        vproc.headIdx = {{
             pdm.offset[0] + 1,
             pdm.offset[1] + 1,
             pdm.offset[2] + 1
-        };
-        vproc.tailIdx = {
+        }};
+        vproc.tailIdx = {{
             vproc.headIdx[0] + vproc.voxelSize[0] - 1,
             vproc.headIdx[1] + vproc.voxelSize[1] - 1,
             vproc.headIdx[2] + vproc.voxelSize[2] - 1
-        };
+        }};
     }}}
 }
 

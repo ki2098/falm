@@ -11,8 +11,8 @@ namespace Falm {
 struct RmcpTurbine {
     REAL  torque = 0;
     REAL  cpower = 0;
-    REAL3    pos = {0, 0, 0};
-    REAL3 rotpos = {0, 0, 0};
+    REAL3    pos = {{0, 0, 0}};
+    REAL3 rotpos = {{0, 0, 0}};
     REAL       R = 1.0;
     REAL   width;
     REAL   thick;
@@ -52,7 +52,7 @@ struct RmcpTurbine {
         REAL x2 = (c2 * c3               ) * x1 + (c2 * s3               ) * y1 + (- s2   ) * z1;
         REAL y2 = (s1 * s2 * c3 - c1 * s3) * x1 + (s1 * s2 * s3 + c1 * c3) * y1 + (s1 * c2) * z1;
         REAL z2 = (c1 * s2 * c3 + s1 * s3) * x1 + (c1 * s2 * s3 - s1 * c3) * y1 + (c1 * c2) * z1;
-        return {x2, y2, z2};
+        return {{x2, y2, z2}};
     }
 
     __host__ __device__ REAL3 invert_transform(const REAL3 &vxyz2) {
@@ -67,7 +67,7 @@ struct RmcpTurbine {
         REAL x1 = (c2 * c3) * x2 + (s1 * s2 * c3 - c1 * s3) * y2 + (c1 * s2 * c3 + s1 * s3) * z2;
         REAL y1 = (c2 * s3) * x2 + (s1 * s2 * s3 + c1 * c3) * y2 + (c1 * s2 * s3 - s1 * c3) * z2;
         REAL z1 = (- s2   ) * x2 + (s1 * c2               ) * y2 + (c1 * c2               ) * z2;
-        return {x1, y1, z1};
+        return {{x1, y1, z1}};
     }
 
     __host__ __device__ REAL Cd(REAL alpha) {

@@ -133,23 +133,23 @@ protected:
                 };
                 INT3 sendbuffer_offset, recvbuffer_offset;
                 if (fid == CPM::XPLUS) {
-                    sendbuffer_offset = {pdm.shape[0] - gc - thick - margin, gc, gc};
-                    recvbuffer_offset = {pdm.shape[0] - gc         + margin, gc, gc};
+                    sendbuffer_offset = {{pdm.shape[0] - gc - thick - margin, gc, gc}};
+                    recvbuffer_offset = {{pdm.shape[0] - gc         + margin, gc, gc}};
                 } else if (fid == CPM::XMINUS) {
-                    sendbuffer_offset = {              gc         + margin, gc, gc};
-                    recvbuffer_offset = {              gc - thick - margin, gc, gc};
+                    sendbuffer_offset = {{              gc         + margin, gc, gc}};
+                    recvbuffer_offset = {{              gc - thick - margin, gc, gc}};
                 } else if (fid == CPM::YPLUS) {
-                    sendbuffer_offset = {gc, pdm.shape[1] - gc - thick - margin, gc};
-                    recvbuffer_offset = {gc, pdm.shape[1] - gc         + margin, gc};
+                    sendbuffer_offset = {{gc, pdm.shape[1] - gc - thick - margin, gc}};
+                    recvbuffer_offset = {{gc, pdm.shape[1] - gc         + margin, gc}};
                 } else if (fid == CPM::YMINUS) {
-                    sendbuffer_offset = {gc,               gc         + margin, gc};
-                    recvbuffer_offset = {gc,               gc - thick - margin, gc};
+                    sendbuffer_offset = {{gc,               gc         + margin, gc}};
+                    recvbuffer_offset = {{gc,               gc - thick - margin, gc}};
                 } else if (fid == CPM::ZPLUS) {
-                    sendbuffer_offset = {gc, gc, pdm.shape[2] - gc - thick - margin};
-                    recvbuffer_offset = {gc, gc, pdm.shape[2] - gc         + margin};
+                    sendbuffer_offset = {{gc, gc, pdm.shape[2] - gc - thick - margin}};
+                    recvbuffer_offset = {{gc, gc, pdm.shape[2] - gc         + margin}};
                 } else if (fid == CPM::ZMINUS) {
-                    sendbuffer_offset = {gc, gc,               gc         + margin};
-                    recvbuffer_offset = {gc, gc,               gc - thick - margin};
+                    sendbuffer_offset = {{gc, gc,               gc         + margin}};
+                    recvbuffer_offset = {{gc, gc,               gc - thick - margin}};
                 }
                 buffer[__s].map = Region(buffer_shape, sendbuffer_offset);
                 buffer[__r].map = Region(buffer_shape, recvbuffer_offset);

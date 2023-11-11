@@ -31,7 +31,7 @@ __global__ void kernel_SetALMFlag(
         bool something = false;
         for (INT _ti = 0; _ti < nTurbine; _ti ++) {
             RmcpTurbine &turb = turbines[_ti];
-            REAL3 dxyz = REAL3{tx, ty, tz} - turb.pos;
+            REAL3 dxyz = REAL3{{tx, ty, tz}} - turb.pos;
             dxyz = turb.transform(dxyz);
             dxyz = dxyz - turb.rotpos;
             REAL dx = dxyz[0], dy = dxyz[1], dz = dxyz[2];
@@ -96,13 +96,13 @@ __global__ void kernel_ALM(
         INT  tflag = flag(idx);
         if (tflag > 0) {
             RmcpTurbine &turb = turbines[tflag - 1];
-            REAL3 dxyz = REAL3{x(idx, 0), x(idx, 1), x(idx, 2)} - turb.pos;
+            REAL3 dxyz = REAL3{{x(idx, 0), x(idx, 1), x(idx, 2)}} - turb.pos;
             dxyz  = turb.transform(dxyz);
             dxyz -= turb.rotpos;
             REAL dx = dxyz[0], dy = dxyz[1], dz = dxyz[2];
             REAL th = atan2(dz, dy);
             REAL rr = sqrt(dy * dy + dz * dz);
-            REAL3 uvw = turb.transform({u(idx, 0), u(idx, 1), u(idx, 2)});
+            REAL3 uvw = turb.transform({{u(idx, 0), u(idx, 1), u(idx, 2)}});
             REAL  ux  = uvw[0];
             REAL  ut  = turb.tip * rr + uvw[1] * sin(th) - uvw[2] * cos(th);
             REAL  uRel2 = ux * ux + ut * ut;
@@ -117,7 +117,7 @@ __global__ void kernel_ALM(
 
             REAL ffx = fabs((Cl * cos(phi) + Cd * sin(phi)) * Cf * uRel2);
             REAL fft = fabs((Cl * sin(phi) - Cd * cos(phi)) * Cf * uRel2);
-            REAL3 ffxyz{- ffx, fft * sin(th), - fft * cos(th)};
+            REAL3 ffxyz{{- ffx, fft * sin(th), - fft * cos(th)}};
             ffxyz = turb.invert_transform(ffxyz);
             ff(idx, 0) = ffxyz[0];
             ff(idx, 1) = ffxyz[1];
@@ -168,12 +168,12 @@ __global__ void kernel_CalcTorque(
         INT tflag = flag(idx);
         if (tflag == Tid + 1) {
             RmcpTurbine &turb = turbines[tflag - 1];
-            REAL3 dxyz = REAL3{x(idx, 0), x(idx, 1), x(idx, 2)} - turb.pos;
+            REAL3 dxyz = REAL3{{x(idx, 0), x(idx, 1), x(idx, 2)}} - turb.pos;
             dxyz  = turb.transform(dxyz);
             dxyz -= turb.rotpos;
             REAL dx = dxyz[0], dy = dxyz[1], dz = dxyz[2];
             REAL rr = sqrt(dy * dy + dz * dz);
-            REAL3 fxyz = {-ff(idx, 0), -ff(idx, 1), -ff(idx, 2)};
+            REAL3 fxyz = {{-ff(idx, 0), -ff(idx, 1), -ff(idx, 2)}};
             fxyz = turb.transform(fxyz);
             REAL  fft  = sqrt(fxyz[1] * fxyz[1] + fxyz[2] * fxyz[2]);
             tmp = rr * fft;

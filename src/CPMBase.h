@@ -28,7 +28,7 @@ public:
     Region global;
     std::vector<Region> pdm_list;
 
-    void initPartition(INT3 gShape, INT guideCell, int mpi_rank = 0, int mpi_size = 1, INT3 mpi_shape = {1,1,1}) {
+    void initPartition(INT3 gShape, INT guideCell, int mpi_rank = 0, int mpi_size = 1, INT3 mpi_shape = {{1,1,1}}) {
         assert(mpi_size == PRODUCT3(mpi_shape));
 
         shape  = mpi_shape;
@@ -38,8 +38,8 @@ public:
 
         gc     = guideCell;
         global = Region(
-            INT3{gShape[0] + gc*2, gShape[1] + gc*2, gShape[2] + gc*2},
-            INT3{0, 0, 0}
+            INT3{{gShape[0] + gc*2, gShape[1] + gc*2, gShape[2] + gc*2}},
+            INT3{{0, 0, 0}}
         );
         pdm_list = std::vector<Region>(size, Region());
         for (INT k = 0; k < shape[2]; k ++) {
@@ -56,12 +56,12 @@ public:
                 oz += dim_division(gShape[2], shape[2], __z);
             }
             pdm_list[IDX(i, j, k, shape)] = Region(
-                INT3{
+                INT3{{
                     dim_division(gShape[0], shape[0], i) + gc*2,
                     dim_division(gShape[1], shape[1], j) + gc*2,
                     dim_division(gShape[2], shape[2], k) + gc*2
-                },
-                INT3{ox, oy, oz}
+                }},
+                INT3{{ox, oy, oz}}
             );
         }}}
 
@@ -71,35 +71,35 @@ public:
         inner_shape = map.shape;
         inner_offset = map.offset;
         if (neighbour[XPLUS] >= 0) {
-            boundary_shape[XPLUS]  = {thick, inner_shape[1], inner_shape[2]};
-            boundary_offset[XPLUS] = {inner_offset[0] + inner_shape[0] - thick, inner_offset[1], inner_offset[2]};
+            boundary_shape[XPLUS]  = {{thick, inner_shape[1], inner_shape[2]}};
+            boundary_offset[XPLUS] = {{inner_offset[0] + inner_shape[0] - thick, inner_offset[1], inner_offset[2]}};
             inner_shape[0] -= thick;
         }
         if (neighbour[XMINUS] >= 0) {
-            boundary_shape[XMINUS]  = {thick, inner_shape[1], inner_shape[2]};
-            boundary_offset[XMINUS] = {inner_offset[0], inner_offset[1], inner_offset[2]};
+            boundary_shape[XMINUS]  = {{thick, inner_shape[1], inner_shape[2]}};
+            boundary_offset[XMINUS] = {{inner_offset[0], inner_offset[1], inner_offset[2]}};
             inner_shape[0]  -= thick;
             inner_offset[0] += thick; 
         }
         if (neighbour[YPLUS] >= 0) {
-            boundary_shape[YPLUS]  = {inner_shape[0], thick, inner_shape[2]};
-            boundary_offset[YPLUS] = {inner_offset[0], inner_offset[1] + inner_shape[1] - thick, inner_offset[2]};
+            boundary_shape[YPLUS]  = {{inner_shape[0], thick, inner_shape[2]}};
+            boundary_offset[YPLUS] = {{inner_offset[0], inner_offset[1] + inner_shape[1] - thick, inner_offset[2]}};
             inner_shape[1] -= thick;
         }
         if (neighbour[YMINUS] >= 0) {
-            boundary_shape[YMINUS]  = {inner_shape[0], thick, inner_shape[2]};
-            boundary_offset[YMINUS] = {inner_offset[0], inner_offset[1], inner_offset[2]};
+            boundary_shape[YMINUS]  = {{inner_shape[0], thick, inner_shape[2]}};
+            boundary_offset[YMINUS] = {{inner_offset[0], inner_offset[1], inner_offset[2]}};
             inner_shape[1]  -= thick;
             inner_offset[1] += thick;
         }
         if (neighbour[ZPLUS] >= 0) {
-            boundary_shape[ZPLUS]  = {inner_shape[0], inner_shape[1], thick};
-            boundary_offset[ZPLUS] = {inner_offset[0], inner_offset[1], inner_offset[2] + inner_shape[2] - thick};
+            boundary_shape[ZPLUS]  = {{inner_shape[0], inner_shape[1], thick}};
+            boundary_offset[ZPLUS] = {{inner_offset[0], inner_offset[1], inner_offset[2] + inner_shape[2] - thick}};
             inner_shape[2] -= thick;
         }
         if (neighbour[ZMINUS] >= 0) {
-            boundary_shape[ZMINUS]  = {inner_shape[0], inner_shape[1], thick};
-            boundary_offset[ZMINUS] = {inner_offset[0], inner_offset[1], inner_offset[2]};
+            boundary_shape[ZMINUS]  = {{inner_shape[0], inner_shape[1], thick}};
+            boundary_offset[ZMINUS] = {{inner_offset[0], inner_offset[1], inner_offset[2]}};
             inner_shape[2]  -= thick;
             inner_offset[2] += thick;
         }
