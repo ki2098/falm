@@ -1,7 +1,7 @@
 falmdir = ../..
 include $(falmdir)/src/Makefile
 
-cuflag = $(flag) 
+cuflag = $(flag) --default-stream per-thread
 
 bcobj = bin/bc.o
 bc:
