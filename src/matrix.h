@@ -195,6 +195,7 @@ template<typename T> Matrix<T>::Matrix(INT _row, INT _col, FLAG _hdctype, const 
 }
 
 template<typename T> Matrix<T>::~Matrix() {
+    printf("desctuctor for matrix %s\n", name.c_str());
     if (hdctype & HDCType::Device) {
         falmFreeDevice(devptr);
     }
