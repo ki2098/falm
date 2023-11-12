@@ -246,6 +246,9 @@ template<typename T> void CPMComm<T>::IExchange6ColoredFace(T *data, INT color, 
             }
         }
     }
+    size_t freebyte, totalbyte;
+    cudaMemGetInfo(&freebyte, &totalbyte);
+    printf("\nrank %d: free %lf, total %lf\n", base->rank, freebyte / (1024. * 1024.), totalbyte / (1024. * 1024.))
     if (!stream) {
         falmWaitStream(0);
     }
