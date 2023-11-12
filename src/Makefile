@@ -9,7 +9,7 @@ else
 endif
 
 
-flag   = --std=c++11
+flag   = -O3 --std=c++11
 
 include $(falmdir)/src/rmcp/Makefile
 
