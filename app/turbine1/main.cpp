@@ -10,7 +10,7 @@ using namespace Falm;
 
 const dim3 block(8, 8, 8);
 const REAL3 Lxyz{{24.0, 8.0, 8.0}};
-const INT3  Nxyz{{480, 160, 160}};
+const INT3  Nxyz{{750, 250, 250}};
 const REAL3 origin{{-4,-4,-4}};
 
 const REAL endtime = 1;
