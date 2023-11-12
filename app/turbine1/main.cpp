@@ -184,7 +184,7 @@ int main(int argc, char **argv) {
     assert(GuideCell == 2);
     CPM_Init(&argc, &argv);
     int mpi_rank, mpi_size;
-    cpm.use_cuda_aware_mpi = false;
+    cpm.use_cuda_aware_mpi = true;
     CPM_GetRank(MPI_COMM_WORLD, mpi_rank);
     CPM_GetSize(MPI_COMM_WORLD, mpi_size);
     cpm.initPartition(Nxyz - INT3{{1,1,1}}, GuideCell, mpi_rank, mpi_size, {{mpi_size, 1, 1}});
