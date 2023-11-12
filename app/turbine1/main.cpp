@@ -10,7 +10,7 @@ using namespace Falm;
 
 const dim3 block(8, 8, 8);
 const REAL3 Lxyz{{24.0, 8.0, 8.0}};
-const INT3  Nxyz{{750, 250, 250}};
+const INT3  Nxyz{{480, 160, 160}};
 const REAL3 origin{{-4,-4,-4}};
 
 const REAL endtime = 1;
@@ -262,13 +262,13 @@ int main(int argc, char **argv) {
     kx.alloc(pdm.shape, 3, HDCType::Host);
     ja.alloc(pdm.shape, 1, HDCType::Host);
     g.alloc(pdm.shape, 3, HDCType::Host);
-    read_grid();
+    // read_grid();
     for (INT k = 0; k < pdm.shape[2]; k ++) {
     for (INT j = 0; j < pdm.shape[1]; j ++) {
     for (INT i = 0; i < pdm.shape[0]; i ++) {
         INT idx = IDX(i, j, k, pdm.shape);
         REAL3 pitch;
-        /* pitch[0] = Lxyz[0] / Nxyz[0];
+        pitch[0] = Lxyz[0] / Nxyz[0];
         pitch[1] = Lxyz[1] / Nxyz[1];
         pitch[2] = Lxyz[2] / Nxyz[2];
         h(idx, 0) = pitch[0];
@@ -276,10 +276,10 @@ int main(int argc, char **argv) {
         h(idx, 2) = pitch[2];
         x(idx, 0) = origin[0] + (i + pdm.offset[0] - cpm.gc + 1) * pitch[0];
         x(idx, 1) = origin[1] + (j + pdm.offset[1] - cpm.gc + 1) * pitch[1];
-        x(idx, 2) = origin[2] + (k + pdm.offset[2] - cpm.gc + 1) * pitch[2]; */
-        pitch[0] = h(idx, 0);
-        pitch[1] = h(idx, 1);
-        pitch[2] = h(idx, 2);
+        x(idx, 2) = origin[2] + (k + pdm.offset[2] - cpm.gc + 1) * pitch[2];
+        // pitch[0] = h(idx, 0);
+        // pitch[1] = h(idx, 1);
+        // pitch[2] = h(idx, 2);
         const REAL volume = pitch[0] * pitch[1] * pitch[2];
         const REAL3 dkdx  = {{1.0/pitch[0], 1.0/pitch[1], 1.0/pitch[2]}};
         g(idx, 0) = volume * (dkdx[0] * dkdx[0]);
