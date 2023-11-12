@@ -49,7 +49,10 @@ static inline void falmFree(void *ptr) {
 // }
 
 static inline void falmFreeDevice(void *ptr) {
-    cudaFree(ptr);
+    cudaError_t err = cudaFree(ptr);
+    if (err != cudaSuccess) {
+        printf("cuda free device failed with error %d\n", (int)err);
+    }
 }
 
 // static inline void falmFreeDeviceAsync(void *ptr, STREAM stream = (STREAM)0) {
