@@ -10,7 +10,7 @@ using namespace Falm;
 
 const dim3 block(8, 8, 8);
 const REAL3 Lxyz{{24.0, 8.0, 8.0}};
-const INT3  Nxyz{{750, 250, 250}};
+INT3  Nxyz;
 const REAL3 origin{{-4,-4,-4}};
 
 const REAL endtime = 100;
@@ -24,13 +24,37 @@ REAL maxdiag;
 CPM cpm;
 Vcdm::VCDM<float> vcdm;
 STREAM facestream[CPM::NFACE];
+std::string gridpath;
+
+void read_gridsize() {
+    std::ifstream xfile(gridpath + "/x.txt");
+    std::ifstream yfile(gridpath + "/y.txt");
+    std::ifstream zfile(gridpath + "/z.txt");
+    if (!xfile || !yfile || !zfile) {
+        printf("Cannot open grid file\n");
+    }
+    std::string line;
+    int nx, ny, nz;
+    std::getline(xfile, line);
+    nx = std::stoi(line);
+    Nxyz[0] = nx - 1;
+    std::getline(yfile, line);
+    ny = std::stoi(line);
+    Nxyz[1] = ny - 1;
+    std::getline(zfile, line);
+    nz = std::stoi(line);
+    Nxyz[2] = nz - 1;
+    xfile.close();
+    yfile.close();
+    zfile.close();
+}
 
 void read_grid() {
     const INT3 &shape = cpm.pdm_list[cpm.rank].shape;
     const INT3 &gshape = cpm.global.shape;
-    std::ifstream xfile("x.txt");
-    std::ifstream yfile("y.txt");
-    std::ifstream zfile("z.txt");
+    std::ifstream xfile(gridpath + "x.txt");
+    std::ifstream yfile(gridpath + "y.txt");
+    std::ifstream zfile(gridpath + "z.txt");
     if (!xfile || !yfile || !zfile) {
         printf("Cannot open grid file\n");
     }
@@ -42,10 +66,6 @@ void read_grid() {
     ny = std::stoi(line);
     std::getline(zfile, line);
     nz = std::stoi(line);
-    printf("%d %d %d\n", nx, ny, nz);
-    if (nx != gshape[0] - 2 || ny != gshape[1] - 2 || nz != gshape[2] - 2) {
-        printf("Wrong domain size\n");
-    }
     gx.alloc(gshape[0], 1, HDCType::Host);
     gy.alloc(gshape[1], 1, HDCType::Host);
     gz.alloc(gshape[2], 1, HDCType::Host);
@@ -183,6 +203,8 @@ REAL main_loop(FalmCFD &cfd, FalmEq &eq, RmcpAlm &alm, RmcpTurbineArray &turbine
 int main(int argc, char **argv) {
     assert(GuideCell == 2);
     CPM_Init(&argc, &argv);
+    gridpath = std::string(argv[1]);
+    read_gridsize();
     int mpi_rank, mpi_size;
     cpm.use_cuda_aware_mpi = true;
     CPM_GetRank(MPI_COMM_WORLD, mpi_rank);
@@ -366,11 +388,8 @@ int main(int argc, char **argv) {
         poisson_a(idxcc, 6) = at;
     }}}
     poisson_a.sync(MCpType::Hst2Dev);
-    printf("OK1\n");
     maxdiag = FalmMV::MaxDiag(poisson_a, cpm, {8, 8, 8});
-    printf("OK2\n");
     FalmMV::ScaleMatrix(poisson_a, 1.0 / maxdiag, {8, 8, 8});
-    printf("OK3\n");
     if (cpm.rank == 0) {
         printf("max diag = %lf\n", maxdiag);
         fflush(stdout);
