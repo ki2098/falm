@@ -385,6 +385,7 @@ int main(int argc, char **argv) {
     turbine.thick = 0.1;
     turbine.tip = 4;
     turbine.hub = 0.1;
+    turbine.yaw = Pi / 6.0;
     turbine.chord_a = {{
           0.2876200,
         - 0.2795100,
@@ -426,11 +427,11 @@ int main(int argc, char **argv) {
         REAL dvr_norm = sqrt(main_loop(cfdsolver, eqsolver, alm, turbineArray, __it, dt, facestream)) / ginner.size;
         __t += dt;
         __it ++;
-        size_t freebyte, totalbyte;
-        cudaMemGetInfo(&freebyte, &totalbyte);
-        printf("\nrank %d: free %lf, total %lf\n", cpm.rank, freebyte / (1024. * 1024.), totalbyte / (1024. * 1024.));
-        fflush(stdout);
-        CPM_Barrier(MPI_COMM_WORLD);
+        // size_t freebyte, totalbyte;
+        // cudaMemGetInfo(&freebyte, &totalbyte);
+        // printf("\nrank %d: free %lf, total %lf\n", cpm.rank, freebyte / (1024. * 1024.), totalbyte / (1024. * 1024.));
+        // fflush(stdout);
+        // CPM_Barrier(MPI_COMM_WORLD);
         if (cpm.rank == 0) {
             printf("%8d %12.5e, %12.5e, %3d, %12.5e\n", __it, __t, dvr_norm, eqsolver.it, eqsolver.err);
             fflush(stdout);
