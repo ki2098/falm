@@ -1,7 +1,7 @@
 #!/usr/bin/bash
 #PJM -L "rscunit=ito-b"
-#PJM -L "rscgrp=ito-g-16"
-#PJM -L "vnode=2"
+#PJM -L "rscgrp=ito-g-4"
+#PJM -L "vnode=1"
 #PJM -L "vnode-core=36"
 #PJM -L "elapse=03:00:00"
 #PJM -j
