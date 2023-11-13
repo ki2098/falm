@@ -6,13 +6,13 @@
 #PJM -L "elapse=03:00:00"
 #PJM -j
 #PJM -X
-#PJM -o "turbine1.340x120x120.1.log"
+#PJM -o "turbine1.340x120x120.2.log"
 
 module load nvhpc/nvhpc_20.11
 
 date
 
-mpirun -np 1 --map-by ppr:2:socket -display-devel-map -display-devel-map --mca plm_rsh_agent /bin/pjrsh -machinefile ${PJM_O_NODEINF} ./bin/t1 small
+mpirun -np 2 --map-by ppr:2:socket -display-devel-map -display-devel-map --mca plm_rsh_agent /bin/pjrsh -machinefile ${PJM_O_NODEINF} ./bin/t1 small
 
 # --mca btl_smcuda_use_cuda_ipc 0
 # nvprof --log-file %q{OMPI_COMM_WORLD_RANK}.prof
