@@ -404,7 +404,7 @@ int main(int argc, char **argv) {
     turbine.thick = 0.1;
     turbine.tip = 4;
     turbine.hub = 0.1;
-    turbine.yaw = Pi / 6.0;
+    turbine.yaw = 0;
     turbine.chord_a = {{
           0.2876200,
         - 0.2795100,
