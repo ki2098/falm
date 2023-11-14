@@ -145,6 +145,7 @@ void FalmEq::Jacobi(Matrix<REAL> &a, Matrix<REAL> &x, Matrix<REAL> &b, Matrix<RE
 }
 
 void FalmEq::JacobiPC(Matrix<REAL> &a, Matrix<REAL> &x, Matrix<REAL> &b, CPM &cpm, dim3 block_dim, STREAM *stream) {
+    // printf("Jacobi PC run\n");
     Region &pdm = cpm.pdm_list[cpm.rank];
     Matrix<REAL> xp(x.shape[0], x.shape[1], HDCType::Device, "Jacobi" + x.name + "Previous");
     if (cpm.size == 1) {
@@ -200,6 +201,7 @@ void FalmEq::JacobiPC(Matrix<REAL> &a, Matrix<REAL> &x, Matrix<REAL> &b, CPM &cp
 }
 
 void FalmEq::SOR(Matrix<REAL> &a, Matrix<REAL> &x, Matrix<REAL> &b, Matrix<REAL> &r, CPM &cpm, dim3 block_dim, STREAM *stream) {
+    // printf("SOR run\n");
     Region &pdm = cpm.pdm_list[cpm.rank];
     if (cpm.size == 1) {
         Region map(pdm.shape, cpm.gc);
@@ -282,6 +284,7 @@ void FalmEq::SOR(Matrix<REAL> &a, Matrix<REAL> &x, Matrix<REAL> &b, Matrix<REAL>
 }
 
 void FalmEq::SORPC(Matrix<REAL> &a, Matrix<REAL> &x, Matrix<REAL> &b, CPM &cpm, dim3 block_dim, STREAM *stream) {
+    // printf("SOR PC run\n");
     Region &pdm = cpm.pdm_list[cpm.rank];
     if (cpm.size == 1) {
         Region map(pdm.shape, cpm.gc);
@@ -355,6 +358,7 @@ void FalmEq::SORPC(Matrix<REAL> &a, Matrix<REAL> &x, Matrix<REAL> &b, CPM &cpm, 
 }
 
 void FalmEq::PBiCGStab(Matrix<REAL> &a, Matrix<REAL> &x, Matrix<REAL> &b, Matrix<REAL> &r, CPM &cpm, dim3 block_dim, STREAM *stream) {
+    // printf("PBiCGStab run\n");
     Region &global = cpm.global;
     Region &pdm = cpm.pdm_list[cpm.rank];
     Region gmap(global.shape, cpm.gc);
