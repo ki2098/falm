@@ -316,7 +316,7 @@ void FalmEq::SORPC(Matrix<REAL> &a, Matrix<REAL> &x, Matrix<REAL> &b, CPM &cpm, 
                     );
                     // Mapper map(boundary_shape[fid], boundary_offset[fid]);
                     STREAM fstream = (stream)? stream[fid] : (STREAM)0;
-                    SORSweep(a, x, b, relax_factor, Color::Black, pdm, Region(boundary_shape[fid], boundary_offset[fid]), __block, fstream);
+                    SORSweep(a, x, b, pc_relax_factor, Color::Black, pdm, Region(boundary_shape[fid], boundary_offset[fid]), __block, fstream);
                 }
             }
             if (stream) {
@@ -341,7 +341,7 @@ void FalmEq::SORPC(Matrix<REAL> &a, Matrix<REAL> &x, Matrix<REAL> &b, CPM &cpm, 
                     );
                     // Mapper map(boundary_shape[fid], boundary_offset[fid]);
                     STREAM fstream = (stream)? stream[fid] : (STREAM)0;
-                    SORSweep(a, x, b, relax_factor, Color::Red, pdm, Region(boundary_shape[fid], boundary_offset[fid]), __block, fstream);
+                    SORSweep(a, x, b, pc_relax_factor, Color::Red, pdm, Region(boundary_shape[fid], boundary_offset[fid]), __block, fstream);
                 }
             }
             if (stream) {
