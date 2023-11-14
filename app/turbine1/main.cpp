@@ -443,9 +443,9 @@ int main(int argc, char **argv) {
         // printf("%8d %12.5e, %12.5e, %3d, %12.5e, %e %e\n", __it, __t, 0, eqsolver.it, eqsolver.err, freebyte / (1024. * 1024.), totalbyte / (1024. * 1024.));
         fflush(stdout);
     }
+    double t_start = MPI_Wtime();
     cfdsolver.UtoUU(u, uu, kx, ja, cpm, block, facestream);
     cfdsolver.SGS(u, nut, x, kx, ja, cpm, block, facestream);
-    double t_start = MPI_Wtime();
     while (__it < __IT) {
         REAL dvr_norm = sqrt(main_loop(cfdsolver, eqsolver, alm, turbineArray, __it, dt, facestream)) / ginner.size;
         __t += dt;
