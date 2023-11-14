@@ -369,6 +369,10 @@ void FalmEq::PBiCGStab(Matrix<REAL> &a, Matrix<REAL> &x, Matrix<REAL> &b, Matrix
     Matrix<REAL>  t(pdm.shape, 1, HDCType::Device, "PBiCGStab  t");
     REAL rho, rrho, alpha, beta, omega;
 
+     size_t freebyte, totalbyte;
+    cudaMemGetInfo(&freebyte, &totalbyte);
+    printf("\nrank %d: free %lf, total %lf\n", cpm.rank, freebyte / (1024. * 1024.), totalbyte / (1024. * 1024.));
+
     Res(a, x, b, r, cpm, block_dim);
     err = sqrt(FalmMV::EuclideanNormSq(r, cpm, block_dim)) / gmap.size;
 
