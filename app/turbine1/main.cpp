@@ -434,7 +434,7 @@ int main(int argc, char **argv) {
     REAL __t = 0;
     INT  __it = 0;
     const INT __IT = int(endtime / dt);
-    const INT __oIT = int(10.0 / dt);
+    const INT __oIT = int(100.0 / dt);
     plt3d_output(__it, cpm.rank, dt);
     if (cpm.rank == 0) {
         printf("time advance start\n");
