@@ -14,7 +14,8 @@ void FalmCFD::FSPseudoU(
     Matrix<REAL> &ff,
     CPM      &cpm,
     dim3          block_dim,
-    STREAM       *stream
+    STREAM       *stream,
+    INT margin
 ) {
     Region &pdm = cpm.pdm_list[cpm.rank];
     if (cpm.size == 1) {
@@ -26,13 +27,13 @@ void FalmCFD::FSPseudoU(
         CPMComm<REAL> wcpm(&cpm);
         CPMComm<REAL> nutcpm(&cpm);
 
-        ucpm.IExchange6Face(&u.dev(0,0), 2, 0, 0, stream);
+        ucpm.IExchange6Face(&u.dev(0,0), 2 - margin, margin, 0, stream);
         // printf("rank %d, [%d %d %d], [%d %d %d %d %d %d]\n", cpm.rank, cpm.idx[0], cpm.idx[1], cpm.idx[2], cpm.neighbour[0], cpm.neighbour[1], cpm.neighbour[2], cpm.neighbour[3], cpm.neighbour[4], cpm.neighbour[5]);
         // fflush(stdout);
-        vcpm.IExchange6Face(&u.dev(0,1), 2, 0, 1, stream);
+        vcpm.IExchange6Face(&u.dev(0,1), 2 - margin, margin, 1, stream);
         // printf("rank %d, [%d %d %d], [%d %d %d %d %d %d]\n", cpm.rank, cpm.idx[0], cpm.idx[1], cpm.idx[2], cpm.neighbour[0], cpm.neighbour[1], cpm.neighbour[2], cpm.neighbour[3], cpm.neighbour[4], cpm.neighbour[5]);
         // fflush(stdout);
-        wcpm.IExchange6Face(&u.dev(0,2), 2, 0, 2, stream);
+        wcpm.IExchange6Face(&u.dev(0,2), 2 - margin, margin, 2, stream);
         // printf("rank %d, [%d %d %d], [%d %d %d %d %d %d]\n", cpm.rank, cpm.idx[0], cpm.idx[1], cpm.idx[2], cpm.neighbour[0], cpm.neighbour[1], cpm.neighbour[2], cpm.neighbour[3], cpm.neighbour[4], cpm.neighbour[5]);
         // fflush(stdout);
         nutcpm.IExchange6Face(&nut.dev(0), 1, 0, 3, stream);
@@ -213,9 +214,6 @@ void FalmCFD::SGS(
     dim3          block_dim,
     STREAM       *stream
 ) {
-    if (SGSModel == SGSType::Empty) {
-        return;
-    }
     Region &pdm = cpm.pdm_list[cpm.rank];
     if (cpm.size == 1) {
         Region map(pdm.shape, cpm.gc);

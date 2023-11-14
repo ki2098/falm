@@ -25,7 +25,8 @@ public:
         Matrix<REAL> &ff,
         CPM      &cpm,
         dim3          block_dim,
-        STREAM       *stream = nullptr
+        STREAM       *stream = nullptr,
+        INT           margin = 0
     );
 
     void UtoUU(

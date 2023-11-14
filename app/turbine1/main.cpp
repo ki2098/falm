@@ -13,7 +13,7 @@ const REAL3 Lxyz{{24.0, 10.0, 10.0}};
 INT3  Nxyz;
 const REAL3 origin{{-4,-5,-5}};
 
-const REAL endtime = 20;
+const REAL endtime = 50;
 const REAL dt = 1e-3;
 
 Matrix<REAL> gx, gy, gz, ghx, ghy, ghz;
@@ -179,7 +179,7 @@ REAL main_loop(FalmCFD &cfd, FalmEq &eq, RmcpAlm &alm, RmcpTurbineArray &turbine
     alm.SetALMFlag(x, dt * step, turbineArray, cpm, block);
     alm.ALM(u, x, ff, dt * step, turbineArray, cpm, block);
 
-    cfd.FSPseudoU(uprev, u, uu, u, nut, kx, g, ja, ff, cpm, block, s);
+    cfd.FSPseudoU(uprev, u, uu, u, nut, kx, g, ja, ff, cpm, block, s, 1);
     cfd.UtoUU(u, uu, kx, ja, cpm, block, s);
     cfd.MACCalcPoissonRHS(uu, rhs, ja, cpm, block, maxdiag);
     
@@ -425,7 +425,7 @@ int main(int argc, char **argv) {
     turbineArray.sync(MCpType::Hst2Dev);
 
     FalmCFD cfdsolver(10000, dt, AdvectionSchemeType::Upwind3, SGSType::Smagorinsky);
-    FalmEq eqsolver(LSType::PBiCGStab, 1000, 1e-6, 1.2, LSType::SOR, 3, 1.2);
+    FalmEq eqsolver(LSType::SOR, 1000, 1e-6, 1.2, LSType::SOR, 3, 1.2);
     RmcpAlm alm(cpm);
     if (cpm.rank == 0) {
         printf("running on %dx%dx%d grid with Re=%lf until t=%lf\n", Nxyz[0], Nxyz[1], Nxyz[1], cfdsolver.Re, endtime);
@@ -444,6 +444,7 @@ int main(int argc, char **argv) {
         fflush(stdout);
     }
     cfdsolver.UtoUU(u, uu, kx, ja, cpm, block, facestream);
+    cfdsolver.SGS(u, nut, x, kx, ja, cpm, block, facestream);
     double t_start = MPI_Wtime();
     while (__it < __IT) {
         REAL dvr_norm = sqrt(main_loop(cfdsolver, eqsolver, alm, turbineArray, __it, dt, facestream)) / ginner.size;
