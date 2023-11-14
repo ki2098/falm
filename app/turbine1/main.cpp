@@ -434,10 +434,13 @@ int main(int argc, char **argv) {
     REAL __t = 0;
     INT  __it = 0;
     const INT __IT = int(endtime / dt);
-    const INT __oIT = int(10000.0 / dt);
+    const INT __oIT = int(1.0 / dt);
     plt3d_output(__it, cpm.rank, dt);
     if (cpm.rank == 0) {
         printf("time advance start\n");
+        size_t freebyte, totalbyte;
+        cudaMemGetInfo(&freebyte, &totalbyte);
+        printf("%8d %12.5e, %12.5e, %3d, %12.5e, %e %e\n", __it, __t, 0, eqsolver.it, eqsolver.err, freebyte / (1024. * 1024.), totalbyte / (1024. * 1024.));
         fflush(stdout);
     }
     cfdsolver.UtoUU(u, uu, kx, ja, cpm, block, facestream);
@@ -451,13 +454,19 @@ int main(int argc, char **argv) {
         // printf("\nrank %d: free %lf, total %lf\n", cpm.rank, freebyte / (1024. * 1024.), totalbyte / (1024. * 1024.));
         // fflush(stdout);
         // CPM_Barrier(MPI_COMM_WORLD);
-        if (cpm.rank == 0) {
-            printf("%8d %12.5e, %12.5e, %3d, %12.5e\n", __it, __t, dvr_norm, eqsolver.it, eqsolver.err);
-            fflush(stdout);
-        }
-        // if (__it % __oIT == 0) {
-        //     plt3d_output(__it, cpm.rank, dt);
+        // if (cpm.rank == 0) {
+        //     printf("%8d %12.5e, %12.5e, %3d, %12.5e\n", __it, __t, dvr_norm, eqsolver.it, eqsolver.err);
+        //     fflush(stdout);
         // }
+        if (__it % __oIT == 0) {
+            // plt3d_output(__it, cpm.rank, dt);
+            if (cpm.rank == 0) {
+                size_t freebyte, totalbyte;
+                cudaMemGetInfo(&freebyte, &totalbyte);
+                printf("%8d %12.5e, %12.5e, %3d, %12.5e, %e %e\n", __it, __t, dvr_norm, eqsolver.it, eqsolver.err, freebyte / (1024. * 1024.), totalbyte / (1024. * 1024.));
+                fflush(stdout);
+            }
+        }
     }
     double t_end = MPI_Wtime();
     printf("\n");
