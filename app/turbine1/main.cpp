@@ -458,14 +458,14 @@ int main(int argc, char **argv) {
         //     printf("%8d %12.5e, %12.5e, %3d, %12.5e\n", __it, __t, dvr_norm, eqsolver.it, eqsolver.err);
         //     fflush(stdout);
         // }
+        if (cpm.rank == 0) {
+            // size_t freebyte = 0, totalbyte = 0;
+            // cudaMemGetInfo(&freebyte, &totalbyte);
+            printf("%8d %12.5e, %12.5e, %3d, %12.5e\n", __it, __t, dvr_norm, eqsolver.it, eqsolver.err);
+            fflush(stdout);
+        }
         if (__it % __oIT == 0) {
             // plt3d_output(__it, cpm.rank, dt);
-            if (cpm.rank == 0) {
-                size_t freebyte = 0, totalbyte = 0;
-                // cudaMemGetInfo(&freebyte, &totalbyte);
-                printf("%8d %12.5e, %12.5e, %3d, %12.5e, %e %e\n", __it, __t, dvr_norm, eqsolver.it, eqsolver.err, freebyte / (1024. * 1024.), totalbyte / (1024. * 1024.));
-                fflush(stdout);
-            }
         }
     }
     double t_end = MPI_Wtime();

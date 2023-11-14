@@ -205,21 +205,22 @@ void RmcpAlmDevCall::CalcTorque(Matrix<REAL> &x, Matrix<REAL> &ff, RmcpTurbineAr
     );
     INT n_blocks = PRODUCT3(grid_dim);
     INT n_threads = PRODUCT3(block_dim);
-    REAL *partial_sum = (REAL*)falmMalloc(sizeof(REAL) * n_blocks);
-    REAL *partial_sum_dev = (REAL*)falmMallocDevice(sizeof(REAL) * n_blocks);
+    REAL *partial_sum,*partial_sum_dev;
+    falmErrCheckMacro(falmMalloc((void**)&partial_sum, sizeof(REAL) * n_blocks));
+    falmErrCheckMacro(falmMallocDevice((void**)&partial_sum_dev, sizeof(REAL) * n_blocks));
     size_t shared_size = n_threads * sizeof(REAL);
 
     for (INT __ti = 0; __ti < wf.nTurbine; __ti ++) {
         kernel_CalcTorque<<<grid_dim, block_dim, shared_size>>>(alm_flag.devptr, x.devptr, ff.devptr, wf.tdevptr, __ti, partial_sum_dev, pdm.shape, map.shape, map.offset);
-        falmMemcpy(partial_sum, partial_sum_dev, sizeof(REAL) * n_blocks, MCpType::Dev2Hst);
+        falmErrCheckMacro(falmMemcpy(partial_sum, partial_sum_dev, sizeof(REAL) * n_blocks, MCpType::Dev2Hst));
         REAL sum = partial_sum[0];
         for (INT i = 0; i < n_blocks; i ++) {
             sum += partial_sum[i];
         }
         wf.tptr[__ti].torque = sum;
     }
-    falmFree(partial_sum);
-    falmFreeDevice(partial_sum_dev);
+    falmErrCheckMacro(falmFree(partial_sum));
+    falmErrCheckMacro(falmFreeDevice(partial_sum_dev));
 }
 
 }

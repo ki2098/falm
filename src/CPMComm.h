@@ -171,7 +171,7 @@ template<typename T> void CPMComm<T>::IExchange6Face(T *data, INT thick, INT mar
             sbuf.alloc(sizeof(T), sbuf.map, BufType::Out, buffer_hdctype);
             rbuf.alloc(sizeof(T), rbuf.map, BufType::In , buffer_hdctype);
             if (buffer_hdctype == HDCType::Host) {
-                packerptr[fid] = falmMallocDevice(sizeof(T) * sbuf.count);
+                falmErrCheckMacro(falmMallocDevice((void**)&packerptr[fid], sizeof(T) * sbuf.count));
             }
         }
     }
@@ -188,7 +188,7 @@ template<typename T> void CPMComm<T>::IExchange6Face(T *data, INT thick, INT mar
                 CPMDevCall::PackBuffer((T*)sbuf.ptr, sbuf.map, data, pdm, block_dim, fstream);
             } else if (buffer_hdctype == HDCType::Host) {
                 CPMDevCall::PackBuffer((T*)(packerptr[fid]), sbuf.map, data, pdm, block_dim, fstream);
-                falmMemcpyAsync(sbuf.ptr, packerptr[fid], sizeof(T) * sbuf.count, MCpType::Dev2Hst, fstream);
+                falmErrCheckMacro(falmMemcpyAsync(sbuf.ptr, packerptr[fid], sizeof(T) * sbuf.count, MCpType::Dev2Hst, fstream));
             }
         }
     }
@@ -201,7 +201,7 @@ template<typename T> void CPMComm<T>::IExchange6Face(T *data, INT thick, INT mar
                 falmWaitStream(stream[fid]);
             }
             if (buffer_hdctype == HDCType::Host) {
-                falmFreeDevice(packerptr[fid]);
+                falmErrCheckMacro(falmFreeDevice(packerptr[fid]));
             }
             CPMBuffer   &sbuf =  buffer[fid * 2], &rbuf =  buffer[fid * 2 + 1];
             MPI_Request &sreq = mpi_req[fid * 2], &rreq = mpi_req[fid * 2 + 1];
@@ -225,7 +225,7 @@ template<typename T> void CPMComm<T>::IExchange6ColoredFace(T *data, INT color, 
             sbuf.allocColored(sizeof(T), sbuf.map, color, BufType::Out, buffer_hdctype, pdm);
             rbuf.allocColored(sizeof(T), rbuf.map, color, BufType::In , buffer_hdctype, pdm);
             if (buffer_hdctype == HDCType::Host) {
-                packerptr[fid] = falmMallocDevice(sizeof(T) * sbuf.count);
+                falmErrCheckMacro(falmMallocDevice((void**)&packerptr[fid], sizeof(T) * sbuf.count));
             }
         }
     }
@@ -242,7 +242,7 @@ template<typename T> void CPMComm<T>::IExchange6ColoredFace(T *data, INT color, 
                 CPMDevCall::PackColoredBuffer((T*)sbuf.ptr, sbuf.map, color, data, pdm, block_dim, fstream);
             } else if (buffer_hdctype == HDCType::Host) {
                 CPMDevCall::PackColoredBuffer((T*)(packerptr[fid]), sbuf.map, color, data, pdm, block_dim, fstream);
-                falmMemcpyAsync(sbuf.ptr, packerptr[fid], sizeof(T) * sbuf.count, MCpType::Dev2Hst, fstream);
+                falmErrCheckMacro(falmMemcpyAsync(sbuf.ptr, packerptr[fid], sizeof(T) * sbuf.count, MCpType::Dev2Hst, fstream));
             }
         }
     }
@@ -258,7 +258,7 @@ template<typename T> void CPMComm<T>::IExchange6ColoredFace(T *data, INT color, 
                 falmWaitStream(stream[fid]);
             }
             if (buffer_hdctype == HDCType::Host) {
-                falmFreeDevice(packerptr[fid]);
+                falmErrCheckMacro(falmFreeDevice(packerptr[fid]));
             }
             fflush(stdout);
             CPMBuffer   &sbuf =  buffer[fid * 2], &rbuf =  buffer[fid * 2 + 1];
@@ -275,7 +275,7 @@ template<typename T> void CPMComm<T>::PostExchange6Face(STREAM *stream) {
         if (base->validNeighbour(fid)) {
             if (buffer_hdctype == HDCType::Host) {
                 CPMBuffer &rbuf = buffer[fid * 2 + 1];
-                packerptr[fid] = falmMallocDevice(sizeof(T) * rbuf.count);
+                falmErrCheckMacro(falmMallocDevice((void**)&packerptr[fid], sizeof(T) * rbuf.count));
             }
         }
     }
@@ -291,7 +291,7 @@ template<typename T> void CPMComm<T>::PostExchange6Face(STREAM *stream) {
             if (buffer_hdctype == HDCType::Device) {
                 CPMDevCall::UnpackBuffer((T*)rbuf.ptr, rbuf.map, origin_ptr, origin_domain, block_dim, fstream);
             } else if (buffer_hdctype == HDCType::Host) {
-                falmMemcpyAsync(packerptr[fid], rbuf.ptr, sizeof(T) * rbuf.count, MCpType::Hst2Dev, fstream);
+                falmErrCheckMacro(falmMemcpyAsync(packerptr[fid], rbuf.ptr, sizeof(T) * rbuf.count, MCpType::Hst2Dev, fstream));
                 CPMDevCall::UnpackBuffer((T*)(packerptr[fid]), rbuf.map, origin_ptr, origin_domain, block_dim, fstream);
             }
         }
@@ -305,7 +305,7 @@ template<typename T> void CPMComm<T>::PostExchange6Face(STREAM *stream) {
                 falmWaitStream(stream[fid]);
             }
             if (buffer_hdctype == HDCType::Host) {
-                falmFreeDevice(packerptr[fid]);
+                falmErrCheckMacro(falmFreeDevice(packerptr[fid]));
             }
             CPMBuffer &sbuf = buffer[fid * 2], &rbuf = buffer[fid * 2 + 1];
             sbuf.release();
@@ -321,7 +321,7 @@ template<typename T> void CPMComm<T>::PostExchange6ColoredFace(STREAM *stream) {
         if (base->validNeighbour(fid)) {
             if (buffer_hdctype == HDCType::Host) {
                 CPMBuffer &rbuf = buffer[fid * 2 + 1];
-                packerptr[fid] = falmMallocDevice(sizeof(T) * rbuf.count);
+                falmErrCheckMacro(falmMallocDevice((void**)&packerptr[fid], sizeof(T) * rbuf.count));
             }
         }
     }
@@ -337,7 +337,7 @@ template<typename T> void CPMComm<T>::PostExchange6ColoredFace(STREAM *stream) {
             if (buffer_hdctype == HDCType::Device) {
                 CPMDevCall::UnpackColoredBuffer((T*)rbuf.ptr, rbuf.map, rbuf.color, origin_ptr, origin_domain, block_dim, fstream);
             } else if (buffer_hdctype == HDCType::Host) {
-                falmMemcpyAsync(packerptr[fid], rbuf.ptr, sizeof(T) * rbuf.count, MCpType::Hst2Dev, fstream);
+                falmErrCheckMacro(falmMemcpyAsync(packerptr[fid], rbuf.ptr, sizeof(T) * rbuf.count, MCpType::Hst2Dev, fstream));
                 CPMDevCall::UnpackColoredBuffer((T*)(packerptr[fid]), rbuf.map, rbuf.color, origin_ptr, origin_domain, block_dim, fstream);
             }
         }
@@ -351,7 +351,7 @@ template<typename T> void CPMComm<T>::PostExchange6ColoredFace(STREAM *stream) {
                 falmWaitStream(stream[fid]);
             }
             if (buffer_hdctype == HDCType::Host) {
-                falmFreeDevice(packerptr[fid]);
+                falmErrCheckMacro(falmFreeDevice(packerptr[fid]));
             }
             CPMBuffer &sbuf = buffer[fid * 2], &rbuf = buffer[fid * 2 + 1];
             sbuf.release();
