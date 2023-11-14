@@ -434,7 +434,7 @@ int main(int argc, char **argv) {
     REAL __t = 0;
     INT  __it = 0;
     const INT __IT = int(endtime / dt);
-    const INT __oIT = int(100.0 / dt);
+    const INT __oIT = int(10000.0 / dt);
     plt3d_output(__it, cpm.rank, dt);
     if (cpm.rank == 0) {
         printf("time advance start\n");
@@ -455,12 +455,13 @@ int main(int argc, char **argv) {
             printf("%8d %12.5e, %12.5e, %3d, %12.5e\n", __it, __t, dvr_norm, eqsolver.it, eqsolver.err);
             fflush(stdout);
         }
-        if (__it % __oIT == 0) {
-            plt3d_output(__it, cpm.rank, dt);
-        }
+        // if (__it % __oIT == 0) {
+        //     plt3d_output(__it, cpm.rank, dt);
+        // }
     }
     double t_end = MPI_Wtime();
     printf("\n");
+    plt3d_output(__it, cpm.rank, dt);
     if (cpm.rank == 0) {
         vcdm.writeIndexDfi();
         vcdm.writeProcDfi();
