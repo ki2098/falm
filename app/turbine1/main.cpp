@@ -428,7 +428,7 @@ int main(int argc, char **argv) {
     FalmEq eqsolver(LSType::SOR, 1000, 1e-6, 1.2, LSType::SOR, 3, 1.2);
     RmcpAlm alm(cpm);
     if (cpm.rank == 0) {
-        printf("running on %dx%dx%d grid with Re=%lf until t=%lf\n", Nxyz[0], Nxyz[1], Nxyz[1], cfdsolver.Re, endtime);
+        printf("running on %dx%dx%d grid with Re=%lf until t=%lf using linear solver %d\n", Nxyz[0], Nxyz[1], Nxyz[1], cfdsolver.Re, endtime, (int)eqsolver.type);
         fflush(stdout);
     }
     REAL __t = 0;
