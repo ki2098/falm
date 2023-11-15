@@ -13,7 +13,7 @@ const REAL3 Lxyz{{24.0, 10.0, 10.0}};
 INT3  Nxyz;
 const REAL3 origin{{-4,-5,-5}};
 
-const REAL endtime = 50;
+const REAL endtime = 25;
 const REAL dt = 1e-3;
 
 Matrix<REAL> gx, gy, gz, ghx, ghy, ghz;
@@ -425,7 +425,7 @@ int main(int argc, char **argv) {
     turbineArray.sync(MCpType::Hst2Dev);
 
     FalmCFD cfdsolver(10000, dt, AdvectionSchemeType::Upwind3, SGSType::Smagorinsky);
-    FalmEq eqsolver(LSType::SOR, 1000, 1e-6, 1.2, LSType::SOR, 3, 1.2);
+    FalmEq eqsolver(LSType::PBiCGStab, 1000, 1e-6, 1.2, LSType::SOR, 2, 1.2);
     RmcpAlm alm(cpm);
     if (cpm.rank == 0) {
         printf("running on %dx%dx%d grid with Re=%lf until t=%lf using linear solver %d\n", Nxyz[0], Nxyz[1], Nxyz[1], cfdsolver.Re, endtime, (int)eqsolver.type);
