@@ -425,7 +425,7 @@ int main(int argc, char **argv) {
     turbineArray.sync(MCpType::Hst2Dev);
 
     FalmCFD cfdsolver(10000, dt, AdvectionSchemeType::Upwind3, SGSType::Smagorinsky);
-    FalmEq eqsolver(LSType::PBiCGStab, 1000, 1e-6, 1.2, LSType::Jacobi, 3, 1.2);
+    FalmEq eqsolver(LSType::PBiCGStab, 1000, 1e-6, 1.2, LSType::Jacobi, 2, 1.2);
     RmcpAlm alm(cpm);
     if (cpm.rank == 0) {
         printf("running on %dx%dx%d grid with Re=%lf until t=%lf using linear solver %d\n", Nxyz[0], Nxyz[1], Nxyz[1], cfdsolver.Re, endtime, (int)eqsolver.type);
