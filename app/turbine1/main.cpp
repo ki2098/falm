@@ -444,10 +444,11 @@ int main(int argc, char **argv) {
         fflush(stdout);
     }
     double t_start = MPI_Wtime();
-    cfdsolver.UtoUU(u, uu, kx, ja, cpm, block, facestream);
-    cfdsolver.SGS(u, nut, x, kx, ja, cpm, block, facestream);
+    STREAM *streams = nullptr;
+    cfdsolver.UtoUU(u, uu, kx, ja, cpm, block, streams);
+    cfdsolver.SGS(u, nut, x, kx, ja, cpm, block, streams);
     while (__it < __IT) {
-        REAL dvr_norm = sqrt(main_loop(cfdsolver, eqsolver, alm, turbineArray, __it, dt, facestream)) / ginner.size;
+        REAL dvr_norm = sqrt(main_loop(cfdsolver, eqsolver, alm, turbineArray, __it, dt, streams)) / ginner.size;
         __t += dt;
         __it ++;
         // size_t freebyte, totalbyte;
