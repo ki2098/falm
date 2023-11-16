@@ -444,7 +444,7 @@ int main(int argc, char **argv) {
         fflush(stdout);
     }
     double t_start = MPI_Wtime();
-    STREAM *streams = nullptr;
+    STREAM *streams = facestream;
     cfdsolver.UtoUU(u, uu, kx, ja, cpm, block, streams);
     cfdsolver.SGS(u, nut, x, kx, ja, cpm, block, streams);
     while (__it < __IT) {
