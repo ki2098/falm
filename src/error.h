@@ -16,7 +16,7 @@ public:
 static inline void FalmErrCheck(INT errCode, const char *name, const char *file, int line) {
     if (errCode != FalmErr::success) {
         fprintf(stderr, "%s at %s %d failed with %d\n", name, file, line, errCode);
-        exit((int)errCode);
+        // exit((int)errCode);
     }
 }
 
