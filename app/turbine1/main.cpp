@@ -9,9 +9,9 @@
 using namespace Falm;
 
 const dim3 block(8, 8, 8);
-const REAL3 Lxyz{{24.0, 10.0, 10.0}};
+REAL3 Lxyz{{24.0, 10.0, 10.0}};
 INT3  Nxyz;
-const REAL3 origin{{-4,-5,-5}};
+REAL3 origin{{-4,-5,-5}};
 
 const REAL endtime = 10;
 const REAL dt = 1e-3;
@@ -27,6 +27,9 @@ STREAM facestream[CPM::NFACE];
 std::string gridpath;
 
 void read_gridsize() {
+    if (gridpath == "weak") {
+        gridpath += "/" + std::to_string(cpm.size);
+    }
     std::ifstream xfile(gridpath + "/x.txt");
     std::ifstream yfile(gridpath + "/y.txt");
     std::ifstream zfile(gridpath + "/z.txt");
@@ -50,6 +53,9 @@ void read_gridsize() {
 }
 
 void read_grid() {
+    if (gridpath == "weak") {
+        gridpath += "/" + std::to_string(cpm.size);
+    }
     const INT3 &shape = cpm.pdm_list[cpm.rank].shape;
     const INT3 &gshape = cpm.global.shape;
     std::ifstream xfile(gridpath + "x.txt");
@@ -204,11 +210,15 @@ int main(int argc, char **argv) {
     assert(GuideCell == 2);
     CPM_Init(&argc, &argv);
     gridpath = std::string(argv[1]);
-    read_gridsize();
     int mpi_rank, mpi_size;
     cpm.use_cuda_aware_mpi = true;
     CPM_GetRank(MPI_COMM_WORLD, mpi_rank);
     CPM_GetSize(MPI_COMM_WORLD, mpi_size);
+    if (gridpath == "weak") {
+        origin = {{-7.5, -7.5, -7.5}};
+        Lxyz = {{mpi_size * 15.0, 15.0, 15.0}};
+    }
+    read_gridsize();
     cpm.initPartition(Nxyz - INT3{{1,1,1}}, GuideCell, mpi_rank, mpi_size, {{mpi_size, 1, 1}});
     int ngpu;
     cudaGetDeviceCount(&ngpu);
@@ -284,24 +294,24 @@ int main(int argc, char **argv) {
     kx.alloc(pdm.shape, 3, HDCType::Host);
     ja.alloc(pdm.shape, 1, HDCType::Host);
     g.alloc(pdm.shape, 3, HDCType::Host);
-    // read_grid();
+    read_grid();
     for (INT k = 0; k < pdm.shape[2]; k ++) {
     for (INT j = 0; j < pdm.shape[1]; j ++) {
     for (INT i = 0; i < pdm.shape[0]; i ++) {
         INT idx = IDX(i, j, k, pdm.shape);
         REAL3 pitch;
-        pitch[0] = Lxyz[0] / Nxyz[0];
-        pitch[1] = Lxyz[1] / Nxyz[1];
-        pitch[2] = Lxyz[2] / Nxyz[2];
-        h(idx, 0) = pitch[0];
-        h(idx, 1) = pitch[1];
-        h(idx, 2) = pitch[2];
-        x(idx, 0) = origin[0] + (i + pdm.offset[0] - cpm.gc + 1) * pitch[0];
-        x(idx, 1) = origin[1] + (j + pdm.offset[1] - cpm.gc + 1) * pitch[1];
-        x(idx, 2) = origin[2] + (k + pdm.offset[2] - cpm.gc + 1) * pitch[2];
-        // pitch[0] = h(idx, 0);
-        // pitch[1] = h(idx, 1);
-        // pitch[2] = h(idx, 2);
+        // pitch[0] = Lxyz[0] / Nxyz[0];
+        // pitch[1] = Lxyz[1] / Nxyz[1];
+        // pitch[2] = Lxyz[2] / Nxyz[2];
+        // h(idx, 0) = pitch[0];
+        // h(idx, 1) = pitch[1];
+        // h(idx, 2) = pitch[2];
+        // x(idx, 0) = origin[0] + (i + pdm.offset[0] - cpm.gc + 1) * pitch[0];
+        // x(idx, 1) = origin[1] + (j + pdm.offset[1] - cpm.gc + 1) * pitch[1];
+        // x(idx, 2) = origin[2] + (k + pdm.offset[2] - cpm.gc + 1) * pitch[2];
+        pitch[0] = h(idx, 0);
+        pitch[1] = h(idx, 1);
+        pitch[2] = h(idx, 2);
         const REAL volume = pitch[0] * pitch[1] * pitch[2];
         const REAL3 dkdx  = {{1.0/pitch[0], 1.0/pitch[1], 1.0/pitch[2]}};
         g(idx, 0) = volume * (dkdx[0] * dkdx[0]);
@@ -426,6 +436,10 @@ int main(int argc, char **argv) {
 
     FalmCFD cfdsolver(10000, dt, AdvectionSchemeType::Upwind3, SGSType::Smagorinsky);
     FalmEq eqsolver(LSType::PBiCGStab, 1000, 1e-6, 1.2, LSType::Jacobi, 2, 1.2);
+    if (gridpath == "weak") {
+        eqsolver.maxit = 1;
+        eqsolver.tol = 0.0;
+    }
     RmcpAlm alm(cpm);
     if (cpm.rank == 0) {
         printf("running on %dx%dx%d grid with Re=%lf until t=%lf using linear solver %d\n", Nxyz[0], Nxyz[1], Nxyz[1], cfdsolver.Re, endtime, (int)eqsolver.type);
