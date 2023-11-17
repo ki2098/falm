@@ -58,9 +58,9 @@ void read_grid() {
     }
     const INT3 &shape = cpm.pdm_list[cpm.rank].shape;
     const INT3 &gshape = cpm.global.shape;
-    std::ifstream xfile(gridpath + "x.txt");
-    std::ifstream yfile(gridpath + "y.txt");
-    std::ifstream zfile(gridpath + "z.txt");
+    std::ifstream xfile(gridpath + "/x.txt");
+    std::ifstream yfile(gridpath + "/y.txt");
+    std::ifstream zfile(gridpath + "/z.txt");
     if (!xfile || !yfile || !zfile) {
         printf("Cannot open grid file\n");
     }
