@@ -9,9 +9,9 @@
 using namespace Falm;
 
 const dim3 block(8, 8, 8);
-REAL3 Lxyz{{24.0, 10.0, 10.0}};
+REAL3 Lxyz;
 INT3  Nxyz;
-REAL3 origin{{-4,-5,-5}};
+REAL3 origin;
 
 const REAL endtime = 10;
 const REAL dt = 1e-3;
@@ -26,10 +26,9 @@ Vcdm::VCDM<float> vcdm;
 STREAM facestream[CPM::NFACE];
 std::string gridpath;
 
-void read_gridsize() {
-    if (gridpath == "weak") {
-        gridpath += "/" + std::to_string(cpm.size);
-    }
+FalmEq eqparam;
+
+void read_param() {
     std::ifstream xfile(gridpath + "/x.txt");
     std::ifstream yfile(gridpath + "/y.txt");
     std::ifstream zfile(gridpath + "/z.txt");
@@ -50,12 +49,51 @@ void read_gridsize() {
     xfile.close();
     yfile.close();
     zfile.close();
+
+    std::ifstream dfile(gridpath + "/domain.txt");
+    std::getline(dfile, line);
+    origin[0] = std::stod(line);
+    std::getline(dfile, line);
+    origin[1] = std::stod(line);
+    std::getline(dfile, line);
+    origin[2] = std::stod(line);
+    std::getline(dfile, line);
+    Lxyz[0] = std::stod(line);
+    std::getline(dfile, line);
+    Lxyz[1] = std::stod(line);
+    std::getline(dfile, line);
+    Lxyz[2] = std::stod(line);
+    dfile.close();
+
+    std::ifstream lsfile(gridpath + "/ls.txt");
+    std::getline(lsfile, line);
+    if (line == "PBiCGStab") {
+        eqparam.type = LSType::PBiCGStab;
+    } else if (line == "SOR") {
+        eqparam.type = LSType::SOR;
+    } else if (line == "Jacobi") {
+        eqparam.type = LSType::Jacobi;
+    }
+    std::getline(lsfile, line);
+    eqparam.maxit = std::stoi(line);
+    std::getline(lsfile, line);
+    eqparam.tol = std::stod(line);
+    std::getline(lsfile, line);
+    eqparam.relax_factor = std::stod(line);
+    std::getline(lsfile, line);
+    if (line == "SOR") {
+        eqparam.pc_type = LSType::SOR;
+    } else if (line == "Jacobi") {
+        eqparam.pc_type = LSType::Jacobi;
+    }
+    std::getline(lsfile, line);
+    eqparam.pc_maxit = std::stoi(line);
+    std::getline(lsfile, line);
+    eqparam.pc_relax_factor = std::stod(line);
+    lsfile.close();
 }
 
 void read_grid() {
-    if (gridpath == "weak") {
-        gridpath += "/" + std::to_string(cpm.size);
-    }
     const INT3 &shape = cpm.pdm_list[cpm.rank].shape;
     const INT3 &gshape = cpm.global.shape;
     std::ifstream xfile(gridpath + "/x.txt");
@@ -214,11 +252,7 @@ int main(int argc, char **argv) {
     cpm.use_cuda_aware_mpi = true;
     CPM_GetRank(MPI_COMM_WORLD, mpi_rank);
     CPM_GetSize(MPI_COMM_WORLD, mpi_size);
-    if (gridpath == "weak") {
-        origin = {{-7.5, -7.5, -7.5}};
-        Lxyz = {{mpi_size * 15.0, 15.0, 15.0}};
-    }
-    read_gridsize();
+    read_param();
     cpm.initPartition(Nxyz - INT3{{1,1,1}}, GuideCell, mpi_rank, mpi_size, {{mpi_size, 1, 1}});
     int ngpu;
     cudaGetDeviceCount(&ngpu);
@@ -435,7 +469,7 @@ int main(int argc, char **argv) {
     turbineArray.sync(MCpType::Hst2Dev);
 
     FalmCFD cfdsolver(10000, dt, AdvectionSchemeType::Upwind3, SGSType::Smagorinsky);
-    FalmEq eqsolver(LSType::PBiCGStab, 1000, 1e-6, 1.2, LSType::Jacobi, 2, 1.2);
+    FalmEq eqsolver(eqparam.type, eqparam.maxit, eqparam.tol, eqparam.relax_factor, eqparam.pc_type, eqparam.pc_maxit, eqparam.pc_relax_factor);
     if (gridpath == "weak") {
         eqsolver.maxit = 1;
         eqsolver.tol = 0.0;

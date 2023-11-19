@@ -12,6 +12,7 @@ namespace Falm {
 
 class FalmEq : public FalmEqDevCall {
 public:
+    FalmEq() {}
     FalmEq(FLAG _type, INT _maxit, REAL _tol, REAL _relax_factor, FLAG _pc_type = SolverType::Empty, INT _pc_maxit = 5, REAL _pc_relax_factor = 1.0) : 
         FalmEqDevCall(_type, _maxit, _tol, _relax_factor, _pc_type, _pc_maxit, _pc_relax_factor) 
     {}

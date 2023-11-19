@@ -1,0 +1,7 @@
+PBiCGStab
+10000
+1e-6
+1.2
+Jacobi
+2
+1.2
