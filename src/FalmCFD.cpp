@@ -76,7 +76,6 @@ void FalmCFD::UtoUU(
 ) {
     Region &pdm = cpm.pdm_list[cpm.rank];
     Matrix<REAL> uc(pdm.shape, 3, HDCType::Device, "contra u at grid");
-    Region &pdm = cpm.pdm_list[cpm.rank];
     INT3 inner_shape, inner_offset, boundary_shape[6], boundary_offset[6];
     cpm.set6Region(inner_shape, inner_offset, boundary_shape, boundary_offset, 1, Region(pdm.shape, cpm.gc - 1));
 
