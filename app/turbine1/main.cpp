@@ -249,7 +249,7 @@ int main(int argc, char **argv) {
     CPM_Init(&argc, &argv);
     gridpath = std::string(argv[1]);
     int mpi_rank, mpi_size;
-    cpm.use_cuda_aware_mpi = true;
+    cpm.use_cuda_aware_mpi = false;
     CPM_GetRank(MPI_COMM_WORLD, mpi_rank);
     CPM_GetSize(MPI_COMM_WORLD, mpi_size);
     read_param();
