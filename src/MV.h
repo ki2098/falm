@@ -10,38 +10,32 @@ class FalmMV : public FalmMVDevCall {
 public:
 static void MV(Matrix<REAL> &a, Matrix<REAL> &x, Matrix<REAL> &ax, CPM &cpm, dim3 block_dim, STREAM *stream = nullptr) {
     Region &pdm = cpm.pdm_list[cpm.rank];
-    if (cpm.size == 1) {
-        Region map(pdm.shape, cpm.gc);
-        FalmMVDevCall::MV(a, x, ax, pdm, map, block_dim);
-    } else {
-        CPMComm<REAL> cpmop(&cpm);
-        cpmop.IExchange6Face(x.dev.ptr, 1, 0, 0);
-        INT3 inner_shape, inner_offset, boundary_shape[6], boundary_offset[6];
-        cpm.set6Region(inner_shape, inner_offset, boundary_shape, boundary_offset, 1, Region(pdm.shape, cpm.gc));
+    CPMComm<REAL> cpmop(&cpm);
+    cpmop.IExchange6Face(x.dev.ptr, 1, 0, 0);
+    INT3 inner_shape, inner_offset, boundary_shape[6], boundary_offset[6];
+    cpm.set6Region(inner_shape, inner_offset, boundary_shape, boundary_offset, 1, Region(pdm.shape, cpm.gc));
     
-        // Mapper inner_map(inner_shape, inner_offset);
-        FalmMVDevCall::MV(a, x, ax, pdm, Region(inner_shape, inner_offset), block_dim);
+    FalmMVDevCall::MV(a, x, ax, pdm, Region(inner_shape, inner_offset), block_dim);
     
-        cpmop.Wait6Face();
-        cpmop.PostExchange6Face();
+    cpmop.Wait6Face();
+    cpmop.PostExchange6Face();
     
+    for (INT fid = 0; fid < 6; fid ++) {
+        if (cpm.neighbour[fid] >= 0) {
+            dim3 __block(
+                (fid == CPM::XPLUS || fid == CPM::XMINUS)? 1U : 8U,
+                (fid == CPM::YPLUS || fid == CPM::YMINUS)? 1U : 8U,
+                (fid == CPM::ZPLUS || fid == CPM::ZMINUS)? 1U : 8U
+            );
+            // Mapper map(boundary_shape[fid], boundary_offset[fid]);
+            STREAM fstream = (stream)? stream[fid] : (STREAM)0;
+            FalmMVDevCall::MV(a, x, ax, pdm, Region(boundary_shape[fid], boundary_offset[fid]), __block, fstream);
+        }
+    }
+    if (stream) {
         for (INT fid = 0; fid < 6; fid ++) {
             if (cpm.neighbour[fid] >= 0) {
-                dim3 __block(
-                    (fid == CPM::XPLUS || fid == CPM::XMINUS)? 1U : 8U,
-                    (fid == CPM::YPLUS || fid == CPM::YMINUS)? 1U : 8U,
-                    (fid == CPM::ZPLUS || fid == CPM::ZMINUS)? 1U : 8U
-                );
-                // Mapper map(boundary_shape[fid], boundary_offset[fid]);
-                STREAM fstream = (stream)? stream[fid] : (STREAM)0;
-                FalmMVDevCall::MV(a, x, ax, pdm, Region(boundary_shape[fid], boundary_offset[fid]), __block, fstream);
-            }
-        }
-        if (stream) {
-            for (INT fid = 0; fid < 6; fid ++) {
-                if (cpm.neighbour[fid] >= 0) {
-                    falmWaitStream(stream[fid]);
-                }
+                falmWaitStream(stream[fid]);
             }
         }
     }
