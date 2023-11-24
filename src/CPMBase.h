@@ -27,6 +27,7 @@ public:
     INT        gc;
     Region global;
     std::vector<Region> pdm_list;
+    STREAM *stream;
 
     void initPartition(INT3 gShape, INT guideCell, int mpi_rank = 0, int mpi_size = 1, INT3 mpi_shape = {{1,1,1}}) {
         assert(mpi_size == PRODUCT3(mpi_shape));
