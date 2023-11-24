@@ -29,7 +29,7 @@ struct CPMBuffer {
     CPMBuffer() : ptr(nullptr), count(0), buftype(BufType::Empty), hdctype(HDCType::Empty) {}
     ~CPMBuffer() {
         if (hdctype == HDCType::Host) {
-            falmErrCheckMacro(falmFreePinned(ptr));
+            falmErrCheckMacro(falmFree(ptr));
         } else if (hdctype == HDCType::Device) {
             falmErrCheckMacro(falmFreeDevice(ptr));
         }
@@ -44,7 +44,7 @@ struct CPMBuffer {
         buftype = _buftype;
         hdctype = _hdctype;
         if (hdctype == HDCType::Host) {
-            falmErrCheckMacro(falmMallocPinned((void**)&ptr, width * count));
+            falmErrCheckMacro(falmMalloc((void**)&ptr, width * count));
         } else if (hdctype == HDCType::Device) {
             falmErrCheckMacro(falmMallocDevice((void**)&ptr, width * count));
         }
@@ -64,7 +64,7 @@ struct CPMBuffer {
             count ++;
         }
         if (hdctype == HDCType::Host) {
-            falmErrCheckMacro(falmMallocPinned((void**)&ptr, width * count));
+            falmErrCheckMacro(falmMalloc((void**)&ptr, width * count));
         } else if (hdctype == HDCType::Device) {
             falmErrCheckMacro(falmMallocDevice((void**)&ptr, width * count));
         }
@@ -72,7 +72,7 @@ struct CPMBuffer {
     
     void release() {
         if (hdctype == HDCType::Host) {
-            falmErrCheckMacro(falmFreePinned(ptr));
+            falmErrCheckMacro(falmFree(ptr));
         } else if (hdctype == HDCType::Device) {
             falmErrCheckMacro(falmFreeDevice(ptr));
         }
