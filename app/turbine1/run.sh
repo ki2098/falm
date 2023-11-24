@@ -12,7 +12,7 @@ module load nvhpc/nvhpc_20.11
 
 date
 
-mpirun -np 2 --map-by ppr:2:socket:PE=9 --bind-to core --report-bindings --mca plm_rsh_agent /bin/pjrsh -machinefile ${PJM_O_NODEINF} ./bin/t1 weak/2
+mpirun -np 2 --map-by ppr:1:socket --bind-to core --report-bindings --mca plm_rsh_agent /bin/pjrsh -machinefile ${PJM_O_NODEINF} ./bin/t1 weak/2
 
 # --mca mpi_leave_pinned 0
 # --mca btl_smcuda_use_cuda_ipc 0
