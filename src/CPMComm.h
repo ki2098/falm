@@ -192,7 +192,7 @@ template<typename T> void CPMComm<T>::IExchange6Face(T *data, INT thick, INT mar
     }
     for (INT fid = 0; fid < 6; fid ++) {
         if (base->validNeighbour(fid) && buffer_hdctype == HDCType::Host) {
-            falmErrCheckMacro(falmMemcpyAsync(sbuf.ptr, packerptr[fid], sizeof(T) * sbuf.count, MCpType::Dev2Hst, (stream)? stream[fid] : 0));
+            falmErrCheckMacro(falmMemcpyAsync(buffer[fid * 2].ptr, packerptr[fid], sizeof(T) * sbuf.count, MCpType::Dev2Hst, (stream)? stream[fid] : 0));
         }
     }
     if (!stream) {
@@ -247,7 +247,7 @@ template<typename T> void CPMComm<T>::IExchange6ColoredFace(T *data, INT color, 
     }
     for (INT fid = 0; fid < 6; fid ++) {
         if (base->validNeighbour(fid) && buffer_hdctype == HDCType::Host) {
-            falmErrCheckMacro(falmMemcpyAsync(sbuf.ptr, packerptr[fid], sizeof(T) * sbuf.count, MCpType::Dev2Hst, (stream)? stream[fid] : 0));
+            falmErrCheckMacro(falmMemcpyAsync(buffer[fid * 2].ptr, packerptr[fid], sizeof(T) * sbuf.count, MCpType::Dev2Hst, (stream)? stream[fid] : 0));
         }
     }
     if (!stream) {
