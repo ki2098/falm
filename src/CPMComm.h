@@ -187,13 +187,8 @@ template<typename T> void CPMComm<T>::IExchange6Face(T *data, INT thick, INT mar
                 CPMDevCall::PackBuffer((T*)sbuf.ptr, sbuf.map, data, pdm, block_dim, fstream);
             } else if (buffer_hdctype == HDCType::Host) {
                 CPMDevCall::PackBuffer((T*)(packerptr[fid]), sbuf.map, data, pdm, block_dim, fstream);
+                falmErrCheckMacro(falmMemcpyAsync(sbuf.ptr, packerptr[fid], sizeof(T) * sbuf.count, MCpType::Dev2Hst, fstream));
             }
-        }
-    }
-    for (INT fid = 0; fid < 6; fid ++) {
-        if (base->validNeighbour(fid) && buffer_hdctype == HDCType::Host) {
-            CPMBuffer &sbuf = buffer[fid * 2];
-            falmErrCheckMacro(falmMemcpyAsync(sbuf.ptr, packerptr[fid], sizeof(T) * sbuf.count, MCpType::Dev2Hst, (stream)? stream[fid] : 0));
         }
     }
     if (!stream) {
@@ -243,13 +238,8 @@ template<typename T> void CPMComm<T>::IExchange6ColoredFace(T *data, INT color, 
                 CPMDevCall::PackColoredBuffer((T*)sbuf.ptr, sbuf.map, color, data, pdm, block_dim, fstream);
             } else if (buffer_hdctype == HDCType::Host) {
                 CPMDevCall::PackColoredBuffer((T*)(packerptr[fid]), sbuf.map, color, data, pdm, block_dim, fstream);
+                falmErrCheckMacro(falmMemcpyAsync(sbuf.ptr, packerptr[fid], sizeof(T) * sbuf.count, MCpType::Dev2Hst, fstream));
             }
-        }
-    }
-    for (INT fid = 0; fid < 6; fid ++) {
-        if (base->validNeighbour(fid) && buffer_hdctype == HDCType::Host) {
-            CPMBuffer &sbuf = buffer[fid * 2];
-            falmErrCheckMacro(falmMemcpyAsync(sbuf.ptr, packerptr[fid], sizeof(T) * sbuf.count, MCpType::Dev2Hst, (stream)? stream[fid] : 0));
         }
     }
     if (!stream) {
