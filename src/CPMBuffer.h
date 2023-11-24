@@ -50,6 +50,21 @@ struct CPMBuffer {
         }
     }
 
+    void allocAsync(size_t _width, const Region &_map, FLAG _buftype, FLAG _hdctype, STREAM stream = 0) {
+        assert(hdctype == HDCType::Empty);
+        assert(buftype == BufType::Empty);
+        width   = _width;
+        map     = _map;
+        count   = _map.size;
+        buftype = _buftype;
+        hdctype = _hdctype;
+        if (hdctype == HDCType::Host) {
+            falmErrCheckMacro(falmMalloc((void**)&ptr, width * count));
+        } else if (hdctype == HDCType::Device) {
+            falmErrCheckMacro(falmMallocDeviceAsync((void**)&ptr, width * count, stream));
+        }
+    }
+
     void allocColored(size_t _width, const Region &_map, INT _color, FLAG _buftype, FLAG _hdctype, Region &_pdm) {
         assert(hdctype == HDCType::Empty);
         assert(buftype == BufType::Empty);
@@ -69,12 +84,43 @@ struct CPMBuffer {
             falmErrCheckMacro(falmMallocDevice((void**)&ptr, width * count));
         }
     }
+
+    void allocColoredAsync(size_t _width, const Region &_map, INT _color, FLAG _buftype, FLAG _hdctype, Region &_pdm, STREAM stream = 0) {
+        assert(hdctype == HDCType::Empty);
+        assert(buftype == BufType::Empty);
+        width   = _width;
+        map     = _map;
+        buftype = _buftype;
+        hdctype = _hdctype;
+        color   = _color;
+        INT refcolor = (SUM3(_pdm.offset) + SUM3(map.offset)) % 2;
+        count = map.size / 2;
+        if (map.size % 2 == 1 && refcolor == color) {
+            count ++;
+        }
+        if (hdctype == HDCType::Host) {
+            falmErrCheckMacro(falmMalloc((void**)&ptr, width * count));
+        } else if (hdctype == HDCType::Device) {
+            falmErrCheckMacro(falmMallocDeviceAsync((void**)&ptr, width * count, stream));
+        }
+    }
     
     void release() {
         if (hdctype == HDCType::Host) {
             falmErrCheckMacro(falmFree(ptr));
         } else if (hdctype == HDCType::Device) {
             falmErrCheckMacro(falmFreeDevice(ptr));
+        }
+        hdctype = HDCType::Empty;
+        buftype = BufType::Empty;
+        ptr = nullptr;
+    }
+
+    void releaseAsync(STREAM stream = 0) {
+        if (hdctype == HDCType::Host) {
+            falmErrCheckMacro(falmFree(ptr));
+        } else if (hdctype == HDCType::Device) {
+            falmErrCheckMacro(falmFreeDeviceAsync(ptr, stream));
         }
         hdctype = HDCType::Empty;
         buftype = BufType::Empty;
