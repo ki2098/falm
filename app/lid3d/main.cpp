@@ -86,7 +86,7 @@ REAL main_loop(FalmCFD &cfd, FalmEq &eq, STREAM *stream) {
 int main(int argc, char **argv) {
     CPM_Init(&argc, &argv);
     int mpi_rank, mpi_size;
-    cpm.use_cuda_aware_mpi = true;
+    cpm.use_cuda_aware_mpi = false;
     CPM_GetRank(MPI_COMM_WORLD, mpi_rank);
     CPM_GetSize(MPI_COMM_WORLD, mpi_size);
     if (argc == 1) {

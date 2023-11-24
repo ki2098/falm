@@ -10,7 +10,7 @@ class FalmErr {
 public:
     static const INT success    = 0;
     static const INT mallocErr  = 1;
-    static const INT devErrMask = 100;
+    static const INT cuErrMask = 100;
 };
 
 static inline void FalmErrCheck(INT errCode, const char *name, const char *file, int line) {

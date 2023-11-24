@@ -7,6 +7,6 @@ bcobj = bin/bc.o
 bc:
 	$(nvnvcc) -c bcdev.cu $(cuflag) -o $(bcobj);
 
-lid3: bc Falm
+main: bc Falm
 	$(nvmpicxx) -cuda -c main.cpp $(flag) -o bin/main.o
 	$(nvmpicxx) -cuda $(bcobj) $(falmobj) bin/main.o -o bin/lid3
