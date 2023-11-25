@@ -1,18 +1,18 @@
 #!/usr/bin/bash
 #PJM -L "rscunit=ito-b"
 #PJM -L "rscgrp=ito-g-16"
-#PJM -L "vnode=2"
+#PJM -L "vnode=3"
 #PJM -L "vnode-core=36"
 #PJM -L "elapse=01:00:00"
 #PJM -j
 #PJM -X
-#PJM -o "turbine1.900x300x300.8.log"
+#PJM -o "turbine1.900x300x300.12.log"
 
 module load nvhpc/nvhpc_20.11
 
 date
 
-mpirun -np 8 --map-by ppr:2:socket:PE=9 --bind-to core --report-bindings --mca plm_rsh_agent /bin/pjrsh -machinefile ${PJM_O_NODEINF} ./bin/t1 strong/large
+mpirun -np 12 --map-by ppr:2:socket:PE=9 --bind-to core --report-bindings --mca plm_rsh_agent /bin/pjrsh -machinefile ${PJM_O_NODEINF} ./bin/t1 strong/large
 
 # --mca mpi_leave_pinned 0
 # --mca btl_smcuda_use_cuda_ipc 0
