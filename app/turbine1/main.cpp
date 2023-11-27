@@ -13,8 +13,8 @@ REAL3 Lxyz;
 INT3  Nxyz;
 REAL3 origin;
 
-const REAL endtime = 10;
-const REAL dt = 1e-3;
+REAL endtime;
+REAL dt;
 
 Matrix<REAL> gx, gy, gz, ghx, ghy, ghz;
 Matrix<REAL> x, h, kx, g, ja;
@@ -91,6 +91,13 @@ void read_param() {
     std::getline(lsfile, line);
     eqparam.pc_relax_factor = std::stod(line);
     lsfile.close();
+
+    std::ifstream runfile(gridpath + "/run.txt");
+    std::getline(runfile, line);
+    endtime = std::stod(line);
+    std::getline(runfile, line);
+    dt = std::stod(line);
+    runfile.close();
 }
 
 void read_grid() {
