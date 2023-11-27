@@ -25,6 +25,7 @@ CPM cpm;
 Vcdm::VCDM<float> vcdm;
 STREAM facestream[CPM::NFACE];
 std::string gridpath;
+STREAM *streams;
 
 FalmEq eqparam;
 
@@ -97,6 +98,12 @@ void read_param() {
     endtime = std::stod(line);
     std::getline(runfile, line);
     dt = std::stod(line);
+    std::getline(runfile, line);
+    if (line == "streams") {
+        streams = facestream;
+    } else {
+        streams = nullptr;
+    }
     runfile.close();
 }
 
@@ -483,7 +490,7 @@ int main(int argc, char **argv) {
     }
     RmcpAlm alm(cpm);
     if (cpm.rank == 0) {
-        printf("running on %dx%dx%d grid with Re=%lf until t=%lf using linear solver %d\n", Nxyz[0], Nxyz[1], Nxyz[1], cfdsolver.Re, endtime, (int)eqsolver.type);
+        printf("running on %dx%dx%d grid with Re=%lf until t=%lf by dt=%e using linear solver %d, streams=%p\n", Nxyz[0], Nxyz[1], Nxyz[1], cfdsolver.Re, endtime, dt, (int)eqsolver.type, streams);
         fflush(stdout);
     }
     REAL __t = 0;
@@ -499,7 +506,7 @@ int main(int argc, char **argv) {
         fflush(stdout);
     }
     double t_start = MPI_Wtime();
-    STREAM *streams = nullptr;
+    
     cfdsolver.UtoUU(u, uu, kx, ja, cpm, block, streams);
     cfdsolver.SGS(u, nut, x, kx, ja, cpm, block, streams);
     while (__it < __IT) {
