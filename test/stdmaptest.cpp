@@ -7,12 +7,11 @@
 
 int main() {
     Cprof::cprof_Profiler evl;
-    for (int i = 0; i < 10; i ++) {
-        evl.startEvent("test event");
+    for (int i = 0; i < 5; i ++) {
+        std::string ename = "event " + std::to_string(i);
+        evl.startEvent(ename);
         sleep(1);
-        evl.endEvent("test event");
+        evl.endEvent(ename);
     }
-    evl.startEvent("new event");
-    printf("%ld\n", evl["test event"].duration);
-    printf("%ld %ld\n", evl["new event"].start, evl["new event"].duration);
+    evl.output();
 }

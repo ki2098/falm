@@ -4,6 +4,8 @@
 #include <sys/time.h>
 #include <stdlib.h>
 #include <map>
+#include <vector>
+#include <bits/stdc++.h>
 
 namespace Cprof {
 
@@ -33,6 +35,18 @@ struct cprof_Profiler {
 
     cprof_Event &operator[](const std::string &s) {
         return __list[s];
+    }
+
+    void output() {
+        std::vector<std::pair<std::string, cprof_Event> > evec(__list.begin(), __list.end());
+        std::sort(evec.begin(), evec.end(), cpm_by_duration);
+        for (auto &it : evec) {
+            printf("%s\t%ld\n", it.first.c_str(), it.second.duration);
+        }
+    }
+
+    static bool cpm_by_duration(std::pair<std::string, cprof_Event> &a, std::pair<std::string, cprof_Event> &b) {
+        return a.second.duration > b.second.duration;
     }
 };
 
