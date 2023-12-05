@@ -15,6 +15,7 @@ REAL3 origin;
 
 REAL endtime;
 REAL dt;
+REAL write_interval;
 
 Matrix<REAL> gx, gy, gz, ghx, ghy, ghz;
 Matrix<REAL> x, h, kx, g, ja;
@@ -104,6 +105,8 @@ void read_param() {
     } else {
         streams = nullptr;
     }
+    std::getline(runfile, line);
+    write_interval = std::stod(line);
     runfile.close();
 }
 
@@ -491,12 +494,13 @@ int main(int argc, char **argv) {
     RmcpAlm alm(cpm);
     if (cpm.rank == 0) {
         printf("running on %dx%dx%d grid with Re=%lf until t=%lf by dt=%e using linear solver %d, streams=%p\n", Nxyz[0], Nxyz[1], Nxyz[1], cfdsolver.Re, endtime, dt, (int)eqsolver.type, streams);
+        printf("output every %e undimensional time\n", write_interval);
         fflush(stdout);
     }
     REAL __t = 0;
     INT  __it = 0;
     const INT __IT = int(endtime / dt);
-    const INT __oIT = int(1.0 / dt);
+    const INT __oIT = int(write_interval / dt);
     plt3d_output(__it, cpm.rank, dt);
     if (cpm.rank == 0) {
         printf("time advance start\n");
@@ -529,12 +533,12 @@ int main(int argc, char **argv) {
             fflush(stdout);
         }
         if (__it % __oIT == 0) {
-            // plt3d_output(__it, cpm.rank, dt);
+            plt3d_output(__it, cpm.rank, dt);
         }
     }
     double t_end = MPI_Wtime();
     printf("\n");
-    plt3d_output(__it, cpm.rank, dt);
+    // plt3d_output(__it, cpm.rank, dt);
     if (cpm.rank == 0) {
         vcdm.writeIndexDfi();
         vcdm.writeProcDfi();
