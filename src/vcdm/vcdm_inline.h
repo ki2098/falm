@@ -319,6 +319,54 @@ void VCDM<T>::writeFunc(T *data, int gc, int dim, int rank, int step, IdxType id
     fclose(file);
 }
 
+template<typename T>
+void Vcdm::VCDM<T>::writeCrd(T *x, T *y, T *z, int gc) {
+    std::string filename = outputDir + "/" + dfiFinfo.prefix + ".crd";
+    FILE *file = fopen(filename.c_str(), "wb");
+    int3 size = dfiDomain.globalVoxel;
+    int rsz, dummy;
+    float fdummy;
+
+    rsz = sizeof(int) * 2;
+    dummy = 1;
+    fwrite(&rsz, sizeof(int), 1, file);
+    fwrite(&dummy, sizeof(int), 1, file);
+    fwrite(&dummy, sizeof(int), 1, file);
+    fwrite(&rsz, sizeof(int), 1, file);
+
+    rsz = sizeof(int) * 3;
+    fwrite(&rsz, sizeof(int), 1, file);
+    fwrite(&size[0], sizeof(int), 1, file);
+    fwrite(&size[1], sizeof(int), 1, file);
+    fwrite(&size[2], sizeof(int), 1, file);
+    fwrite(&rsz, sizeof(int), 1, file);
+
+    rsz = sizeof(int) + sizeof(float);
+    dummy = 0;
+    fdummy = 0;
+    fwrite(&rsz, sizeof(int), 1, file);
+    fwrite(&dummy, sizeof(float), 1, file);
+    fwrite(&fdummy, sizeof(int), 1, file);
+    fwrite(&rsz, sizeof(int), 1, file);
+
+    rsz = sizeof(T) * size[0];
+    fwrite(&rsz, sizeof(int), 1, file);
+    fwrite(&x[gc], sizeof(T), size[0], file);
+    fwrite(&rsz, sizeof(int), 1, file);
+
+    rsz = sizeof(T) * size[1];
+    fwrite(&rsz, sizeof(int), 1, file);
+    fwrite(&y[gc], sizeof(T), size[1], file);
+    fwrite(&rsz, sizeof(int), 1, file);
+
+    rsz = sizeof(T) * size[2];
+    fwrite(&rsz, sizeof(int), 1, file);
+    fwrite(&z[gc], sizeof(T), size[2], file);
+    fwrite(&rsz, sizeof(int), 1, file);
+
+    fclose(file);
+}
+
 }
 
 #endif

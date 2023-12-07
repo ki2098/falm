@@ -205,6 +205,8 @@ public:
         }
     }
 
+    void writeCrd(T *x, T *y, T *z, int gc);
+
 protected:
     std::string           indexSuffix = "_index.dfi";
     std::string           procSuffix  = "_proc.dfi";

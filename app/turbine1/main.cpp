@@ -182,6 +182,16 @@ void read_grid() {
         h(idx, 2) = ghz(k + offset[2]);
     }}}
 
+    Matrix<float> fgx(gx.shape[0], gx.shape[1], HDCType::Host, "x float");
+    Matrix<float> fgy(gy.shape[0], gy.shape[1], HDCType::Host, "y float");
+    Matrix<float> fgz(gz.shape[0], gz.shape[1], HDCType::Host, "z float");
+
+    for (int i = 0; i < gx.size; i ++) fgx(i) = gx(i);
+    for (int i = 0; i < gy.size; i ++) fgy(i) = gy(i);
+    for (int i = 0; i < gz.size; i ++) fgz(i) = gz(i);
+
+    vcdm.writeCrd(&fgx(0), &fgy(0), &fgz(0), cpm.gc);
+
     gx.release(HDCType::Host);
     gy.release(HDCType::Host);
     gz.release(HDCType::Host);
@@ -382,7 +392,7 @@ int main(int argc, char **argv) {
     kx.sync(MCpType::Hst2Dev);
     ja.sync(MCpType::Hst2Dev);
     g.sync(MCpType::Hst2Dev);
-    vcdm.writeGridData(&xyz(0), cpm.gc, cpm.rank, 0, Vcdm::IdxType::IJKN);
+    // vcdm.writeGridData(&xyz(0), cpm.gc, cpm.rank, 0, Vcdm::IdxType::IJKN);
     xyz.release(HDCType::Host);
 
     poisson_a.alloc(pdm.shape, 7, HDCType::Host, "poisson matrix", StencilMatrix::D3P7);
