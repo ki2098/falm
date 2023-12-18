@@ -643,4 +643,22 @@ REAL FalmMVDevCall::VecMin(Matrix<REAL> &a, Region &pdm, const Region &map, dim3
     return maximum;
 }
 
+__global__ void kernel_MatrixAdd(const MatrixFrame<REAL> *va, const MatrixFrame<REAL> *vb) {
+    const MatrixFrame<REAL> &a=*va, &b=*vb;
+    INT tidx  = IDX(threadIdx, blockDim);
+    INT bidx  = IDX(blockIdx, gridDim);
+    INT bsize = PRODUCT3(blockDim);
+    INT gtidx = tidx + bidx * bsize;
+    if (gtidx < a.size) {
+        a(gtidx) += b(gtidx);
+    }
+}
+
+void FalmMVDevCall::MatrixAdd(Matrix<REAL> &a, Matrix<REAL> &b, dim3 block_dim) {
+    INT n_threads = PRODUCT3(block_dim);
+    INT n_blocks = (a.size + n_threads - 1) / n_threads;
+    kernel_MatrixAdd<<<n_blocks, n_threads>>>(a.devptr, b.devptr);
+    falmWaitStream();
+}
+
 }

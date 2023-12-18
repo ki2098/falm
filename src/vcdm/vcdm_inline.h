@@ -275,6 +275,104 @@ void VCDM<T>::writeXYZ(T *xyz, int gc, int rank, int step, IdxType idxtype) {
 }
 
 template<typename T>
+void VCDM<T>::writeSph(T *data, int gc, int dim, int rank, int step, T t, IdxType idxtype) {
+    std::string fname = outputDir + "/" + makeFilename(
+        dfiFinfo.fnameFormat,
+        dfiFinfo.prefix,
+        dfiFinfo.rankPrefix,
+        "sph",
+        rank,
+        step
+    );
+
+    if (!(dim == 1 || dim == 3)) {
+        printf("wrong number of vars %d for sph file %s\n", dim, fname.c_str());
+    }
+
+    FILE *file = fopen(fname.c_str(), "wb");
+
+    int32_t svtype, dtype;
+    int32_t rsz;
+    if (dim == 1) {
+        svtype = 1;
+    } else {
+        svtype = 2;
+    }
+    dtype = sizeof(T) / sizeof(float);
+    rsz = sizeof(int32_t) * 2;
+    fwrite(&rsz, sizeof(int32_t), 1, file);
+    fwrite(&svtype, sizeof(int32_t), 1, file);
+    fwrite(&dtype, sizeof(int32_t), 1, file);
+    fwrite(&rsz, sizeof(int32_t), 1, file);
+
+    int3 size = dfiProc[rank].voxelSize + int3{{2*gc, 2*gc, 2*gc}};
+    int sz3d_gc = size[0] * size[1] * size[2];
+
+    if (dtype == 1) {
+        rsz = sizeof(int32_t) * 3;
+        int32_t _size[] = {size[0], size[1], size[2]};
+        fwrite(&rsz, sizeof(int32_t), 1, file);
+        fwrite(_size, sizeof(int32_t), 3, file);
+        fwrite(&rsz, sizeof(int32_t), 1, file);
+    } else if (dtype == 2) {
+        rsz = sizeof(int64_t) * 3;
+        int64_t _size[] = {size[0], size[1], size[2]};
+        fwrite(&rsz, sizeof(int32_t), 1, file);
+        fwrite(_size, sizeof(int64_t), 3, file);
+        fwrite(&rsz, sizeof(int32_t), 1, file);
+    }
+
+    T pitch[3], origin[3];
+    for (int i = 0; i < 3; i ++) pitch[i] = dfiDomain.globalRegion[i] / dfiDomain.globalVoxel[i];
+    for (int i = 0; i < 3; i ++) origin[i] = dfiDomain.globalOrigin[i] - (gc + 0.5) * pitch[i];
+
+    rsz = sizeof(T) * 3;
+    fwrite(&rsz, sizeof(int32_t), 1, file);
+    fwrite(origin, sizeof(T), 3, file);
+    fwrite(&rsz, sizeof(int32_t), 1, file);
+    fwrite(&rsz, sizeof(int32_t), 1, file);
+    fwrite(pitch, sizeof(T), 3, file);
+    fwrite(&rsz, sizeof(int32_t), 1, file);
+
+    if (dtype == 1) {
+        int32_t stp = step;
+        rsz = sizeof(int32_t) + sizeof(T);
+        fwrite(&rsz, sizeof(int32_t), 1, file);
+        fwrite(&stp, sizeof(int32_t), 1, file);
+        fwrite(&t, sizeof(T), 1, file);
+        fwrite(&rsz, sizeof(int32_t), 1, file);
+    } else if (dtype == 2) {
+        int64_t stp = step;
+        rsz = sizeof(int32_t) + sizeof(T);
+        fwrite(&rsz, sizeof(int32_t), 1, file);
+        fwrite(&stp, sizeof(int64_t), 1, file);
+        fwrite(&t, sizeof(T), 1, file);
+        fwrite(&rsz, sizeof(int32_t), 1, file);
+    }
+
+    rsz = sz3d_gc * sizeof(T);
+    fwrite(&rsz, sizeof(int32_t), 1, file);
+    for (int k = 0; k < size[2]; k ++) {
+    for (int j = 0; j < size[1]; j ++) {
+    for (int i = 0; i < size[0]; i ++) {
+        if (idxtype == IdxType::IJK) {
+            fwrite(&data[IJK_IDX(i, j, k, size)], sizeof(T), 1, file);
+        } else if (idxtype == IdxType::IJKN) {
+            for (int n = 0; n < dim; n ++) {
+                fwrite(&data[IJKN_IDX(i, j, k, n, size)], sizeof(T), 1, file);
+            }
+        } else if (idxtype == IdxType::NIJK) {
+            for (int n = 0; n < dim; n ++) {
+                fwrite(&data[NIJK_IDX(n, i, j, k, size, dim)], sizeof(T), 1, file);
+            }
+        }
+    }}}
+    fwrite(&rsz, sizeof(int32_t), 1, file);
+
+    fclose(file);
+}
+
+template<typename T>
 void VCDM<T>::writeFunc(T *data, int gc, int dim, int rank, int step, IdxType idxtype) {
     std::string fname = outputDir + "/" + makeFilename(
         dfiFinfo.fnameFormat,
@@ -320,49 +418,63 @@ void VCDM<T>::writeFunc(T *data, int gc, int dim, int rank, int step, IdxType id
 }
 
 template<typename T>
-void Vcdm::VCDM<T>::writeCrd(T *x, T *y, T *z, int gc) {
+void Vcdm::VCDM<T>::writeCrd(T *x, T *y, T *z) {
     std::string filename = outputDir + "/" + dfiFinfo.prefix + ".crd";
     FILE *file = fopen(filename.c_str(), "wb");
-    int3 size = dfiDomain.globalVoxel;
-    int rsz, dummy;
-    float fdummy;
+    int3 size = dfiDomain.globalVoxel + int3{{1,1,1}};
+    int32_t rsz, dtype;
 
-    rsz = sizeof(int) * 2;
-    dummy = 1;
-    fwrite(&rsz, sizeof(int), 1, file);
-    fwrite(&dummy, sizeof(int), 1, file);
-    fwrite(&dummy, sizeof(int), 1, file);
-    fwrite(&rsz, sizeof(int), 1, file);
+    dtype = sizeof(T) / sizeof(float);
+    rsz = sizeof(int32_t) * 2;
+    fwrite(&rsz, sizeof(int32_t), 1, file);
+    fwrite(&dtype, sizeof(int32_t), 1, file);
+    fwrite(&dtype, sizeof(int32_t), 1, file);
+    fwrite(&rsz, sizeof(int32_t), 1, file);
 
-    rsz = sizeof(int) * 3;
-    fwrite(&rsz, sizeof(int), 1, file);
-    fwrite(&size[0], sizeof(int), 1, file);
-    fwrite(&size[1], sizeof(int), 1, file);
-    fwrite(&size[2], sizeof(int), 1, file);
-    fwrite(&rsz, sizeof(int), 1, file);
+    if (dtype == 1) {
+        int32_t sz[3] = {size[0], size[1], size[2]};
+        rsz = sizeof(int32_t) * 3;
+        fwrite(&rsz, sizeof(int32_t), 1, file);
+        fwrite(sz, sizeof(int32_t), 3, file);
+        fwrite(&rsz, sizeof(int32_t), 1, file);
 
-    rsz = sizeof(int) + sizeof(float);
-    dummy = 0;
-    fdummy = 0;
-    fwrite(&rsz, sizeof(int), 1, file);
-    fwrite(&dummy, sizeof(float), 1, file);
-    fwrite(&fdummy, sizeof(int), 1, file);
-    fwrite(&rsz, sizeof(int), 1, file);
+        rsz = sizeof(int32_t) + sizeof(float);
+        int32_t step = 0;
+        float time = 0;
+        fwrite(&rsz, sizeof(int32_t), 1, file);
+        fwrite(&step, sizeof(int32_t), 1, file);
+        fwrite(&time, sizeof(float), 1, file);
+        fwrite(&rsz, sizeof(int32_t), 1, file);
+    } else if (dtype == 2) {
+        int64_t sz[3] = {size[0], size[1], size[2]};
+        rsz = sizeof(int64_t) * 3;
+        fwrite(&rsz, sizeof(int32_t), 1, file);
+        fwrite(sz, sizeof(int64_t), 3, file);
+        fwrite(&rsz, sizeof(int32_t), 1, file);
+
+        rsz = sizeof(int64_t) + sizeof(double);
+        int64_t step = 0;
+        double time = 0;
+        fwrite(&rsz, sizeof(int32_t), 1, file);
+        fwrite(&step, sizeof(int64_t), 1, file);
+        fwrite(&time, sizeof(double), 1, file);
+        fwrite(&rsz, sizeof(int32_t), 1, file);
+    }
 
     rsz = sizeof(T) * size[0];
-    fwrite(&rsz, sizeof(int), 1, file);
-    fwrite(&x[gc], sizeof(T), size[0], file);
-    fwrite(&rsz, sizeof(int), 1, file);
+    fwrite(&rsz, sizeof(int32_t), 1, file);
+    fwrite(x, sizeof(T), size[0], file);
+    fwrite(&rsz, sizeof(int32_t), 1, file);
 
     rsz = sizeof(T) * size[1];
-    fwrite(&rsz, sizeof(int), 1, file);
-    fwrite(&y[gc], sizeof(T), size[1], file);
-    fwrite(&rsz, sizeof(int), 1, file);
+    fwrite(&rsz, sizeof(int32_t), 1, file);
+    fwrite(y, sizeof(T), size[1], file);
+    fwrite(&rsz, sizeof(int32_t), 1, file);
 
     rsz = sizeof(T) * size[2];
-    fwrite(&rsz, sizeof(int), 1, file);
-    fwrite(&z[gc], sizeof(T), size[2], file);
-    fwrite(&rsz, sizeof(int), 1, file);
+    fwrite(&rsz, sizeof(int32_t), 1, file);
+    fwrite(z, sizeof(T), size[2], file);
+    fwrite(&rsz, sizeof(int32_t), 1, file);
 
     fclose(file);
 }

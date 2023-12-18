@@ -31,6 +31,8 @@ static REAL VecMin(Matrix<REAL> &a, Region &pdm, const Region &map, dim3 block_d
 
 static void ScaleMatrix(Matrix<REAL> &a, REAL scale, dim3 block_dim);
 
+static void MatrixAdd(Matrix<REAL> &a, Matrix<REAL> &b, dim3 block_dim);
+
 // static inline REAL L1Dev_DotProduct(Matrix<REAL> &a, Matrix<REAL> &b, CPMBase &cpm, dim3 block_dim) {
 //     Region &pdm = cpm.pdm_list[cpm.rank];
 //     Region map(pdm.shape, cpm.gc);

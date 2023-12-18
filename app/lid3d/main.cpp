@@ -21,7 +21,7 @@ CPM cpm;
 Vcdm::VCDM<float> vcdm;
 STREAM facestream[CPM::NFACE];
 
-void plt3d_output(int step, int rank, double dt) {
+void data_output(int step, int rank, double dt) {
     Matrix<float> uvw(cpm.pdm_list[cpm.rank].shape, 4, HDCType::Host, "uvw");
     u.sync(MCpType::Dev2Hst);
     p.sync(MCpType::Dev2Hst);
@@ -280,7 +280,7 @@ int main(int argc, char **argv) {
     INT  __it = 0;
     const INT __IT = int(T / DT);
     const INT __oIT = int(10.0 / DT);
-    plt3d_output(__it, cpm.rank, DT);
+    data_output(__it, cpm.rank, DT);
     if (cpm.rank == 0) {
         printf("time advance start\n");
         fflush(stdout);
@@ -294,7 +294,7 @@ int main(int argc, char **argv) {
             fflush(stdout);
         }
         if (__it % __oIT == 0) {
-            plt3d_output(__it, cpm.rank, DT);
+            data_output(__it, cpm.rank, DT);
         }
     }
     printf("\n");

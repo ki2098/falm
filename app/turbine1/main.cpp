@@ -23,7 +23,7 @@ Matrix<REAL> u, uprev, uu, ua, uua, p, nut, ff ,rhs, res, dvr, vrt;
 Matrix<REAL> poisson_a;
 REAL maxdiag;
 CPM cpm;
-Vcdm::VCDM<float> vcdm;
+Vcdm::VCDM<float> vcdm, pvcdm;
 STREAM facestream[CPM::NFACE];
 std::string gridpath;
 STREAM *streams;
@@ -190,7 +190,7 @@ void read_grid() {
     for (int i = 0; i < gy.size; i ++) fgy(i) = gy(i);
     for (int i = 0; i < gz.size; i ++) fgz(i) = gz(i);
 
-    vcdm.writeCrd(&fgx(0), &fgy(0), &fgz(0), cpm.gc);
+    vcdm.writeCrd(&fgx(cpm.gc), &fgy(cpm.gc), &fgz(cpm.gc));
 
     gx.release(HDCType::Host);
     gy.release(HDCType::Host);
@@ -203,46 +203,85 @@ void read_grid() {
     zfile.close();
 }
 
-void plt3d_output(int step, int rank, double dt) {
-    Matrix<float> uvw(cpm.pdm_list[cpm.rank].shape, 7, HDCType::Host, "uvw");
+void data_output(int step, int rank, double dt) {
+    // Matrix<float> uvw(cpm.pdm_list[cpm.rank].shape, 7, HDCType::Host, "uvw");
+    // u.sync(MCpType::Dev2Hst);
+    // p.sync(MCpType::Dev2Hst);
+    // vrt.sync(MCpType::Dev2Hst);
+    // for (INT i = 0; i < u.shape[0]; i ++) {
+    //     uvw(i, 0) = u(i, 0);
+    //     uvw(i, 1) = u(i, 1);
+    //     uvw(i, 2) = u(i, 2);
+    //     uvw(i, 3) = p(i);
+    //     uvw(i, 4) = vrt(i, 0);
+    //     uvw(i, 5) = vrt(i, 1);
+    //     uvw(i, 6) = vrt(i, 2);
+    // }
+    // vcdm.writeFileData(&uvw(0, 0), cpm.gc, 7, rank, step, Vcdm::IdxType::IJKN);
+    // double umax = FalmMV::MatColMax(u, 0, cpm, block);
+    // double vmax = FalmMV::MatColMax(u, 1, cpm, block);
+    // double wmax = FalmMV::MatColMax(u, 2, cpm, block);
+    // double pmax = FalmMV::MatColMax(p, 0, cpm, block);
+    // double vxmax = FalmMV::MatColMax(vrt, 0, cpm, block);
+    // double vymax = FalmMV::MatColMax(vrt, 1, cpm, block);
+    // double vzmax = FalmMV::MatColMax(vrt, 2, cpm, block);
+    // double umin = FalmMV::MatColMin(u, 0, cpm, block);
+    // double vmin = FalmMV::MatColMin(u, 1, cpm, block);
+    // double wmin = FalmMV::MatColMin(u, 2, cpm, block);
+    // double pmin = FalmMV::MatColMin(p, 0, cpm, block);
+    // double vxmin = FalmMV::MatColMin(vrt, 0, cpm, block);
+    // double vymin = FalmMV::MatColMin(vrt, 1, cpm, block);
+    // double vzmin = FalmMV::MatColMin(vrt, 2, cpm, block);
+    // Vcdm::VcdmSlice slice;
+    // slice.step = step;
+    // slice.time = step * dt;
+    // slice.avgStep = 1;
+    // slice.avgTime = dt;
+    // slice.avgMode = true;
+    // // slice.vectorMax = _max;
+    // // slice.vectorMin = _min;
+    // slice.varMax = {umax, vmax, wmax, pmax, vxmax, vymax, vzmax};
+    // slice.varMin = {umin, vmin, wmin, pmin, vxmin, vymin, vzmin};
+    // vcdm.timeSlice.push_back(slice);
+    Matrix<float> uf(cpm.pdm_list[cpm.rank].shape, 3, HDCType::Host, "uvw");
+    Matrix<float> pf(cpm.pdm_list[cpm.rank].shape, 1, HDCType::Host, "p");
     u.sync(MCpType::Dev2Hst);
     p.sync(MCpType::Dev2Hst);
-    vrt.sync(MCpType::Dev2Hst);
-    for (INT i = 0; i < u.shape[0]; i ++) {
-        uvw(i, 0) = u(i, 0);
-        uvw(i, 1) = u(i, 1);
-        uvw(i, 2) = u(i, 2);
-        uvw(i, 3) = p(i);
-        uvw(i, 4) = vrt(i, 0);
-        uvw(i, 5) = vrt(i, 1);
-        uvw(i, 6) = vrt(i, 2);
+    for (int i = 0; i < cpm.pdm_list[cpm.rank].size; i ++) {
+        for (int n = 0; n < 3; n ++) uf(i, n) = u(i, n);
+        pf(i) = p(i);
     }
-    vcdm.writeFileData(&uvw(0, 0), cpm.gc, 7, rank, step, Vcdm::IdxType::IJKN);
-    double umax = FalmMV::MatColMax(u, 0, cpm, block);
-    double vmax = FalmMV::MatColMax(u, 1, cpm, block);
-    double wmax = FalmMV::MatColMax(u, 2, cpm, block);
-    double pmax = FalmMV::MatColMax(p, 0, cpm, block);
-    double vxmax = FalmMV::MatColMax(vrt, 0, cpm, block);
-    double vymax = FalmMV::MatColMax(vrt, 1, cpm, block);
-    double vzmax = FalmMV::MatColMax(vrt, 2, cpm, block);
-    double umin = FalmMV::MatColMin(u, 0, cpm, block);
-    double vmin = FalmMV::MatColMin(u, 1, cpm, block);
-    double wmin = FalmMV::MatColMin(u, 2, cpm, block);
-    double pmin = FalmMV::MatColMin(p, 0, cpm, block);
-    double vxmin = FalmMV::MatColMin(vrt, 0, cpm, block);
-    double vymin = FalmMV::MatColMin(vrt, 1, cpm, block);
-    double vzmin = FalmMV::MatColMin(vrt, 2, cpm, block);
+    vcdm.writeFileData(&uf(0), cpm.gc, uf.shape[1], cpm.rank, step, step * dt, Vcdm::IdxType::IJKN);
+    pvcdm.writeFileData(&pf(0), cpm.gc, pf.shape[1], cpm.rank, step, step * dt, Vcdm::IdxType::IJK);
+
+    REAL3 umax = {{
+        FalmMV::MatColMax(u, 0, cpm, block),
+        FalmMV::MatColMax(u, 1, cpm, block),
+        FalmMV::MatColMax(u, 2, cpm, block)
+    }};
+    REAL3 umin = {{
+        FalmMV::MatColMin(u, 0, cpm, block),
+        FalmMV::MatColMin(u, 1, cpm, block),
+        FalmMV::MatColMin(u, 2, cpm, block)
+    }};
+    REAL uvecmax = FalmMV::VecMax(u, cpm, block);
+    REAL uvecmin = FalmMV::VecMin(u, cpm, block);
     Vcdm::VcdmSlice slice;
     slice.step = step;
     slice.time = step * dt;
     slice.avgStep = 1;
     slice.avgTime = dt;
     slice.avgMode = true;
-    // slice.vectorMax = _max;
-    // slice.vectorMin = _min;
-    slice.varMax = {umax, vmax, wmax, pmax, vxmax, vymax, vzmax};
-    slice.varMin = {umin, vmin, wmin, pmin, vxmin, vymin, vzmin};
+    slice.vectorMax = uvecmax;
+    slice.vectorMin = uvecmin;
+    slice.varMax = {umax[0], umax[1], umax[2]};
+    slice.varMin = {umin[0], umin[1], umin[2]};
     vcdm.timeSlice.push_back(slice);
+    REAL pmax = FalmMV::MatColMax(p, 0, cpm, block);
+    REAL pmin = FalmMV::MatColMin(p, 0, cpm, block);
+    slice.varMax = {pmax};
+    slice.varMin = {pmin};
+    pvcdm.timeSlice.push_back(slice);
 }
 
 REAL main_loop(FalmCFD &cfd, FalmEq &eq, RmcpAlm &alm, RmcpTurbineArray &turbineArray, INT step, REAL dt, STREAM *s) {
@@ -291,9 +330,12 @@ int main(int argc, char **argv) {
     Region ginner(global.shape, cpm.gc);
     printf("rank %d, global size = (%d %d %d), proc size = (%d %d %d), proc offset = (%d %d %d)\n", cpm.rank, global.shape[0], global.shape[1], global.shape[2], pdm.shape[0], pdm.shape[1], pdm.shape[2], pdm.offset[0], pdm.offset[1], pdm.offset[2]);
     fflush(stdout); CPM_Barrier(MPI_COMM_WORLD);
-    vcdm.setPath("data", "lid3d");
+    vcdm.setPath("data", "velocity");
+    pvcdm.setPath("data", "pressure");
     setVcdm(cpm, vcdm, {{Lxyz[0],Lxyz[1],Lxyz[2]}}, {{origin[0], origin[1], origin[2]}});
-    vcdm.dfiFinfo.varList = {"u", "v", "w", "p", "vorticityX", "vorticityY", "vorticityZ"};
+    setVcdm(cpm, pvcdm, {{Lxyz[0],Lxyz[1],Lxyz[2]}}, {{origin[0], origin[1], origin[2]}});
+    vcdm.dfiFinfo.varList = {"u", "v", "w"};
+    pvcdm.dfiFinfo.varList = {"p"};
     if (cpm.rank == 0) {
         Vcdm::double3 d3;
         Vcdm::int3    i3;
@@ -324,6 +366,8 @@ int main(int argc, char **argv) {
         fflush(stdout);
         vcdm.writeIndexDfi();
         vcdm.writeProcDfi();
+        pvcdm.writeIndexDfi();
+        pvcdm.writeProcDfi();
     }
     CPM_Barrier(MPI_COMM_WORLD);
 
@@ -511,7 +555,7 @@ int main(int argc, char **argv) {
     INT  __it = 0;
     const INT __IT = int(endtime / dt);
     const INT __oIT = int(write_interval / dt);
-    plt3d_output(__it, cpm.rank, dt);
+    data_output(__it, cpm.rank, dt);
     if (cpm.rank == 0) {
         printf("time advance start\n");
         // size_t freebyte, totalbyte;
@@ -543,7 +587,7 @@ int main(int argc, char **argv) {
             fflush(stdout);
         }
         if (__it % __oIT == 0) {
-            plt3d_output(__it, cpm.rank, dt);
+            data_output(__it, cpm.rank, dt);
         }
     }
     double t_end = MPI_Wtime();
@@ -552,6 +596,8 @@ int main(int argc, char **argv) {
     if (cpm.rank == 0) {
         vcdm.writeIndexDfi();
         vcdm.writeProcDfi();
+        pvcdm.writeIndexDfi();
+        pvcdm.writeProcDfi();
         printf("wall time = %lf\n", t_end - t_start);
     }
 

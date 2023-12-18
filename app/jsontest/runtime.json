@@ -1,0 +1,16 @@
+{
+    "time":{
+        "end":120,
+        "dt":1e-3
+    },
+    "timeAvg":{
+        "start":20
+    },
+    "output":{
+        "interval":5
+    },
+    "inflow":{
+        "type":"uniform",
+        "value":1.0
+    }
+}

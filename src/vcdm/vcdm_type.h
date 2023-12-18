@@ -19,11 +19,13 @@ struct VcdmVector {
     VcdmVector operator+(const VcdmVector &v) const {
         VcdmVector vv;
         for (size_t i = 0; i < N; i ++) vv[i] = _m_vector[i] + v[i];
+        return vv;
     }
 
     VcdmVector operator-(const VcdmVector &v) const {
         VcdmVector vv;
         for (size_t i = 0; i < N; i ++) vv[i] = _m_vector[i] - v[i];
+        return vv;
     }
 
     VcdmVector operator+=(const VcdmVector &v) {
@@ -62,6 +64,7 @@ struct VcdmVector {
 
 typedef VcdmVector<int, 3> int3;
 typedef VcdmVector<double, 3> double3;
+typedef VcdmVector<float, 3> float3;
 
 enum class FileType {BINARY, FBINARY};
 enum class FilenameFormat {RANK, STEP_RANK, RANK_STEP};
@@ -126,7 +129,7 @@ struct VcdmFinfo {
 
     std::string              dfiType      = "Non_Uniform_Cartesian";
     bool                     timeSliceDir = false;
-    FileFormat               fFormat      = FileFormat::PLOT3D;
+    FileFormat               fFormat      = FileFormat::SPH;
     FilenameFormat           fnameFormat  = FilenameFormat::STEP_RANK;
     Endian                   endian;
     std::string              dirPath      = ".";
@@ -193,9 +196,11 @@ public:
         }
     }
 
-    void writeFileData(T *data, int gc, int dim, int rank, int step, IdxType idxtype) {
+    void writeFileData(T *data, int gc, int dim, int rank, int step, T t, IdxType idxtype) {
         if (dfiFinfo.fFormat == FileFormat::PLOT3D) {
             writeFunc(data, gc, dim, rank, step, idxtype);
+        } else if (dfiFinfo.fFormat == FileFormat::SPH) {
+            writeSph(data, gc, dim, rank, step, t, idxtype);
         }
     }
 
@@ -205,9 +210,9 @@ public:
         }
     }
 
-    void writeCrd(T *x, T *y, T *z, int gc);
+    void writeCrd(T *x, T *y, T *z);
 
-protected:
+
     std::string           indexSuffix = "_index.dfi";
     std::string           procSuffix  = "_proc.dfi";
     std::string           outputDir;
@@ -251,6 +256,8 @@ protected:
     void writeXYZ(T *xyz, int gc, int rank, int step, IdxType idxtype);
 
     void writeFunc(T *data, int gc, int dim, int rank, int step, IdxType idxtype);
+
+    void writeSph(T *data, int gc, int dim, int rank, int step, T t, IdxType idxtype);
 
 };
 

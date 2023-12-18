@@ -1,0 +1,33 @@
+{
+    "runtime":{
+        "time":{
+            "end":120,
+            "dt":1e-3
+        },
+        "timeAvg":{
+            "start":20
+        },
+        "output":{
+            "interval":5
+        }
+    },
+    "inflow":{
+        "type":"uniform",
+        "velocity":1.0
+    },
+    "solver":{
+        "linearSolver":{
+            "type":"PBiCGStab",
+            "iteration":1000,
+            "tolerance":1e-6,
+            "preconditioner":{
+                "type":"Jacobi",
+                "iteration":2
+            }
+        }
+    },
+    "mesh":{
+        "path":"mesh/test",
+        "controlVolumeCenter":"innerNode"
+    }
+}
