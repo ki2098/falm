@@ -9,6 +9,10 @@ __host__ __device__ static inline INT PRODUCT3(const INT3 &u) {
     return u[0] * u[1] * u[2];
 }
 
+__host__ __device__ static inline REAL PRODUCT3(const REAL3 &u) {
+    return u[0] * u[1] * u[2];
+}
+
 __host__ __device__ static inline INT PRODUCT3(const dim3 &u) {
     return u.x * u.y * u.z;
 }

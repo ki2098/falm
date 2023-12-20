@@ -1,6 +1,7 @@
 #ifndef FALM_STRUCTEQL2_H
 #define FALM_STRUCTEQL2_H
 
+#include <string>
 #include "FalmEqDevCall.h"
 #include "CPM.h"
 
@@ -16,6 +17,10 @@ public:
     FalmEq(FLAG _type, INT _maxit, REAL _tol, REAL _relax_factor, FLAG _pc_type = SolverType::Empty, INT _pc_maxit = 5, REAL _pc_relax_factor = 1.0) : 
         FalmEqDevCall(_type, _maxit, _tol, _relax_factor, _pc_type, _pc_maxit, _pc_relax_factor) 
     {}
+
+    void init(FLAG _type, INT _maxit, REAL _tol, REAL _relax_factor, FLAG _pc_type = SolverType::Empty, INT _pc_maxit = 5, REAL _pc_relax_factor = 1.0) {
+        FalmEqDevCall::init(_type, _maxit, _tol, _relax_factor, _pc_type, _pc_maxit, _pc_relax_factor);
+    }
 
     void Jacobi(Matrix<REAL> &a, Matrix<REAL> &x, Matrix<REAL> &b, Matrix<REAL> &r, CPM &cpm, dim3 block_dim, STREAM *stream = nullptr);
     void SOR(Matrix<REAL> &a, Matrix<REAL> &x, Matrix<REAL> &b, Matrix<REAL> &r, CPM &cpm, dim3 block_dim, STREAM *stream = nullptr);
@@ -42,6 +47,18 @@ public:
         }
     }
 
+public:
+    static FLAG str2type(std::string str) {
+        if (str == "PBiCGStab") {
+            return LSType::PBiCGStab;
+        } else if (str == "SOR") {
+            return LSType::SOR;
+        } else if (str == "Jacobi") {
+            return LSType::Jacobi;
+        } else {
+            return LSType::Empty;
+        }
+    }
 };
 
 }

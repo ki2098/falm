@@ -23,7 +23,7 @@ public:
     INT3     idx;
     int      rank;
     int      size;
-    bool use_cuda_aware_mpi;
+    bool use_cuda_aware_mpi = false;
     INT        gc;
     Region global;
     std::vector<Region> pdm_list;

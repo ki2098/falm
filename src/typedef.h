@@ -7,6 +7,7 @@
 #include <cuda.h>
 #include <cuda_runtime.h>
 #include "vectypes.h"
+#include "nlohmann/json.hpp"
 
 namespace Falm {
 
@@ -21,6 +22,8 @@ typedef VECTOR<INT , 2>   INT2;
 typedef VECTOR<REAL, 2>  REAL2;
 
 typedef cudaStream_t STREAM;
+
+typedef nlohmann::json json;
 
 // typedef int           INT_T;
 // typedef char         CHAR_T;

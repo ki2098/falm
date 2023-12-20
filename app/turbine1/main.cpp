@@ -291,7 +291,7 @@ REAL main_loop(FalmCFD &cfd, FalmEq &eq, RmcpAlm &alm, RmcpTurbineArray &turbine
 
     cfd.FSPseudoU(uprev, u, uu, u, nut, kx, g, ja, ff, cpm, block, s, 1);
     cfd.UtoUU(u, uu, kx, ja, cpm, block, s);
-    cfd.MACCalcPoissonRHS(uu, rhs, ja, cpm, block, maxdiag);
+    cfd.MACCalcPoissonRHS(uu, rhs, ja, dt, cpm, block, maxdiag);
     
     eq.Solve(poisson_a, p, rhs, res, cpm, block, s);
     TURBINE1::pbc(p, cpm, s);
@@ -539,7 +539,7 @@ int main(int argc, char **argv) {
     turbineArray[0] = turbine;
     turbineArray.sync(MCpType::Hst2Dev);
 
-    FalmCFD cfdsolver(10000, dt, AdvectionSchemeType::Upwind3, SGSType::Smagorinsky);
+    FalmCFD cfdsolver(10000, AdvectionSchemeType::Upwind3, SGSType::Smagorinsky);
     FalmEq eqsolver(eqparam.type, eqparam.maxit, eqparam.tol, eqparam.relax_factor, eqparam.pc_type, eqparam.pc_maxit, eqparam.pc_relax_factor);
     if (gridpath == "weak") {
         eqsolver.maxit = 1;

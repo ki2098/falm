@@ -24,7 +24,7 @@
 				"End": 0,
 				"Begin_width": 0.2,
 				"End_width": 0.05,
-				"Division": 20
+				"Division": 40
 			},
 			{
 				"Label": "Stretch_x_02",
@@ -32,7 +32,7 @@
 				"End": 20,
 				"Begin_width": 0.05,
 				"End_width": 0.2,
-				"Division": 20
+				"Division": 40
 			}
 		]
 	},

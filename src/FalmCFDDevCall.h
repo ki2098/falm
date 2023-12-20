@@ -25,19 +25,27 @@ class FalmCFDDevCall {
 public:
     REAL Re;
     REAL ReI;
-    REAL dt;
+    // REAL dt;
     FLAG AdvScheme;
     FLAG SGSModel;
     REAL CSmagorinsky;
 
-    FalmCFDDevCall(REAL _Re, REAL _dt, FLAG _AdvScheme, FLAG _SGSModel = SGSType::Smagorinsky, REAL _CSmagorinsky = 0.1):
+    FalmCFDDevCall() {}
+    FalmCFDDevCall(REAL _Re, FLAG _AdvScheme, FLAG _SGSModel = SGSType::Smagorinsky, REAL _CSmagorinsky = 0.1):
         Re(_Re),
         ReI(1.0 / _Re),
-        dt(_dt),
         AdvScheme(_AdvScheme),
         SGSModel(_SGSModel),
         CSmagorinsky(_CSmagorinsky) 
     {}
+
+    void init(REAL _Re, FLAG _AdvScheme, FLAG _SGSModel = SGSType::Smagorinsky, REAL _CSmagorinsky = 0.1) {
+        Re = _Re;
+        ReI = 1.0 / _Re;
+        AdvScheme = _AdvScheme;
+        SGSModel = _SGSModel;
+        CSmagorinsky = _CSmagorinsky;
+    }
 
     // void L1Dev_Cartesian3d_FSCalcPseudoU(
     //     Matrix<REAL> &un,

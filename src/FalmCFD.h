@@ -1,6 +1,7 @@
 #ifndef FALM_FALMCFDL2_H
 #define FALM_FALMCFDL2_H
 
+#include <string>
 #include "FalmCFDDevCall.h"
 #include "FalmEq.h"
 #include "MV.h"
@@ -9,9 +10,14 @@ namespace Falm {
 
 class FalmCFD : public FalmCFDDevCall {
 public:
-    FalmCFD(REAL _Re, REAL _dt, FLAG _AdvScheme, FLAG _SGSModel = SGSType::Smagorinsky, REAL _CSmagorinsky = 0.1) : 
-        FalmCFDDevCall(_Re, _dt, _AdvScheme, _SGSModel, _CSmagorinsky) 
+    FalmCFD() {}
+    FalmCFD(REAL _Re, FLAG _AdvScheme, FLAG _SGSModel = SGSType::Smagorinsky, REAL _CSmagorinsky = 0.1) : 
+        FalmCFDDevCall(_Re, _AdvScheme, _SGSModel, _CSmagorinsky) 
     {}
+
+    void init(REAL _Re, FLAG _AdvScheme, FLAG _SGSModel = SGSType::Smagorinsky, REAL _CSmagorinsky = 0.1) {
+        FalmCFDDevCall::init(_Re, _AdvScheme, _SGSModel, _CSmagorinsky);
+    }
 
     void FSPseudoU(
         Matrix<REAL> &un,
@@ -79,6 +85,7 @@ public:
         Matrix<REAL> &uu,
         Matrix<REAL> &rhs,
         Matrix<REAL> &ja,
+        REAL dt,
         CPM      &cpm,
         dim3          block_dim,
         REAL          maxdiag = 1.0
@@ -89,6 +96,27 @@ public:
         FalmMV::ScaleMatrix(rhs, 1.0 / (dt * maxdiag), block_dim);
     }
     
+    static FLAG str2advscheme(std::string str) {
+        if (str == "Upwind1") {
+            return AdvectionSchemeType::Upwind1;
+        } else if (str == "Upwind3") {
+            return AdvectionSchemeType::Upwind3;
+        } else {
+            return AdvectionSchemeType::Upwind1;
+        }
+    }
+
+    static FLAG str2sgs(std::string str) {
+        if (str == "Empty") {
+            return SGSType::Empty;
+        } else if (str == "Smagorinsky") {
+            return SGSType::Smagorinsky;
+        } else if (str == "CSM") {
+            return SGSType::CSM;
+        } else {
+            return SGSType::Empty;
+        }
+    }
 };
 
 
