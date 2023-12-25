@@ -22,9 +22,9 @@ Vcdm::VCDM<float> vcdm;
 STREAM facestream[CPM::NFACE];
 
 void data_output(int step, int rank, double dt) {
-    Matrix<float> uvw(cpm.pdm_list[cpm.rank].shape, 4, HDCType::Host, "uvw");
-    u.sync(MCpType::Dev2Hst);
-    p.sync(MCpType::Dev2Hst);
+    Matrix<float> uvw(cpm.pdm_list[cpm.rank].shape, 4, HDC::Host, "uvw");
+    u.sync(MCP::Dev2Hst);
+    p.sync(MCP::Dev2Hst);
     for (INT i = 0; i < u.shape[0]; i ++) {
         uvw(i, 0) = u(i, 0);
         uvw(i, 1) = u(i, 1);
@@ -57,7 +57,7 @@ void data_output(int step, int rank, double dt) {
 }
 
 REAL main_loop(FalmCFD &cfd, FalmEq &eq, STREAM *stream) {
-    uprev.copy(u, HDCType::Device);
+    uprev.copy(u, HDC::Device);
     // printf("1\n");
 
     cfd.FSPseudoU(uprev, u, uu, u, nut, kx, g, ja, ff, cpm, bdim, stream);
@@ -120,17 +120,17 @@ int main(int argc, char **argv) {
     printf("rank %d, global size = (%d %d %d), proc size = (%d %d %d), proc offset = (%d %d %d)\n", cpm.rank, global.shape[0], global.shape[1], global.shape[2], pdm.shape[0], pdm.shape[1], pdm.shape[2], pdm.offset[0], pdm.offset[1], pdm.offset[2]);
     fflush(stdout); CPM_Barrier(MPI_COMM_WORLD);
 
-    u.alloc(pdm.shape, 3, HDCType::Device);
-    uprev.alloc(pdm.shape, 3, HDCType::Device);
-    ua.alloc(pdm.shape, 3, HDCType::Device);
-    uu.alloc(pdm.shape, 3, HDCType::Device);
-    uua.alloc(pdm.shape, 3, HDCType::Device);
-    p.alloc(pdm.shape, 1, HDCType::Device);
-    nut.alloc(pdm.shape, 1, HDCType::Device);
-    ff.alloc(pdm.shape, 3, HDCType::Device);
-    rhs.alloc(pdm.shape, 1, HDCType::Device);
-    res.alloc(pdm.shape, 1, HDCType::Device);
-    dvr.alloc(pdm.shape, 1, HDCType::Device);
+    u.alloc(pdm.shape, 3, HDC::Device);
+    uprev.alloc(pdm.shape, 3, HDC::Device);
+    ua.alloc(pdm.shape, 3, HDC::Device);
+    uu.alloc(pdm.shape, 3, HDC::Device);
+    uua.alloc(pdm.shape, 3, HDC::Device);
+    p.alloc(pdm.shape, 1, HDC::Device);
+    nut.alloc(pdm.shape, 1, HDC::Device);
+    ff.alloc(pdm.shape, 3, HDC::Device);
+    rhs.alloc(pdm.shape, 1, HDC::Device);
+    res.alloc(pdm.shape, 1, HDC::Device);
+    dvr.alloc(pdm.shape, 1, HDC::Device);
 
     vcdm.setPath("data", "lid3d");
     setVcdm(cpm, vcdm, {L, L, L}, {ORGN, ORGN, ORGN});
@@ -166,12 +166,12 @@ int main(int argc, char **argv) {
     }
     CPM_Barrier(MPI_COMM_WORLD);
 
-    Matrix<float> xyz(pdm.shape, 3, HDCType::Host);
-    x.alloc(pdm.shape, 3, HDCType::Host);
-    h.alloc(pdm.shape, 3, HDCType::Host);
-    kx.alloc(pdm.shape, 3, HDCType::Host);
-    ja.alloc(pdm.shape, 1, HDCType::Host);
-    g.alloc(pdm.shape, 3, HDCType::Host);
+    Matrix<float> xyz(pdm.shape, 3, HDC::Host);
+    x.alloc(pdm.shape, 3, HDC::Host);
+    h.alloc(pdm.shape, 3, HDC::Host);
+    kx.alloc(pdm.shape, 3, HDC::Host);
+    ja.alloc(pdm.shape, 1, HDC::Host);
+    g.alloc(pdm.shape, 3, HDC::Host);
     const REAL pitch = L / N;
     const REAL volume = pitch * pitch * pitch;
     const REAL dkdx  = 1.0 / pitch;
@@ -191,14 +191,14 @@ int main(int argc, char **argv) {
         xyz(idx, 1) = ORGN + (j + pdm.offset[1] - cpm.gc + 0.5) * pitch;
         xyz(idx, 2) = ORGN + (k + pdm.offset[2] - cpm.gc + 0.5) * pitch;
     }}}
-    x.sync(MCpType::Hst2Dev);
-    h.sync(MCpType::Hst2Dev);
-    kx.sync(MCpType::Hst2Dev);
-    ja.sync(MCpType::Hst2Dev);
-    g.sync(MCpType::Hst2Dev);
+    x.sync(MCP::Hst2Dev);
+    h.sync(MCP::Hst2Dev);
+    kx.sync(MCP::Hst2Dev);
+    ja.sync(MCP::Hst2Dev);
+    g.sync(MCP::Hst2Dev);
     vcdm.writeGridData(&xyz(0), cpm.gc, cpm.rank, 0, Vcdm::IdxType::IJKN);
 
-    poisson_a.alloc(pdm.shape, 7, HDCType::Host, "poisson matrix", StencilMatrix::D3P7);
+    poisson_a.alloc(pdm.shape, 7, HDC::Host, "poisson matrix", StencilMatrix::D3P7);
     for (INT k = cpm.gc; k < pdm.shape[2] - cpm.gc; k ++) {
     for (INT j = cpm.gc; j < pdm.shape[1] - cpm.gc; j ++) {
     for (INT i = cpm.gc; i < pdm.shape[0] - cpm.gc; i ++) {
@@ -261,7 +261,7 @@ int main(int argc, char **argv) {
         poisson_a(idxcc, 5) = ab;
         poisson_a(idxcc, 6) = at;
     }}}
-    poisson_a.sync(MCpType::Hst2Dev);
+    poisson_a.sync(MCP::Hst2Dev);
     maxdiag = FalmMV::MaxDiag(poisson_a, cpm, {8, 8, 8});
     FalmMV::ScaleMatrix(poisson_a, 1.0 / maxdiag, {8, 8, 8});
     if (cpm.rank == 0) {

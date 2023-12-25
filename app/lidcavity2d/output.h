@@ -16,11 +16,11 @@ static void outputGridInfo(
     Falm::Matrix<Falm::REAL> &ja,
     Falm::Region             &pdm
 ) {
-    x.sync(Falm::MCpType::Dev2Hst);
-    h.sync(Falm::MCpType::Dev2Hst);
-    kx.sync(Falm::MCpType::Dev2Hst);
-    g.sync(Falm::MCpType::Dev2Hst);
-    ja.sync(Falm::MCpType::Dev2Hst);
+    x.sync(Falm::MCP::Dev2Hst);
+    h.sync(Falm::MCP::Dev2Hst);
+    kx.sync(Falm::MCP::Dev2Hst);
+    g.sync(Falm::MCP::Dev2Hst);
+    ja.sync(Falm::MCP::Dev2Hst);
     FILE *file = fopen("grid.csv", "w");
     fprintf(file, "x,y,z,h1,h2,h3,k1,k2,k3,g1,g2,g3,ja\n");
     for (Falm::INT k = 0; k < pdm.shape[2]; k ++) {

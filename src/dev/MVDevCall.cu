@@ -98,7 +98,7 @@ REAL FalmMVDevCall::DotProduct(Matrix<REAL> &a, Matrix<REAL> &b, Region &pdm, co
 
     kernel_DotProduct<<<grid_dim, block_dim, shared_size>>>(a.devptr, b.devptr, partial_sum_dev, pdm.shape, map.shape, map.offset);
 
-    falmErrCheckMacro(falmMemcpy(partial_sum, partial_sum_dev, sizeof(REAL) * n_blocks, MCpType::Dev2Hst));
+    falmErrCheckMacro(falmMemcpy(partial_sum, partial_sum_dev, sizeof(REAL) * n_blocks, MCP::Dev2Hst));
     REAL sum = partial_sum[0];
     for (INT i = 1; i < n_blocks; i ++) {
         sum += partial_sum[i];
@@ -160,7 +160,7 @@ REAL FalmMVDevCall::EuclideanNormSq(Matrix<REAL> &a, Region &pdm, const Region &
 
     kernel_EuclideanNormSq<<<grid_dim, block_dim, shared_size>>>(a.devptr, partial_sum_dev, pdm.shape, map.shape, map.offset);
 
-    falmErrCheckMacro(falmMemcpy(partial_sum, partial_sum_dev, sizeof(REAL) * n_blocks, MCpType::Dev2Hst));
+    falmErrCheckMacro(falmMemcpy(partial_sum, partial_sum_dev, sizeof(REAL) * n_blocks, MCP::Dev2Hst));
     REAL sum = partial_sum[0];
     for (INT i = 1; i < n_blocks; i ++) {
         sum += partial_sum[i];
@@ -390,7 +390,7 @@ REAL FalmMVDevCall::MatColMax(Matrix<REAL> &a, INT col, Region &pdm, const Regio
 
     kernel_MatColMax<<<grid_dim, block_dim, shared_size>>>(a.devptr, col, partial_max_dev, pdm.shape, map.shape, map.offset);
 
-    falmErrCheckMacro(falmMemcpy(partial_max, partial_max_dev, sizeof(REAL) * n_blocks, MCpType::Dev2Hst));
+    falmErrCheckMacro(falmMemcpy(partial_max, partial_max_dev, sizeof(REAL) * n_blocks, MCP::Dev2Hst));
     REAL maximum = partial_max[0];
     for (INT i = 1; i < n_blocks; i ++) {
         if (partial_max[i] > maximum) {
@@ -419,7 +419,7 @@ REAL FalmMVDevCall::MatColMin(Matrix<REAL> &a, INT col, Region &pdm, const Regio
 
     kernel_MatColMin<<<grid_dim, block_dim, shared_size>>>(a.devptr, col, partial_max_dev, pdm.shape, map.shape, map.offset);
 
-    falmErrCheckMacro(falmMemcpy(partial_max, partial_max_dev, sizeof(REAL) * n_blocks, MCpType::Dev2Hst));
+    falmErrCheckMacro(falmMemcpy(partial_max, partial_max_dev, sizeof(REAL) * n_blocks, MCP::Dev2Hst));
     REAL maximum = partial_max[0];
     for (INT i = 1; i < n_blocks; i ++) {
         if (partial_max[i] < maximum) {
@@ -448,7 +448,7 @@ REAL FalmMVDevCall::MatColAbsMax(Matrix<REAL> &a, INT col, Region &pdm, const Re
 
     kernel_MatColAbsMax<<<grid_dim, block_dim, shared_size>>>(a.devptr, col, partial_max_dev, pdm.shape, map.shape, map.offset);
 
-    falmErrCheckMacro(falmMemcpy(partial_max, partial_max_dev, sizeof(REAL) * n_blocks, MCpType::Dev2Hst));
+    falmErrCheckMacro(falmMemcpy(partial_max, partial_max_dev, sizeof(REAL) * n_blocks, MCP::Dev2Hst));
     REAL maximum = partial_max[0];
     for (INT i = 1; i < n_blocks; i ++) {
         if (partial_max[i] > maximum) {
@@ -477,7 +477,7 @@ REAL FalmMVDevCall::MatColAbsMin(Matrix<REAL> &a, INT col, Region &pdm, const Re
 
     kernel_MatColAbsMin<<<grid_dim, block_dim, shared_size>>>(a.devptr, col, partial_max_dev, pdm.shape, map.shape, map.offset);
 
-    falmErrCheckMacro(falmMemcpy(partial_max, partial_max_dev, sizeof(REAL) * n_blocks, MCpType::Dev2Hst));
+    falmErrCheckMacro(falmMemcpy(partial_max, partial_max_dev, sizeof(REAL) * n_blocks, MCP::Dev2Hst));
     REAL maximum = partial_max[0];
     for (INT i = 1; i < n_blocks; i ++) {
         if (partial_max[i] < maximum) {
@@ -600,7 +600,7 @@ REAL FalmMVDevCall::VecMax(Matrix<REAL> &a, Region &pdm, const Region &map, dim3
 
     kernel_VecMax<<<grid_dim, block_dim, shared_size>>>(a.devptr, partial_max_dev, pdm.shape, map.shape, map.offset);
 
-    falmErrCheckMacro(falmMemcpy(partial_max, partial_max_dev, sizeof(REAL) * n_blocks, MCpType::Dev2Hst));
+    falmErrCheckMacro(falmMemcpy(partial_max, partial_max_dev, sizeof(REAL) * n_blocks, MCP::Dev2Hst));
     REAL maximum = partial_max[0];
     for (INT i = 1; i < n_blocks; i ++) {
         if (partial_max[i] > maximum) {
@@ -629,7 +629,7 @@ REAL FalmMVDevCall::VecMin(Matrix<REAL> &a, Region &pdm, const Region &map, dim3
 
     kernel_VecMin<<<grid_dim, block_dim, shared_size>>>(a.devptr, partial_max_dev, pdm.shape, map.shape, map.offset);
 
-    falmErrCheckMacro(falmMemcpy(partial_max, partial_max_dev, sizeof(REAL) * n_blocks, MCpType::Dev2Hst));
+    falmErrCheckMacro(falmMemcpy(partial_max, partial_max_dev, sizeof(REAL) * n_blocks, MCP::Dev2Hst));
     REAL maximum = partial_max[0];
     for (INT i = 1; i < n_blocks; i ++) {
         if (partial_max[i] < maximum) {

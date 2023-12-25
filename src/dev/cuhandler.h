@@ -74,27 +74,27 @@ static inline INT falmFreeDevice(void *ptr) {
 // }
 
 static INT falmMemcpy(void *dst, void *src, size_t size, FLAG mcptype) {
-    if (mcptype == MCpType::Hst2Hst) {
+    if (mcptype == MCP::Hst2Hst) {
         memcpy(dst, src, size);
         return FalmErr::success;
-    } else if (mcptype == MCpType::Hst2Dev) {
+    } else if (mcptype == MCP::Hst2Dev) {
         return FalmErr::cuErrMask * (INT)cudaMemcpy(dst, src, size, cudaMemcpyHostToDevice);
-    } else if (mcptype == MCpType::Dev2Hst) {
+    } else if (mcptype == MCP::Dev2Hst) {
         return FalmErr::cuErrMask * (INT)cudaMemcpy(dst, src, size, cudaMemcpyDeviceToHost);
-    } else if (mcptype == MCpType::Dev2Dev) {
+    } else if (mcptype == MCP::Dev2Dev) {
         return FalmErr::cuErrMask * (INT)cudaMemcpy(dst, src, size, cudaMemcpyDeviceToDevice);
     }
     return FalmErr::success;
 }
 
 static INT falmMemcpyAsync(void *dst, void *src, size_t size, FLAG mcptype, STREAM stream = (STREAM)0) {
-    if (mcptype == MCpType::Hst2Hst) {
+    if (mcptype == MCP::Hst2Hst) {
         return FalmErr::cuErrMask * (INT)cudaMemcpyAsync(dst, src, size, cudaMemcpyHostToHost, stream);
-    } else if (mcptype == MCpType::Hst2Dev) {
+    } else if (mcptype == MCP::Hst2Dev) {
         return FalmErr::cuErrMask * (INT)cudaMemcpyAsync(dst, src, size, cudaMemcpyHostToDevice, stream);
-    } else if (mcptype == MCpType::Dev2Hst) {
+    } else if (mcptype == MCP::Dev2Hst) {
         return FalmErr::cuErrMask * (INT)cudaMemcpyAsync(dst, src, size, cudaMemcpyDeviceToHost, stream);
-    } else if (mcptype == MCpType::Dev2Dev) {
+    } else if (mcptype == MCP::Dev2Dev) {
         return FalmErr::cuErrMask * (INT)cudaMemcpyAsync(dst, src, size, cudaMemcpyDeviceToDevice, stream);
     }
     return FalmErr::success;

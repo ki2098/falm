@@ -106,7 +106,7 @@ int main(int argc, char **argv) {
     fflush(stdout);
     CPM_Barrier(MPI_COMM_WORLD);
 
-    Matrix<REAL> x(process.shape, 1, HDCType::Host, "x");
+    Matrix<REAL> x(process.shape, 1, HDC::Host, "x");
     for (INT i = Gd; i < process.shape[0] - Gd; i ++) {
         for (INT j = Gd; j < process.shape[1] - Gd; j ++) {
             for (INT k = Gd; k < process.shape[2] - Gd; k ++) {
@@ -138,7 +138,7 @@ int main(int argc, char **argv) {
         cudaStreamCreate(&faceStream[fid]);
     }
     
-    x.sync(MCpType::Hst2Dev);
+    x.sync(MCP::Hst2Dev);
     if (cpm.size > 1) {
         if (cpm.rank == 0) {
             printf("Sending color %u...\n", Color::Black);
@@ -154,7 +154,7 @@ int main(int argc, char **argv) {
         cpmop.PostExchange6ColoredFace(FACESTREAM);
         // cpmop.CPML2dev_PostExchange6Face();
     }
-    x.sync(MCpType::Dev2Hst);
+    x.sync(MCP::Dev2Hst);
     for (INT i = 0; i < cpm.size; i ++) {
         if (cpm.rank == i) {
             printf("%d(%u %u %u) printing...\n", cpm.rank, cpm.idx[0], cpm.idx[1], cpm.idx[2]);
@@ -185,7 +185,7 @@ int main(int argc, char **argv) {
         cpmop.CPML2_Wait6Face();
         cpmop.PostExchange6ColoredFace(FACESTREAM);
     }
-    x.sync(MCpType::Dev2Hst);
+    x.sync(MCP::Dev2Hst);
     for (INT i = 0; i < cpm.size; i ++) {
         if (cpm.rank == i) {
             printf("%d(%u %u %u) printing...\n", cpm.rank, cpm.idx[0], cpm.idx[1], cpm.idx[2]);
@@ -207,13 +207,13 @@ int main(int argc, char **argv) {
         CPM_Barrier(MPI_COMM_WORLD);
     }
 
-    x.release(HDCType::HstDev);
+    x.release(HDC::HstDev);
     
     printf("_____________________________________________________________________\n");
     fflush(stdout);
     CPM_Barrier(MPI_COMM_WORLD);
 
-    x.alloc(process.shape, 1, HDCType::Host);
+    x.alloc(process.shape, 1, HDC::Host);
     for (INT i = Gd; i < process.shape[0] - Gd; i ++) {
         for (INT j = Gd; j < process.shape[1] - Gd; j ++) {
             for (INT k = Gd; k < process.shape[2] - Gd; k ++) {
@@ -234,7 +234,7 @@ int main(int argc, char **argv) {
         CPM_Barrier(MPI_COMM_WORLD);
     }
 
-    x.sync(MCpType::Hst2Dev);
+    x.sync(MCP::Hst2Dev);
     if (cpm.size > 1) {
         if (cpm.rank == 0) {
             printf("Sending color %u...\n", Color::Black);
@@ -248,7 +248,7 @@ int main(int argc, char **argv) {
         cpmop.PostExchange6ColoredFace(FACESTREAM);
         // cpmop.CPML2dev_PostExchange6Face();
     }
-    x.sync(MCpType::Dev2Hst);
+    x.sync(MCP::Dev2Hst);
     for (INT i = 0; i < cpm.size; i ++) {
         if (cpm.rank == i) {
             printf("%d(%u %u %u) printing...\n", cpm.rank, cpm.idx[0], cpm.idx[1], cpm.idx[2]);
@@ -279,7 +279,7 @@ int main(int argc, char **argv) {
         cpmop.CPML2_Wait6Face();
         cpmop.PostExchange6ColoredFace(FACESTREAM);
     }
-    x.sync(MCpType::Dev2Hst);
+    x.sync(MCP::Dev2Hst);
     for (INT i = 0; i < cpm.size; i ++) {
         if (cpm.rank == i) {
             printf("%d(%u %u %u) printing...\n", cpm.rank, cpm.idx[0], cpm.idx[1], cpm.idx[2]);
@@ -301,7 +301,7 @@ int main(int argc, char **argv) {
         CPM_Barrier(MPI_COMM_WORLD);
     }
 
-    x.release(HDCType::HstDev);
+    x.release(HDC::HstDev);
 
     for (int fid = 0; fid < 6; fid ++) {
         cudaStreamDestroy(faceStream[fid]);

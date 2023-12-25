@@ -12,6 +12,7 @@ void FalmCFD::FSPseudoU(
     Matrix<REAL> &g,
     Matrix<REAL> &ja,
     Matrix<REAL> &ff,
+    REAL dt,
     CPM      &cpm,
     dim3          block_dim,
     STREAM       *stream,
@@ -31,7 +32,7 @@ void FalmCFD::FSPseudoU(
     INT3 inner_shape, inner_offset, boundary_shape[6], boundary_offset[6];
     cpm.set6Region(inner_shape, inner_offset, boundary_shape, boundary_offset, 2, Region(pdm.shape, cpm.gc));
 
-    FalmCFDDevCall::FSPseudoU(un, u, uu, ua, nut, kx, g, ja, ff, pdm, Region(inner_shape, inner_offset), block_dim);
+    FalmCFDDevCall::FSPseudoU(un, u, uu, ua, nut, kx, g, ja, ff, dt, pdm, Region(inner_shape, inner_offset), block_dim);
 
     ucpm.Wait6Face();
     vcpm.Wait6Face();
@@ -51,7 +52,7 @@ void FalmCFD::FSPseudoU(
                 (fid == CPM::ZPLUS || fid == CPM::ZMINUS)? 1U : 8U
             );
             STREAM fstream = (stream)? stream[fid] : (STREAM)0;
-            FalmCFDDevCall::FSPseudoU(un, u, uu, ua, nut, kx, g, ja, ff, pdm, Region(boundary_shape[fid], boundary_offset[fid]), __block, fstream);
+            FalmCFDDevCall::FSPseudoU(un, u, uu, ua, nut, kx, g, ja, ff, dt, pdm, Region(boundary_shape[fid], boundary_offset[fid]), __block, fstream);
         }
     }
     if (stream) {
@@ -75,7 +76,7 @@ void FalmCFD::UtoUU(
     STREAM       *stream
 ) {
     Region &pdm = cpm.pdm_list[cpm.rank];
-    Matrix<REAL> uc(pdm.shape, 3, HDCType::Device, "contra u at grid");
+    Matrix<REAL> uc(pdm.shape, 3, HDC::Device, "contra u at grid");
     INT3 inner_shape, inner_offset, boundary_shape[6], boundary_offset[6];
     cpm.set6Region(inner_shape, inner_offset, boundary_shape, boundary_offset, 1, Region(pdm.shape, cpm.gc - 1));
 
@@ -116,8 +117,8 @@ void FalmCFD::UtoUU(
     }
 
     Region uumap(pdm.shape, cpm.gc);
-    uumap.shape  += {{1, 1, 1}};
-    uumap.offset -= {{1, 1, 1}};
+    uumap.shape  += 1;
+    uumap.offset -= 1;
     // uumap = uumap.transform(
     //     INT3{ 1,  1,  1},
     //     INT3{-1, -1, -1}
@@ -135,6 +136,7 @@ void FalmCFD::ProjectP(
     Matrix<REAL> &p,
     Matrix<REAL> &kx,
     Matrix<REAL> &g,
+    REAL dt,
     CPM      &cpm,
     dim3          block_dim,
     STREAM       *stream
@@ -146,7 +148,7 @@ void FalmCFD::ProjectP(
     CPMComm<REAL> pcpm(&cpm);
     pcpm.IExchange6Face(p.dev.ptr, 1, 0, 0, stream);
 
-    FalmCFDDevCall::ProjectPGrid(u, ua, p, kx, pdm, Region(inner_shape, inner_offset), block_dim);
+    FalmCFDDevCall::ProjectPGrid(u, ua, p, kx, dt, pdm, Region(inner_shape, inner_offset), block_dim);
 
     pcpm.Wait6Face();
     pcpm.PostExchange6Face();
@@ -159,7 +161,7 @@ void FalmCFD::ProjectP(
                 (fid == CPM::ZPLUS || fid == CPM::ZMINUS)? 1U : 8U
             );
             STREAM fstream = (stream)? stream[fid] : (STREAM)0;
-            FalmCFDDevCall::ProjectPGrid(u, ua, p, kx, pdm, Region(boundary_shape[fid], boundary_offset[fid]), __block, fstream);
+            FalmCFDDevCall::ProjectPGrid(u, ua, p, kx, dt, pdm, Region(boundary_shape[fid], boundary_offset[fid]), __block, fstream);
         }
     }
     if (stream) {
@@ -171,13 +173,13 @@ void FalmCFD::ProjectP(
     }
 
     Region uumap(pdm.shape, cpm.gc);
-    uumap.shape  += {{1, 1, 1}};
-    uumap.offset -= {{1, 1, 1}};
+    uumap.shape  += 1;
+    uumap.offset -= 1;
     // uumap = uumap.transform(
     //     INT3{ 1,  1,  1},
     //     INT3{-1, -1, -1}
     // );
-    FalmCFDDevCall::ProjectPFace(uu, uua, p, g, pdm, uumap, block_dim);
+    FalmCFDDevCall::ProjectPFace(uu, uua, p, g, dt, pdm, uumap, block_dim);
 
     falmWaitStream();
 }

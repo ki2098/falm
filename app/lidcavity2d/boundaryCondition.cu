@@ -318,10 +318,10 @@ void copyZ5(
     INT idxb2 = IDX(0, 0, gc-2, pdm.shape);
     INT slice_size = pdm.shape[0] * pdm.shape[1];
     for (INT d = 0; d < field.shape[1]; d ++) {
-        falmMemcpyAsync(&field.dev(idxt1, d), &field.dev(idxcc, d), sizeof(REAL) * slice_size, MCpType::Dev2Dev);
-        falmMemcpyAsync(&field.dev(idxt2, d), &field.dev(idxcc, d), sizeof(REAL) * slice_size, MCpType::Dev2Dev);
-        falmMemcpyAsync(&field.dev(idxb1, d), &field.dev(idxcc, d), sizeof(REAL) * slice_size, MCpType::Dev2Dev);
-        falmMemcpyAsync(&field.dev(idxb2, d), &field.dev(idxcc, d), sizeof(REAL) * slice_size, MCpType::Dev2Dev);
+        falmMemcpyAsync(&field.dev(idxt1, d), &field.dev(idxcc, d), sizeof(REAL) * slice_size, MCP::Dev2Dev);
+        falmMemcpyAsync(&field.dev(idxt2, d), &field.dev(idxcc, d), sizeof(REAL) * slice_size, MCP::Dev2Dev);
+        falmMemcpyAsync(&field.dev(idxb1, d), &field.dev(idxcc, d), sizeof(REAL) * slice_size, MCP::Dev2Dev);
+        falmMemcpyAsync(&field.dev(idxb2, d), &field.dev(idxcc, d), sizeof(REAL) * slice_size, MCP::Dev2Dev);
     }
     falmWaitStream();
 }

@@ -1,6 +1,7 @@
 #ifndef FALM_CPMBASE_H
 #define FALM_CPMBASE_H
 
+#include <typeinfo>
 #include <vector>
 #include <assert.h>
 #include "region.h"
@@ -29,17 +30,17 @@ public:
     std::vector<Region> pdm_list;
     // STREAM *stream;
 
-    void initPartition(INT3 gShape, INT guideCell, int mpi_rank = 0, int mpi_size = 1, INT3 mpi_shape = {{1,1,1}}) {
-        assert(mpi_size == PRODUCT3(mpi_shape));
+    void initPartition(INT3 gShape, INT guideCell, INT3 mpi_shape) {
+        assert(size == PRODUCT3(mpi_shape));
 
         shape  = mpi_shape;
-        rank   = mpi_rank;
-        size   = mpi_size;
+
         initNeighbour();
 
         gc     = guideCell;
+        INT gcgc = gc*2;
         global = Region(
-            INT3{{gShape[0] + gc*2, gShape[1] + gc*2, gShape[2] + gc*2}},
+            gShape,
             INT3{{0, 0, 0}}
         );
         pdm_list = std::vector<Region>(size, Region());
@@ -48,19 +49,19 @@ public:
         for (INT i = 0; i < shape[0]; i ++) {
             INT ox = 0, oy = 0, oz = 0;
             for (INT __x = 0; __x < i; __x ++) {
-                ox += dim_division(gShape[0], shape[0], __x);
+                ox += dim_division(gShape[0] - gcgc, shape[0], __x);
             }
             for (INT __y = 0; __y < j; __y ++) {
-                oy += dim_division(gShape[1], shape[1], __y);
+                oy += dim_division(gShape[1] - gcgc, shape[1], __y);
             }
             for (INT __z = 0; __z < k; __z ++) {
-                oz += dim_division(gShape[2], shape[2], __z);
+                oz += dim_division(gShape[2] - gcgc, shape[2], __z);
             }
             pdm_list[IDX(i, j, k, shape)] = Region(
                 INT3{{
-                    dim_division(gShape[0], shape[0], i) + gc*2,
-                    dim_division(gShape[1], shape[1], j) + gc*2,
-                    dim_division(gShape[2], shape[2], k) + gc*2
+                    dim_division(gShape[0] - gcgc, shape[0], i) + gc*2,
+                    dim_division(gShape[1] - gcgc, shape[1], j) + gc*2,
+                    dim_division(gShape[2] - gcgc, shape[2], k) + gc*2
                 }},
                 INT3{{ox, oy, oz}}
             );

@@ -12,7 +12,7 @@ using namespace Falm;
 
 void print_buffer_dev(CPMBuffer<double> &buffer) {
     double *ptr = (double *)falmMallocPinned(sizeof(double) * buffer.size);
-    falmMemcpy(ptr, buffer.ptr, sizeof(double) * buffer.size, MCpType::Dev2Hst);
+    falmMemcpy(ptr, buffer.ptr, sizeof(double) * buffer.size, MCP::Dev2Hst);
     for (int i = 0; i < buffer.size; i ++) {
         printf("%-3.0lf ", ptr[i]);
     }
@@ -112,7 +112,7 @@ int main(int argc, char **argv) {
     fflush(stdout);
     CPML2_Barrier(MPI_COMM_WORLD);
 
-    Matrix<double> x(process.shape, 1, HDCType::Host, 0);
+    Matrix<double> x(process.shape, 1, HDC::Host, 0);
     for (int i = Gd; i < process.shape[0] - Gd; i ++) {
         for (int j = Gd; j < process.shape[1] - Gd; j ++) {
             for (int k = Gd; k < process.shape[2] - Gd; k ++) {
@@ -132,7 +132,7 @@ int main(int argc, char **argv) {
 
     MPI_Request *req;
     CPMBuffer<double> *buffer;
-    unsigned int bufhdc = HDCType::Host;
+    unsigned int bufhdc = HDC::Host;
     
     dim3 block_dim_yz(1, 8, 4);
 

@@ -26,32 +26,32 @@ struct CPMBuffer {
     FLAG    hdctype;
     INT       color;
 
-    CPMBuffer() : ptr(nullptr), count(0), buftype(BufType::Empty), hdctype(HDCType::Empty) {}
+    CPMBuffer() : ptr(nullptr), count(0), buftype(BufType::Empty), hdctype(HDC::Empty) {}
     ~CPMBuffer() {
-        if (hdctype == HDCType::Host) {
+        if (hdctype == HDC::Host) {
             falmErrCheckMacro(falmFree(ptr));
-        } else if (hdctype == HDCType::Device) {
+        } else if (hdctype == HDC::Device) {
             falmErrCheckMacro(falmFreeDevice(ptr));
         }
     }
 
     void alloc(size_t _width, const Region &_map, FLAG _buftype, FLAG _hdctype) {
-        assert(hdctype == HDCType::Empty);
+        assert(hdctype == HDC::Empty);
         assert(buftype == BufType::Empty);
         width   = _width;
         map     = _map;
         count   = _map.size;
         buftype = _buftype;
         hdctype = _hdctype;
-        if (hdctype == HDCType::Host) {
+        if (hdctype == HDC::Host) {
             falmErrCheckMacro(falmMalloc((void**)&ptr, width * count));
-        } else if (hdctype == HDCType::Device) {
+        } else if (hdctype == HDC::Device) {
             falmErrCheckMacro(falmMallocDevice((void**)&ptr, width * count));
         }
     }
 
     void allocColored(size_t _width, const Region &_map, INT _color, FLAG _buftype, FLAG _hdctype, Region &_pdm) {
-        assert(hdctype == HDCType::Empty);
+        assert(hdctype == HDC::Empty);
         assert(buftype == BufType::Empty);
         width   = _width;
         map     = _map;
@@ -63,20 +63,20 @@ struct CPMBuffer {
         if (map.size % 2 == 1 && refcolor == color) {
             count ++;
         }
-        if (hdctype == HDCType::Host) {
+        if (hdctype == HDC::Host) {
             falmErrCheckMacro(falmMalloc((void**)&ptr, width * count));
-        } else if (hdctype == HDCType::Device) {
+        } else if (hdctype == HDC::Device) {
             falmErrCheckMacro(falmMallocDevice((void**)&ptr, width * count));
         }
     }
     
     void release() {
-        if (hdctype == HDCType::Host) {
+        if (hdctype == HDC::Host) {
             falmErrCheckMacro(falmFree(ptr));
-        } else if (hdctype == HDCType::Device) {
+        } else if (hdctype == HDC::Device) {
             falmErrCheckMacro(falmFreeDevice(ptr));
         }
-        hdctype = HDCType::Empty;
+        hdctype = HDC::Empty;
         buftype = BufType::Empty;
         ptr = nullptr;
     }

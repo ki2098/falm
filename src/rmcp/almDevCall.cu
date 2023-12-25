@@ -212,7 +212,7 @@ void RmcpAlmDevCall::CalcTorque(Matrix<REAL> &x, Matrix<REAL> &ff, RmcpTurbineAr
 
     for (INT __ti = 0; __ti < wf.nTurbine; __ti ++) {
         kernel_CalcTorque<<<grid_dim, block_dim, shared_size>>>(alm_flag.devptr, x.devptr, ff.devptr, wf.tdevptr, __ti, partial_sum_dev, pdm.shape, map.shape, map.offset);
-        falmErrCheckMacro(falmMemcpy(partial_sum, partial_sum_dev, sizeof(REAL) * n_blocks, MCpType::Dev2Hst));
+        falmErrCheckMacro(falmMemcpy(partial_sum, partial_sum_dev, sizeof(REAL) * n_blocks, MCP::Dev2Hst));
         REAL sum = partial_sum[0];
         for (INT i = 0; i < n_blocks; i ++) {
             sum += partial_sum[i];

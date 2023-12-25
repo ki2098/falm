@@ -48,11 +48,11 @@ void setCoord(
     dim3          block_dim
 ) {
     Region &pdm = cpm.pdm_list[cpm.rank];
-    x.alloc(pdm.shape, 3, HDCType::Device);
-    h.alloc(pdm.shape, 3, HDCType::Device);
-    kx.alloc(pdm.shape, 3, HDCType::Device);
-    g.alloc(pdm.shape, 3, HDCType::Device);
-    ja.alloc(pdm.shape, 1, HDCType::Device);
+    x.alloc(pdm.shape, 3, HDC::Device);
+    h.alloc(pdm.shape, 3, HDC::Device);
+    kx.alloc(pdm.shape, 3, HDC::Device);
+    g.alloc(pdm.shape, 3, HDC::Device);
+    ja.alloc(pdm.shape, 1, HDC::Device);
 
     dim3 grid_dim(
         (pdm.shape[0] + block_dim.x - 1) / block_dim.x,

@@ -59,6 +59,20 @@ public:
             return LSType::Empty;
         }
     }
+
+    static std::string type2str(FLAG lst) {
+        if (lst == LSType::Empty) {
+            return "Empty";
+        } else if (lst == LSType::PBiCGStab) {
+            return "PBiCGStab";
+        } else if (lst == LSType::SOR) {
+            return "SOR";
+        } else if (lst == LSType::Jacobi) {
+            return "Jacobi";
+        } else {
+            return "Not defined";
+        }
+    }
 };
 
 }

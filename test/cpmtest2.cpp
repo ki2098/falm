@@ -104,7 +104,7 @@ int main(int argc, char **argv) {
     INT3 inner_shape, inner_offset;
     INT3 boundary_shape[6], boundary_offset[6];
     cpm.set6Region(inner_shape, inner_offset, boundary_shape, boundary_offset, 1, Region(process, Gd));
-    Matrix<double> x(process.shape, 1, HDCType::Host);
+    Matrix<double> x(process.shape, 1, HDC::Host);
     set_matrix_value(x, inner_shape, inner_offset, process.shape, cpm.rank * 10);
     for (INT i = 0; i < 6; i ++) {
         if (cpm.neighbour[i] >= 0) {

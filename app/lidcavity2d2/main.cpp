@@ -35,9 +35,9 @@ void field_output(INT i, int rank) {
     std::string filename = "data/cavity-rank" + std::to_string(rank) + ".csv" + std::to_string(i);
     FILE *file = fopen(filename.c_str(), "w");
     fprintf(file, "x,y,z,u,v,w,p\n");
-    x.sync(MCpType::Dev2Hst);
-    u.sync(MCpType::Dev2Hst);
-    p.sync(MCpType::Dev2Hst);
+    x.sync(MCP::Dev2Hst);
+    u.sync(MCP::Dev2Hst);
+    p.sync(MCP::Dev2Hst);
     for (INT k = 0; k < pdm.shape[2]; k ++) {
         for (INT j = 0; j < pdm.shape[1]; j ++) {
             for (INT i = 0; i < pdm.shape[0]; i ++) {
@@ -50,9 +50,9 @@ void field_output(INT i, int rank) {
 }
 
 void plt3d_output(int step, int rank, REAL dt, Vcdm::VCDM<float> &vcdm) {
-    Matrix<float> uvw(cpm.pdm_list[cpm.rank].shape, 4, HDCType::Host, "uvw");
-    u.sync(MCpType::Dev2Hst);
-    p.sync(MCpType::Dev2Hst);
+    Matrix<float> uvw(cpm.pdm_list[cpm.rank].shape, 4, HDC::Host, "uvw");
+    u.sync(MCP::Dev2Hst);
+    p.sync(MCP::Dev2Hst);
     // falmMemcpy(&uvw(0, 0), &u(0, 0), sizeof(REAL) * u.size, MCpType::Hst2Hst);
     // falmMemcpy(&uvwp(0, 3), &p(0)   , sizeof(REAL) * p.size, MCpType::Hst2Hst);
     for (INT i = 0; i < u.shape[0]; i ++) {
@@ -94,16 +94,16 @@ void setVcdmAttributes(Vcdm::VCDM<Type> &vcdm) {
 }
 
 void allocVars(Region &pdm) {
-    u.alloc(pdm.shape, 3, HDCType::Device);
-    ua.alloc(pdm.shape, 3, HDCType::Device);
-    uu.alloc(pdm.shape, 3, HDCType::Device);
-    uua.alloc(pdm.shape, 3, HDCType::Device);
-    p.alloc(pdm.shape, 1, HDCType::Device);
-    nut.alloc(pdm.shape, 1, HDCType::Device);
-    ff.alloc(pdm.shape, 3, HDCType::Device);
-    rhs.alloc(pdm.shape, 1, HDCType::Device);
-    res.alloc(pdm.shape, 1, HDCType::Device);
-    dvr.alloc(pdm.shape, 1, HDCType::Device);
+    u.alloc(pdm.shape, 3, HDC::Device);
+    ua.alloc(pdm.shape, 3, HDC::Device);
+    uu.alloc(pdm.shape, 3, HDC::Device);
+    uua.alloc(pdm.shape, 3, HDC::Device);
+    p.alloc(pdm.shape, 1, HDC::Device);
+    nut.alloc(pdm.shape, 1, HDC::Device);
+    ff.alloc(pdm.shape, 3, HDC::Device);
+    rhs.alloc(pdm.shape, 1, HDC::Device);
+    res.alloc(pdm.shape, 1, HDC::Device);
+    dvr.alloc(pdm.shape, 1, HDC::Device);
 }
 
 REAL main_loop(FalmCFD &cfd, FalmEq &eqsolver, CPM &cpm, dim3 block_dim, STREAM *stream) {
@@ -162,7 +162,7 @@ int main(int argc, char **argv) {
 
     allocVars(pdm);
     setCoord(L, N, pdm, cpm.gc, x, h, kx, g, ja);
-    poisson_a.alloc(pdm.shape, 7, HDCType::Device, StencilMatrix::D3P7);
+    poisson_a.alloc(pdm.shape, 7, HDC::Device, StencilMatrix::D3P7);
     maxdiag = makePoissonMatrix(poisson_a, g, ja, cpm);
 
     printf("%lf\n", maxdiag);
@@ -223,8 +223,8 @@ int main(int argc, char **argv) {
     }
     CPM_Barrier(MPI_COMM_WORLD);
 
-    x.sync(MCpType::Dev2Hst);
-    Matrix<float> xyz(x.shape[0], x.shape[1], HDCType::Host, "float x");
+    x.sync(MCP::Dev2Hst);
+    Matrix<float> xyz(x.shape[0], x.shape[1], HDC::Host, "float x");
     for (INT i = 0; i < x.size; i ++) {
         xyz(i) = x(i);
     }
@@ -258,7 +258,7 @@ int main(int argc, char **argv) {
             // field_output(__it, cpm.rank);
             if (cpm.rank == 0) {
                 REAL probe_u;
-                falmMemcpy(&probe_u, &u.dev(IDX(2, 0, 0, cpm.pdm_list[cpm.rank].shape), 0), sizeof(REAL), MCpType::Dev2Hst);
+                falmMemcpy(&probe_u, &u.dev(IDX(2, 0, 0, cpm.pdm_list[cpm.rank].shape), 0), sizeof(REAL), MCP::Dev2Hst);
                 printf("\n%e\n", probe_u);
             }
         }

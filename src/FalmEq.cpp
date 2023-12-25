@@ -85,10 +85,10 @@ void FalmEq::Jacobi(Matrix<REAL> &a, Matrix<REAL> &x, Matrix<REAL> &b, Matrix<RE
 
     Region inner_map(inner_shape, inner_offset);
 
-    Matrix<REAL> xp(x.shape[0], x.shape[1], HDCType::Device, "Jacobi" + x.name + "Previous");
+    Matrix<REAL> xp(x.shape[0], x.shape[1], HDC::Device, "Jacobi" + x.name + "Previous");
     it = 0;
     do {
-        xp.copy(x, HDCType::Device);
+        xp.copy(x, HDC::Device);
         cpmop.IExchange6Face(xp.dev.ptr, 1, 0, 0);
 
         JacobiSweep(a, x, xp, b, pdm, inner_map, block_dim);
@@ -125,7 +125,7 @@ void FalmEq::Jacobi(Matrix<REAL> &a, Matrix<REAL> &x, Matrix<REAL> &b, Matrix<RE
 
 void FalmEq::JacobiPC(Matrix<REAL> &a, Matrix<REAL> &x, Matrix<REAL> &b, CPM &cpm, dim3 block_dim, STREAM *stream) {
     Region &pdm = cpm.pdm_list[cpm.rank];
-    Matrix<REAL> xp(x.shape[0], x.shape[1], HDCType::Device, "Jacobi" + x.name + "Previous");
+    Matrix<REAL> xp(x.shape[0], x.shape[1], HDC::Device, "Jacobi" + x.name + "Previous");
 
     CPMComm<REAL> cpmop(&cpm);
     INT3 inner_shape, inner_offset, boundary_shape[6], boundary_offset[6];
@@ -135,7 +135,7 @@ void FalmEq::JacobiPC(Matrix<REAL> &a, Matrix<REAL> &x, Matrix<REAL> &b, CPM &cp
         
     INT __it = 0;
     do {
-        xp.copy(x, HDCType::Device);
+        xp.copy(x, HDC::Device);
         cpmop.IExchange6Face(xp.dev.ptr, 1, 0, 0);
     
         JacobiSweep(a, x, xp, b, pdm, inner_map, block_dim);
@@ -306,13 +306,13 @@ void FalmEq::PBiCGStab(Matrix<REAL> &a, Matrix<REAL> &x, Matrix<REAL> &b, Matrix
     Region gmap(global.shape, cpm.gc);
     Region map(pdm.shape, cpm.gc);
 
-    Matrix<REAL> rr(pdm.shape, 1, HDCType::Device, "PBiCGStab rr");
-    Matrix<REAL>  p(pdm.shape, 1, HDCType::Device, "PBiCGStab  p");
-    Matrix<REAL>  q(pdm.shape, 1, HDCType::Device, "PBiCGStab  q");
-    Matrix<REAL>  s(pdm.shape, 1, HDCType::Device, "PBiCGStab  s");
-    Matrix<REAL> pp(pdm.shape, 1, HDCType::Device, "PBiCGStab pp");
-    Matrix<REAL> ss(pdm.shape, 1, HDCType::Device, "PBiCGStab ss");
-    Matrix<REAL>  t(pdm.shape, 1, HDCType::Device, "PBiCGStab  t");
+    Matrix<REAL> rr(pdm.shape, 1, HDC::Device, "PBiCGStab rr");
+    Matrix<REAL>  p(pdm.shape, 1, HDC::Device, "PBiCGStab  p");
+    Matrix<REAL>  q(pdm.shape, 1, HDC::Device, "PBiCGStab  q");
+    Matrix<REAL>  s(pdm.shape, 1, HDC::Device, "PBiCGStab  s");
+    Matrix<REAL> pp(pdm.shape, 1, HDC::Device, "PBiCGStab pp");
+    Matrix<REAL> ss(pdm.shape, 1, HDC::Device, "PBiCGStab ss");
+    Matrix<REAL>  t(pdm.shape, 1, HDC::Device, "PBiCGStab  t");
     REAL rho, rrho, alpha, beta, omega;
 
     // size_t freebyte, totalbyte;
@@ -322,7 +322,7 @@ void FalmEq::PBiCGStab(Matrix<REAL> &a, Matrix<REAL> &x, Matrix<REAL> &b, Matrix
     Res(a, x, b, r, cpm, block_dim);
     err = sqrt(FalmMV::EuclideanNormSq(r, cpm, block_dim)) / gmap.size;
 
-    rr.copy(r, HDCType::Device);
+    rr.copy(r, HDC::Device);
     rrho  = 1.0;
     alpha = 0.0;
     omega = 1.0;
@@ -340,18 +340,18 @@ void FalmEq::PBiCGStab(Matrix<REAL> &a, Matrix<REAL> &x, Matrix<REAL> &b, Matrix
         }
 
         if (it == 0) {
-            p.copy(r, HDCType::Device);
+            p.copy(r, HDC::Device);
         } else {
             beta = (rho * alpha) / (rrho * omega);
             PBiCGStab1(p, q, r, beta, omega, pdm, map, block_dim);
         }
-        pp.clear(HDCType::Device);
+        pp.clear(HDC::Device);
         Precondition(a, pp, p, cpm, block_dim);
         FalmMV::MV(a, pp, q, cpm, block_dim);
         alpha = rho / FalmMV::DotProduct(rr, q, cpm, block_dim);
 
         PBiCGStab2(s, q, r, alpha, pdm, map, block_dim);
-        ss.clear(HDCType::Device);
+        ss.clear(HDC::Device);
         Precondition(a, ss, s, cpm, block_dim);
         FalmMV::MV(a, ss, t, cpm, block_dim);
         omega = FalmMV::DotProduct(t, s, cpm, block_dim) / FalmMV::DotProduct(t, t, cpm, block_dim);

@@ -82,10 +82,10 @@ int main(int argc, char **argv) {
         INT3{0, 0, 0}
     );
     Matrix<REAL> ga, gt, gb, gr;
-    ga.alloc(global.shape, 7, HDCType::Host  , "global a");
-    gt.alloc(global.shape, 1, HDCType::Device, "global t");
-    gb.alloc(global.shape, 1, HDCType::Host  , "global b");
-    gr.alloc(global.shape, 1, HDCType::Device, "global r");
+    ga.alloc(global.shape, 7, HDC::Host  , "global a");
+    gt.alloc(global.shape, 1, HDC::Device, "global t");
+    gb.alloc(global.shape, 1, HDC::Host  , "global b");
+    gr.alloc(global.shape, 1, HDC::Device, "global r");
     const REAL dx = Lx / Nx;
     for (INT i = Gd; i < Gd + Nx; i ++) {
         REAL ac, ae, aw, bc;
@@ -152,10 +152,10 @@ int main(int argc, char **argv) {
     }
 
     Matrix<REAL> a, t, b, r;
-    a.alloc(process.shape, 7, HDCType::Host  , "a");
-    t.alloc(process.shape, 1, HDCType::Device, "t");
-    b.alloc(process.shape, 1, HDCType::Host  , "b");
-    r.alloc(process.shape, 1, HDCType::Device, "r");
+    a.alloc(process.shape, 7, HDC::Host  , "a");
+    t.alloc(process.shape, 1, HDC::Device, "t");
+    b.alloc(process.shape, 1, HDC::Host  , "b");
+    r.alloc(process.shape, 1, HDC::Device, "r");
     for (INT i = Gd; i < process.shape[0] - Gd; i ++) {
         for (INT j = Gd; j < process.shape[1] - Gd; j ++) {
             for (INT k = Gd; k < process.shape[2] - Gd; k ++) {
@@ -174,7 +174,7 @@ int main(int argc, char **argv) {
 
     INT3 inner_shape, inner_offset, boundary_shape[6], boundary_offset[6];
     cpm.set6Region(inner_shape, inner_offset, boundary_shape, boundary_offset, 1, Region(process, Gd));
-    Matrix<REAL> region(process.shape, 1, HDCType::Host, "region");
+    Matrix<REAL> region(process.shape, 1, HDC::Host, "region");
     set_matrix_value(region, inner_shape, inner_offset, process.shape, cpm.rank * 10);
     for (INT i = 0; i < 6; i ++) {
         if (cpm.neighbour[i] >= 0) {
@@ -192,15 +192,15 @@ int main(int argc, char **argv) {
         CPM_Barrier(MPI_COMM_WORLD);
     }
 
-    a.sync(MCpType::Hst2Dev);
-    b.sync(MCpType::Hst2Dev);
+    a.sync(MCP::Hst2Dev);
+    b.sync(MCP::Hst2Dev);
     dim3 block_dim(32, 1, 1);
     REAL max_diag = L2Dev_MaxDiag(a, process, block_dim, cpm);
     printf("%12lf\n", max_diag);
     L1Dev_ScaleMatrix(a, 1.0 / max_diag, block_dim);
     L1Dev_ScaleMatrix(b, 1.0 / max_diag, block_dim);
-    a.sync(MCpType::Dev2Hst);
-    b.sync(MCpType::Dev2Hst);
+    a.sync(MCP::Dev2Hst);
+    b.sync(MCP::Dev2Hst);
     for (INT i = 0; i < cpm.size; i ++) {
         if (cpm.rank == i) {
             printf("%d(%u %u %u) printing...\n", cpm.rank, cpm.idx[0], cpm.idx[1], cpm.idx[2]);
@@ -216,8 +216,8 @@ int main(int argc, char **argv) {
     }
     FalmEq solver(LSType::PBiCGStab, 1000, 1e-9, 1.2, LSType::SOR, 5, 1.5);
     solver.Solve(a, t, b, r, global, process, block_dim, cpm, faceStream);
-    t.sync(MCpType::Dev2Hst);
-    r.sync(MCpType::Dev2Hst);
+    t.sync(MCP::Dev2Hst);
+    r.sync(MCP::Dev2Hst);
     for (INT i = 0; i < cpm.size; i ++) {
         if (i == cpm.rank) {
             printf("%d(%u %u %u) printing...\n", cpm.rank, cpm.idx[0], cpm.idx[1], cpm.idx[2]);

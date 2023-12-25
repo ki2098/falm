@@ -29,6 +29,7 @@ public:
         Matrix<REAL> &g,
         Matrix<REAL> &ja,
         Matrix<REAL> &ff,
+        REAL dt,
         CPM      &cpm,
         dim3          block_dim,
         STREAM       *stream = nullptr,
@@ -53,6 +54,7 @@ public:
         Matrix<REAL> &p,
         Matrix<REAL> &kx,
         Matrix<REAL> &g,
+        REAL dt,
         CPM      &cpm,
         dim3          block_dim,
         STREAM       *stream = nullptr
@@ -115,6 +117,28 @@ public:
             return SGSType::CSM;
         } else {
             return SGSType::Empty;
+        }
+    }
+
+    static std::string advscheme2str(FLAG adv) {
+        if (adv == AdvectionSchemeType::Upwind1) {
+            return "Upwind1";
+        } else if (adv == AdvectionSchemeType::Upwind3) {
+            return "Upwind3";
+        } else {
+            return "Not defined";
+        }
+    }
+
+    static std::string sgs2str(FLAG sgs) {
+        if (sgs == SGSType::Empty) {
+            return "Empty";
+        } else if (sgs == SGSType::Smagorinsky) {
+            return "Smagorinsky";
+        } else if (sgs == SGSType::CSM) {
+            return "CSM";
+        } else {
+            return "Not defined";
         }
     }
 };

@@ -33,11 +33,11 @@ void output(INT i) {
     std::string filename = "data/lid2d.csv." + std::to_string(i);
     FILE *file = fopen(filename.c_str(), "w");
     fprintf(file, "x,y,z,u,v,w,p\n");
-    x.sync(MCpType::Dev2Hst);
-    u.sync(MCpType::Dev2Hst);
-    p.sync(MCpType::Dev2Hst);
-    uu.sync(MCpType::Dev2Hst);
-    uua.sync(MCpType::Dev2Hst);
+    x.sync(MCP::Dev2Hst);
+    u.sync(MCP::Dev2Hst);
+    p.sync(MCP::Dev2Hst);
+    uu.sync(MCP::Dev2Hst);
+    uua.sync(MCP::Dev2Hst);
     for (INT k = gc - 1; k < pdm.shape[2] - gc + 1; k ++) {
         for (INT j = gc - 1; j < pdm.shape[1] - gc + 1; j ++) {
             for (INT i = gc - 1; i < pdm.shape[0] - gc + 1; i ++) {
@@ -50,17 +50,17 @@ void output(INT i) {
 }
 
 void allocVars(Region &pdm) {
-    u.alloc(pdm.shape, 3, HDCType::Device);
-    ua.alloc(pdm.shape, 3, HDCType::Device);
-    uc.alloc(pdm.shape, 3, HDCType::Device);
-    uu.alloc(pdm.shape, 3, HDCType::Device);
-    uua.alloc(pdm.shape, 3, HDCType::Device);
-    p.alloc(pdm.shape, 1, HDCType::Device);
-    nut.alloc(pdm.shape, 1, HDCType::Device);
-    ff.alloc(pdm.shape, 3, HDCType::Device);
-    rhs.alloc(pdm.shape, 1, HDCType::Device);
-    res.alloc(pdm.shape, 1, HDCType::Device);
-    diver.alloc(pdm.shape, 1, HDCType::Device);
+    u.alloc(pdm.shape, 3, HDC::Device);
+    ua.alloc(pdm.shape, 3, HDC::Device);
+    uc.alloc(pdm.shape, 3, HDC::Device);
+    uu.alloc(pdm.shape, 3, HDC::Device);
+    uua.alloc(pdm.shape, 3, HDC::Device);
+    p.alloc(pdm.shape, 1, HDC::Device);
+    nut.alloc(pdm.shape, 1, HDC::Device);
+    ff.alloc(pdm.shape, 3, HDC::Device);
+    rhs.alloc(pdm.shape, 1, HDC::Device);
+    res.alloc(pdm.shape, 1, HDC::Device);
+    diver.alloc(pdm.shape, 1, HDC::Device);
 
 }
 
@@ -68,8 +68,8 @@ void main_loop(FalmCFD &cfdsolver, FalmEq &eqsolver, dim3 block_dim = dim3{8, 8,
     Region &pdm = cpm.pdm_list[cpm.rank];
     INT    &gc  = cpm.gc;
     Region  map(pdm.shape, gc);
-    Matrix<REAL> un(u.shape[0], u.shape[1], HDCType::Device, "un");
-    un.copy(u, HDCType::Device);
+    Matrix<REAL> un(u.shape[0], u.shape[1], HDC::Device, "un");
+    un.copy(u, HDC::Device);
 
     FalmCFD rk2fs1(cfdsolver.Re, cfdsolver.dt * 0.5, cfdsolver.AdvScheme, cfdsolver.SGSModel, cfdsolver.CSmagorinsky);
     FalmCFD rk2fs2(cfdsolver.Re, cfdsolver.dt      , cfdsolver.AdvScheme, cfdsolver.SGSModel, cfdsolver.CSmagorinsky);
@@ -145,7 +145,7 @@ int main() {
     setCoord(L, N, cpm, x, h, kx, g, ja);
     printf("%d %d %d\n", pdm.shape[0], pdm.shape[1], pdm.shape[2]);
 
-    poisson_a.alloc(pdm.shape, 7, HDCType::Device);
+    poisson_a.alloc(pdm.shape, 7, HDC::Device);
 
     maxdiag =  makePoissonMatrix(poisson_a, g, ja, cpm);
 
@@ -188,8 +188,8 @@ int main() {
 
         REAL probeu, probev;
         INT probeidx = IDX(monitor_i + gc, monitor_j + gc, gc, pdm.shape);
-        falmMemcpy(&probeu, &u.dev(probeidx, 0), sizeof(REAL), MCpType::Dev2Hst);
-        falmMemcpy(&probev, &u.dev(probeidx, 1), sizeof(REAL), MCpType::Dev2Hst);
+        falmMemcpy(&probeu, &u.dev(probeidx, 0), sizeof(REAL), MCP::Dev2Hst);
+        falmMemcpy(&probev, &u.dev(probeidx, 1), sizeof(REAL), MCP::Dev2Hst);
 
         printf("\r%8d %12.5e, %12.5e, %3d, %12.5e, %12.5e, %12.5e, %12.5e", __it, __t, divernorm, eqsolver.it, eqsolver.err, tke, probeu, probev);
 

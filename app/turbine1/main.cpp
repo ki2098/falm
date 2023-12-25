@@ -127,12 +127,12 @@ void read_grid() {
     ny = std::stoi(line);
     std::getline(zfile, line);
     nz = std::stoi(line);
-    gx.alloc(gshape[0], 1, HDCType::Host);
-    gy.alloc(gshape[1], 1, HDCType::Host);
-    gz.alloc(gshape[2], 1, HDCType::Host);
-    ghx.alloc(gshape[0], 1, HDCType::Host);
-    ghy.alloc(gshape[1], 1, HDCType::Host);
-    ghz.alloc(gshape[2], 1, HDCType::Host);
+    gx.alloc(gshape[0], 1, HDC::Host);
+    gy.alloc(gshape[1], 1, HDC::Host);
+    gz.alloc(gshape[2], 1, HDC::Host);
+    ghx.alloc(gshape[0], 1, HDC::Host);
+    ghy.alloc(gshape[1], 1, HDC::Host);
+    ghz.alloc(gshape[2], 1, HDC::Host);
     for (int id = 1; id < gshape[0] - 1; id ++) {
         std::getline(xfile, line);
         gx(id) = std::stod(line);
@@ -182,9 +182,9 @@ void read_grid() {
         h(idx, 2) = ghz(k + offset[2]);
     }}}
 
-    Matrix<float> fgx(gx.shape[0], gx.shape[1], HDCType::Host, "x float");
-    Matrix<float> fgy(gy.shape[0], gy.shape[1], HDCType::Host, "y float");
-    Matrix<float> fgz(gz.shape[0], gz.shape[1], HDCType::Host, "z float");
+    Matrix<float> fgx(gx.shape[0], gx.shape[1], HDC::Host, "x float");
+    Matrix<float> fgy(gy.shape[0], gy.shape[1], HDC::Host, "y float");
+    Matrix<float> fgz(gz.shape[0], gz.shape[1], HDC::Host, "z float");
 
     for (int i = 0; i < gx.size; i ++) fgx(i) = gx(i);
     for (int i = 0; i < gy.size; i ++) fgy(i) = gy(i);
@@ -192,12 +192,12 @@ void read_grid() {
 
     vcdm.writeCrd(&fgx(cpm.gc), &fgy(cpm.gc), &fgz(cpm.gc));
 
-    gx.release(HDCType::Host);
-    gy.release(HDCType::Host);
-    gz.release(HDCType::Host);
-    ghx.release(HDCType::Host);
-    ghy.release(HDCType::Host);
-    ghz.release(HDCType::Host);
+    gx.release(HDC::Host);
+    gy.release(HDC::Host);
+    gz.release(HDC::Host);
+    ghx.release(HDC::Host);
+    ghy.release(HDC::Host);
+    ghz.release(HDC::Host);
     xfile.close();
     yfile.close();
     zfile.close();
@@ -243,10 +243,10 @@ void data_output(int step, int rank, double dt) {
     // slice.varMax = {umax, vmax, wmax, pmax, vxmax, vymax, vzmax};
     // slice.varMin = {umin, vmin, wmin, pmin, vxmin, vymin, vzmin};
     // vcdm.timeSlice.push_back(slice);
-    Matrix<float> uf(cpm.pdm_list[cpm.rank].shape, 3, HDCType::Host, "uvw");
-    Matrix<float> pf(cpm.pdm_list[cpm.rank].shape, 1, HDCType::Host, "p");
-    u.sync(MCpType::Dev2Hst);
-    p.sync(MCpType::Dev2Hst);
+    Matrix<float> uf(cpm.pdm_list[cpm.rank].shape, 3, HDC::Host, "uvw");
+    Matrix<float> pf(cpm.pdm_list[cpm.rank].shape, 1, HDC::Host, "p");
+    u.sync(McpType::Dev2Hst);
+    p.sync(McpType::Dev2Hst);
     for (int i = 0; i < cpm.pdm_list[cpm.rank].size; i ++) {
         for (int n = 0; n < 3; n ++) uf(i, n) = u(i, n);
         pf(i) = p(i);
@@ -285,18 +285,18 @@ void data_output(int step, int rank, double dt) {
 }
 
 REAL main_loop(FalmCFD &cfd, FalmEq &eq, RmcpAlm &alm, RmcpTurbineArray &turbineArray, INT step, REAL dt, STREAM *s) {
-    uprev.copy(u, HDCType::Device);
+    uprev.copy(u, HDC::Device);
     alm.SetALMFlag(x, dt * step, turbineArray, cpm, block);
     alm.ALM(u, x, ff, dt * step, turbineArray, cpm, block);
 
-    cfd.FSPseudoU(uprev, u, uu, u, nut, kx, g, ja, ff, cpm, block, s, 1);
+    cfd.FSPseudoU(uprev, u, uu, u, nut, kx, g, ja, ff, dt, cpm, block, s, 1);
     cfd.UtoUU(u, uu, kx, ja, cpm, block, s);
     cfd.MACCalcPoissonRHS(uu, rhs, ja, dt, cpm, block, maxdiag);
     
     eq.Solve(poisson_a, p, rhs, res, cpm, block, s);
     TURBINE1::pbc(p, cpm, s);
 
-    cfd.ProjectP(u, u, uu, uu, p, kx, g, cpm, block, s);
+    cfd.ProjectP(u, u, uu, uu, p, kx, g, dt, cpm, block, s);
     TURBINE1::ubc(u, uprev, x, dt, cpm, s);
     // printf("6\n"); fflush(stdout);
 
@@ -375,30 +375,30 @@ int main(int argc, char **argv) {
         cudaStreamCreate(&facestream[fid]);
     }
 
-    u.alloc(pdm.shape, 3, HDCType::HstDev);
-    uprev.alloc(pdm.shape, 3, HDCType::Device);
-    ua.alloc(pdm.shape, 3, HDCType::Device);
-    uu.alloc(pdm.shape, 3, HDCType::Device);
-    uua.alloc(pdm.shape, 3, HDCType::Device);
-    p.alloc(pdm.shape, 1, HDCType::Device);
-    nut.alloc(pdm.shape, 1, HDCType::Device);
-    ff.alloc(pdm.shape, 3, HDCType::Device);
-    rhs.alloc(pdm.shape, 1, HDCType::Device);
-    res.alloc(pdm.shape, 1, HDCType::Device);
-    dvr.alloc(pdm.shape, 1, HDCType::Device);
-    vrt.alloc(pdm.shape, 3, HDCType::Device);
+    u.alloc(pdm.shape, 3, HDC::HstDev);
+    uprev.alloc(pdm.shape, 3, HDC::Device);
+    ua.alloc(pdm.shape, 3, HDC::Device);
+    uu.alloc(pdm.shape, 3, HDC::Device);
+    uua.alloc(pdm.shape, 3, HDC::Device);
+    p.alloc(pdm.shape, 1, HDC::Device);
+    nut.alloc(pdm.shape, 1, HDC::Device);
+    ff.alloc(pdm.shape, 3, HDC::Device);
+    rhs.alloc(pdm.shape, 1, HDC::Device);
+    res.alloc(pdm.shape, 1, HDC::Device);
+    dvr.alloc(pdm.shape, 1, HDC::Device);
+    vrt.alloc(pdm.shape, 3, HDC::Device);
     for (INT id = 0; id < u.shape[0]; id ++) {
         u(id, 0) = 1.0;
         u(id, 1) = u(id, 2) = 0.0;
     }
-    u.sync(MCpType::Hst2Dev);
+    u.sync(McpType::Hst2Dev);
 
-    Matrix<float> xyz(pdm.shape, 3, HDCType::Host);
-    x.alloc(pdm.shape, 3, HDCType::Host);
-    h.alloc(pdm.shape, 3, HDCType::Host);
-    kx.alloc(pdm.shape, 3, HDCType::Host);
-    ja.alloc(pdm.shape, 1, HDCType::Host);
-    g.alloc(pdm.shape, 3, HDCType::Host);
+    Matrix<float> xyz(pdm.shape, 3, HDC::Host);
+    x.alloc(pdm.shape, 3, HDC::Host);
+    h.alloc(pdm.shape, 3, HDC::Host);
+    kx.alloc(pdm.shape, 3, HDC::Host);
+    ja.alloc(pdm.shape, 1, HDC::Host);
+    g.alloc(pdm.shape, 3, HDC::Host);
     read_grid();
     for (INT k = 0; k < pdm.shape[2]; k ++) {
     for (INT j = 0; j < pdm.shape[1]; j ++) {
@@ -431,15 +431,15 @@ int main(int argc, char **argv) {
         xyz(idx, 1) = x(idx, 1);
         xyz(idx, 2) = x(idx, 2);
     }}}
-    x.sync(MCpType::Hst2Dev);
+    x.sync(McpType::Hst2Dev);
     // h.sync(MCpType::Hst2Dev);
-    kx.sync(MCpType::Hst2Dev);
-    ja.sync(MCpType::Hst2Dev);
-    g.sync(MCpType::Hst2Dev);
+    kx.sync(McpType::Hst2Dev);
+    ja.sync(McpType::Hst2Dev);
+    g.sync(McpType::Hst2Dev);
     // vcdm.writeGridData(&xyz(0), cpm.gc, cpm.rank, 0, Vcdm::IdxType::IJKN);
-    xyz.release(HDCType::Host);
+    xyz.release(HDC::Host);
 
-    poisson_a.alloc(pdm.shape, 7, HDCType::Host, "poisson matrix", StencilMatrix::D3P7);
+    poisson_a.alloc(pdm.shape, 7, HDC::Host, "poisson matrix", StencilMatrix::D3P7);
     for (INT k = cpm.gc; k < pdm.shape[2] - cpm.gc; k ++) {
     for (INT j = cpm.gc; j < pdm.shape[1] - cpm.gc; j ++) {
     for (INT i = cpm.gc; i < pdm.shape[0] - cpm.gc; i ++) {
@@ -502,7 +502,7 @@ int main(int argc, char **argv) {
         poisson_a(idxcc, 5) = ab;
         poisson_a(idxcc, 6) = at;
     }}}
-    poisson_a.sync(MCpType::Hst2Dev);
+    poisson_a.sync(McpType::Hst2Dev);
     maxdiag = FalmMV::MaxDiag(poisson_a, cpm, {8, 8, 8});
     FalmMV::ScaleMatrix(poisson_a, 1.0 / maxdiag, {8, 8, 8});
     if (cpm.rank == 0) {
@@ -537,7 +537,7 @@ int main(int argc, char **argv) {
         -  0.575430
     }};
     turbineArray[0] = turbine;
-    turbineArray.sync(MCpType::Hst2Dev);
+    turbineArray.sync(McpType::Hst2Dev);
 
     FalmCFD cfdsolver(10000, AdvectionSchemeType::Upwind3, SGSType::Smagorinsky);
     FalmEq eqsolver(eqparam.type, eqparam.maxit, eqparam.tol, eqparam.relax_factor, eqparam.pc_type, eqparam.pc_maxit, eqparam.pc_relax_factor);

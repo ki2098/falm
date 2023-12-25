@@ -121,10 +121,10 @@ static void copyZ5(
     Falm::INT idxb2 = Falm::IDX(0, 0, cpm.gc-2, pdm.shape);
     Falm::INT slice_size = pdm.shape[0] * pdm.shape[1];
     for (Falm::INT d = 0; d < field.shape[1]; d ++) {
-        Falm::falmMemcpyAsync(&field.dev(idxt1, d), &field.dev(idxcc, d), sizeof(Falm::REAL) * slice_size, Falm::MCpType::Dev2Dev);
-        Falm::falmMemcpyAsync(&field.dev(idxt2, d), &field.dev(idxcc, d), sizeof(Falm::REAL) * slice_size, Falm::MCpType::Dev2Dev);
-        Falm::falmMemcpyAsync(&field.dev(idxb1, d), &field.dev(idxcc, d), sizeof(Falm::REAL) * slice_size, Falm::MCpType::Dev2Dev);
-        Falm::falmMemcpyAsync(&field.dev(idxb2, d), &field.dev(idxcc, d), sizeof(Falm::REAL) * slice_size, Falm::MCpType::Dev2Dev);
+        Falm::falmMemcpyAsync(&field.dev(idxt1, d), &field.dev(idxcc, d), sizeof(Falm::REAL) * slice_size, Falm::MCP::Dev2Dev);
+        Falm::falmMemcpyAsync(&field.dev(idxt2, d), &field.dev(idxcc, d), sizeof(Falm::REAL) * slice_size, Falm::MCP::Dev2Dev);
+        Falm::falmMemcpyAsync(&field.dev(idxb1, d), &field.dev(idxcc, d), sizeof(Falm::REAL) * slice_size, Falm::MCP::Dev2Dev);
+        Falm::falmMemcpyAsync(&field.dev(idxb2, d), &field.dev(idxcc, d), sizeof(Falm::REAL) * slice_size, Falm::MCP::Dev2Dev);
     }
 }
 

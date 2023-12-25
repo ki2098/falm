@@ -32,9 +32,9 @@ int main(int argc, char **argv) {
     std::getline(zfile, line);
     nxyz[2] = std::stoi(line);
 
-    gx[0].alloc(nxyz[0], 1, HDCType::Host);
-    gx[1].alloc(nxyz[1], 1, HDCType::Host);
-    gx[2].alloc(nxyz[2], 1, HDCType::Host);
+    gx[0].alloc(nxyz[0], 1, HDC::Host);
+    gx[1].alloc(nxyz[1], 1, HDC::Host);
+    gx[2].alloc(nxyz[2], 1, HDC::Host);
 
     for (int i = 0; i < nxyz[0]; i ++) {
         std::getline(xfile, line);
@@ -69,7 +69,7 @@ int main(int argc, char **argv) {
     dvcdm.setPath(".", "uvw");
     setVcdm(cpm, dvcdm, gregion, gorigin);
     dvcdm.dfiFinfo.varList = {"u", "v", "w"};
-    u.alloc(cpm.pdm_list[cpm.rank].shape, 3, HDCType::Host, "uvw");
+    u.alloc(cpm.pdm_list[cpm.rank].shape, 3, HDC::Host, "uvw");
 
     INT3 shape = cpm.pdm_list[cpm.rank].shape;
     for (int i = 0; i < shape[0]; i ++) {

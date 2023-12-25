@@ -33,6 +33,27 @@ template<typename T> inline MPI_Datatype getMPIDtype() {
     return MPI_DATATYPE_NULL;
 }
 
+static inline int CPM_Init(int *argc, char ***argv, CPM &cpm) {
+    int err = MPI_Init(argc, argv);
+    if (err != MPI_SUCCESS) return err;
+    err = MPI_Comm_rank(MPI_COMM_WORLD, &cpm.rank);
+    if (err != MPI_SUCCESS) return err;
+    err = MPI_Comm_size(MPI_COMM_WORLD, &cpm.size);
+    return err;
+}
+
+static inline int CPM_Finalize() {
+    return MPI_Finalize();
+}
+
+static inline int CPM_GetRank(MPI_Comm mpi_comm, int &mpi_rank) {
+    return MPI_Comm_rank(mpi_comm, &mpi_rank);
+}
+
+static inline int CPM_GetSize(MPI_Comm mpi_comm, int &mpi_size) {
+    return MPI_Comm_size(mpi_comm, &mpi_size);
+}
+
 static inline int CPM_ISend(CPMBuffer &buffer, MPI_Datatype mpi_dtype, int dst, int tag, MPI_Comm mpi_comm, MPI_Request *mpi_req) {
     return MPI_Isend(buffer.ptr, buffer.count, mpi_dtype, dst, tag, mpi_comm, mpi_req);
 }
@@ -47,22 +68,6 @@ static inline int CPM_Wait(MPI_Request *mpi_req, MPI_Status *mpi_status) {
 
 static inline int CPM_Waitall(int count, MPI_Request *mpi_req, MPI_Status *mpi_status) {
     return MPI_Waitall(count, mpi_req, mpi_status);
-}
-
-static inline int CPM_Init(int *argc, char ***argv) {
-    return MPI_Init(argc, argv);
-}
-
-static inline int CPM_Finalize() {
-    return MPI_Finalize();
-}
-
-static inline int CPM_GetRank(MPI_Comm mpi_comm, int &mpi_rank) {
-    return MPI_Comm_rank(mpi_comm, &mpi_rank);
-}
-
-static inline int CPM_GetSize(MPI_Comm mpi_comm, int &mpi_size) {
-    return MPI_Comm_size(mpi_comm, &mpi_size);
 }
 
 static inline int CPM_Barrier(MPI_Comm mpi_comm) {
@@ -94,9 +99,9 @@ public:
     {
         mpi_dtype = getMPIDtype<T>();
         if (base->use_cuda_aware_mpi) {
-            buffer_hdctype = HDCType::Device;
+            buffer_hdctype = HDC::Device;
         } else {
-            buffer_hdctype = HDCType::Host;
+            buffer_hdctype = HDC::Host;
         }
     }
 
@@ -175,12 +180,12 @@ template<typename T> void CPMComm<T>::IExchange6Face(T *data, INT thick, INT mar
                 (fid == CPM::ZPLUS || fid == CPM::ZMINUS)? 1U : 8U
             );
             STREAM fstream = (stream)? stream[fid] : (STREAM)0;
-            if (buffer_hdctype == HDCType::Device) {
+            if (buffer_hdctype == HDC::Device) {
                 CPMDevCall::PackBuffer((T*)sbuf.ptr, sbuf.map, data, pdm, block_dim, fstream);
-            } else if (buffer_hdctype == HDCType::Host) {
+            } else if (buffer_hdctype == HDC::Host) {
                 falmErrCheckMacro(falmMallocDevice((void**)&packerptr[fid], sizeof(T) * sbuf.count));
                 CPMDevCall::PackBuffer((T*)(packerptr[fid]), sbuf.map, data, pdm, block_dim, fstream);
-                falmErrCheckMacro(falmMemcpyAsync(sbuf.ptr, packerptr[fid], sizeof(T) * sbuf.count, MCpType::Dev2Hst, fstream));
+                falmErrCheckMacro(falmMemcpyAsync(sbuf.ptr, packerptr[fid], sizeof(T) * sbuf.count, MCP::Dev2Hst, fstream));
             }
         }
     }
@@ -196,7 +201,7 @@ template<typename T> void CPMComm<T>::IExchange6Face(T *data, INT thick, INT mar
             MPI_Request &sreq = mpi_req[fid * 2], &rreq = mpi_req[fid * 2 + 1];
             CPM_ISend(sbuf, mpi_dtype, base->neighbour[fid], base->neighbour[fid] + grp_tag * 12, MPI_COMM_WORLD, &sreq);
             CPM_IRecv(rbuf, mpi_dtype, base->neighbour[fid], base->rank           + grp_tag * 12, MPI_COMM_WORLD, &rreq);
-            if (buffer_hdctype == HDCType::Host) {
+            if (buffer_hdctype == HDC::Host) {
                 falmErrCheckMacro(falmFreeDevice(packerptr[fid]));
             }
         }
@@ -219,12 +224,12 @@ template<typename T> void CPMComm<T>::IExchange6ColoredFace(T *data, INT color, 
                 (fid == CPM::ZPLUS || fid == CPM::ZMINUS)? 1U : 8U
             );
             STREAM fstream = (stream)? stream[fid] : (STREAM)0;
-            if (buffer_hdctype == HDCType::Device) {
+            if (buffer_hdctype == HDC::Device) {
                 CPMDevCall::PackColoredBuffer((T*)sbuf.ptr, sbuf.map, color, data, pdm, block_dim, fstream);
-            } else if (buffer_hdctype == HDCType::Host) {
+            } else if (buffer_hdctype == HDC::Host) {
                 falmErrCheckMacro(falmMallocDevice((void**)&packerptr[fid], sizeof(T) * sbuf.count));
                 CPMDevCall::PackColoredBuffer((T*)(packerptr[fid]), sbuf.map, color, data, pdm, block_dim, fstream);
-                falmErrCheckMacro(falmMemcpyAsync(sbuf.ptr, packerptr[fid], sizeof(T) * sbuf.count, MCpType::Dev2Hst, fstream));
+                falmErrCheckMacro(falmMemcpyAsync(sbuf.ptr, packerptr[fid], sizeof(T) * sbuf.count, MCP::Dev2Hst, fstream));
             }
         }
     }
@@ -240,7 +245,7 @@ template<typename T> void CPMComm<T>::IExchange6ColoredFace(T *data, INT color, 
             MPI_Request &sreq = mpi_req[fid * 2], &rreq = mpi_req[fid * 2 + 1];
             CPM_ISend(sbuf, mpi_dtype, base->neighbour[fid], base->neighbour[fid] + grp_tag * 12, MPI_COMM_WORLD, &sreq);
             CPM_IRecv(rbuf, mpi_dtype, base->neighbour[fid], base->rank           + grp_tag * 12, MPI_COMM_WORLD, &rreq);
-            if (buffer_hdctype == HDCType::Host) {
+            if (buffer_hdctype == HDC::Host) {
                 falmErrCheckMacro(falmFreeDevice(packerptr[fid]));
             }
         }
@@ -257,11 +262,11 @@ template<typename T> void CPMComm<T>::PostExchange6Face(STREAM *stream) {
             );
             CPMBuffer &rbuf = buffer[fid * 2 + 1];
             STREAM fstream = (stream)? stream[fid] : (STREAM)0;
-            if (buffer_hdctype == HDCType::Device) {
+            if (buffer_hdctype == HDC::Device) {
                 CPMDevCall::UnpackBuffer((T*)rbuf.ptr, rbuf.map, origin_ptr, origin_domain, block_dim, fstream);
-            } else if (buffer_hdctype == HDCType::Host) {
+            } else if (buffer_hdctype == HDC::Host) {
                 falmErrCheckMacro(falmMallocDevice((void**)&packerptr[fid], sizeof(T) * rbuf.count));
-                falmErrCheckMacro(falmMemcpyAsync(packerptr[fid], rbuf.ptr, sizeof(T) * rbuf.count, MCpType::Hst2Dev, fstream));
+                falmErrCheckMacro(falmMemcpyAsync(packerptr[fid], rbuf.ptr, sizeof(T) * rbuf.count, MCP::Hst2Dev, fstream));
                 CPMDevCall::UnpackBuffer((T*)(packerptr[fid]), rbuf.map, origin_ptr, origin_domain, block_dim, fstream);
             }
         }
@@ -277,7 +282,7 @@ template<typename T> void CPMComm<T>::PostExchange6Face(STREAM *stream) {
             CPMBuffer &sbuf = buffer[fid * 2], &rbuf = buffer[fid * 2 + 1];
             sbuf.release();
             rbuf.release();
-            if (buffer_hdctype == HDCType::Host) {
+            if (buffer_hdctype == HDC::Host) {
                 falmErrCheckMacro(falmFreeDevice(packerptr[fid]));
             }
         }
@@ -294,11 +299,11 @@ template<typename T> void CPMComm<T>::PostExchange6ColoredFace(STREAM *stream) {
             );
             CPMBuffer &rbuf = buffer[fid * 2 + 1];
             STREAM fstream = (stream)? stream[fid] : (STREAM)0;
-            if (buffer_hdctype == HDCType::Device) {
+            if (buffer_hdctype == HDC::Device) {
                 CPMDevCall::UnpackColoredBuffer((T*)rbuf.ptr, rbuf.map, rbuf.color, origin_ptr, origin_domain, block_dim, fstream);
-            } else if (buffer_hdctype == HDCType::Host) {
+            } else if (buffer_hdctype == HDC::Host) {
                 falmErrCheckMacro(falmMallocDevice((void**)&packerptr[fid], sizeof(T) * rbuf.count));
-                falmErrCheckMacro(falmMemcpyAsync(packerptr[fid], rbuf.ptr, sizeof(T) * rbuf.count, MCpType::Hst2Dev, fstream));
+                falmErrCheckMacro(falmMemcpyAsync(packerptr[fid], rbuf.ptr, sizeof(T) * rbuf.count, MCP::Hst2Dev, fstream));
                 CPMDevCall::UnpackColoredBuffer((T*)(packerptr[fid]), rbuf.map, rbuf.color, origin_ptr, origin_domain, block_dim, fstream);
             }
         }
@@ -314,7 +319,7 @@ template<typename T> void CPMComm<T>::PostExchange6ColoredFace(STREAM *stream) {
             CPMBuffer &sbuf = buffer[fid * 2], &rbuf = buffer[fid * 2 + 1];
             sbuf.release();
             rbuf.release();
-            if (buffer_hdctype == HDCType::Host) {
+            if (buffer_hdctype == HDC::Host) {
                 falmErrCheckMacro(falmFreeDevice(packerptr[fid]));
             }
         }

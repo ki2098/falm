@@ -9,8 +9,8 @@
             "start":20
         },
         "output":{
+            "start":20,
             "interval":5,
-            "var":["u", "v", "w", "p"],
             "prefix":"data/uvwp"
         }
     },
@@ -36,7 +36,8 @@
         }
     },
     "mesh":{
-        "path":"mesh/test",
+        "convert":"mesh/test",
+        "controlVolumeFile":"controlVolume.txt",
         "controlVolumeCenter":"innerNode"
     }
 }

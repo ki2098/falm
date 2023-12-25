@@ -3,36 +3,217 @@
 
 #include "FalmCFD.h"
 #include "FalmEq.h"
-#include "FalmTime.h"
 #include "falmath.h"
 #include "mesher/mesher.hpp"
 #include "rmcp/alm.h"
 #include "vcdm/VCDM.h"
+#include "FalmIO.h"
 
 namespace Falm {
 
-class FalmControl {
-public:
-    REAL dt;
-    REAL startTime;
-    INT  maxIt;
-    INT  timeAvgStartIt;
-    INT  timeAvgStopIt;
-    INT  outputStartIt;
-    INT  outputStopIt;
-    INT  outputIntervalIt;
+struct FalmBasicVar {
+    Matrix<REAL> xyz, kx, g, ja; // Non-uniform cartesian structured mesh variables
+    Matrix<REAL> u, uu, p, nut; // basic physical fields
+    Matrix<REAL> poi_a, poi_rhs, poi_res; // variables for pressure poisson equation
+    Matrix<REAL> ff; // actuator model force
+    Matrix<REAL> divergence; // velocity divergence
+
+    void release_all() {
+        xyz.release();
+        kx.release();
+        g.release();
+        ja.release();
+        u.release();
+        uu.release();
+        p.release();
+        nut.release();
+        poi_a.release();
+        poi_rhs.release();
+        poi_res.release();
+        ff.release();
+        divergence.release();
+    }
+};
+
+struct FalmMeshInfo {
+    bool convert;
+    std::string convertSrc;
+    std::string cvFile;
+    std::string cvCenter;
 };
 
 class FalmCore {
 public:
-    json             params;
-    FalmControl falmControl;
-    FalmCFD         falmCfd;
-    FalmEq           falmEq;
-    FalmTime       falmTime;
+    json               params;
+    FalmCFD           falmCfd;
+    FalmEq             falmEq;
+    FalmMeshInfo falmMeshInfo;
+    CPM                   cpm;
+    FalmBasicVar           fv;
+    
+    REAL dt;
+    REAL startTime;
+    INT  maxIt;
+    INT  timeAvgStartIt;
+    INT  timeAvgEndIt;
+    INT  outputStartIt;
+    INT  outputEndIt;
+    INT  outputIntervalIt;
+    std::string     workdir;
+    std::string outputPrefix;
+    std::string    setupFile;
+    std::string       cvFile;
 
-    static void parse(const json &jobj, FalmEq &eq) {
-        auto lsprm = jobj["solver"]["linearSolver"];
+    void env_init(int &argc, char **&argv) {
+        CPM_Init(&argc, &argv, cpm);
+        int ngpu;
+        cudaGetDeviceCount(&ngpu);
+        cudaSetDevice(cpm.rank % ngpu);
+    }
+
+    void env_finalize() {
+        fv.release_all();
+        CPM_Finalize();
+    }
+
+    std::string wpath(std::string str) {
+        return workdir + "/" + str;
+    }
+
+    void print_info() {
+        if (cpm.rank == 0) {
+            printf("SETUP INFO START\n");
+
+            printf("Working dir %s\n", workdir.c_str());
+            printf("Read setup file %s\n", wpath(setupFile).c_str());
+            printf("Control Params:\n");
+            printf("\tdt %e\n", dt);
+            printf("\tstart time %e\n", startTime);
+            printf("\titeration number %d\n", maxIt);
+            printf("\ttime avg start iteration %d\n", timeAvgStartIt);
+            printf("\ttime avg end iteration %d\n", timeAvgEndIt);
+            printf("\toutput start iteration %d\n", outputStartIt);
+            printf("\toutput end iteration %d\n", outputEndIt);
+            printf("\toutput every %d iterations\n", outputIntervalIt);
+            printf("\toutput to %s\n", wpath(outputPrefix).c_str());
+
+            printf("CFD Solver Params\n");
+            printf("\tRe = %e, 1/Re = %e\n", falmCfd.Re, falmCfd.ReI);
+            printf("\tAdvection scheme %s\n", FalmCFD::advscheme2str(falmCfd.AdvScheme).c_str());
+            printf("\tSGS model %s\n", FalmCFD::sgs2str(falmCfd.SGSModel).c_str());
+            if (falmCfd.SGSModel == SGSType::Smagorinsky) {
+                printf("\tCsmagorinsky %e\n", falmCfd.CSmagorinsky);
+            }
+
+            printf("Poisson Solver Params\n");
+            printf("\tsolver type %s\n", FalmEq::type2str(falmEq.type).c_str());
+            printf("\tmax iteration number %d\n", falmEq.maxit);
+            printf("\ttolerance %e\n", falmEq.tol);
+            if (falmEq.type == LSType::SOR) {
+                printf("\trelaxation factor %e\n", falmEq.relax_factor);
+            }
+            if (falmEq.type == LSType::PBiCGStab) {
+            printf("Preconditioner Params\n");
+            printf("\tsolver type %s\n", FalmEq::type2str(falmEq.pc_type).c_str());
+            printf("\titeration number %d\n", falmEq.pc_maxit);
+            if (falmEq.pc_type == LSType::SOR) {
+                printf("\trelaxation factor %e\n", falmEq.pc_relax_factor);
+            }
+        }
+        printf("SETUP INFO END\n");
+        }
+
+        int *ngh = (int*)malloc(sizeof(int)*6*cpm.size);
+        MPI_Gather(cpm.neighbour, 6, MPI_INT, ngh, 6, MPI_INT, 0, MPI_COMM_WORLD);
+
+        if (cpm.rank == 0) {
+            printf("MPI INFO START\n");
+            INT gc = cpm.gc;
+            printf("\tGlobal voxel (%d %d %d)\n", cpm.global.shape[0], cpm.global.shape[1], cpm.global.shape[2]);
+            printf("\tGlobal inner voxel (%d %d %d)\n", cpm.global.shape[0] - 2*gc, cpm.global.shape[1] - 2*gc, cpm.global.shape[2] - 2*gc);
+            printf("\tGuide voxel length %d\n", cpm.gc);
+            printf("\tMPI cluster shape (%d %d %d)\n", cpm.shape[0], cpm.shape[1], cpm.shape[2]);
+            for (int i = 0; i < cpm.size; i ++) {
+                printf("\tRank %d\n", i);
+                printf("\t\tMPI idx (%d %d %d)\n", cpm.idx[0], cpm.idx[1], cpm.idx[2]);
+                const Region &pdm = cpm.pdm_list[i];
+                printf("\t\tVoxel (%d %d %d)\n", pdm.shape[0], pdm.shape[1], pdm.shape[2]);
+                printf("\t\tInner voxel (%d %d %d)\n", pdm.shape[0] - 2*gc, pdm.shape[1] - 2*gc, pdm.shape[2] - 2*gc);
+                printf("\t\tOffset (%d %d %d)\n", pdm.offset[0], pdm.offset[1], pdm.offset[2]);
+                printf("\t\tNeighbour [%d %d %d %d %d %d]\n", ngh[i*6], ngh[i*6+1], ngh[i*6+2], ngh[i*6+3], ngh[i*6+4], ngh[i*6+5]);
+            }
+            printf("MPI INFO END\n");
+        }
+
+        free(ngh);
+    }
+
+    INT parse_settings(std::string setup_file_path) {
+        int cutat = setup_file_path.find_last_of('/');
+        if (cutat == std::string::npos) {
+            workdir = ".";
+            setupFile = setup_file_path;
+        } else {
+            workdir = setup_file_path.substr(0, cutat);
+            setupFile = setup_file_path.substr(cutat + 1);
+        }
+        std::ifstream setupfile(wpath(setupFile));
+        if (!setupfile) {
+            return FalmErr::setUpFileErr;
+        }
+        params = json::parse(setupfile);
+
+    {
+        auto runprm = params["runtime"];
+        startTime = runprm["time"]["start"];
+        dt = runprm["time"]["dt"];
+        maxIt = INT((runprm["time"]["end"].get<REAL>() - startTime) / dt);
+        if (runprm.contains("timeAvg")) {
+            if (runprm["timeAvg"].contains("start")) {
+                REAL tavgstart = runprm["timeAvg"]["start"];
+                if (tavgstart < startTime) {
+                    tavgstart = startTime;
+                }
+                timeAvgStartIt = INT((tavgstart - startTime) / dt);
+            } else {
+                timeAvgStartIt = 0;
+            }
+            if (runprm["timeAvg"].contains("end")) {
+                REAL tavgend = runprm["timeAvg"]["end"];
+                timeAvgEndIt = INT((tavgend - startTime) / dt);
+            } else {
+                timeAvgEndIt = maxIt;
+            }
+        } else {
+            timeAvgStartIt = 0;
+            timeAvgEndIt = -1;
+        }
+        if (runprm.contains("output")) {
+            if (runprm["output"].contains("start")) {
+                REAL ostart = runprm["output"]["start"];
+                if (ostart < startTime) {
+                    ostart = startTime;
+                }
+                outputStartIt = INT((ostart - startTime) / dt);
+            } else {
+                outputStartIt = 0;
+            }
+            if (runprm["output"].contains("end")) {
+                REAL oend = runprm["output"]["end"];
+                outputEndIt = INT((oend - startTime) / dt);
+            } else {
+                outputEndIt = maxIt;
+            }
+            outputIntervalIt = INT(runprm["output"]["interval"].get<REAL>() / dt);
+            outputPrefix = runprm["output"]["prefix"];
+        } else {
+            outputStartIt = 0;
+            outputEndIt = -1;
+        }
+    }
+
+    {
+        auto lsprm = params["solver"]["linearSolver"];
         FalmEq tmp;
         tmp.type = FalmEq::str2type(lsprm["type"]);
         tmp.maxit = lsprm["iteration"];
@@ -50,11 +231,11 @@ public:
         } else {
             tmp.pc_type = LSType::Empty;
         }
-        eq.init(tmp.type, tmp.maxit, tmp.tol, tmp.relax_factor, tmp.pc_type, tmp.pc_maxit, tmp.pc_relax_factor);
+        falmEq.init(tmp.type, tmp.maxit, tmp.tol, tmp.relax_factor, tmp.pc_type, tmp.pc_maxit, tmp.pc_relax_factor);
     }
 
-    static void parse(const json &jobj, FalmCFD &cfd) {
-        auto cfdprm = jobj["solver"]["cfd"];
+    {
+        auto cfdprm = params["solver"]["cfd"];
         FalmCFD tmp;
         tmp.Re = cfdprm["Re"];
         tmp.AdvScheme = FalmCFD::str2advscheme(cfdprm["advectionScheme"]);
@@ -66,12 +247,77 @@ public:
         if (tmp.SGSModel == SGSType::Smagorinsky) {
             tmp.CSmagorinsky = cfdprm["Cs"];
         }
-        cfd.init(tmp.Re, tmp.AdvScheme, tmp.SGSModel, tmp.CSmagorinsky);
+        falmCfd.init(tmp.Re, tmp.AdvScheme, tmp.SGSModel, tmp.CSmagorinsky);
     }
 
-    static void parse(const json &jobj, FalmControl &control) {
-        auto runprm = jobj["runtime"];
+    {
+        auto meshprm = params["mesh"];
+        falmMeshInfo.cvFile = meshprm["controlVolumeFile"];
+        falmMeshInfo.cvCenter = meshprm["controlVolumeCenter"];
+        if (meshprm.contains("convert")) {
+            falmMeshInfo.convert = true;
+            falmMeshInfo.convertSrc = meshprm["convert"];
+        }
     }
+
+        setupfile.close();
+
+        return FalmErr::success;
+    }
+
+    void computation_init(const INT3 &division, int gc) {
+        if (falmMeshInfo.convert && cpm.rank == 0) {
+            Mesher::build_mesh(workdir, falmMeshInfo.cvCenter, wpath(falmMeshInfo.convertSrc), wpath(falmMeshInfo.cvFile), gc);
+        }
+        Matrix<REAL> x,y,z,hx,hy,hz;
+        INT3 idmax;
+        FalmIO::readControlVolumeFile(wpath(falmMeshInfo.cvFile), x, y, z, hx, hy, hz, idmax);
+        cpm.initPartition(idmax, gc, division);
+        INT3 &shape  = cpm.pdm_list[cpm.rank].shape;
+        INT3 &offset = cpm.pdm_list[cpm.rank].offset;
+        
+
+        fv.xyz.alloc(shape, 3, HDC::HstDev, "coordinate");
+        fv.kx.alloc(shape, 3, HDC::HstDev, "d kxi / d x");
+        fv.g.alloc(shape, 3, HDC::HstDev, "metric tensor");
+        fv.ja.alloc(shape, 1, HDC::HstDev, "jacobian");
+
+        for (INT k = 0; k < shape[2]; k ++) {
+        for (INT j = 0; j < shape[1]; j ++) {
+        for (INT i = 0; i < shape[0]; i ++) {
+            INT idx = IDX(i, j, k, shape);
+            fv.xyz(idx, 0) = x(i + offset[0]);
+            fv.xyz(idx, 1) = y(j + offset[1]);
+            fv.xyz(idx, 2) = z(k + offset[2]);
+            REAL3 pitch;
+            pitch[0] = hx(i + offset[0]);
+            pitch[1] = hy(j + offset[1]);
+            pitch[2] = hz(k + offset[2]);
+            REAL volume = PRODUCT3(pitch);
+            REAL3 dkdx = REAL(1) / pitch;
+            fv.ja(idx) = volume;
+            for (int n = 0; n < 3; n ++) {
+                fv.g(idx, n) = volume * dkdx[n] * dkdx[n];
+                fv.kx(idx, n) = dkdx[n];
+            }
+        }}}
+
+        fv.xyz.sync(MCP::Hst2Dev);
+        fv.kx.sync(MCP::Hst2Dev);
+        fv.g.sync(MCP::Hst2Dev);
+        fv.ja.sync(MCP::Hst2Dev);
+
+        fv.u.alloc(shape, 3, HDC::HstDev, "velocity");
+        fv.uu.alloc(shape, 3, HDC::HstDev, "contravariant face velocity");
+        fv.p.alloc(shape, 1, HDC::HstDev, "pressure");
+        fv.nut.alloc(shape, 1, HDC::HstDev, "turbulence viscosity");
+        fv.poi_a.alloc(shape, 7, HDC::HstDev, "poisson coefficients", StencilMatrix::D3P7);
+        fv.poi_rhs.alloc(shape, 1, HDC::HstDev, "poisson rhs");
+        fv.poi_res.alloc(shape, 1, HDC::HstDev, "poisson residual");
+        fv.ff.alloc(shape, 3, HDC::HstDev, "ALM force");
+        fv.divergence.alloc(shape, 1, HDC::HstDev, "divergence");
+    }
+
 };
 
 }

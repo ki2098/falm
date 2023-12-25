@@ -11,7 +11,7 @@ class RmcpAlmDevCall {
 public:
     Matrix<INT> alm_flag;
 
-    RmcpAlmDevCall(const Region &pdm) : alm_flag(pdm.shape, 1, HDCType::Device, "ALM flag") {}
+    RmcpAlmDevCall(const Region &pdm) : alm_flag(pdm.shape, 1, HDC::Device, "ALM flag") {}
 
     void ALM(Matrix<REAL> &u, Matrix<REAL> &x, Matrix<REAL> &ff, REAL t, RmcpTurbineArray &wf, const Region &pdm, const Region &map, dim3 block_dim={8,8,8});
 

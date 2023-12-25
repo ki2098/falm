@@ -5,7 +5,7 @@
 
 namespace Falm {
 
-class MCpType {
+class MCP {
 public:
     static const FLAG Empty   = 0;
     static const FLAG Hst2Hst = 1;
@@ -14,7 +14,7 @@ public:
     static const FLAG Dev2Dev = 8;
 };
 
-class HDCType {
+class HDC {
 public:
     static const FLAG Empty  = 0;
     static const FLAG Host   = 1;

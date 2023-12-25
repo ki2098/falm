@@ -18,10 +18,10 @@ int main() {
     );
     Region pdm(global.shape, global.offset);
     Matrix<double> a, t, b, r;
-    a.alloc(pdm.shape, 7, HDCType::Host  , "a");
-    t.alloc(pdm.shape, 1, HDCType::Device, "t");
-    b.alloc(pdm.shape, 1, HDCType::Host  , "b");
-    r.alloc(pdm.shape, 1, HDCType::Device, "r");
+    a.alloc(pdm.shape, 7, HDC::Host  , "a");
+    t.alloc(pdm.shape, 1, HDC::Device, "t");
+    b.alloc(pdm.shape, 1, HDC::Host  , "b");
+    r.alloc(pdm.shape, 1, HDC::Device, "r");
     const double dx = Lx / Nx;
     for (unsigned int i = Gd; i < Gd + Nx; i ++) {
         double ac, ae, aw, bc;
@@ -47,15 +47,15 @@ int main() {
         a(idx, 2) = aw;
         b(idx)    = bc;
     }
-    a.sync(MCpType::Hst2Dev);
-    b.sync(MCpType::Hst2Dev);
+    a.sync(MCP::Hst2Dev);
+    b.sync(MCP::Hst2Dev);
     dim3 block_dim(32, 1, 1);
     double max_diag = L1Dev_MaxDiag(a, pdm, block_dim);
     printf("%12lf\n", max_diag);
     L1Dev_ScaleMatrix(a, 1.0 / max_diag, block_dim);
     L1Dev_ScaleMatrix(b, 1.0 / max_diag, block_dim);
-    a.sync(MCpType::Dev2Hst);
-    b.sync(MCpType::Dev2Hst);
+    a.sync(MCP::Dev2Hst);
+    b.sync(MCP::Dev2Hst);
 
     for (unsigned int i = Gd; i < Gd + Nx; i ++) {
         unsigned int idx = IDX(i, Gd, Gd, pdm.shape);
@@ -67,8 +67,8 @@ int main() {
 
     FalmEqDevCall solver(LSType::PBiCGStab, 10000, 1e-9, 1.5, LSType::SOR, 5, 1.5);
     solver.L1Dev_Struct3d7p_Solve(a, t, b, r, global, pdm, block_dim);
-    t.sync(MCpType::Dev2Hst);
-    r.sync(MCpType::Dev2Hst);
+    t.sync(MCP::Dev2Hst);
+    r.sync(MCP::Dev2Hst);
     for (unsigned int i = Gd; i < Gd + Nx; i ++) {
         unsigned int idx = IDX(i, Gd, Gd, pdm.shape);
         printf("%12.4lf %12.4lf\n", t(idx), r(idx));

@@ -96,49 +96,49 @@ struct RmcpTurbineArray {
 
     RmcpTurbineArray(INT _n) {
         nTurbine = _n;
-        hdctype  = HDCType::Host;
+        hdctype  = HDC::Host;
         falmErrCheckMacro(falmMalloc((void**)&tptr, sizeof(RmcpTurbine) * nTurbine));
         tdevptr  = nullptr;
     }
 
     void sync(FLAG _mcptype) {
-        if (_mcptype == MCpType::Hst2Dev) {
-            if (hdctype & HDCType::Device) {
-                falmErrCheckMacro(falmMemcpy(tdevptr, tptr, sizeof(RmcpTurbine) * nTurbine, MCpType::Hst2Dev));
+        if (_mcptype == MCP::Hst2Dev) {
+            if (hdctype & HDC::Device) {
+                falmErrCheckMacro(falmMemcpy(tdevptr, tptr, sizeof(RmcpTurbine) * nTurbine, MCP::Hst2Dev));
             } else {
                 falmErrCheckMacro(falmMallocDevice((void**)&tdevptr, sizeof(RmcpTurbine) * nTurbine));
-                falmErrCheckMacro(falmMemcpy(tdevptr, tptr, sizeof(RmcpTurbine) * nTurbine, MCpType::Hst2Dev));
-                hdctype &= HDCType::Device;
+                falmErrCheckMacro(falmMemcpy(tdevptr, tptr, sizeof(RmcpTurbine) * nTurbine, MCP::Hst2Dev));
+                hdctype &= HDC::Device;
             }
-        } else if (_mcptype == MCpType::Dev2Hst) {
-            if (hdctype & HDCType::Host) {
-                falmErrCheckMacro(falmMemcpy(tptr, tdevptr, sizeof(RmcpTurbine) * nTurbine, MCpType::Dev2Hst));
+        } else if (_mcptype == MCP::Dev2Hst) {
+            if (hdctype & HDC::Host) {
+                falmErrCheckMacro(falmMemcpy(tptr, tdevptr, sizeof(RmcpTurbine) * nTurbine, MCP::Dev2Hst));
             } else {
                 falmErrCheckMacro(falmMalloc((void**)&tptr, sizeof(RmcpTurbine) * nTurbine));
-                falmErrCheckMacro(falmMemcpy(tptr, tdevptr, sizeof(RmcpTurbine) * nTurbine, MCpType::Dev2Hst));
-                hdctype &= HDCType::Host;
+                falmErrCheckMacro(falmMemcpy(tptr, tdevptr, sizeof(RmcpTurbine) * nTurbine, MCP::Dev2Hst));
+                hdctype &= HDC::Host;
             }
         }
     }
 
     void release(FLAG _hdctype) {
-        if (_hdctype & HDCType::Host) {
+        if (_hdctype & HDC::Host) {
             falmErrCheckMacro(falmFree(tptr));
-            hdctype &= ~(HDCType::Host);
+            hdctype &= ~(HDC::Host);
             tptr = nullptr;
         }
-        if (_hdctype & HDCType::Device) {
+        if (_hdctype & HDC::Device) {
             falmErrCheckMacro(falmFreeDevice(tdevptr));
-            hdctype &= ~(HDCType::Device);
+            hdctype &= ~(HDC::Device);
             tdevptr = nullptr;
         }
     }
 
     ~RmcpTurbineArray() {
-        if (hdctype & HDCType::Device) {
+        if (hdctype & HDC::Device) {
             falmErrCheckMacro(falmFreeDevice(tdevptr));
         }
-        if (hdctype & HDCType::Host) {
+        if (hdctype & HDC::Host) {
             falmErrCheckMacro(falmFree(tptr));
         }
     }
