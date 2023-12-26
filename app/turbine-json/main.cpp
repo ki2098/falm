@@ -184,7 +184,7 @@ int main(int argc, char **argv) {
         REAL divnorm = sqrt(main_loop(alm, turbineArray, streams));
         falm.it ++;
         if (falm.cpm.rank == 0) {
-            printf("\r%8d %12.5e, %12.5e, %3d, %12.5e", falm.it, falm.gettime(), divnorm, falm.falmEq.it, falm.falmEq.err);
+            printf("%8d %12.5e, %12.5e, %3d, %12.5e\n", falm.it, falm.gettime(), divnorm, falm.falmEq.it, falm.falmEq.err);
             fflush(stdout);
         }
     }
