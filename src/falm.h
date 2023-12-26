@@ -51,6 +51,7 @@ public:
     CPM                   cpm;
     FalmBasicVar           fv;
     
+    INT it;
     REAL dt;
     REAL startTime;
     INT  maxIt;
@@ -63,6 +64,8 @@ public:
     std::string outputPrefix;
     std::string    setupFile;
     std::string       cvFile;
+
+    REAL gettime() {return dt * it;}
 
     void env_init(int &argc, char **&argv) {
         CPM_Init(&argc, &argv, cpm);
@@ -113,14 +116,19 @@ public:
                 printf("\trelaxation factor %e\n", falmEq.relax_factor);
             }
             if (falmEq.type == LSType::PBiCGStab) {
-            printf("Preconditioner Params\n");
-            printf("\tsolver type %s\n", FalmEq::type2str(falmEq.pc_type).c_str());
-            printf("\titeration number %d\n", falmEq.pc_maxit);
-            if (falmEq.pc_type == LSType::SOR) {
-                printf("\trelaxation factor %e\n", falmEq.pc_relax_factor);
+                printf("Preconditioner Params\n");
+                printf("\tsolver type %s\n", FalmEq::type2str(falmEq.pc_type).c_str());
+                printf("\titeration number %d\n", falmEq.pc_maxit);
+                if (falmEq.pc_type == LSType::SOR) {
+                    printf("\trelaxation factor %e\n", falmEq.pc_relax_factor);
+                }
             }
-        }
-        printf("SETUP INFO END\n");
+            if (params.contains("inflow")) {
+                printf("Inflow Params\n");
+                printf("\tProfile %s\n", params["inflow"]["type"].get<std::string>().c_str());
+                printf("\tVelocity %e\n", params["inflow"]["velocity"].get<REAL>());
+            }
+            printf("SETUP INFO END\n");
         }
 
         int *ngh = (int*)malloc(sizeof(int)*6*cpm.size);
