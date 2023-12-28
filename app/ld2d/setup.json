@@ -1,0 +1,35 @@
+{
+    "runtime":{
+        "time":{
+            "start":0,
+            "end":100,
+            "dt":1e-3
+        },
+        "output":{
+            "interval":10,
+            "prefix":"data/uvwp"
+        }
+    },
+    "solver":{
+        "linearSolver":{
+            "type":"PBiCGStab",
+            "iteration":1000,
+            "tolerance":1e-6,
+            "preconditioner":{
+                "type":"SOR",
+                "iteration":2,
+                "relaxationFactor":1.5
+            }
+        },
+        "cfd":{
+            "Re":7500,
+            "advectionScheme":"Upwind3",
+            "SGS":"Empty"
+        }
+    },
+    "mesh":{
+        "convert":"mesh",
+        "controlVolumeFile":"controlVolume.txt",
+        "controlVolumeCenter":"cell"
+    }
+}

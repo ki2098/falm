@@ -1,0 +1,50 @@
+{
+	"Region": {
+		"Xmin": 0,
+		"Xmax": 1,
+		"Ymin": 0,
+		"Ymax": 1,
+		"Zmin": 0,
+		"Zmax": 0.1
+	},
+	"x_axis": {
+		"SubRegion": 1,
+		"Equal": [
+			{
+				"Label": "xequal1",
+				"Begin": 0,
+				"End": 1,
+				"Division": 128
+			}
+		],
+		"Stretch": []
+	},
+	"y_axis": {
+		"SubRegion": 2,
+		"Equal": [
+			{
+				"Label": "yequal1",
+				"Begin": 0,
+				"End": 1,
+				"Division": 128
+			}
+		],
+		"Stretch": []
+	},
+	"z_axis": {
+		"SubRegion": 1,
+		"Equal": [
+
+		],
+		"Stretch": [
+			{
+				"Label": "Stretch_z_01",
+				"Begin": 0,
+				"End": 0.01,
+				"Begin_width": 0.01,
+				"End_width": 0.01,
+				"Division": 1
+			}
+		]
+	}
+}

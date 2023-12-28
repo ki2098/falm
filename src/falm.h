@@ -150,6 +150,7 @@ public:
                 printf("\t\tOffset (%d %d %d)\n", pdm.offset[0], pdm.offset[1], pdm.offset[2]);
                 printf("\t\tNeighbour [%d %d %d %d %d %d]\n", ngh[i*6], ngh[i*6+1], ngh[i*6+2], ngh[i*6+3], ngh[i*6+4], ngh[i*6+5]);
             }
+            printf("Using Cuda-aware-MPI %d\n", cpm.use_cuda_aware_mpi);
             printf("MPI INFO END\n");
         }
 
