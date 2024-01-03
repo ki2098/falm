@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include <map>
 #include <vector>
-#include <bits/stdc++.h>
+#include <algorithm>
 
 namespace Cprof {
 
