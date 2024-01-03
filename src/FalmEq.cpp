@@ -88,7 +88,7 @@ void FalmEq::Jacobi(Matrix<REAL> &a, Matrix<REAL> &x, Matrix<REAL> &b, Matrix<RE
 
     Region inner_map(inner_shape, inner_offset);
 
-    Matrix<REAL> xp(x.shape[0], x.shape[1], HDC::Device, "Jacobi" + x.name + "Previous");
+    // Matrix<REAL> xp(x.shape[0], x.shape[1], HDC::Device, "Jacobi" + x.name + "Previous");
     it = 0;
     do {
         xp.copy(x, HDC::Device);
@@ -311,13 +311,13 @@ void FalmEq::PBiCGStab(Matrix<REAL> &a, Matrix<REAL> &x, Matrix<REAL> &b, Matrix
     Region gmap(global.shape, cpm.gc);
     Region map(pdm.shape, cpm.gc);
 
-    Matrix<REAL> rr(pdm.shape, 1, HDC::Device, "PBiCGStab rr");
-    Matrix<REAL>  p(pdm.shape, 1, HDC::Device, "PBiCGStab  p");
-    Matrix<REAL>  q(pdm.shape, 1, HDC::Device, "PBiCGStab  q");
-    Matrix<REAL>  s(pdm.shape, 1, HDC::Device, "PBiCGStab  s");
-    Matrix<REAL> pp(pdm.shape, 1, HDC::Device, "PBiCGStab pp");
-    Matrix<REAL> ss(pdm.shape, 1, HDC::Device, "PBiCGStab ss");
-    Matrix<REAL>  t(pdm.shape, 1, HDC::Device, "PBiCGStab  t");
+    // Matrix<REAL> rr(pdm.shape, 1, HDC::Device, "PBiCGStab rr");
+    // Matrix<REAL>  p(pdm.shape, 1, HDC::Device, "PBiCGStab  p");
+    // Matrix<REAL>  q(pdm.shape, 1, HDC::Device, "PBiCGStab  q");
+    // Matrix<REAL>  s(pdm.shape, 1, HDC::Device, "PBiCGStab  s");
+    // Matrix<REAL> pp(pdm.shape, 1, HDC::Device, "PBiCGStab pp");
+    // Matrix<REAL> ss(pdm.shape, 1, HDC::Device, "PBiCGStab ss");
+    // Matrix<REAL>  t(pdm.shape, 1, HDC::Device, "PBiCGStab  t");
     REAL rho, rrho, alpha, beta, omega;
     pprofiler.endEvent("PBiCGStab init");
 

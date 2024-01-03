@@ -82,6 +82,7 @@ public:
             FalmIO::writeIndexFile(wpath(outputPrefix + ".json"), cpm, timeSlices);
         }
         fv.release_all();
+        falmEq.release();
         CPM_Finalize();
     }
 
@@ -338,6 +339,8 @@ public:
         fv.poi_res.alloc(shape, 1, HDC::HstDev, "poisson residual");
         fv.ff.alloc(shape, 3, HDC::HstDev, "ALM force");
         fv.divergence.alloc(shape, 1, HDC::HstDev, "divergence");
+
+        falmEq.alloc(shape);
     }
 
     void outputUVWP() {
