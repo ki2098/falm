@@ -6,7 +6,7 @@
 
 using namespace Falm;
 
-Cprof::cprof_Profiler profiler;
+Cprof::cprof_Profiler profiler, pprofiler;
 
 FalmCore falm;
 REAL maxdiag;
@@ -230,6 +230,8 @@ int main(int argc, char **argv) {
 FIN:
     if (falm.cpm.rank == 0) {
         profiler.output();
+        printf("\n");
+        pprofiler.output();
     }
     finalize();
     return 0;

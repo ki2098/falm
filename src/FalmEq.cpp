@@ -1,6 +1,9 @@
 #include <math.h>
 #include "FalmEq.h"
 #include "MV.h"
+#include "profiler.h"
+
+extern Cprof::cprof_Profiler pprofiler;
 
 namespace Falm {
 
@@ -319,8 +322,12 @@ void FalmEq::PBiCGStab(Matrix<REAL> &a, Matrix<REAL> &x, Matrix<REAL> &b, Matrix
     // cudaMemGetInfo(&freebyte, &totalbyte);
     // printf("\nrank %d: free %lf, total %lf\n", cpm.rank, freebyte / (1024. * 1024.), totalbyte / (1024. * 1024.));
 
+    pprofiler.startEvent("PBiCGStab");
+
+    pprofiler.startEvent("||b - Ax||");
     Res(a, x, b, r, cpm, block_dim);
     err = sqrt(FalmMV::EuclideanNormSq(r, cpm, block_dim)) / gmap.size;
+    pprofiler.endEvent("||b - Ax||");
 
     rr.copy(r, HDC::Device);
     rrho  = 1.0;
@@ -333,7 +340,10 @@ void FalmEq::PBiCGStab(Matrix<REAL> &a, Matrix<REAL> &x, Matrix<REAL> &b, Matrix
         //     break;
         // }
 
+        pprofiler.startEvent("rho = r dor r*");
         rho = FalmMV::DotProduct(r, rr, cpm, block_dim);
+        pprofiler.endEvent("rho = r dor r*");
+
         if (fabs(rho) < __FLT_MIN__) {
             err = rho;
             break;
@@ -343,27 +353,59 @@ void FalmEq::PBiCGStab(Matrix<REAL> &a, Matrix<REAL> &x, Matrix<REAL> &b, Matrix
             p.copy(r, HDC::Device);
         } else {
             beta = (rho * alpha) / (rrho * omega);
+            pprofiler.startEvent("p = r + beta * (p - omega * q) [1]");
             PBiCGStab1(p, q, r, beta, omega, pdm, map, block_dim);
+            pprofiler.endEvent("p = r + beta * (p - omega * q) [1]");
         }
         pp.clear(HDC::Device);
+        pprofiler.startEvent("Ap* ~ p");
         Precondition(a, pp, p, cpm, block_dim);
+        pprofiler.endEvent("Ap* ~ p");
+
+        pprofiler.startEvent("q = Ap*");
         FalmMV::MV(a, pp, q, cpm, block_dim);
+        pprofiler.endEvent("q = Ap*");
+
+        pprofiler.startEvent("alpha = rho / (r* dot q)");
         alpha = rho / FalmMV::DotProduct(rr, q, cpm, block_dim);
+        pprofiler.endEvent("alpha = rho / (r* dot q)");
 
+        pprofiler.startEvent("s = r - alpha * q [2]");
         PBiCGStab2(s, q, r, alpha, pdm, map, block_dim);
-        ss.clear(HDC::Device);
-        Precondition(a, ss, s, cpm, block_dim);
-        FalmMV::MV(a, ss, t, cpm, block_dim);
-        omega = FalmMV::DotProduct(t, s, cpm, block_dim) / FalmMV::DotProduct(t, t, cpm, block_dim);
+        pprofiler.endEvent("s = r - alpha * q [2]");
 
+        ss.clear(HDC::Device);
+
+        pprofiler.startEvent("As* ~ s");
+        Precondition(a, ss, s, cpm, block_dim);
+        pprofiler.endEvent("As* ~ s");
+
+        pprofiler.startEvent("t = As*");
+        FalmMV::MV(a, ss, t, cpm, block_dim);
+        pprofiler.endEvent("t = As*");
+
+        pprofiler.startEvent("omega = (t dot s) / (t dot t)");
+        omega = FalmMV::DotProduct(t, s, cpm, block_dim) / FalmMV::DotProduct(t, t, cpm, block_dim);
+        pprofiler.endEvent("omega = (t dot s) / (t dot t)");
+
+        pprofiler.startEvent("x += alpha * p* + omega * s* [3]");
         PBiCGStab3(x, pp, ss, alpha, omega, pdm, map, block_dim);
+        pprofiler.endEvent("x += alpha * p* + omega * s* [3]");
+
+        pprofiler.startEvent("r = s - omega * t [4]");
         PBiCGStab4(r, s, t, omega, pdm, map, block_dim);
+        pprofiler.endEvent("r = s - omega * t [4]");
 
         rrho = rho;
 
+        pprofiler.startEvent("||b - Ax||");
         err = sqrt(FalmMV::EuclideanNormSq(r, cpm, block_dim)) / gmap.size;
+        pprofiler.endEvent("||b - Ax||");
+
         it ++;
     } while (it < maxit && err > tol);
+
+    pprofiler.endEvent("PBiCGStab");
 }
 
 }

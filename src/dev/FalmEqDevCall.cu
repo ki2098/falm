@@ -269,6 +269,7 @@ void FalmEqDevCall::PBiCGStab1(Matrix<REAL> &p, Matrix<REAL> &q, Matrix<REAL> &r
         (map.shape[2] + block_dim.z - 1) / block_dim.z
     );
     kernel_PBiCGStab_1<<<grid_dim, block_dim, 0, 0>>>(p.devptr, q.devptr, r.devptr, beta, omega, pdm.shape, map.shape, map.offset);
+    falmWaitStream();
 }
 
 __global__ void kernel_PBiCGStab_2(const MatrixFrame<REAL> *vs, const MatrixFrame<REAL> *vq, const MatrixFrame<REAL> *vr, REAL alpha, INT3 pdm_shape, INT3 map_shape, INT3 map_offset) {
@@ -291,6 +292,7 @@ void FalmEqDevCall::PBiCGStab2(Matrix<REAL> &s, Matrix<REAL> &q, Matrix<REAL> &r
         (map.shape[2] + block_dim.z - 1) / block_dim.z
     );
     kernel_PBiCGStab_2<<<grid_dim, block_dim, 0, 0>>>(s.devptr, q.devptr, r.devptr, alpha, pdm.shape, map.shape, map.offset);
+    falmWaitStream();
 }
 
 __global__ void kernel_PBiCGStab_3(const MatrixFrame<REAL> *vx, const MatrixFrame<REAL> *vpp, const MatrixFrame<REAL> *vss, REAL alpha, REAL omega, INT3 pdm_shape, INT3 map_shape, INT3 map_offset) {
@@ -313,6 +315,7 @@ void FalmEqDevCall::PBiCGStab3(Matrix<REAL> &x, Matrix<REAL> &pp, Matrix<REAL> &
         (map.shape[2] + block_dim.z - 1) / block_dim.z
     );
     kernel_PBiCGStab_3<<<grid_dim, block_dim, 0, 0>>>(x.devptr, pp.devptr, ss.devptr, alpha, omega, pdm.shape, map.shape, map.offset);
+    falmWaitStream();
 } 
 
 __global__ void kernel_PBiCGStab_4(const MatrixFrame<REAL> *vr, const MatrixFrame<REAL> *vs, const MatrixFrame<REAL> *vt, REAL omega, INT3 pdm_shape, INT3 map_shape, INT3 map_offset) {
@@ -335,6 +338,7 @@ void FalmEqDevCall::PBiCGStab4(Matrix<REAL> &r, Matrix<REAL> &s, Matrix<REAL> &t
         (map.shape[2] + block_dim.z - 1) / block_dim.z
     );
     kernel_PBiCGStab_4<<<grid_dim, block_dim, 0, 0>>>(r.devptr, s.devptr, t.devptr, omega, pdm.shape, map.shape, map.offset);
+    falmWaitStream();
 }
 
 // void FalmEqDevCall::L1Dev_Struct3d7p_PBiCGStab(Matrix<REAL> &a, Matrix<REAL> &x, Matrix<REAL> &b, Matrix<REAL> &r, CPMBase &cpm, dim3 block_dim) {
