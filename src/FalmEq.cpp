@@ -303,7 +303,9 @@ void FalmEq::SORPC(Matrix<REAL> &a, Matrix<REAL> &x, Matrix<REAL> &b, CPM &cpm, 
 }
 
 void FalmEq::PBiCGStab(Matrix<REAL> &a, Matrix<REAL> &x, Matrix<REAL> &b, Matrix<REAL> &r, CPM &cpm, dim3 block_dim, STREAM *stream) {
+    pprofiler.startEvent("PBiCGStab");
     // printf("PBiCGStab run\n");
+    pprofiler.startEvent("PBiCGStab init");
     Region &global = cpm.global;
     Region &pdm = cpm.pdm_list[cpm.rank];
     Region gmap(global.shape, cpm.gc);
@@ -317,12 +319,11 @@ void FalmEq::PBiCGStab(Matrix<REAL> &a, Matrix<REAL> &x, Matrix<REAL> &b, Matrix
     Matrix<REAL> ss(pdm.shape, 1, HDC::Device, "PBiCGStab ss");
     Matrix<REAL>  t(pdm.shape, 1, HDC::Device, "PBiCGStab  t");
     REAL rho, rrho, alpha, beta, omega;
+    pprofiler.endEvent("PBiCGStab init");
 
     // size_t freebyte, totalbyte;
     // cudaMemGetInfo(&freebyte, &totalbyte);
     // printf("\nrank %d: free %lf, total %lf\n", cpm.rank, freebyte / (1024. * 1024.), totalbyte / (1024. * 1024.));
-
-    pprofiler.startEvent("PBiCGStab");
 
     pprofiler.startEvent("||b - Ax||");
     Res(a, x, b, r, cpm, block_dim);
