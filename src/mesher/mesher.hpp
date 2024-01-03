@@ -239,7 +239,7 @@ public:
         std::string output_path = workdir + "/" + outputfile;
         FILE *ofile = fopen(output_path.c_str(), "w");
         if (ofile) {
-            fprintf(ofile, "%d %d %d\n", imax, jmax, kmax);
+            fprintf(ofile, "%d %d %d %d\n", imax, jmax, kmax, gc);
             for (int i = 0; i < imax; i ++) {
                 fprintf(ofile, "\t%.15e\t%.15e\n", x[i], hx[i]);
             }

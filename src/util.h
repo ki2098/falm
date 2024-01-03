@@ -30,6 +30,10 @@ __host__ __device__ static inline INT IDX(INT i, INT j, INT k, const INT3 &shape
     return i + j * shape[0] + k * shape[0] * shape[1];
 }
 
+__host__ __device__ static inline size_t IDX(size_t i, size_t j, size_t k, const VECTOR<size_t, 3> &shape) {
+    return i + j * shape[0] + k * shape[0] * shape[1];
+}
+
 __host__ __device__ static inline INT IDX(INT3 &idx, const INT3 &shape) {
     return idx[0] + idx[1] * shape[0] + idx[2] * shape[0] * shape[1];
 }

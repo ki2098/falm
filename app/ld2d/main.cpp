@@ -156,7 +156,7 @@ int main(int argc, char **argv) {
             fflush(stdout);
         }
         if (falm.it % falm.outputIntervalIt == 0) {
-            csv_output();
+            falm.outputUVWP();
         }
     }
     printf("\n");

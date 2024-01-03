@@ -1,6 +1,7 @@
 #ifndef FALM_FALM_H
 #define FALM_FALM_H
 
+#include <vector>
 #include "FalmCFD.h"
 #include "FalmEq.h"
 #include "falmath.h"
@@ -64,6 +65,7 @@ public:
     std::string outputPrefix;
     std::string    setupFile;
     std::string       cvFile;
+    std::vector<std::pair<INT, REAL> > timeSlices;
 
     REAL gettime() {return dt * it;}
 
@@ -72,9 +74,13 @@ public:
         int ngpu;
         cudaGetDeviceCount(&ngpu);
         cudaSetDevice(cpm.rank % ngpu);
+        timeSlices = {};
     }
 
     void env_finalize() {
+        if (cpm.rank == 0) {
+            FalmIO::writeIndexFile(wpath(outputPrefix + ".json"), cpm, timeSlices);
+        }
         fv.release_all();
         CPM_Finalize();
     }
@@ -278,12 +284,19 @@ public:
         if (falmMeshInfo.convert && cpm.rank == 0) {
             Mesher::build_mesh(workdir, falmMeshInfo.cvCenter, wpath(falmMeshInfo.convertSrc), wpath(falmMeshInfo.cvFile), gc);
         }
+        CPM_Barrier(MPI_COMM_WORLD);
         Matrix<REAL> x,y,z,hx,hy,hz;
         INT3 idmax;
-        FalmIO::readControlVolumeFile(wpath(falmMeshInfo.cvFile), x, y, z, hx, hy, hz, idmax);
+        INT _gc;
+        FalmIO::readControlVolumeFile(wpath(falmMeshInfo.cvFile), x, y, z, hx, hy, hz, idmax, _gc);
+        assert(_gc == gc);
         cpm.initPartition(idmax, gc, division);
         INT3 &shape  = cpm.pdm_list[cpm.rank].shape;
         INT3 &offset = cpm.pdm_list[cpm.rank].offset;
+        if (cpm.rank == 0) {
+            FalmIO::writeIndexFile(wpath(outputPrefix + ".json"), cpm, timeSlices);
+        }
+        FalmIO::writeControlVolumeFile(wpath(outputPrefix + ".cv"), x, y, z, hx, hy, hz, idmax, gc);
         
 
         fv.xyz.alloc(shape, 3, HDC::HstDev, "coordinate");
@@ -325,6 +338,21 @@ public:
         fv.poi_res.alloc(shape, 1, HDC::HstDev, "poisson residual");
         fv.ff.alloc(shape, 3, HDC::HstDev, "ALM force");
         fv.divergence.alloc(shape, 1, HDC::HstDev, "divergence");
+    }
+
+    void outputUVWP() {
+        INT3 shape = cpm.pdm_list[cpm.rank].shape;
+        Matrix<REAL> uvwp(shape, 4, HDC::Host, "output uvwp");
+        falmMemcpy(&uvwp(0, 0), &fv.u.dev(0), sizeof(REAL) * uvwp.shape[0] * 3, MCP::Dev2Hst);
+        falmMemcpy(&uvwp(0, 3), &fv.p.dev(0), sizeof(REAL) * uvwp.shape[0]    , MCP::Dev2Hst);
+        size_t len = outputPrefix.size() + 32;
+        char *tmp = (char*)malloc(sizeof(char) * len);
+        sprintf(tmp, "%s_%06d_%010d", outputPrefix.c_str(), cpm.rank, it);
+        std::string fpath(tmp);
+        FalmIO::writeVectorFile(wpath(fpath), cpm, uvwp, it, gettime());
+        free(tmp);
+        std::pair<INT, REAL> pt{it, it * dt};
+        timeSlices.push_back(pt);
     }
 
 };

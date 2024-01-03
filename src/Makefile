@@ -60,6 +60,12 @@ cfd: cfddevcall cpm
 
 Falm: cfd eq alm
 
+reconstructor:
+	g++ $(falmdir)/src/reconstructor/reconstructor.cpp -o $(falmdir)/bin/reconstructor
+
+atofalm:
+	g++ $(falmdir)/src/atofalm/atofalm.cpp -o $(falmdir)/bin/atofalm
+
 showenv:
 	@echo nvmpicxx = $(nvmpicxx)
 	@echo nvnvcc = $(nvnvcc)  
