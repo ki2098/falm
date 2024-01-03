@@ -6,7 +6,7 @@
 #PJM -L "elapse=01:00:00"
 #PJM -j
 #PJM -X
-#PJM -o "turbine.8.log"
+#PJM -o "turbine.16.log"
 
 module load nvhpc/nvhpc_20.11
 
