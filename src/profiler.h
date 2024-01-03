@@ -45,7 +45,7 @@ struct cprof_Profiler {
         }
     }
 
-    static bool compare_by_duration(std::pair<std::string, cprof_Event> &a, std::pair<std::string, cprof_Event> &b) {
+    static bool compare_by_duration(const std::pair<std::string, cprof_Event> &a, const std::pair<std::string, cprof_Event> &b) {
         return a.second.duration > b.second.duration;
     }
 };
