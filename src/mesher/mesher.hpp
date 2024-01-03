@@ -10,6 +10,7 @@ class Mesher {
 
 public:
     static void build_mesh(std::string workdir, std::string cvcenter, std::string meshpath, std::string outputfile, int gc) {
+        int ogc = gc;
         int imax, jmax, kmax;
         double *x, *y, *z, *hx, *hy, *hz;
         std::ifstream mjfile(workdir + "/" + meshpath + "/mesh.json");
@@ -239,7 +240,7 @@ public:
         std::string output_path = workdir + "/" + outputfile;
         FILE *ofile = fopen(output_path.c_str(), "w");
         if (ofile) {
-            fprintf(ofile, "%d %d %d %d\n", imax, jmax, kmax, gc);
+            fprintf(ofile, "%d %d %d %d\n", imax, jmax, kmax, ogc);
             for (int i = 0; i < imax; i ++) {
                 fprintf(ofile, "\t%.15e\t%.15e\n", x[i], hx[i]);
             }

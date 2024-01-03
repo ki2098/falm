@@ -39,13 +39,13 @@ struct cprof_Profiler {
 
     void output() {
         std::vector<std::pair<std::string, cprof_Event> > evec(__list.begin(), __list.end());
-        std::sort(evec.begin(), evec.end(), cpm_by_duration);
+        std::sort(evec.begin(), evec.end(), compare_by_duration);
         for (auto &it : evec) {
-            printf("%s\t%ld\n", it.first.c_str(), it.second.duration);
+            printf("%30s %15e\n", it.first.c_str(), it.second.duration / 1000000.0);
         }
     }
 
-    static bool cpm_by_duration(std::pair<std::string, cprof_Event> &a, std::pair<std::string, cprof_Event> &b) {
+    static bool compare_by_duration(std::pair<std::string, cprof_Event> &a, std::pair<std::string, cprof_Event> &b) {
         return a.second.duration > b.second.duration;
     }
 };

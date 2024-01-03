@@ -2,16 +2,8 @@
     "runtime":{
         "time":{
             "start":0,
-            "end":120,
+            "end":10,
             "dt":1e-3
-        },
-        "timeAvg":{
-            "start":20
-        },
-        "output":{
-            "start":20,
-            "interval":5,
-            "prefix":"data/uvwp"
         }
     },
     "inflow":{
@@ -36,7 +28,7 @@
         }
     },
     "mesh":{
-        "convert":"mesh/test",
+        "convert":"mesh/strong",
         "controlVolumeFile":"controlVolume.txt",
         "controlVolumeCenter":"innerNode"
     }

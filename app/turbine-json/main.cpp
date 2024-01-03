@@ -2,8 +2,11 @@
 #include <fstream>
 #include "../../src/falm.h"
 #include "bc.h"
+#include "../../src/profiler.h"
 
 using namespace Falm;
+
+Cprof::cprof_Profiler profiler;
 
 FalmCore falm;
 REAL maxdiag;
@@ -113,26 +116,52 @@ void init(int &argc, char **&argv) {
 REAL main_loop(RmcpAlm &alm, RmcpTurbineArray &turbineArray, STREAM *s) {
     FalmBasicVar &fv = falm.fv;
     u_previous.copy(fv.u, HDC::Device);
+    profiler.startEvent("ALM");
     alm.SetALMFlag(fv.xyz, falm.gettime(), turbineArray, falm.cpm, block);
     alm.ALM(fv.u, fv.xyz, fv.ff, falm.gettime(), turbineArray, falm.cpm, block);
+    profiler.endEvent("ALM");
 
     FalmCFD &fcfd = falm.falmCfd;
+
+    profiler.startEvent("U*");
     fcfd.FSPseudoU(u_previous, fv.u, fv.uu, fv.u, fv.nut, fv.kx, fv.g, fv.ja, fv.ff, falm.dt, falm.cpm, block, s, 1);
+    profiler.endEvent("U*");
+
+    profiler.startEvent("U* interpolation");
     fcfd.UtoUU(fv.u, fv.uu, fv.kx, fv.ja, falm.cpm, block, s);
+    profiler.endEvent("U* interpolation");
+
+    profiler.startEvent("div(U*)/dt");
     fcfd.MACCalcPoissonRHS(fv.uu, fv.poi_rhs, fv.ja, falm.dt, falm.cpm, block, maxdiag);
+    profiler.endEvent("div(U*)/dt");
 
     FalmEq &feq = falm.falmEq;
+    profiler.startEvent("div(grad p)=div(U*)/dt");
     feq.Solve(fv.poi_a, fv.p, fv.poi_rhs, fv.poi_res, falm.cpm, block, s);
+    profiler.endEvent("div(grad p)=div(U*)/dt");
+
+    profiler.startEvent("p BC");
     pbc(fv.p, falm.cpm, s);
+    profiler.endEvent("p BC");
 
+    profiler.startEvent("U = U* - dt grad(p)");
     fcfd.ProjectP(fv.u, fv.u, fv.uu, fv.uu, fv.p, fv.kx, fv.g, falm.dt, falm.cpm, block, s);
+    profiler.endEvent("U = U* - dt grad(p)");
+
+    profiler.startEvent("U BC");
     ubc(fv.u, u_previous, fv.xyz, falm.dt, falm.cpm, s);
+    profiler.endEvent("U BC");
 
+    profiler.startEvent("Nut");
     fcfd.SGS(fv.u, fv.nut, fv.xyz, fv.kx, fv.ja, falm.cpm, block, s);
+    profiler.endEvent("Nut");
 
+    profiler.startEvent("||div(U)||");
     fcfd.Divergence(fv.uu, fv.divergence, fv.ja, falm.cpm, block);
+    REAL divnorm = FalmMV::EuclideanNormSq(fv.divergence, falm.cpm, block);
+    profiler.endEvent("||div(U)||");
 
-    return FalmMV::EuclideanNormSq(fv.divergence, falm.cpm, block);
+    return divnorm;
 }
 
 void finalize() {
@@ -174,22 +203,34 @@ int main(int argc, char **argv) {
     turbineArray.sync(MCP::Hst2Dev);
 
     RmcpAlm alm(falm.cpm);
-    
+
+    if (argc > 1) {
+        std::string arg(argv[1]);
+        if (arg == "info") {
+            goto FIN;
+        }
+    }
+
     falm.it = 0;
     printf("\n");
     if (falm.cpm.rank == 0) {
         printf("maxdiag = %e\n", maxdiag);
     }
+    profiler.startEvent("global loop");
     while (falm.it < falm.maxIt) {
-        REAL divnorm = sqrt(main_loop(alm, turbineArray, streams));
+        REAL divnorm = sqrt(main_loop(alm, turbineArray, streams)) / PRODUCT3(falm.cpm.pdm_list[falm.cpm.rank].shape - INT(2 * falm.cpm.gc));
         falm.it ++;
         if (falm.cpm.rank == 0) {
-            printf("%8d %12.5e, %12.5e, %3d, %12.5e\n", falm.it, falm.gettime(), divnorm, falm.falmEq.it, falm.falmEq.err);
+            printf("\r%8d %12.5e, %12.5e, %3d, %12.5e", falm.it, falm.gettime(), divnorm, falm.falmEq.it, falm.falmEq.err);
             fflush(stdout);
         }
     }
+    profiler.endEvent("global loop");
     printf("\n");
-
+FIN:
+    if (falm.cpm.rank == 0) {
+        profiler.output();
+    }
     finalize();
     return 0;
 }
