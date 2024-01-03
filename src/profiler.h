@@ -41,7 +41,7 @@ struct cprof_Profiler {
         std::vector<std::pair<std::string, cprof_Event> > evec(__list.begin(), __list.end());
         std::sort(evec.begin(), evec.end(), compare_by_duration);
         for (auto &it : evec) {
-            printf("%30s %15e\n", it.first.c_str(), it.second.duration / 1000000.0);
+            printf("%45s %15e\n", it.first.c_str(), it.second.duration / 1000000.0);
         }
     }
 
