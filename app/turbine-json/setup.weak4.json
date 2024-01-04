@@ -1,0 +1,35 @@
+{
+    "runtime":{
+        "time":{
+            "start":0,
+            "end":10,
+            "dt":1e-3
+        }
+    },
+    "inflow":{
+        "type":"uniform",
+        "velocity":1.0
+    },
+    "solver":{
+        "linearSolver":{
+            "type":"PBiCGStab",
+            "iteration":1,
+            "tolerance":1e-18,
+            "preconditioner":{
+                "type":"Jacobi",
+                "iteration":2
+            }
+        },
+        "cfd":{
+            "Re":10000,
+            "advectionScheme":"Upwind3",
+            "SGS":"Smagorinsky",
+            "Cs":0.1
+        }
+    },
+    "mesh":{
+        "convert":"mesh/weak/4",
+        "controlVolumeFile":"controlVolume.txt",
+        "controlVolumeCenter":"innerNode"
+    }
+}
