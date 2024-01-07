@@ -9,7 +9,7 @@
 
 namespace Falm {
 
-static inline INT falmMalloc(void **ptr, size_t size) {
+static inline int falmMalloc(void **ptr, size_t size) {
     *ptr =  malloc(size);
     if (*ptr == nullptr) {
         return FalmErr::mallocErr;
@@ -23,32 +23,32 @@ static inline INT falmMalloc(void **ptr, size_t size) {
 //     return ptr;
 // }
 
-static inline INT falmMallocPinned(void **ptr, size_t size) {
-    return FalmErr::cuErrMask * (INT)cudaMallocHost(ptr, size);
+static inline int falmMallocPinned(void **ptr, size_t size) {
+    return FalmErr::cuErrMask * (int)cudaMallocHost(ptr, size);
 }
 
-static inline INT falmMallocDevice(void **ptr, size_t size) {
-    return FalmErr::cuErrMask * (INT)cudaMalloc(ptr, size);
+static inline int falmMallocDevice(void **ptr, size_t size) {
+    return FalmErr::cuErrMask * (int)cudaMalloc(ptr, size);
 }
 
 // static inline void falmMallocDeviceAsync(void **ptr, size_t size, STREAM stream = (STREAM)0) {
 //     cudaMallocAsync(ptr, size, stream);
 // }
 
-static inline INT falmMemset(void *ptr, int value, size_t size) {
+static inline int falmMemset(void *ptr, int value, size_t size) {
     memset(ptr, value, size);
     return FalmErr::success;
 }
 
-static inline INT falmMemsetDevice(void *ptr, int value, size_t size) {
-    return FalmErr::cuErrMask * (INT)cudaMemset(ptr, value, size);
+static inline int falmMemsetDevice(void *ptr, int value, size_t size) {
+    return FalmErr::cuErrMask * (int)cudaMemset(ptr, value, size);
 }
 
-static inline INT falmMemsetDeviceAsync(void *ptr, int value, size_t size, STREAM stream = (STREAM)0) {
-    return FalmErr::cuErrMask * (INT)cudaMemsetAsync(ptr, value, size, stream);
+static inline int falmMemsetDeviceAsync(void *ptr, int value, size_t size, STREAM stream = (STREAM)0) {
+    return FalmErr::cuErrMask * (int)cudaMemsetAsync(ptr, value, size, stream);
 }
 
-static inline INT falmFree(void *ptr) {
+static inline int falmFree(void *ptr) {
     free(ptr);
     return FalmErr::success;
 }
@@ -57,13 +57,13 @@ static inline INT falmFree(void *ptr) {
 //     cudaFreeHost(ptr);
 // }
 
-static inline INT falmFreePinned(void *ptr) {
-    return FalmErr::cuErrMask * (INT)cudaFreeHost(ptr);
+static inline int falmFreePinned(void *ptr) {
+    return FalmErr::cuErrMask * (int)cudaFreeHost(ptr);
 }
 
-static inline INT falmFreeDevice(void *ptr) {
+static inline int falmFreeDevice(void *ptr) {
     /* cudaError_t err =  */ 
-    return FalmErr::cuErrMask * (INT)cudaFree(ptr);
+    return FalmErr::cuErrMask * (int)cudaFree(ptr);
     // if (err != cudaSuccess) {
     //     printf("cuda free device failed with error %d\n", (int)err);
     // }
@@ -73,35 +73,35 @@ static inline INT falmFreeDevice(void *ptr) {
 //     cudaFreeAsync(ptr, stream);
 // }
 
-static INT falmMemcpy(void *dst, void *src, size_t size, FLAG mcptype) {
+static int falmMemcpy(void *dst, void *src, size_t size, FLAG mcptype) {
     if (mcptype == MCP::Hst2Hst) {
         memcpy(dst, src, size);
         return FalmErr::success;
     } else if (mcptype == MCP::Hst2Dev) {
-        return FalmErr::cuErrMask * (INT)cudaMemcpy(dst, src, size, cudaMemcpyHostToDevice);
+        return FalmErr::cuErrMask * (int)cudaMemcpy(dst, src, size, cudaMemcpyHostToDevice);
     } else if (mcptype == MCP::Dev2Hst) {
-        return FalmErr::cuErrMask * (INT)cudaMemcpy(dst, src, size, cudaMemcpyDeviceToHost);
+        return FalmErr::cuErrMask * (int)cudaMemcpy(dst, src, size, cudaMemcpyDeviceToHost);
     } else if (mcptype == MCP::Dev2Dev) {
-        return FalmErr::cuErrMask * (INT)cudaMemcpy(dst, src, size, cudaMemcpyDeviceToDevice);
+        return FalmErr::cuErrMask * (int)cudaMemcpy(dst, src, size, cudaMemcpyDeviceToDevice);
     }
     return FalmErr::success;
 }
 
-static INT falmMemcpyAsync(void *dst, void *src, size_t size, FLAG mcptype, STREAM stream = (STREAM)0) {
+static int falmMemcpyAsync(void *dst, void *src, size_t size, FLAG mcptype, STREAM stream = (STREAM)0) {
     if (mcptype == MCP::Hst2Hst) {
-        return FalmErr::cuErrMask * (INT)cudaMemcpyAsync(dst, src, size, cudaMemcpyHostToHost, stream);
+        return FalmErr::cuErrMask * (int)cudaMemcpyAsync(dst, src, size, cudaMemcpyHostToHost, stream);
     } else if (mcptype == MCP::Hst2Dev) {
-        return FalmErr::cuErrMask * (INT)cudaMemcpyAsync(dst, src, size, cudaMemcpyHostToDevice, stream);
+        return FalmErr::cuErrMask * (int)cudaMemcpyAsync(dst, src, size, cudaMemcpyHostToDevice, stream);
     } else if (mcptype == MCP::Dev2Hst) {
-        return FalmErr::cuErrMask * (INT)cudaMemcpyAsync(dst, src, size, cudaMemcpyDeviceToHost, stream);
+        return FalmErr::cuErrMask * (int)cudaMemcpyAsync(dst, src, size, cudaMemcpyDeviceToHost, stream);
     } else if (mcptype == MCP::Dev2Dev) {
-        return FalmErr::cuErrMask * (INT)cudaMemcpyAsync(dst, src, size, cudaMemcpyDeviceToDevice, stream);
+        return FalmErr::cuErrMask * (int)cudaMemcpyAsync(dst, src, size, cudaMemcpyDeviceToDevice, stream);
     }
     return FalmErr::success;
 }
 
-static inline INT falmWaitStream(STREAM stream = (STREAM)0) {
-    return FalmErr::cuErrMask * (INT)cudaStreamSynchronize(stream);
+static inline int falmWaitStream(STREAM stream = (STREAM)0) {
+    return FalmErr::cuErrMask * (int)cudaStreamSynchronize(stream);
 }
 
 }

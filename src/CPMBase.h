@@ -5,6 +5,7 @@
 #include <vector>
 #include <assert.h>
 #include "region.h"
+#include "CPMBufMan.h"
 
 namespace Falm {
 
@@ -19,6 +20,7 @@ public:
     static const INT NFACE  = 6;
 
 public:
+    CpmBufMan bufman;
     int neighbour[6];
     INT3   shape;
     INT3     idx;
