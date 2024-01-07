@@ -90,7 +90,7 @@ public:
             } else if (hdc == HDC::Device) {
                 falmErrCheckMacro(falmMallocDevice(&buf.ptr, reqsize));
             }
-            printf("buffer %d -> %lu\n", first_vacant, reqsize);
+            // printf("buffer %d -> %lu\n", first_vacant, reqsize);
             buf.hdc = hdc;
             buf.capacity = reqsize;
             buf.map = map;
@@ -113,7 +113,7 @@ public:
             } else if (hdc == HDC::Device) {
                 falmErrCheckMacro(falmMallocDevice(&buf.ptr, reqsize));
             }
-            printf("buffer %d -> %lu\n", first_vacant, reqsize);
+            // printf("buffer %d -> %lu\n", first_vacant, reqsize);
             buf.hdc = hdc;
             buf.capacity = reqsize;
             buf.map = map;
@@ -166,7 +166,7 @@ public:
             } else if (hdc == HDC::Device) {
                 falmErrCheckMacro(falmMallocDevice(&buf.ptr, reqsize));
             }
-            printf("buffer %d -> %lu\n", first_vacant, reqsize);
+            // printf("buffer %d -> %lu\n", first_vacant, reqsize);
             buf.hdc = hdc;
             buf.capacity = reqsize;
             buf.map = map;
@@ -190,7 +190,7 @@ public:
             } else if (hdc == HDC::Device) {
                 falmErrCheckMacro(falmMallocDevice(&buf.ptr, reqsize));
             }
-            printf("buffer %d -> %lu\n", first_vacant, reqsize);
+            // printf("buffer %d -> %lu\n", first_vacant, reqsize);
             buf.hdc = hdc;
             buf.capacity = reqsize;
             buf.map = map;
