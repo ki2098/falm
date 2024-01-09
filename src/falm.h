@@ -14,7 +14,7 @@ namespace Falm {
 
 struct FalmBasicVar {
     Matrix<REAL> xyz, kx, g, ja; // Non-uniform cartesian structured mesh variables
-    Matrix<REAL> u, uu, p, nut; // basic physical fields
+    Matrix<REAL> u, uu, uc, p, nut; // basic physical fields
     Matrix<REAL> poi_a, poi_rhs, poi_res; // variables for pressure poisson equation
     Matrix<REAL> ff; // actuator model force
     Matrix<REAL> divergence; // velocity divergence
@@ -83,6 +83,7 @@ public:
         }
         fv.release_all();
         falmEq.release();
+        falmCfd.release();
         CPM_Finalize();
     }
 
@@ -90,8 +91,8 @@ public:
         return workdir + "/" + str;
     }
 
-    void print_info() {
-        if (cpm.rank == 0) {
+    void print_info(int outpur_rank = 0) {
+        if (cpm.rank == outpur_rank) {
             printf("SETUP INFO START\n");
 
             printf("Working dir %s\n", workdir.c_str());
@@ -141,7 +142,7 @@ public:
         int *ngh = (int*)malloc(sizeof(int)*6*cpm.size);
         MPI_Gather(cpm.neighbour, 6, MPI_INT, ngh, 6, MPI_INT, 0, MPI_COMM_WORLD);
 
-        if (cpm.rank == 0) {
+        if (cpm.rank == outpur_rank) {
             printf("MPI INFO START\n");
             INT gc = cpm.gc;
             printf("\tGlobal voxel (%d %d %d)\n", cpm.global.shape[0], cpm.global.shape[1], cpm.global.shape[2]);
@@ -340,6 +341,7 @@ public:
         fv.ff.alloc(shape, 3, HDC::HstDev, "ALM force");
         fv.divergence.alloc(shape, 1, HDC::HstDev, "divergence");
 
+        falmCfd.alloc(shape);
         falmEq.alloc(shape);
     }
 

@@ -76,7 +76,7 @@ void FalmCFD::UtoUU(
     STREAM       *stream
 ) {
     Region &pdm = cpm.pdm_list[cpm.rank];
-    Matrix<REAL> uc(pdm.shape, 3, HDC::Device, "contra u at grid");
+    // Matrix<REAL> uc(pdm.shape, 3, HDC::Device, "contra u at grid");
     INT3 inner_shape, inner_offset, boundary_shape[6], boundary_offset[6];
     cpm.set6Region(inner_shape, inner_offset, boundary_shape, boundary_offset, 1, Region(pdm.shape, cpm.gc - 1));
 

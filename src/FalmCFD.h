@@ -10,6 +10,8 @@ namespace Falm {
 
 class FalmCFD : public FalmCFDDevCall {
 public:
+    Matrix<REAL> uc;
+
     FalmCFD() {}
     FalmCFD(REAL _Re, FLAG _AdvScheme, FLAG _SGSModel = SGSType::Smagorinsky, REAL _CSmagorinsky = 0.1) : 
         FalmCFDDevCall(_Re, _AdvScheme, _SGSModel, _CSmagorinsky) 
@@ -17,6 +19,14 @@ public:
 
     void init(REAL _Re, FLAG _AdvScheme, FLAG _SGSModel = SGSType::Smagorinsky, REAL _CSmagorinsky = 0.1) {
         FalmCFDDevCall::init(_Re, _AdvScheme, _SGSModel, _CSmagorinsky);
+    }
+
+    void alloc(INT3 shape) {
+        uc.alloc(shape, 3, HDC::Device, "contra U at control volume centers");
+    }
+
+    void release() {
+        uc.release();
     }
 
     void FSPseudoU(
