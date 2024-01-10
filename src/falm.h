@@ -75,12 +75,14 @@ public:
         cudaGetDeviceCount(&ngpu);
         cudaSetDevice(cpm.rank % ngpu);
         timeSlices = {};
+        FalmMV::init();
     }
 
     void env_finalize() {
         if (cpm.rank == 0) {
             FalmIO::writeIndexFile(wpath(outputPrefix + ".json"), cpm, timeSlices);
         }
+        FalmMV::release();
         fv.release_all();
         falmEq.release();
         falmCfd.release();
@@ -160,7 +162,9 @@ public:
             }
             printf("Using Cuda-aware-MPI %d\n", cpm.use_cuda_aware_mpi);
             printf("MPI INFO END\n");
+            printf("reduction buffer size %d\n", FalmMV::reduction_buffer_size);
         }
+
 
         free(ngh);
     }

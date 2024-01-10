@@ -91,21 +91,22 @@ REAL FalmMVDevCall::DotProduct(Matrix<REAL> &a, Matrix<REAL> &b, Region &pdm, co
     );
     INT n_blocks = PRODUCT3(grid_dim);
     INT n_threads = PRODUCT3(block_dim);
-    REAL *partial_sum,*partial_sum_dev;
-    falmErrCheckMacro(falmMalloc((void**)&partial_sum, sizeof(REAL) * n_blocks));
-    falmErrCheckMacro(falmMallocDevice((void**)&partial_sum_dev, sizeof(REAL) * n_blocks));
+    // REAL *partial_sum,*partial_sum_dev;
+    // falmErrCheckMacro(falmMalloc((void**)&partial_sum, sizeof(REAL) * n_blocks));
+    // falmErrCheckMacro(falmMallocDevice((void**)&partial_sum_dev, sizeof(REAL) * n_blocks));
+    request_reduction_buffer(n_blocks);
     size_t shared_size = n_threads * sizeof(REAL);
 
-    kernel_DotProduct<<<grid_dim, block_dim, shared_size>>>(a.devptr, b.devptr, partial_sum_dev, pdm.shape, map.shape, map.offset);
+    kernel_DotProduct<<<grid_dim, block_dim, shared_size>>>(a.devptr, b.devptr, reduction_buffer_device, pdm.shape, map.shape, map.offset);
 
-    falmErrCheckMacro(falmMemcpy(partial_sum, partial_sum_dev, sizeof(REAL) * n_blocks, MCP::Dev2Hst));
-    REAL sum = partial_sum[0];
+    falmErrCheckMacro(falmMemcpy(reduction_buffer_host, reduction_buffer_device, sizeof(REAL) * n_blocks, MCP::Dev2Hst));
+    REAL sum = reduction_buffer_host[0];
     for (INT i = 1; i < n_blocks; i ++) {
-        sum += partial_sum[i];
+        sum += reduction_buffer_host[i];
     }
 
-    falmErrCheckMacro(falmFree(partial_sum));
-    falmErrCheckMacro(falmFreeDevice(partial_sum_dev));
+    // falmErrCheckMacro(falmFree(partial_sum));
+    // falmErrCheckMacro(falmFreeDevice(partial_sum_dev));
 
     return sum;
 }
@@ -153,21 +154,22 @@ REAL FalmMVDevCall::EuclideanNormSq(Matrix<REAL> &a, Region &pdm, const Region &
     );
     INT n_blocks = PRODUCT3(grid_dim);
     INT n_threads = PRODUCT3(block_dim);
-    REAL *partial_sum,*partial_sum_dev;
-    falmErrCheckMacro(falmMalloc((void**)&partial_sum, sizeof(REAL) * n_blocks));
-    falmErrCheckMacro(falmMallocDevice((void**)&partial_sum_dev, sizeof(REAL) * n_blocks));
+    // REAL *partial_sum,*partial_sum_dev;
+    // falmErrCheckMacro(falmMalloc((void**)&partial_sum, sizeof(REAL) * n_blocks));
+    // falmErrCheckMacro(falmMallocDevice((void**)&partial_sum_dev, sizeof(REAL) * n_blocks));
+    request_reduction_buffer(n_blocks);
     size_t shared_size = n_threads * sizeof(REAL);
 
-    kernel_EuclideanNormSq<<<grid_dim, block_dim, shared_size>>>(a.devptr, partial_sum_dev, pdm.shape, map.shape, map.offset);
+    kernel_EuclideanNormSq<<<grid_dim, block_dim, shared_size>>>(a.devptr, reduction_buffer_device, pdm.shape, map.shape, map.offset);
 
-    falmErrCheckMacro(falmMemcpy(partial_sum, partial_sum_dev, sizeof(REAL) * n_blocks, MCP::Dev2Hst));
-    REAL sum = partial_sum[0];
+    falmErrCheckMacro(falmMemcpy(reduction_buffer_host, reduction_buffer_device, sizeof(REAL) * n_blocks, MCP::Dev2Hst));
+    REAL sum = reduction_buffer_host[0];
     for (INT i = 1; i < n_blocks; i ++) {
-        sum += partial_sum[i];
+        sum += reduction_buffer_host[i];
     }
 
-    falmErrCheckMacro(falmFree(partial_sum));
-    falmErrCheckMacro(falmFreeDevice(partial_sum_dev));
+    // falmErrCheckMacro(falmFree(partial_sum));
+    // falmErrCheckMacro(falmFreeDevice(partial_sum_dev));
 
     return sum;
 }
@@ -383,23 +385,24 @@ REAL FalmMVDevCall::MatColMax(Matrix<REAL> &a, INT col, Region &pdm, const Regio
     );
     INT n_blocks = PRODUCT3(grid_dim);
     INT n_threads = PRODUCT3(block_dim);
-    REAL *partial_max,*partial_max_dev;
-    falmErrCheckMacro(falmMalloc((void**)&partial_max, sizeof(REAL) * n_blocks));
-    falmErrCheckMacro(falmMallocDevice((void**)&partial_max_dev, sizeof(REAL) * n_blocks));
+    // REAL *partial_max,*partial_max_dev;
+    // falmErrCheckMacro(falmMalloc((void**)&partial_max, sizeof(REAL) * n_blocks));
+    // falmErrCheckMacro(falmMallocDevice((void**)&partial_max_dev, sizeof(REAL) * n_blocks));
+    request_reduction_buffer(n_blocks);
     size_t shared_size = n_threads * sizeof(REAL);
 
-    kernel_MatColMax<<<grid_dim, block_dim, shared_size>>>(a.devptr, col, partial_max_dev, pdm.shape, map.shape, map.offset);
+    kernel_MatColMax<<<grid_dim, block_dim, shared_size>>>(a.devptr, col, reduction_buffer_device, pdm.shape, map.shape, map.offset);
 
-    falmErrCheckMacro(falmMemcpy(partial_max, partial_max_dev, sizeof(REAL) * n_blocks, MCP::Dev2Hst));
-    REAL maximum = partial_max[0];
+    falmErrCheckMacro(falmMemcpy(reduction_buffer_host, reduction_buffer_device, sizeof(REAL) * n_blocks, MCP::Dev2Hst));
+    REAL maximum = reduction_buffer_host[0];
     for (INT i = 1; i < n_blocks; i ++) {
-        if (partial_max[i] > maximum) {
-            maximum = partial_max[i];
+        if (reduction_buffer_host[i] > maximum) {
+            maximum = reduction_buffer_host[i];
         }
     }
 
-    falmErrCheckMacro(falmFree(partial_max));
-    falmErrCheckMacro(falmFreeDevice(partial_max_dev));
+    // falmErrCheckMacro(falmFree(partial_max));
+    // falmErrCheckMacro(falmFreeDevice(partial_max_dev));
 
     return maximum;
 }
@@ -412,23 +415,24 @@ REAL FalmMVDevCall::MatColMin(Matrix<REAL> &a, INT col, Region &pdm, const Regio
     );
     INT n_blocks = PRODUCT3(grid_dim);
     INT n_threads = PRODUCT3(block_dim);
-    REAL *partial_max,*partial_max_dev;
-    falmErrCheckMacro(falmMalloc((void**)&partial_max, sizeof(REAL) * n_blocks));
-    falmErrCheckMacro(falmMallocDevice((void**)&partial_max_dev, sizeof(REAL) * n_blocks));
+    // REAL *partial_max,*partial_max_dev;
+    // falmErrCheckMacro(falmMalloc((void**)&partial_max, sizeof(REAL) * n_blocks));
+    // falmErrCheckMacro(falmMallocDevice((void**)&partial_max_dev, sizeof(REAL) * n_blocks));
+    request_reduction_buffer(n_blocks);
     size_t shared_size = n_threads * sizeof(REAL);
 
-    kernel_MatColMin<<<grid_dim, block_dim, shared_size>>>(a.devptr, col, partial_max_dev, pdm.shape, map.shape, map.offset);
+    kernel_MatColMin<<<grid_dim, block_dim, shared_size>>>(a.devptr, col, reduction_buffer_device, pdm.shape, map.shape, map.offset);
 
-    falmErrCheckMacro(falmMemcpy(partial_max, partial_max_dev, sizeof(REAL) * n_blocks, MCP::Dev2Hst));
-    REAL maximum = partial_max[0];
+    falmErrCheckMacro(falmMemcpy(reduction_buffer_host, reduction_buffer_device, sizeof(REAL) * n_blocks, MCP::Dev2Hst));
+    REAL maximum = reduction_buffer_host[0];
     for (INT i = 1; i < n_blocks; i ++) {
-        if (partial_max[i] < maximum) {
-            maximum = partial_max[i];
+        if (reduction_buffer_host[i] < maximum) {
+            maximum = reduction_buffer_host[i];
         }
     }
 
-    falmErrCheckMacro(falmFree(partial_max));
-    falmErrCheckMacro(falmFreeDevice(partial_max_dev));
+    // falmErrCheckMacro(falmFree(partial_max));
+    // falmErrCheckMacro(falmFreeDevice(partial_max_dev));
 
     return maximum;
 }
@@ -441,23 +445,24 @@ REAL FalmMVDevCall::MatColAbsMax(Matrix<REAL> &a, INT col, Region &pdm, const Re
     );
     INT n_blocks = PRODUCT3(grid_dim);
     INT n_threads = PRODUCT3(block_dim);
-    REAL *partial_max,*partial_max_dev;
-    falmErrCheckMacro(falmMalloc((void**)&partial_max, sizeof(REAL) * n_blocks));
-    falmErrCheckMacro(falmMallocDevice((void**)&partial_max_dev, sizeof(REAL) * n_blocks));
+    // REAL *partial_max,*partial_max_dev;
+    // falmErrCheckMacro(falmMalloc((void**)&partial_max, sizeof(REAL) * n_blocks));
+    // falmErrCheckMacro(falmMallocDevice((void**)&partial_max_dev, sizeof(REAL) * n_blocks));
+    request_reduction_buffer(n_blocks);
     size_t shared_size = n_threads * sizeof(REAL);
 
-    kernel_MatColAbsMax<<<grid_dim, block_dim, shared_size>>>(a.devptr, col, partial_max_dev, pdm.shape, map.shape, map.offset);
+    kernel_MatColAbsMax<<<grid_dim, block_dim, shared_size>>>(a.devptr, col, reduction_buffer_device, pdm.shape, map.shape, map.offset);
 
-    falmErrCheckMacro(falmMemcpy(partial_max, partial_max_dev, sizeof(REAL) * n_blocks, MCP::Dev2Hst));
-    REAL maximum = partial_max[0];
+    falmErrCheckMacro(falmMemcpy(reduction_buffer_host, reduction_buffer_device, sizeof(REAL) * n_blocks, MCP::Dev2Hst));
+    REAL maximum = reduction_buffer_host[0];
     for (INT i = 1; i < n_blocks; i ++) {
-        if (partial_max[i] > maximum) {
-            maximum = partial_max[i];
+        if (reduction_buffer_host[i] > maximum) {
+            maximum = reduction_buffer_host[i];
         }
     }
 
-    falmErrCheckMacro(falmFree(partial_max));
-    falmErrCheckMacro(falmFreeDevice(partial_max_dev));
+    // falmErrCheckMacro(falmFree(partial_max));
+    // falmErrCheckMacro(falmFreeDevice(partial_max_dev));
 
     return maximum;
 }
@@ -470,23 +475,24 @@ REAL FalmMVDevCall::MatColAbsMin(Matrix<REAL> &a, INT col, Region &pdm, const Re
     );
     INT n_blocks = PRODUCT3(grid_dim);
     INT n_threads = PRODUCT3(block_dim);
-    REAL *partial_max,*partial_max_dev;
-    falmErrCheckMacro(falmMalloc((void**)&partial_max, sizeof(REAL) * n_blocks));
-    falmErrCheckMacro(falmMallocDevice((void**)&partial_max_dev, sizeof(REAL) * n_blocks));
+    // REAL *partial_max,*partial_max_dev;
+    // falmErrCheckMacro(falmMalloc((void**)&partial_max, sizeof(REAL) * n_blocks));
+    // falmErrCheckMacro(falmMallocDevice((void**)&partial_max_dev, sizeof(REAL) * n_blocks));
+    request_reduction_buffer(n_blocks);
     size_t shared_size = n_threads * sizeof(REAL);
 
-    kernel_MatColAbsMin<<<grid_dim, block_dim, shared_size>>>(a.devptr, col, partial_max_dev, pdm.shape, map.shape, map.offset);
+    kernel_MatColAbsMin<<<grid_dim, block_dim, shared_size>>>(a.devptr, col, reduction_buffer_device, pdm.shape, map.shape, map.offset);
 
-    falmErrCheckMacro(falmMemcpy(partial_max, partial_max_dev, sizeof(REAL) * n_blocks, MCP::Dev2Hst));
-    REAL maximum = partial_max[0];
+    falmErrCheckMacro(falmMemcpy(reduction_buffer_host, reduction_buffer_device, sizeof(REAL) * n_blocks, MCP::Dev2Hst));
+    REAL maximum = reduction_buffer_host[0];
     for (INT i = 1; i < n_blocks; i ++) {
-        if (partial_max[i] < maximum) {
-            maximum = partial_max[i];
+        if (reduction_buffer_host[i] < maximum) {
+            maximum = reduction_buffer_host[i];
         }
     }
 
-    falmErrCheckMacro(falmFree(partial_max));
-    falmErrCheckMacro(falmFreeDevice(partial_max_dev));
+    // falmErrCheckMacro(falmFree(partial_max));
+    // falmErrCheckMacro(falmFreeDevice(partial_max_dev));
 
     return maximum;
 }
@@ -593,23 +599,24 @@ REAL FalmMVDevCall::VecMax(Matrix<REAL> &a, Region &pdm, const Region &map, dim3
     );
     INT n_blocks = PRODUCT3(grid_dim);
     INT n_threads = PRODUCT3(block_dim);
-    REAL *partial_max,*partial_max_dev;
-    falmErrCheckMacro(falmMalloc((void**)&partial_max, sizeof(REAL) * n_blocks));
-    falmErrCheckMacro(falmMallocDevice((void**)&partial_max_dev, sizeof(REAL) * n_blocks));
+    // REAL *partial_max,*partial_max_dev;
+    // falmErrCheckMacro(falmMalloc((void**)&partial_max, sizeof(REAL) * n_blocks));
+    // falmErrCheckMacro(falmMallocDevice((void**)&partial_max_dev, sizeof(REAL) * n_blocks));
+    request_reduction_buffer(n_blocks);
     size_t shared_size = n_threads * sizeof(REAL);
 
-    kernel_VecMax<<<grid_dim, block_dim, shared_size>>>(a.devptr, partial_max_dev, pdm.shape, map.shape, map.offset);
+    kernel_VecMax<<<grid_dim, block_dim, shared_size>>>(a.devptr, reduction_buffer_device, pdm.shape, map.shape, map.offset);
 
-    falmErrCheckMacro(falmMemcpy(partial_max, partial_max_dev, sizeof(REAL) * n_blocks, MCP::Dev2Hst));
-    REAL maximum = partial_max[0];
+    falmErrCheckMacro(falmMemcpy(reduction_buffer_host, reduction_buffer_device, sizeof(REAL) * n_blocks, MCP::Dev2Hst));
+    REAL maximum = reduction_buffer_host[0];
     for (INT i = 1; i < n_blocks; i ++) {
-        if (partial_max[i] > maximum) {
-            maximum = partial_max[i];
+        if (reduction_buffer_host[i] > maximum) {
+            maximum = reduction_buffer_host[i];
         }
     }
 
-    falmErrCheckMacro(falmFree(partial_max));
-    falmErrCheckMacro(falmFreeDevice(partial_max_dev));
+    // falmErrCheckMacro(falmFree(partial_max));
+    // falmErrCheckMacro(falmFreeDevice(partial_max_dev));
 
     return maximum;
 }
@@ -622,23 +629,24 @@ REAL FalmMVDevCall::VecMin(Matrix<REAL> &a, Region &pdm, const Region &map, dim3
     );
     INT n_blocks = PRODUCT3(grid_dim);
     INT n_threads = PRODUCT3(block_dim);
-    REAL *partial_max,*partial_max_dev;
-    falmErrCheckMacro(falmMalloc((void**)&partial_max, sizeof(REAL) * n_blocks));
-    falmErrCheckMacro(falmMallocDevice((void**)&partial_max_dev, sizeof(REAL) * n_blocks));
+    // REAL *partial_max,*partial_max_dev;
+    // falmErrCheckMacro(falmMalloc((void**)&partial_max, sizeof(REAL) * n_blocks));
+    // falmErrCheckMacro(falmMallocDevice((void**)&partial_max_dev, sizeof(REAL) * n_blocks));
+    request_reduction_buffer(n_blocks);
     size_t shared_size = n_threads * sizeof(REAL);
 
-    kernel_VecMin<<<grid_dim, block_dim, shared_size>>>(a.devptr, partial_max_dev, pdm.shape, map.shape, map.offset);
+    kernel_VecMin<<<grid_dim, block_dim, shared_size>>>(a.devptr, reduction_buffer_device, pdm.shape, map.shape, map.offset);
 
-    falmErrCheckMacro(falmMemcpy(partial_max, partial_max_dev, sizeof(REAL) * n_blocks, MCP::Dev2Hst));
-    REAL maximum = partial_max[0];
+    falmErrCheckMacro(falmMemcpy(reduction_buffer_host, reduction_buffer_device, sizeof(REAL) * n_blocks, MCP::Dev2Hst));
+    REAL maximum = reduction_buffer_host[0];
     for (INT i = 1; i < n_blocks; i ++) {
-        if (partial_max[i] < maximum) {
-            maximum = partial_max[i];
+        if (reduction_buffer_host[i] < maximum) {
+            maximum = reduction_buffer_host[i];
         }
     }
 
-    falmErrCheckMacro(falmFree(partial_max));
-    falmErrCheckMacro(falmFreeDevice(partial_max_dev));
+    // falmErrCheckMacro(falmFree(partial_max));
+    // falmErrCheckMacro(falmFreeDevice(partial_max_dev));
 
     return maximum;
 }

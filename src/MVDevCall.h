@@ -8,6 +8,34 @@ namespace Falm {
 
 class FalmMVDevCall {
 public:
+static INT reduction_buffer_size;
+static REAL *reduction_buffer_host, *reduction_buffer_device;
+
+static void init() {
+    reduction_buffer_size = 0;
+    reduction_buffer_device = nullptr;
+    reduction_buffer_host = nullptr;
+}
+
+static void request_reduction_buffer(INT bufsize) {
+    if (reduction_buffer_size < bufsize) {
+        if (reduction_buffer_size != 0) {
+            falmErrCheckMacro(falmFreePinned(reduction_buffer_host));
+            falmErrCheckMacro(falmFreeDevice(reduction_buffer_device));
+        }
+        falmErrCheckMacro(falmMallocPinned((void**)&reduction_buffer_host, bufsize * sizeof(REAL)));
+        falmErrCheckMacro(falmMallocDevice((void**)&reduction_buffer_device, bufsize * sizeof(REAL)));
+        reduction_buffer_size = bufsize;
+    }
+}
+
+static void release() {
+    if (reduction_buffer_size > 0) {
+        falmErrCheckMacro(falmFreePinned(reduction_buffer_host));
+        falmErrCheckMacro(falmFreeDevice(reduction_buffer_device));
+    }
+    reduction_buffer_size = 0;
+}
 
 static void MV(Matrix<REAL> &a, Matrix<REAL> &x, Matrix<REAL> &ax, Region &pdm, const Region &map, dim3 block_dim, STREAM stream = (STREAM)0);
 
