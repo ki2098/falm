@@ -3,6 +3,10 @@
 
 namespace Falm {
 
+INT   FalmMVDevCall::reduction_buffer_size = 0;
+REAL *FalmMVDevCall::reduction_buffer_device = nullptr;
+REAL *FalmMVDevCall::reduction_buffer_host = nullptr;
+
 __global__ void kernel_MV(const MatrixFrame<REAL> *va, const MatrixFrame<REAL> *vx, const MatrixFrame<REAL> *vax, INT3 pdm_shape, INT3 map_shape, INT3 map_offset) {
     const MatrixFrame<REAL> &a=*va, &x=*vx, &ax=*vax;
     INT i, j, k;

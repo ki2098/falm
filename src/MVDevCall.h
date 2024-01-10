@@ -12,9 +12,9 @@ static INT reduction_buffer_size;
 static REAL *reduction_buffer_host, *reduction_buffer_device;
 
 static void init() {
-    reduction_buffer_size = 0;
-    reduction_buffer_device = nullptr;
-    reduction_buffer_host = nullptr;
+    // reduction_buffer_size = 0;
+    // reduction_buffer_device = nullptr;
+    // reduction_buffer_host = nullptr;
 }
 
 static void request_reduction_buffer(INT bufsize) {
