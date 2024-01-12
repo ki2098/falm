@@ -6,7 +6,7 @@
 #PJM -L "elapse=01:00:00"
 #PJM -j
 #PJM -X
-#PJM -o "turbine.weak4.log"
+#PJM -o "turbine.bmweak4.log"
 
 module load nvhpc/nvhpc_20.11
 
