@@ -12,6 +12,6 @@ module load nvhpc/nvhpc_20.11
 
 date
 
-cp setup.weak4.json setup.json
+cp setup.weak8.json setup.json
 
 mpirun -n 8 --map-by ppr:2:socket:PE=9 --bind-to core --report-bindings --mca plm_rsh_agent /bin/pjrsh -machinefile ${PJM_O_NODEINF} ./bin/main
