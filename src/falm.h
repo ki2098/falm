@@ -93,8 +93,8 @@ public:
         return workdir + "/" + str;
     }
 
-    void print_info(int outpur_rank = 0) {
-        if (cpm.rank == outpur_rank) {
+    void print_info(int output_rank = 0) {
+        if (cpm.rank == output_rank) {
             printf("SETUP INFO START\n");
 
             printf("Working dir %s\n", workdir.c_str());
@@ -142,9 +142,10 @@ public:
         }
 
         int *ngh = (int*)malloc(sizeof(int)*6*cpm.size);
-        MPI_Gather(cpm.neighbour, 6, MPI_INT, ngh, 6, MPI_INT, 0, MPI_COMM_WORLD);
+        // MPI_Gather(cpm.neighbour, 6, MPI_INT, ngh, 6, MPI_INT, 0, MPI_COMM_WORLD);
+        MPI_Allgather(cpm.neighbour, 6, MPI_INT, ngh, 6, MPI_INT, MPI_COMM_WORLD);
 
-        if (cpm.rank == outpur_rank) {
+        if (cpm.rank == output_rank) {
             printf("MPI INFO START\n");
             INT gc = cpm.gc;
             printf("\tGlobal voxel (%d %d %d)\n", cpm.global.shape[0], cpm.global.shape[1], cpm.global.shape[2]);
