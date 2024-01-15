@@ -1,10 +1,47 @@
 #include <fstream>
 #include "../nlohmann/json.hpp"
 
+using json = nlohmann::json;
 using namespace std;
+
+vector<pair<size_t, double> > slice_list;
+
+void read_index_file(string path) {
+    ifstream idxfile(path);
+    json idxjson = json::parse(idxfile);
+    for (auto slice : idxjson["outputSteps"]) {
+        size_t _step = slice[0].get<size_t>();
+        double _time = slice[1].get<double>();
+        pair<size_t, double> pt{_step, _time};
+        slice_list.push_back(pt);
+    }
+}
 
 void record(ofstream &ofs, int sz) {
     ofs.write((char*)&sz, sizeof(int));
+}
+
+string make_filename(string prefix, size_t step) {
+    char *tmp = (char*)malloc(sizeof(char) * (prefix.size() + 32));
+    sprintf(tmp, "%s_%010d", prefix.c_str(), step);
+    return string(tmp);
+}
+
+template<typename T>
+void write_sph(string path, size_t imax, size_t jmax, size_t kmax, size_t nv, size_t step, double time) {
+    
+}
+
+template<typename T>
+void uvwp_to_sph(string prefix, size_t step, bool cut_gc) {
+    for (auto slice : slice_list) {
+        string filename = make_filename(prefix, step);
+        ifstream ifile(filename, ios::binary);
+        size_t imax, jmax, kmax, nv, gc, stp;
+        double time;
+
+        
+    }
 }
 
 template<typename T>

@@ -24,7 +24,12 @@ static inline int falmMalloc(void **ptr, size_t size) {
 // }
 
 static inline int falmMallocPinned(void **ptr, size_t size) {
-    return FalmErr::cuErrMask * (int)cudaMallocHost(ptr, size);
+    // return FalmErr::cuErrMask * (int)cudaMallocHost(ptr, size);
+    *ptr =  malloc(size);
+    if (*ptr == nullptr) {
+        return FalmErr::mallocErr;
+    }
+    return FalmErr::success;
 }
 
 static inline int falmMallocDevice(void **ptr, size_t size) {
@@ -58,7 +63,9 @@ static inline int falmFree(void *ptr) {
 // }
 
 static inline int falmFreePinned(void *ptr) {
-    return FalmErr::cuErrMask * (int)cudaFreeHost(ptr);
+    // return FalmErr::cuErrMask * (int)cudaFreeHost(ptr);
+    free(ptr);
+    return FalmErr::success;
 }
 
 static inline int falmFreeDevice(void *ptr) {
