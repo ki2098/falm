@@ -19,11 +19,12 @@ static void init() {
 
 static void request_reduction_buffer(INT bufsize) {
     if (reduction_buffer_size < bufsize) {
+        printf("reduction buffer enlarged from %d to %d\n", reduction_buffer_size, bufsize);
         if (reduction_buffer_size != 0) {
-            falmErrCheckMacro(falmFreePinned(reduction_buffer_host));
+            falmErrCheckMacro(falmFree(reduction_buffer_host));
             falmErrCheckMacro(falmFreeDevice(reduction_buffer_device));
         }
-        falmErrCheckMacro(falmMallocPinned((void**)&reduction_buffer_host, bufsize * sizeof(REAL)));
+        falmErrCheckMacro(falmMalloc((void**)&reduction_buffer_host, bufsize * sizeof(REAL)));
         falmErrCheckMacro(falmMallocDevice((void**)&reduction_buffer_device, bufsize * sizeof(REAL)));
         reduction_buffer_size = bufsize;
     }
@@ -31,7 +32,7 @@ static void request_reduction_buffer(INT bufsize) {
 
 static void release() {
     if (reduction_buffer_size > 0) {
-        falmErrCheckMacro(falmFreePinned(reduction_buffer_host));
+        falmErrCheckMacro(falmFree(reduction_buffer_host));
         falmErrCheckMacro(falmFreeDevice(reduction_buffer_device));
     }
     reduction_buffer_size = 0;
