@@ -99,7 +99,11 @@ void init(int &argc, char **&argv) {
     u_previous.alloc(falm.fv.u.shape[0], falm.fv.u.shape[1], HDC::Device, "previous velocity");
 
     for (int i = 0; i < 6; i ++) cudaStreamCreate(&facestream[i]);
-    streams = facestream;
+    // streams = facestream;
+    streams = nullptr;
+    if (falm.cpm.rank == TERMINAL_OUTPUT_RANK) {
+        printf("using streams %p\n", streams);
+    }
 
     REAL u_inflow = falm.params["inflow"]["velocity"].get<REAL>();
     Matrix<REAL> &u = falm.fv.u;
