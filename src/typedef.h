@@ -30,6 +30,12 @@ typedef nlohmann::json json;
 // typedef size_t       SIZE_T;
 // typedef unsigned int UINT_T;
 
+struct FalmSnapshotInfo {
+    size_t step;
+    double time;
+    bool tavg;
+};
+
 const INT GuideCell = 2;
 
 }

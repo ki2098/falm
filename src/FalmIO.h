@@ -15,7 +15,7 @@ namespace Falm {
 class FalmIO {
 public:
 
-static void writeIndexFile(std::string fpath, CPM &cpm, const std::vector<std::pair<INT, REAL> > &itlist) {
+static void writeIndexFile(std::string fpath, CPM &cpm, const std::vector<FalmSnapshotInfo> &itlist) {
     json idxjson;
     INT gimax, gjmax, gkmax, gc;
     gimax = cpm.global.shape[0];
@@ -35,7 +35,16 @@ static void writeIndexFile(std::string fpath, CPM &cpm, const std::vector<std::p
         jranks.push_back(tmp);
     }
     idxjson["ranks"] = jranks;
-    idxjson["outputSteps"] = itlist;
+    // idxjson["outputSteps"] = {};
+    for (auto snapshot : itlist) {
+        json spt;
+        spt["time"] = snapshot.time;
+        spt["step"] = snapshot.step;
+        if (snapshot.tavg) {
+            spt["timeAvg"] = 1;
+        }
+        idxjson["outputSteps"].push_back(spt);
+    }
     if (typeid(REAL) == typeid(float)) {
         idxjson["dateType"] = "float32";
     } else if (typeid(REAL) == typeid(double)) {

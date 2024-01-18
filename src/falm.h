@@ -18,6 +18,8 @@ struct FalmBasicVar {
     Matrix<REAL> poi_a, poi_rhs, poi_res; // variables for pressure poisson equation
     Matrix<REAL> ff; // actuator model force
     Matrix<REAL> divergence; // velocity divergence
+    Matrix<REAL> utavg, ptavg; // time-averaged variables
+    Matrix<REAL> uvwp; // output buffer
 
     void release_all() {
         xyz.release();
@@ -33,6 +35,9 @@ struct FalmBasicVar {
         poi_res.release();
         ff.release();
         divergence.release();
+        utavg.release();
+        ptavg.release();
+        uvwp.release();
     }
 };
 
@@ -58,6 +63,7 @@ public:
     INT  maxIt;
     INT  timeAvgStartIt;
     INT  timeAvgEndIt;
+    INT  timeAvgCount = 0;
     INT  outputStartIt;
     INT  outputEndIt;
     INT  outputIntervalIt;
@@ -65,7 +71,7 @@ public:
     std::string outputPrefix;
     std::string    setupFile;
     std::string       cvFile;
-    std::vector<std::pair<INT, REAL> > timeSlices;
+    std::vector<FalmSnapshotInfo> timeSlices;
 
     REAL gettime() {return dt * it;}
 
@@ -346,24 +352,59 @@ public:
         fv.ff.alloc(shape, 3, HDC::HstDev, "ALM force");
         fv.divergence.alloc(shape, 1, HDC::HstDev, "divergence");
 
+        if (timeAvgEndIt > timeAvgStartIt) {
+            fv.utavg.alloc(shape, 3, HDC::Device, "time-avg velocity");
+            fv.ptavg.alloc(shape, 1, HDC::Device, "time-avg pressure");
+        }
+        fv.uvwp.alloc(shape, 4, HDC::HstDev, "uvwp buffer");
+
         falmCfd.alloc(shape);
         falmEq.alloc(shape);
     }
 
-    void outputUVWP() {
+    void TAvg(dim3 block={8,8,8}) {
+        if (it >= timeAvgStartIt && it < timeAvgEndIt) {
+            FalmMV::MatrixAdd(fv.utavg, fv.u, block);
+            FalmMV::MatrixAdd(fv.ptavg, fv.p, block);
+            timeAvgCount ++;
+        }
+    }
+
+    void outputUVWP(dim3 block={8,8,8}) {
+        if (it < outputStartIt || it >= outputEndIt || it % outputIntervalIt != 0) {
+            return;
+        }
+        
         INT3 shape = cpm.pdm_list[cpm.rank].shape;
-        Matrix<REAL> uvwp(shape, 4, HDC::Host, "output uvwp");
-        falmMemcpy(&uvwp(0, 0), &fv.u.dev(0), sizeof(REAL) * uvwp.shape[0] * 3, MCP::Dev2Hst);
-        falmMemcpy(&uvwp(0, 3), &fv.p.dev(0), sizeof(REAL) * uvwp.shape[0]    , MCP::Dev2Hst);
+        // Matrix<REAL> uvwp(shape, 4, HDC::Host, "output uvwp");
+        falmMemcpy(&fv.uvwp(0, 0), &fv.u.dev(0), sizeof(REAL) * fv.uvwp.shape[0] * 3, MCP::Dev2Hst);
+        falmMemcpy(&fv.uvwp(0, 3), &fv.p.dev(0), sizeof(REAL) * fv.uvwp.shape[0]    , MCP::Dev2Hst);
         size_t len = outputPrefix.size() + 32;
         char *tmp = (char*)malloc(sizeof(char) * len);
         sprintf(tmp, "%s_%06d_%010d", outputPrefix.c_str(), cpm.rank, it);
         std::string fpath(tmp);
-        FalmIO::writeVectorFile(wpath(fpath), cpm, uvwp, it, gettime());
+        FalmIO::writeVectorFile(wpath(fpath), cpm, fv.uvwp, it, gettime());
         free(tmp);
-        std::pair<INT, REAL> pt{it, it * dt};
-        timeSlices.push_back(pt);
+        FalmSnapshotInfo snapshot = {it, gettime(), false};
+        if (it >= timeAvgStartIt && it < timeAvgEndIt) {
+            falmMemcpy(&fv.uvwp.dev(0, 0), &fv.utavg.dev(0), sizeof(REAL) * fv.uvwp.shape[0] * 3, MCP::Dev2Dev);
+            falmMemcpy(&fv.uvwp.dev(0, 3), &fv.ptavg.dev(0), sizeof(REAL) * fv.uvwp.shape[0]    , MCP::Dev2Dev);
+            FalmMV::ScaleMatrix(fv.uvwp, 1.0 / timeAvgCount, block);
+            fv.uvwp.sync(MCP::Dev2Hst);
+            std::string tAvgPrefix = outputPrefix + "_tavg";
+            len = outputPrefix.size() + 64;
+            tmp = (char*)malloc(sizeof(char) * len);
+            sprintf(tmp, "%s_%06d_%010d", tAvgPrefix.c_str(), cpm.rank, it);
+            fpath = std::string(tmp);
+            FalmIO::writeVectorFile(wpath(fpath), cpm, fv.uvwp, it, gettime());
+            free(tmp);
+            snapshot.tavg = true;
+        }
+        // std::pair<INT, REAL> pt{it, it * dt};
+        timeSlices.push_back(snapshot);
     }
+
+
 
 };
 

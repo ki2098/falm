@@ -71,11 +71,17 @@ struct size4 {
     }
 };
 
+struct TimeSliceInfo {
+    size_t step;
+    double time;
+    bool tavg;
+};
+
 vector<size3> size_list;
 vector<size3> offset_list;
 size3 global;
 size_t gc;
-vector<pair<size_t, double> > slice_list;
+vector<TimeSliceInfo> slice_list;
 int mpi_size;
 size_t dtype;
 size_t n_variable;
@@ -109,10 +115,15 @@ void readIndexFile(string path) {
         size_list[rank] = size3(size3(rj["voxel"]) + 2*gc);
     }
     for (auto slice : idxjson["outputSteps"]) {
-        size_t _step = slice[0].get<size_t>();
-        double _time = slice[1].get<double>();
-        pair<size_t, double> pt{_step, _time};
-        slice_list.push_back(pt);
+        TimeSliceInfo tsinfo;
+        tsinfo.step = slice["step"].get<size_t>();
+        tsinfo.time = slice["time"].get<double>();
+        tsinfo.tavg = false;
+        if (slice.contains("timeAvg")) {
+            tsinfo.tavg = true;
+        }
+        // pair<size_t, double> pt{_step, _time};
+        slice_list.push_back(tsinfo);
     }
     if (idxjson["dataType"].get<string>() == "float32") {
         dtype = sizeof(float);
@@ -192,13 +203,20 @@ void reconstruct(std::string prefix, size_t step, double time) {
 int main(int argc, char **argv) {
     std::string path(argv[1]);
     readIndexFile(path + ".json");
+    std::string tavg_path = path + "_tavg";
     for (auto slice : slice_list) {
-        size_t _step = slice.first;
-        double _time = slice.second;
+        size_t _step = slice.step;
+        double _time = slice.time;
         if (dtype == sizeof(double)) {
             reconstruct<double>(path, _step, _time);
+            if (slice.tavg) {
+                reconstruct<double>(tavg_path, _step, _time);
+            }
         }  else if (dtype == sizeof(float)) {
             reconstruct<float>(path, _step, _time);
+            if (slice.tavg) {
+                reconstruct<float>(tavg_path, _step, _time);
+            }
         } else {
             printf("undefined data width %lu\n", dtype);
         }

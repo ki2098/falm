@@ -4,7 +4,17 @@
 using json = nlohmann::json;
 using namespace std;
 
+struct SphDummyGrid {
+    double xorg, yorg, zorg, xpitch, ypitch, zpitch;
+};
+
+SphDummyGrid sdg;
+
 vector<pair<size_t, double> > slice_list;
+
+size_t idx_ijkn(size_t imax, size_t jmax, size_t kmax, size_t nmax, size_t i, size_t j, size_t k, size_t n) {
+    return i + j*imax + k*imax*jmax + n*imax*jmax*kmax;
+}
 
 void read_index_file(string path) {
     ifstream idxfile(path);
@@ -21,15 +31,62 @@ void record(ofstream &ofs, int sz) {
     ofs.write((char*)&sz, sizeof(int));
 }
 
+void fwrite(ofstream &ofs, void *ptr, size_t sz) {
+    ofs.write((char*)ptr, sz);
+}
+
 string make_filename(string prefix, size_t step) {
     char *tmp = (char*)malloc(sizeof(char) * (prefix.size() + 32));
     sprintf(tmp, "%s_%010d", prefix.c_str(), step);
     return string(tmp);
 }
 
-template<typename T>
-void write_sph(string path, size_t imax, size_t jmax, size_t kmax, size_t nv, size_t step, double time) {
-    
+void write_sph_float(double *data, string path, size_t imax, size_t jmax, size_t kmax, size_t nv, size_t step, double time) {
+    ofstream ofs(path, ios::binary);
+    int svtype, dtype, rsz;
+
+    if (nv == 1) svtype = 1;
+    else if (nv == 3) svtype = 2;
+    else {
+        svtype = 2;
+        printf("wrong number of variables %ld in SPH file %s\n", nv, path.c_str());
+    }
+    dtype = 1;
+
+    record(ofs, 2*sizeof(int));
+    fwrite(ofs, &svtype, sizeof(int));
+    fwrite(ofs, &dtype, sizeof(int));
+    record(ofs, 2*sizeof(int));
+
+    int _imax = imax, _jmax = jmax, _kmax = kmax;
+    record(ofs, 3*sizeof(int));
+    fwrite(ofs, &_imax, sizeof(int));
+    fwrite(ofs, &_jmax, sizeof(int));
+    fwrite(ofs, &_kmax, sizeof(int));
+    record(ofs, 3*sizeof(int));
+
+    float xorg = sdg.xorg, yorg = sdg.yorg, zorg = sdg.zorg;
+    float xpitch = sdg.xpitch, ypitch = sdg.ypitch, zpitch = sdg.zpitch;
+    record(ofs, 3*sizeof(float));
+    fwrite(ofs, &xorg, sizeof(float));
+    fwrite(ofs, &yorg, sizeof(float));
+    fwrite(ofs, &zorg, sizeof(float));
+    record(ofs, 3*sizeof(float));
+
+    record(ofs, 3*sizeof(float));
+    fwrite(ofs, &xpitch, sizeof(float));
+    fwrite(ofs, &ypitch, sizeof(float));
+    fwrite(ofs, &zpitch, sizeof(float));
+    record(ofs, 3*sizeof(float));
+
+    int _step = step;
+    float _time = time;
+    record(ofs, sizeof(int)+sizeof(float));
+    fwrite(ofs, &_step, sizeof(int));
+    fwrite(ofs, &_time, sizeof(float));
+    record(ofs, sizeof(int)+sizeof(float));
+
+    ofs.close();
 }
 
 template<typename T>
@@ -40,7 +97,6 @@ void uvwp_to_sph(string prefix, size_t step, bool cut_gc) {
         size_t imax, jmax, kmax, nv, gc, stp;
         double time;
 
-        
     }
 }
 
@@ -108,6 +164,11 @@ void cvnode_to_crd(string ipath, string opath, bool cut_gc) {
                 v = x[tmp-1] + 0.5 * hx[tmp-1];
             }
             ofs.write((char*)&v, sizeof(float));
+            if (i == 0) {
+                sdg.xorg = v;
+            } else if (i == xnum - 1) {
+                sdg.xpitch = (v - sdg.xorg) / (xnum - 1);
+            }
         }
         record(ofs, rsz);
 
@@ -122,6 +183,11 @@ void cvnode_to_crd(string ipath, string opath, bool cut_gc) {
                 v = y[tmp-1] + 0.5 * hy[tmp-1];
             }
             ofs.write((char*)&v, sizeof(float));
+            if (j == 0) {
+                sgd.yorg = v;
+            } else if (j == ynum - 1) {
+                sgd.ypitch = (v - sgd.yorg) / (ynum - 1);
+            }
         }
         record(ofs, rsz);
 
@@ -136,6 +202,11 @@ void cvnode_to_crd(string ipath, string opath, bool cut_gc) {
                 v = z[tmp-1] + 0.5 * hz[tmp-1];
             }
             ofs.write((char*)&v, sizeof(float));
+            if (k == 0) {
+                sdg.zorg = v;
+            } else if (k == znum - 1) {
+                sdg.zpitch = (v - sdg.zorg) / (znum - 1);
+            }
         }
         record(ofs, rsz);
         ofs.close();
