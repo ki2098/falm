@@ -139,9 +139,11 @@ void readIndexFile(string path) {
 template<typename T>
 void reconstruct(std::string prefix, size_t step, double time) {
     T *v = (T *)malloc(sizeof(T) * global.product() * n_variable);
-    printf("reconstructing %s with maximum %d threads...\n", make_filename(prefix, step).c_str(), omp_get_max_threads());
+    printf("reconstructing %s with maximum %d threads: ", make_filename(prefix, step).c_str(), omp_get_max_threads());
     fflush(stdout);
     for (int rank = 0; rank < mpi_size; rank ++) {
+        printf("%d ", rank);
+        fflush(stdout);
         size3 size = size_list[rank];
         size3 offset = offset_list[rank];
         size3 start(0, 0, 0);
@@ -188,7 +190,10 @@ void reconstruct(std::string prefix, size_t step, double time) {
         }}}}
 
         procfile.close();
+        free(vp);
     }
+    printf("\n");
+    fflush(stdout);
 
     string ofilename = make_filename(prefix, step);
     ofstream ofile(ofilename, ios::binary);
@@ -202,6 +207,8 @@ void reconstruct(std::string prefix, size_t step, double time) {
     ofile.write((char*)&dtype, sizeof(size_t));
     ofile.write((char*)v, sizeof(T) * global.product() * n_variable);
     ofile.close();
+
+    free(v);
 }
 
 int main(int argc, char **argv) {
