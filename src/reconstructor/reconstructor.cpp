@@ -1,6 +1,7 @@
 #include <fstream>
 #include <sstream>
 #include <omp.h>
+#include <sys/time.h>
 #include "../nlohmann/json.hpp"
 
 using json = nlohmann::json;
@@ -138,6 +139,8 @@ void readIndexFile(string path) {
 
 template<typename T>
 void reconstruct(std::string prefix, size_t step, double time) {
+    timeval t1, t2;
+    gettimeofday(&t1, NULL);
     T *v = (T *)malloc(sizeof(T) * global.product() * n_variable);
     printf("reconstructing %s with maximum %d threads: ", make_filename(prefix, step).c_str(), omp_get_max_threads());
     fflush(stdout);
@@ -192,8 +195,7 @@ void reconstruct(std::string prefix, size_t step, double time) {
         procfile.close();
         free(vp);
     }
-    printf("\n");
-    fflush(stdout);
+    
 
     string ofilename = make_filename(prefix, step);
     ofstream ofile(ofilename, ios::binary);
@@ -209,6 +211,11 @@ void reconstruct(std::string prefix, size_t step, double time) {
     ofile.close();
 
     free(v);
+
+    gettimeofday(&t2, NULL);
+    double tt = (t2.tv_sec + t2.tv_usec/1000000.0) - (t1.tv_sec + t1.tv_usec/1000000.0);
+    printf(" %e\n", tt);
+    fflush(stdout);
 }
 
 int main(int argc, char **argv) {
