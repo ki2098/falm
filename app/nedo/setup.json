@@ -2,14 +2,14 @@
     "runtime":{
         "time":{
             "start":0,
-            "end":60,
+            "end":120,
             "dt":1e-3
         },
         "timeAvg":{
-            "start":10
+            "start":20
         },
         "output":{
-            "start":10,
+            "start":20,
             "interval":10,
             "prefix":"data/uvwp"
         }
