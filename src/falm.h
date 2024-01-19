@@ -363,7 +363,7 @@ public:
     }
 
     void TAvg(dim3 block={8,8,8}) {
-        if (it >= timeAvgStartIt && it < timeAvgEndIt) {
+        if (it >= timeAvgStartIt && it <= timeAvgEndIt) {
             FalmMV::MatrixAdd(fv.utavg, fv.u, block);
             FalmMV::MatrixAdd(fv.ptavg, fv.p, block);
             timeAvgCount ++;
@@ -371,7 +371,7 @@ public:
     }
 
     void outputUVWP(dim3 block={8,8,8}) {
-        if (it < outputStartIt || it >= outputEndIt || it % outputIntervalIt != 0) {
+        if (it <= outputStartIt || it >= outputEndIt || it % outputIntervalIt != 0) {
             return;
         }
         
