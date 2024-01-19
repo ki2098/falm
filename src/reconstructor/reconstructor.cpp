@@ -1,5 +1,6 @@
 #include <fstream>
 #include <sstream>
+#include <omp.h>
 #include "../nlohmann/json.hpp"
 
 using json = nlohmann::json;
@@ -138,6 +139,7 @@ void readIndexFile(string path) {
 template<typename T>
 void reconstruct(std::string prefix, size_t step, double time) {
     T *v = (T *)malloc(sizeof(T) * global.product() * n_variable);
+    printf("reconstructing %s with maximum %d threads...", make_filename(prefix), omp_get_max_threads());
     for (int rank = 0; rank < mpi_size; rank ++) {
         size3 size = size_list[rank];
         size3 offset = offset_list[rank];
@@ -173,6 +175,7 @@ void reconstruct(std::string prefix, size_t step, double time) {
 
         size4 vsz(size, n_variable);
         size4 gvsz(global, n_variable);
+        #pragma omp parallel for collapse(4)
         for (size_t n = 0; n < n_variable; n ++) {
         for (size_t k = start[2]; k < end[2]; k ++) {
         for (size_t j = start[1]; j < end[1]; j ++) {

@@ -1,0 +1,43 @@
+{
+    "runtime":{
+        "time":{
+            "start":0,           // シミュレーションの開始時刻
+            "end":60,            // シミュレーションの終わり時刻
+            "dt":1e-3            // Δt
+        },
+        "timeAvg":{
+            "start":10           // 時間平均の開始時刻
+        },
+        "output":{
+            "start":10,          // 出力の開始時刻
+            "interval":10,       // 出力の間隔
+            "prefix":"data/uvwp" // 出力のディレクトリとファイル名：dataフォルダーのuvwp_${rank}_${step}に出力
+        }
+    },
+    "inflow":{
+        "type":"uniform",        // 一様流入
+        "velocity":1.0           // 流入面の風速
+    },
+    "solver":{
+        "linearSolver":{                 // ポアソン方程式のソルバー
+            "type":"PBiCGStab",          // PBiCGStabソルバー
+            "iteration":1000,            // 最大反復回数
+            "tolerance":1e-6,            // 収束とみなす最大残差ノルム
+            "preconditioner":{           // 前処理
+                "type":"Jacobi",
+                "iteration":2
+            }
+        },
+        "cfd":{                          // CFDソルバー
+            "Re":10000,                  // レイノルズ数
+            "advectionScheme":"Upwind3", // 移流項の差分スキーム
+            "SGS":"Smagorinsky",         // 渦粘性評価のモデル
+            "Cs":0.1                     // Smagorinsky定数
+        }
+    },
+    "mesh":{                                     // 格子ファイル
+        "convert":"mesh",                        // 格子ファイルのパースを指定
+        "controlVolumeFile":"controlVolume.txt", // 格子ファイルをcontrolVolumeファイルに変換
+        "controlVolumeCenter":"innerNode"        // 格子のinnerNodeにコントロールボリュームの中心を配置する
+    }
+}
