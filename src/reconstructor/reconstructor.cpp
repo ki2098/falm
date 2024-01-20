@@ -132,6 +132,7 @@ void readIndexFile(string path) {
     } else if (idxjson["dataType"].get<string>() == "float64") {
         dtype = sizeof(double);
     } else {
+        printf("index file error: data type other than float32 or float64 are not allowed\n");
         dtype = sizeof(int);
     }
     n_variable = idxjson["variables"].size();

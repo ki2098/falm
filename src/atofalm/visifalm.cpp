@@ -1,8 +1,99 @@
 #include <fstream>
+#include <sstream>
+#include <omp.h>
 #include "../nlohmann/json.hpp"
 
 using json = nlohmann::json;
 using namespace std;
+
+struct size3 {
+    size_t _sz[3];
+    size3(size_t _vx, size_t _vy, size_t _vz) {
+        _sz[0] = _vx;
+        _sz[1] = _vy;
+        _sz[2] = _vz;
+    }
+
+    size3(const json &jsz) {
+        _sz[0] = jsz[0];
+        _sz[1] = jsz[1];
+        _sz[2] = jsz[2];
+    }
+
+    size3() {}
+
+    size_t &operator[](size_t i) {
+        return _sz[i];
+    }
+
+    const size_t &operator[](size_t i) const {
+        return _sz[i];
+    }
+
+    size3 operator+(size_t _v) {
+        size3 tmp;
+        tmp[0] = _sz[0] + _v;
+        tmp[1] = _sz[1] + _v;
+        tmp[2] = _sz[2] + _v;
+        return tmp;
+    }
+
+    std::string str() {
+        stringstream tmp;
+        tmp << "(" << _sz[0] << " " << _sz[1] << " " << _sz[2] << ")";
+        return tmp.str();
+    }
+
+    size_t product() const {
+        return _sz[0] * _sz[1] * _sz[2];
+    }
+
+    size_t idx(size_t i, size_t j, size_t k) {
+        return i + j * _sz[0] + k * _sz[0] * _sz[1];
+    }
+};
+
+struct size4 {
+    size_t _sz[4];
+
+    size4(size_t _vx, size_t _vy, size_t _vz, size_t _vn) {
+        _sz[0] = _vx;
+        _sz[1] = _vy;
+        _sz[2] = _vz;
+        _sz[3] = _vn;
+    }
+
+    size4(const size3 &sz3, size_t n) {
+        _sz[0] = sz3[0];
+        _sz[1] = sz3[1];
+        _sz[2] = sz3[2];
+        _sz[3] = n;
+    }
+
+    size_t &operator[](size_t i) {
+        return _sz[i];
+    }
+
+    const size_t &operator[](size_t i) const {
+        return _sz[i];
+    }
+
+    size3 operator+(size_t _v) {
+        size3 tmp;
+        tmp[0] = _sz[0] + _v;
+        tmp[1] = _sz[1] + _v;
+        tmp[2] = _sz[2] + _v;
+        return tmp;
+    }
+
+    size_t product() const {
+        return _sz[0] * _sz[1] * _sz[2] * _sz[3];
+    }
+
+    size_t idx(size_t i, size_t j, size_t k, size_t n) {
+        return i + j * _sz[0] + k * _sz[0] * _sz[1] + n * _sz[0] * _sz[1] * _sz[2];
+    }
+};
 
 struct SphDummyGrid {
     double xorg, yorg, zorg, xpitch, ypitch, zpitch;
@@ -10,7 +101,13 @@ struct SphDummyGrid {
 
 SphDummyGrid sdg;
 
-vector<pair<size_t, double> > slice_list;
+struct TimeSliceInfo {
+    size_t step;
+    double time;
+    bool tavg;
+};
+
+vector<TimeSliceInfo> slice_list;
 
 size_t idx_ijkn(size_t imax, size_t jmax, size_t kmax, size_t nmax, size_t i, size_t j, size_t k, size_t n) {
     return i + j*imax + k*imax*jmax + n*imax*jmax*kmax;
@@ -20,10 +117,15 @@ void read_index_file(string path) {
     ifstream idxfile(path);
     json idxjson = json::parse(idxfile);
     for (auto slice : idxjson["outputSteps"]) {
-        size_t _step = slice[0].get<size_t>();
-        double _time = slice[1].get<double>();
-        pair<size_t, double> pt{_step, _time};
-        slice_list.push_back(pt);
+        TimeSliceInfo tsinfo;
+        tsinfo.step = slice["step"].get<size_t>();
+        tsinfo.time = slice["time"].get<double>();
+        tsinfo.tavg = false;
+        if (slice.contains("timeAvg")) {
+            tsinfo.tavg = true;
+        }
+        // pair<size_t, double> pt{_step, _time};
+        slice_list.push_back(tsinfo);
     }
 }
 
@@ -35,15 +137,21 @@ void fwrite(ofstream &ofs, void *ptr, size_t sz) {
     ofs.write((char*)ptr, sz);
 }
 
+void fread(ifstream &ifs, void *ptr, size_t sz) {
+    ifs.read((char*)ptr, sz);
+}
+
 string make_filename(string prefix, size_t step) {
     char *tmp = (char*)malloc(sizeof(char) * (prefix.size() + 32));
     sprintf(tmp, "%s_%010d", prefix.c_str(), step);
     return string(tmp);
 }
 
-void write_sph_float(double *data, string path, size_t imax, size_t jmax, size_t kmax, size_t nv, size_t step, double time) {
+void write_sph_float(double *data, string path, size_t imax, size_t jmax, size_t kmax, size_t nv, size_t gc, size_t step, double time) {
     ofstream ofs(path, ios::binary);
     int svtype, dtype, rsz;
+
+    size4 size(imax, jmax, kmax, nv);
 
     if (nv == 1) svtype = 1;
     else if (nv == 3) svtype = 2;
@@ -58,7 +166,7 @@ void write_sph_float(double *data, string path, size_t imax, size_t jmax, size_t
     fwrite(ofs, &dtype, sizeof(int));
     record(ofs, 2*sizeof(int));
 
-    int _imax = imax, _jmax = jmax, _kmax = kmax;
+    int _imax = size[0]-2*gc, _jmax = size[1]-2*gc, _kmax = size[2]-2*gc;
     record(ofs, 3*sizeof(int));
     fwrite(ofs, &_imax, sizeof(int));
     fwrite(ofs, &_jmax, sizeof(int));
@@ -86,22 +194,30 @@ void write_sph_float(double *data, string path, size_t imax, size_t jmax, size_t
     fwrite(ofs, &_time, sizeof(float));
     record(ofs, sizeof(int)+sizeof(float));
 
+    record(ofs, sizeof(float)*_imax*_jmax*_kmax*nv);
+    #pragma omp parallel collapse(4)
+    for (size_t k = gc; k < size[2]-gc; k ++) {
+    for (size_t j = gc; j < size[1]-gc; j ++) {
+    for (size_t i = gc; i < size[0]-gc; i ++) {
+    for (size_t n = 0; n < size[3]; n ++) {
+        float v = data[size.idx(i, j, k, n)];
+        fwrite(ofs, &v, sizeof(float));
+    }}}}
+    record(ofs, sizeof(float)*_imax*_jmax*_kmax*nv);
+
     ofs.close();
 }
 
 template<typename T>
-void uvwp_to_sph(string prefix, size_t step, bool cut_gc) {
+void uvwp_to_sph(string prefix, bool cut_gc) {
     for (auto slice : slice_list) {
-        string filename = make_filename(prefix, step);
-        ifstream ifile(filename, ios::binary);
-        size_t imax, jmax, kmax, nv, gc, stp;
-        double time;
-
+        
     }
 }
 
 template<typename T>
 void cvnode_to_crd(string ipath, string opath, bool cut_gc) {
+    printf("converting %s to %s\n", ipath.c_str(), opath.c_str());fflush(stdout);
     ifstream ifs(ipath);
     size_t imax, jmax, kmax, gc;
     ifs >> imax >> jmax >> kmax >> gc;
@@ -295,11 +411,11 @@ void cvnode_to_crd(string ipath, string opath, bool cut_gc) {
 
 template<typename T>
 void cvcenter_to_crd(string ipath, string opath, bool cut_gc) {
+    printf("converting %s to %s\n", ipath.c_str(), opath.c_str());fflush(stdout);
     ifstream ifs(ipath);
     size_t imax, jmax, kmax, gc;
     ifs >> imax >> jmax >> kmax >> gc;
     int gc_mask = int(cut_gc);
-    
     if (typeid(T) == typeid(float)) {
         float *x, *y, *z, dummy;
         x = (float*)malloc(sizeof(float)*imax);
@@ -446,5 +562,8 @@ void cvcenter_to_crd(string ipath, string opath, bool cut_gc) {
 
 int main(int argc, char **argv) {
     string prefix(argv[1]);
+    printf("VisiFalm: converting %s files to Riken V-Isio files\n", prefix.c_str());
+    read_index_file(prefix+".json");
     cvnode_to_crd<float>(prefix+".cv", prefix+".crd", true);
+    uvwp_to_sph<float>(prefix, true);
 }
