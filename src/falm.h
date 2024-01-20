@@ -395,7 +395,7 @@ public:
             fv.uvwp.sync(MCP::Dev2Hst);
             std::string tAvgPrefix = outputPrefix + "_tavg";
             len = tAvgPrefix.size() + 32;
-            tmp = vector<char>(len);
+            tmp = std::vector<char>(len);
             sprintf(tmp.data(), "%s_%06d_%010d", tAvgPrefix.c_str(), cpm.rank, it);
             fpath = std::string(tmp.data());
             FalmIO::writeVectorFile(wpath(fpath), cpm, fv.uvwp, it, gettime());
