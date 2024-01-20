@@ -1,208 +1,33 @@
 #include <math.h>
-#include "../../src/FalmCFD.h"
-#include "../../src/FalmEq.h"
+#include <fstream>
+#include "../../src/falm.h"
 #include "bc.h"
-
-#define L 1.0
-#define N 128
-#define T 100.0
-#define DT 1e-3
-#define ORGN 1.0
+#include "../../src/profiler.h"
 
 using namespace Falm;
 
-const dim3 bdim = {8, 8, 8};
+Cprof::cprof_Profiler profiler;
 
-Matrix<REAL> x, h, kx, g, ja;
-Matrix<REAL> u, uprev, uu, ua, uua, p, nut, ff ,rhs, res, dvr;
-Matrix<REAL> poisson_a;
+#define TERMINAL_OUTPUT_RANK 1
+
+FalmCore falm;
 REAL maxdiag;
-CPM cpm;
-Vcdm::VCDM<float> vcdm;
+Matrix<REAL> u_previous;
+
+dim3 block{8, 8, 8};
+
 STREAM facestream[CPM::NFACE];
+STREAM *streams;
 
-void data_output(int step, int rank, double dt) {
-    Matrix<float> uvw(cpm.pdm_list[cpm.rank].shape, 4, HDC::Host, "uvw");
-    u.sync(MCP::Dev2Hst);
-    p.sync(MCP::Dev2Hst);
-    for (INT i = 0; i < u.shape[0]; i ++) {
-        uvw(i, 0) = u(i, 0);
-        uvw(i, 1) = u(i, 1);
-        uvw(i, 2) = u(i, 2);
-        uvw(i, 3) = p(i);
-    }
-    vcdm.writeFileData(&uvw(0, 0), cpm.gc, 4, rank, step, Vcdm::IdxType::IJKN);
-    dim3 bdim(8, 8, 1);
-    double umax = FalmMV::MatColMax(u, 0, cpm, bdim);
-    double vmax = FalmMV::MatColMax(u, 1, cpm, bdim);
-    double wmax = FalmMV::MatColMax(u, 2, cpm, bdim);
-    // double _max = L2Dev_VecMax(u, cpm, bdim);
-    double pmax = FalmMV::MatColMax(p, 0, cpm, bdim);
-    double umin = FalmMV::MatColMin(u, 0, cpm, bdim);
-    double vmin = FalmMV::MatColMin(u, 1, cpm, bdim);
-    double wmin = FalmMV::MatColMin(u, 2, cpm, bdim);
-    // double _min = L2Dev_VecMin(u, cpm, bdim);
-    double pmin = FalmMV::MatColMin(p, 0, cpm, bdim);
-    Vcdm::VcdmSlice slice;
-    slice.step = step;
-    slice.time = step * dt;
-    slice.avgStep = 1;
-    slice.avgTime = dt;
-    slice.avgMode = true;
-    // slice.vectorMax = _max;
-    // slice.vectorMin = _min;
-    slice.varMax = {umax, vmax, wmax, pmax};
-    slice.varMin = {umin, vmin, wmin, pmin};
-    vcdm.timeSlice.push_back(slice);
-}
-
-REAL main_loop(FalmCFD &cfd, FalmEq &eq, STREAM *stream) {
-    uprev.copy(u, HDC::Device);
-    // printf("1\n");
-
-    cfd.FSPseudoU(uprev, u, uu, u, nut, kx, g, ja, ff, cpm, bdim, stream);
-    // printf("2\n");
-    cfd.UtoUU(u, uu, kx, ja, cpm, bdim, stream);
-    // printf("3\n");
-    LID3D::uubc(uu, cpm, stream);
-    // printf("4\n");
-    cfd.MACCalcPoissonRHS(uu, rhs, ja, cpm, bdim, maxdiag);
-    // printf("5\n");
-    
-    eq.Solve(poisson_a, p, rhs, res, cpm, bdim, stream);
-    // printf("6\n");
-    LID3D::pbc(p, cpm, stream);
-
-    cfd.ProjectP(u, u, uu, uu, p, kx, g, cpm, bdim, stream);
-    LID3D::ubc(u, cpm, stream);
-
-    cfd.SGS(u, nut, x, kx, ja, cpm, bdim, stream);
-
-    cfd.Divergence(uu, dvr, ja, cpm, bdim);
-
-    return FalmMV::EuclideanNormSq(dvr, cpm, bdim);
-}
-
-int main(int argc, char **argv) {
-    CPM_Init(&argc, &argv);
-    int mpi_rank, mpi_size;
-    cpm.use_cuda_aware_mpi = false;
-    CPM_GetRank(MPI_COMM_WORLD, mpi_rank);
-    CPM_GetSize(MPI_COMM_WORLD, mpi_size);
-    if (argc == 1) {
-        if (mpi_size > 1) {
-            printf("when running with > 1 procs, define partition nx ny nz\n");
-            CPM_Finalize();
-            return 0;
-        }
-        cpm.initPartition({N, N, N}, GuideCell);
-    } else if (argc == 4) {
-        cpm.initPartition(
-            {N, N, N},
-            GuideCell,
-            mpi_rank,
-            mpi_size,
-            {atoi(argv[1]), atoi(argv[2]), atoi(argv[3])}
-        );
-    } else {
-        printf("mpirun -np N lid3 [nx ny nz]\n");
-        CPM_Finalize();
-        return 0;
-    }
+void make_poisson_coefficient_matrix() {
+    CPM &cpm = falm.cpm;
     Region &pdm = cpm.pdm_list[cpm.rank];
     Region &global = cpm.global;
-    Region ginner(global.shape, cpm.gc);
-
-    for (int fid = 0; fid < 6; fid ++) {
-        cudaStreamCreate(&facestream[fid]);
-    }
-
-    printf("rank %d, global size = (%d %d %d), proc size = (%d %d %d), proc offset = (%d %d %d)\n", cpm.rank, global.shape[0], global.shape[1], global.shape[2], pdm.shape[0], pdm.shape[1], pdm.shape[2], pdm.offset[0], pdm.offset[1], pdm.offset[2]);
-    fflush(stdout); CPM_Barrier(MPI_COMM_WORLD);
-
-    u.alloc(pdm.shape, 3, HDC::Device);
-    uprev.alloc(pdm.shape, 3, HDC::Device);
-    ua.alloc(pdm.shape, 3, HDC::Device);
-    uu.alloc(pdm.shape, 3, HDC::Device);
-    uua.alloc(pdm.shape, 3, HDC::Device);
-    p.alloc(pdm.shape, 1, HDC::Device);
-    nut.alloc(pdm.shape, 1, HDC::Device);
-    ff.alloc(pdm.shape, 3, HDC::Device);
-    rhs.alloc(pdm.shape, 1, HDC::Device);
-    res.alloc(pdm.shape, 1, HDC::Device);
-    dvr.alloc(pdm.shape, 1, HDC::Device);
-
-    vcdm.setPath("data", "lid3d");
-    setVcdm(cpm, vcdm, {L, L, L}, {ORGN, ORGN, ORGN});
-    vcdm.dfiFinfo.varList = {"u", "v", "w", "p"};
-    if (cpm.rank == 0) {
-        Vcdm::double3 d3;
-        Vcdm::int3    i3;
-        printf("------------dfi info------------\n");
-        printf("mpi (%d %d)\n", vcdm.dfiMPI.size, vcdm.dfiMPI.ngrp);
-        d3 = vcdm.dfiDomain.globalOrigin;
-        printf("gOrigin   (%e %e %e)\n", d3[0], d3[1], d3[2]);
-        d3 = vcdm.dfiDomain.globalRegion;
-        printf("gRegion   (%e %e %e)\n", d3[0], d3[1], d3[2]);
-        i3 = vcdm.dfiDomain.globalVoxel;
-        printf("gVoxel    (%d %d %d)\n", i3[0], i3[1], i3[2]);
-        i3 = vcdm.dfiDomain.globalDivision;
-        printf("gDivision (%d %d %d)\n", i3[0], i3[1], i3[2]);
-        printf("\n");
-        for (int i = 0; i < cpm.size; i ++) {
-            Vcdm::VcdmRank &vproc = vcdm.dfiProc[i];
-            printf("rank %d\n", vproc.rank);
-            printf("host name %s\n", vproc.hostName.c_str());
-            i3 = vproc.voxelSize;
-            printf("voxel size (%d %d %d)\n", i3[0], i3[1], i3[2]);
-            i3 = vproc.headIdx;
-            printf("head idx   (%d %d %d)\n", i3[0], i3[1], i3[2]);
-            i3 = vproc.tailIdx;
-            printf("tail idx   (%d %d %d)\n", i3[0], i3[1], i3[2]);
-            printf("\n");
-        }
-        printf("------------dfi info------------\n");
-        fflush(stdout);
-    }
-    CPM_Barrier(MPI_COMM_WORLD);
-
-    Matrix<float> xyz(pdm.shape, 3, HDC::Host);
-    x.alloc(pdm.shape, 3, HDC::Host);
-    h.alloc(pdm.shape, 3, HDC::Host);
-    kx.alloc(pdm.shape, 3, HDC::Host);
-    ja.alloc(pdm.shape, 1, HDC::Host);
-    g.alloc(pdm.shape, 3, HDC::Host);
-    const REAL pitch = L / N;
-    const REAL volume = pitch * pitch * pitch;
-    const REAL dkdx  = 1.0 / pitch;
-    for (INT k = 0; k < pdm.shape[2]; k ++) {
-    for (INT j = 0; j < pdm.shape[1]; j ++) {
-    for (INT i = 0; i < pdm.shape[0]; i ++) {
-        INT idx = IDX(i, j, k, pdm.shape);
-        x(idx, 0) = ORGN + (i + pdm.offset[0] - cpm.gc + 0.5) * pitch;
-        x(idx, 1) = ORGN + (j + pdm.offset[1] - cpm.gc + 0.5) * pitch;
-        x(idx, 2) = ORGN + (k + pdm.offset[2] - cpm.gc + 0.5) * pitch;
-        h(idx, 0) = h(idx, 1) = h(idx, 2) = pitch;
-        kx(idx, 0) = kx(idx, 1) = kx(idx, 2) = dkdx;
-        ja(idx) = volume;
-        g(idx, 0) = g(idx, 1) = g(idx, 2) = volume * (dkdx * dkdx);
-
-        xyz(idx, 0) = ORGN + (i + pdm.offset[0] - cpm.gc + 0.5) * pitch;
-        xyz(idx, 1) = ORGN + (j + pdm.offset[1] - cpm.gc + 0.5) * pitch;
-        xyz(idx, 2) = ORGN + (k + pdm.offset[2] - cpm.gc + 0.5) * pitch;
-    }}}
-    x.sync(MCP::Hst2Dev);
-    h.sync(MCP::Hst2Dev);
-    kx.sync(MCP::Hst2Dev);
-    ja.sync(MCP::Hst2Dev);
-    g.sync(MCP::Hst2Dev);
-    vcdm.writeGridData(&xyz(0), cpm.gc, cpm.rank, 0, Vcdm::IdxType::IJKN);
-
-    poisson_a.alloc(pdm.shape, 7, HDC::Host, "poisson matrix", StencilMatrix::D3P7);
+    FalmBasicVar &fv = falm.fv;
     for (INT k = cpm.gc; k < pdm.shape[2] - cpm.gc; k ++) {
     for (INT j = cpm.gc; j < pdm.shape[1] - cpm.gc; j ++) {
     for (INT i = cpm.gc; i < pdm.shape[0] - cpm.gc; i ++) {
-        INT3 gijk = INT3{i, j, k} + pdm.offset;
+        INT3 gijk = pdm.offset + INT3{{i, j, k}};
         REAL ac, ae, aw, an, as, at, ab;
         ac = ae = aw = an = as = at = ab = 0.0;
         INT idxcc = IDX(i  , j  , k  , pdm.shape);
@@ -212,16 +37,16 @@ int main(int argc, char **argv) {
         INT idxs1 = IDX(i  , j-1, k  , pdm.shape);
         INT idxt1 = IDX(i  , j  , k+1, pdm.shape);
         INT idxb1 = IDX(i  , j  , k-1, pdm.shape);
-        REAL gxcc  =  g(idxcc, 0);
-        REAL gxe1  =  g(idxe1, 0);
-        REAL gxw1  =  g(idxw1, 0);
-        REAL gycc  =  g(idxcc, 1);
-        REAL gyn1  =  g(idxn1, 1);
-        REAL gys1  =  g(idxs1, 1);
-        REAL gzcc  =  g(idxcc, 2);
-        REAL gzt1  =  g(idxt1, 2);
-        REAL gzb1  =  g(idxb1, 2);
-        REAL jacob = ja(idxcc);
+        REAL gxcc  =  fv.g(idxcc, 0);
+        REAL gxe1  =  fv.g(idxe1, 0);
+        REAL gxw1  =  fv.g(idxw1, 0);
+        REAL gycc  =  fv.g(idxcc, 1);
+        REAL gyn1  =  fv.g(idxn1, 1);
+        REAL gys1  =  fv.g(idxs1, 1);
+        REAL gzcc  =  fv.g(idxcc, 2);
+        REAL gzt1  =  fv.g(idxt1, 2);
+        REAL gzb1  =  fv.g(idxb1, 2);
+        REAL jacob = fv.ja(idxcc);
         REAL coefficient;
         coefficient = 0.5 * (gxcc + gxe1) / jacob;
         if (gijk[0] < global.shape[0] - cpm.gc - 1) {
@@ -253,59 +78,170 @@ int main(int argc, char **argv) {
             ac -= coefficient;
             ab  = coefficient;
         }
-        poisson_a(idxcc, 0) = ac;
-        poisson_a(idxcc, 1) = aw;
-        poisson_a(idxcc, 2) = ae;
-        poisson_a(idxcc, 3) = as;
-        poisson_a(idxcc, 4) = an;
-        poisson_a(idxcc, 5) = ab;
-        poisson_a(idxcc, 6) = at;
+        fv.poi_a(idxcc, 0) = ac;
+        fv.poi_a(idxcc, 1) = aw;
+        fv.poi_a(idxcc, 2) = ae;
+        fv.poi_a(idxcc, 3) = as;
+        fv.poi_a(idxcc, 4) = an;
+        fv.poi_a(idxcc, 5) = ab;
+        fv.poi_a(idxcc, 6) = at;
     }}}
-    poisson_a.sync(MCP::Hst2Dev);
-    maxdiag = FalmMV::MaxDiag(poisson_a, cpm, {8, 8, 8});
-    FalmMV::ScaleMatrix(poisson_a, 1.0 / maxdiag, {8, 8, 8});
-    if (cpm.rank == 0) {
-        printf("max diag = %lf\n", maxdiag);
-        fflush(stdout);
+    fv.poi_a.sync(MCP::Hst2Dev);
+    maxdiag = FalmMV::MaxDiag(fv.poi_a, falm.cpm, block);
+    FalmMV::ScaleMatrix(fv.poi_a, 1.0 / maxdiag, block);
+}
+
+void init(int &argc, char **&argv) {
+    falm.env_init(argc, argv);
+    falm.parse_settings("setup.json");
+    falm.computation_init({{falm.cpm.size, 1, 1,}}, GuideCell);
+    falm.print_info(TERMINAL_OUTPUT_RANK);
+    u_previous.alloc(falm.fv.u.shape[0], falm.fv.u.shape[1], HDC::Device, "previous velocity");
+
+    for (int i = 0; i < 6; i ++) cudaStreamCreate(&facestream[i]);
+    streams = facestream;
+    // streams = nullptr;
+    if (falm.cpm.rank == TERMINAL_OUTPUT_RANK) {
+        printf("using streams %p\n", streams);
     }
 
-    FalmCFD cfdsolver(10000, DT, AdvectionSchemeType::Upwind3, SGSType::Empty, 0.1);
-    FalmEq eqsolver(LSType::PBiCGStab, 1000, 1e-6, 1.2, LSType::SOR, 5, 1.5);
-    if (cpm.rank == 0) {
-        printf("running on %dx%d grid with Re=%lf until t=%lf\n", N, N, cfdsolver.Re, T);
-        fflush(stdout);
+    REAL u_inflow = falm.params["inflow"]["velocity"].get<REAL>();
+    Matrix<REAL> &u = falm.fv.u;
+    for (INT i = 0; i < u.shape[0]; i ++) {
+        u(i, 0) = u_inflow;
+        u(i, 1) = u(i, 2) = 0.0;
+    }
+    u.sync(MCP::Hst2Dev);
+    FalmBasicVar &fv = falm.fv;
+    falm.falmCfd.UtoUU(fv.u, fv.uu, fv.kx, fv.ja, falm.cpm, block, streams);
+    falm.falmCfd.SGS(fv.u, fv.nut, fv.xyz, fv.kx, fv.ja, falm.cpm, block, streams);
+
+    make_poisson_coefficient_matrix();
+}
+
+REAL main_loop(RmcpAlm &alm, RmcpTurbineArray &turbineArray, STREAM *s) {
+    FalmBasicVar &fv = falm.fv;
+    u_previous.copy(fv.u, HDC::Device);
+    // profiler.startEvent("ALM");
+    // alm.SetALMFlag(fv.xyz, falm.gettime(), turbineArray, falm.cpm, block);
+    // alm.ALM(fv.u, fv.xyz, fv.ff, falm.gettime(), turbineArray, falm.cpm, block);
+    // profiler.endEvent("ALM");
+
+    FalmCFD &fcfd = falm.falmCfd;
+
+    profiler.startEvent("U*");
+    fcfd.FSPseudoU(u_previous, fv.u, fv.uu, fv.u, fv.nut, fv.kx, fv.g, fv.ja, fv.ff, falm.dt, falm.cpm, block, s, 1);
+    profiler.endEvent("U*");
+
+    profiler.startEvent("U* interpolation");
+    fcfd.UtoUU(fv.u, fv.uu, fv.kx, fv.ja, falm.cpm, block, s);
+    LID3D::uubc(fv.uu, falm.cpm, s);
+    profiler.endEvent("U* interpolation");
+
+    profiler.startEvent("div(U*)/dt");
+    fcfd.MACCalcPoissonRHS(fv.uu, fv.poi_rhs, fv.ja, falm.dt, falm.cpm, block, maxdiag);
+    profiler.endEvent("div(U*)/dt");
+
+    FalmEq &feq = falm.falmEq;
+    profiler.startEvent("div(grad p)=div(U*)/dt");
+    feq.Solve(fv.poi_a, fv.p, fv.poi_rhs, fv.poi_res, falm.cpm, block, s);
+    profiler.endEvent("div(grad p)=div(U*)/dt");
+
+    profiler.startEvent("p BC");
+    LID3D::pbc(fv.p, falm.cpm, s);
+    profiler.endEvent("p BC");
+
+    profiler.startEvent("U = U* - dt grad(p)");
+    fcfd.ProjectP(fv.u, fv.u, fv.uu, fv.uu, fv.p, fv.kx, fv.g, falm.dt, falm.cpm, block, s);
+    profiler.endEvent("U = U* - dt grad(p)");
+
+    profiler.startEvent("U BC");
+    LID3D::ubc(fv.u, falm.cpm, s);
+    profiler.endEvent("U BC");
+
+    profiler.startEvent("Nut");
+    fcfd.SGS(fv.u, fv.nut, fv.xyz, fv.kx, fv.ja, falm.cpm, block, s);
+    profiler.endEvent("Nut");
+
+    profiler.startEvent("||div(U)||");
+    fcfd.Divergence(fv.uu, fv.divergence, fv.ja, falm.cpm, block);
+    REAL divnorm = FalmMV::EuclideanNormSq(fv.divergence, falm.cpm, block);
+    profiler.endEvent("||div(U)||");
+
+    falm.TAvg();
+    falm.outputUVWP();
+
+    return divnorm;
+}
+
+void finalize() {
+    for (int i = 0; i < 6; i ++) cudaStreamDestroy(facestream[i]);
+    u_previous.release();
+    falm.env_finalize();
+}
+
+int main(int argc, char **argv) {
+    init(argc, argv);
+
+    RmcpTurbineArray turbineArray(1);
+    RmcpTurbine turbine;
+    turbine.pos = {{0, 0, 0}};
+    turbine.rotpos = {{0, 0, 0}};
+    turbine.R = 1;
+    turbine.width = 0.2;
+    turbine.thick = 0.1;
+    turbine.tip = 4;
+    turbine.hub = 0.1;
+    turbine.yaw = 0;
+    turbine.chord_a = {{
+          0.2876200,
+        - 0.2795100,
+          0.1998600,
+        - 0.1753800,
+          0.1064600,
+        - 0.0025213
+    }};
+    turbine.angle_a = {{
+          49.992000,
+        - 70.551000,
+          45.603000,
+        - 40.018000,
+          24.292000,
+        -  0.575430
+    }};
+    turbineArray[0] = turbine;
+    turbineArray.sync(MCP::Hst2Dev);
+
+    RmcpAlm alm(falm.cpm);
+
+    if (argc > 1) {
+        std::string arg(argv[1]);
+        if (arg == "info") {
+            goto FIN;
+        }
     }
 
-    REAL __t = 0;
-    INT  __it = 0;
-    const INT __IT = int(T / DT);
-    const INT __oIT = int(10.0 / DT);
-    data_output(__it, cpm.rank, DT);
-    if (cpm.rank == 0) {
-        printf("time advance start\n");
-        fflush(stdout);
+    printf("\n");
+    if (falm.cpm.rank == TERMINAL_OUTPUT_RANK) {
+        printf("maxdiag = %e\n", maxdiag);
     }
-    while (__it < __IT) {
-        REAL dvr_norm = sqrt(main_loop(cfdsolver, eqsolver, facestream)) / ginner.size;
-        __t += DT;
-        __it ++;
-        if (cpm.rank == 0) {
-            printf("\r%8d %12.5e, %12.5e, %3d, %12.5e", __it, __t, dvr_norm, eqsolver.it, eqsolver.err);
+    profiler.startEvent("global loop");
+    for (falm.it = 1; falm.it <= falm.maxIt; falm.it ++) {
+        REAL divnorm = sqrt(main_loop(alm, turbineArray, streams)) / PRODUCT3(falm.cpm.pdm_list[falm.cpm.rank].shape - INT(2 * falm.cpm.gc));
+        // falm.it ++;
+        if (falm.cpm.rank == TERMINAL_OUTPUT_RANK) {
+            printf("%8d %12.5e, %12.5e, %3d, %12.5e\n", falm.it, falm.gettime(), divnorm, falm.falmEq.it, falm.falmEq.err);
             fflush(stdout);
         }
-        if (__it % __oIT == 0) {
-            data_output(__it, cpm.rank, DT);
-        }
     }
+    profiler.endEvent("global loop");
     printf("\n");
-    if (cpm.rank == 0) {
-        vcdm.writeIndexDfi();
-        vcdm.writeProcDfi();
+FIN:
+    if (falm.cpm.rank == TERMINAL_OUTPUT_RANK) {
+        profiler.output();
+        printf("\n");
+        // pprofiler.output();
     }
-
-    for (INT fid = 0; fid < CPM::NFACE; fid ++) {
-        cudaStreamDestroy(facestream[fid]);
-    }
-    CPM_Finalize();
+    finalize();
     return 0;
 }

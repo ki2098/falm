@@ -147,9 +147,10 @@ public:
             printf("SETUP INFO END\n");
         }
 
-        int *ngh = (int*)malloc(sizeof(int)*6*cpm.size);
+        // int *ngh = (int*)malloc(sizeof(int)*6*cpm.size);
+        std::vector<int> ngh(6*cpm.size);
         // MPI_Gather(cpm.neighbour, 6, MPI_INT, ngh, 6, MPI_INT, 0, MPI_COMM_WORLD);
-        MPI_Allgather(cpm.neighbour, 6, MPI_INT, ngh, 6, MPI_INT, MPI_COMM_WORLD);
+        MPI_Allgather(cpm.neighbour, 6, MPI_INT, ngh.data(), 6, MPI_INT, MPI_COMM_WORLD);
 
         if (cpm.rank == output_rank) {
             printf("MPI INFO START\n");
@@ -173,7 +174,7 @@ public:
         }
 
 
-        free(ngh);
+        // free(ngh);
     }
 
     INT parse_settings(std::string setup_file_path) {
@@ -380,11 +381,12 @@ public:
         falmMemcpy(&fv.uvwp(0, 0), &fv.u.dev(0), sizeof(REAL) * fv.uvwp.shape[0] * 3, MCP::Dev2Hst);
         falmMemcpy(&fv.uvwp(0, 3), &fv.p.dev(0), sizeof(REAL) * fv.uvwp.shape[0]    , MCP::Dev2Hst);
         size_t len = outputPrefix.size() + 32;
-        char *tmp = (char*)malloc(sizeof(char) * len);
-        sprintf(tmp, "%s_%06d_%010d", outputPrefix.c_str(), cpm.rank, it);
-        std::string fpath(tmp);
+        // char *tmp = (char*)malloc(sizeof(char) * len);
+        std::vector<char> tmp(len);
+        sprintf(tmp.data(), "%s_%06d_%010d", outputPrefix.c_str(), cpm.rank, it);
+        std::string fpath(tmp.data());
         FalmIO::writeVectorFile(wpath(fpath), cpm, fv.uvwp, it, gettime());
-        free(tmp);
+        // free(tmp);
         FalmSnapshotInfo snapshot = {it, gettime(), false};
         if (it >= timeAvgStartIt && it < timeAvgEndIt) {
             falmMemcpy(&fv.uvwp.dev(0, 0), &fv.utavg.dev(0), sizeof(REAL) * fv.uvwp.shape[0] * 3, MCP::Dev2Dev);
@@ -392,12 +394,12 @@ public:
             FalmMV::ScaleMatrix(fv.uvwp, 1.0 / timeAvgCount, block);
             fv.uvwp.sync(MCP::Dev2Hst);
             std::string tAvgPrefix = outputPrefix + "_tavg";
-            len = outputPrefix.size() + 64;
-            tmp = (char*)malloc(sizeof(char) * len);
-            sprintf(tmp, "%s_%06d_%010d", tAvgPrefix.c_str(), cpm.rank, it);
-            fpath = std::string(tmp);
+            len = tAvgPrefix.size() + 32;
+            tmp = vector<char>(len);
+            sprintf(tmp.data(), "%s_%06d_%010d", tAvgPrefix.c_str(), cpm.rank, it);
+            fpath = std::string(tmp.data());
             FalmIO::writeVectorFile(wpath(fpath), cpm, fv.uvwp, it, gettime());
-            free(tmp);
+            // free(tmp);
             snapshot.tavg = true;
         }
         // std::pair<INT, REAL> pt{it, it * dt};

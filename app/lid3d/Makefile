@@ -9,4 +9,4 @@ bc:
 
 main: bc Falm
 	$(nvmpicxx) -cuda -c main.cpp $(flag) -o bin/main.o
-	$(nvmpicxx) -cuda $(bcobj) $(falmobj) bin/main.o -o bin/lid3
+	$(nvmpicxx) -cuda $(bcobj) $(falmobj) bin/main.o -o bin/main
