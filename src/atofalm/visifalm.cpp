@@ -144,7 +144,9 @@ void fread(ifstream &ifs, void *ptr, size_t sz) {
 string make_filename(string prefix, size_t step) {
     char *tmp = (char*)malloc(sizeof(char) * (prefix.size() + 32));
     sprintf(tmp, "%s_%010d", prefix.c_str(), step);
-    return string(tmp);
+    string str(tmp);
+    free(tmp);
+    return str;
 }
 
 void write_sph_float(double *data, string path, size_t imax, size_t jmax, size_t kmax, size_t nv, size_t gc, size_t step, double time) {

@@ -47,7 +47,8 @@ static inline int CPM_Init(int *argc, char ***argv, CPM &cpm) {
     return err;
 }
 
-static inline int CPM_Finalize() {
+static inline int CPM_Finalize(CPM &cpm) {
+    cpm.bufman.release_all();
     return MPI_Finalize();
 }
 

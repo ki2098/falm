@@ -92,7 +92,7 @@ public:
         fv.release_all();
         falmEq.release();
         falmCfd.release();
-        CPM_Finalize();
+        CPM_Finalize(cpm);
     }
 
     std::string wpath(std::string str) {
@@ -371,7 +371,7 @@ public:
     }
 
     void outputUVWP(dim3 block={8,8,8}) {
-        if (it <= outputStartIt || it >= outputEndIt || it % outputIntervalIt != 0) {
+        if (it < outputStartIt || it > outputEndIt || it % outputIntervalIt != 0) {
             return;
         }
         

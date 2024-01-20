@@ -211,7 +211,7 @@ public:
 
     int release_all() {
         for (int i = 0; i < NBUFFER; i ++) {
-            if(release(i)) {
+            if(falmErrCheckMacro(release(i))) {
                 return FalmErr::cpmBufReleaseErr;
             }
         }

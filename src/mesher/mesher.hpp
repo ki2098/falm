@@ -234,6 +234,7 @@ public:
                 for (int k = kmax - gc; k < kmax; k ++) {
                     z[k] = z[k - 1] + 0.5 * (hz[k] + hz[k - 1]);
                 }
+                free(tx);free(ty);free(tz);
             }
         }
 

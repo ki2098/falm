@@ -61,10 +61,12 @@ cfd: cfddevcall cpm
 Falm: cfd eq alm
 
 reconstructor:
-	g++ $(falmdir)/src/reconstructor/reconstructor.cpp -std=c++11 -fopenmp -o $(falmdir)/bin/reconstructor
+	g++ $(falmdir)/src/postfalm/reconstructor.cpp -std=c++11 -fopenmp -o $(falmdir)/bin/reconstructor
 
-atofalm:
-	g++ $(falmdir)/src/atofalm/atofalm.cpp -o $(falmdir)/bin/atofalm
+visifalm:
+	g++ $(falmdir)/src/postfalm/visifalm.cpp -std=c++11 -o $(falmdir)/bin/visifalm
+
+postfalm: reconstructor visifalm
 
 showenv:
 	@echo nvmpicxx = $(nvmpicxx)
