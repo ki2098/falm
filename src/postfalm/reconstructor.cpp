@@ -58,7 +58,7 @@ struct size3 {
         return _sz[0] * _sz[1] * _sz[2];
     }
 
-    size_t idx(size_t i, size_t j, size_t k) {
+    size_t idx(size_t i, size_t j, size_t k) const {
         return i + j * _sz[0] + k * _sz[0] * _sz[1];
     }
 };
@@ -77,7 +77,7 @@ struct size4 {
         return _sz[0] * _sz[1] * _sz[2] * _sz[3];
     }
 
-    size_t idx(size_t i, size_t j, size_t k, size_t n) {
+    size_t idx(size_t i, size_t j, size_t k, size_t n) const {
         return i + j * _sz[0] + k * _sz[0] * _sz[1] + n * _sz[0] * _sz[1] * _sz[2];
     }
 };
