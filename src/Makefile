@@ -4,12 +4,14 @@ ifeq ($(platform),ito)
 	nvnvcc = nvcc
 	c++ = FCC
 	fomp = -Kopenmp
+	fstl = -lstdc++
 else
 	nvmpicxx = /opt/nvidia/hpc_sdk/Linux_x86_64/23.3/comm_libs/mpi/bin/mpic++
 	nvnvcxx = /opt/nvidia/hpc_sdk/Linux_x86_64/23.3/compilers/bin/nvc++
 	nvnvcc = /opt/nvidia/hpc_sdk/Linux_x86_64/23.3/cuda/bin/nvcc
 	c++ = g++
 	fomp = -fopenmp
+	fstl =
 endif
 
 
@@ -65,10 +67,10 @@ cfd: cfddevcall cpm
 Falm: cfd eq alm
 
 reconstructor:
-	$(c++) $(falmdir)/src/postfalm/reconstructor.cpp -std=c++11 $(fomp) -o $(falmdir)/bin/reconstructor
+	$(c++) $(falmdir)/src/postfalm/reconstructor.cpp -std=c++11 $(fomp) $(fstl) -o $(falmdir)/bin/reconstructor
 
 visifalm:
-	$(c++) $(falmdir)/src/postfalm/visifalm.cpp -std=c++11 -o $(falmdir)/bin/visifalm
+	$(c++) $(falmdir)/src/postfalm/visifalm.cpp -std=c++11 $(fstl) -o $(falmdir)/bin/visifalm
 
 postfalm: reconstructor visifalm
 
