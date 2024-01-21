@@ -9,6 +9,7 @@
 #PJM -o "nedo.log"
 
 module load nvhpc/nvhpc_20.11
+module load oneapi/2022.3.1
 
 date
 
