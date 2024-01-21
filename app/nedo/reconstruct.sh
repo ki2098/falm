@@ -11,3 +11,4 @@
 . ./env
 
 ${falmdir}/bin/reconstructor data/uvwp
+${falmdir}/bin/visifalm data/uvwp

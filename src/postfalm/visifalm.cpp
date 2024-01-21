@@ -220,7 +220,9 @@ void uvwp_to_sph(string prefix, size_t step, double time, bool cut_gc) {
     fread(ifs, &_step, sizeof(size_t));
     fread(ifs, &_time, sizeof(double));
     fread(ifs, &dtype, sizeof(size_t));
-    assert(dtype == sizeof(double));
+    if (dtype != sizeof(double)) {
+        printf("wrong data width %lu in %s\n", dtype, prefix.c_str());
+    }
 
     size4 size(imax, jmax, kmax, nv);
     farray<double> v(size.product());

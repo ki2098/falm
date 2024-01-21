@@ -162,16 +162,13 @@ void readIndexFile(string path) {
 void reconstruct(string prefix, size_t step, double time) {
     timeval t1, t2;
     gettimeofday(&t1, NULL);
-    printf("reconstructing %s with maximum %d threads: ", make_filename(prefix, step).c_str(), omp_get_max_threads());
+    printf("reconstructing %s\n", make_filename(prefix, step).c_str(), omp_get_max_threads());
     fflush(stdout);
 
     // double *v = (double*)malloc(sizeof(double) * global.product() * n_variable);
     farray<double> v(global.product() * n_variable);
 
     for (int rank = 0; rank < mpi_size; rank ++) {
-        printf("%d ", rank);
-        fflush(stdout);
-
         size3 size = size_list[rank];
         size3 offset = offset_list[rank];
         size3 start(0, 0, 0);
@@ -186,6 +183,8 @@ void reconstruct(string prefix, size_t step, double time) {
                 end[i] -= gc;
             }
         }
+        printf("\trank %d: size%s offset%s start%s end%s\n", rank, size.str().c_str(), offset.str().c_str(), start.str().c_str(), end.str().c_str());
+        fflush(stdout);
 
         // double *vp = (double*)malloc(sizeof(double) * size.product() * n_variable);
         farray<double> vp(size.product() * n_variable);
@@ -207,7 +206,7 @@ void reconstruct(string prefix, size_t step, double time) {
 
         size4 vsz(size, n_variable);
         size4 gvsz(global, n_variable);
-        #pragma omp parallel for collapse(4)
+        // #pragma omp parallel for collapse(4)
         for (size_t n = 0; n < n_variable; n ++) {
         for (size_t k = start[2]; k < end[2]; k ++) {
         for (size_t j = start[1]; j < end[1]; j ++) {

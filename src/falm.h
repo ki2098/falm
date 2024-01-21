@@ -88,6 +88,7 @@ public:
         if (cpm.rank == 0) {
             FalmIO::writeIndexFile(wpath(outputPrefix + ".json"), cpm, timeSlices);
         }
+        CPM_Barrier(MPI_COMM_WORLD);
         FalmMV::release();
         fv.release_all();
         falmEq.release();
