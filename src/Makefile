@@ -2,8 +2,8 @@ ifeq ($(platform),ito)
 	nvmpicxx = mpic++
 	nvnvcxx = nvc++
 	nvnvcc = nvcc
-	c++ = icpc
-	fomp = -qopenmp
+	c++ = g++
+	fomp = -fopenmp
 	fstl =
 else
 	nvmpicxx = /opt/nvidia/hpc_sdk/Linux_x86_64/23.3/comm_libs/mpi/bin/mpic++
