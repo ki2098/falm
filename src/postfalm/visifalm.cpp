@@ -207,6 +207,7 @@ void uvwp_to_sph(string prefix, size_t step, double time, bool cut_gc) {
     string pprefix = prefix + "_pressure";
     string ifname = make_filename(prefix, step);
     printf("converting %s to %s and %s...\n", ifname.c_str(), uvwprefix.c_str(), pprefix.c_str());
+    fflush(stdout);
 
     size_t imax, jmax, kmax, nv, gc, _step, dtype;
     double _time;
@@ -240,6 +241,7 @@ void uvwp_to_sph(string prefix, size_t step, double time, bool cut_gc) {
 
 void cv_to_crd(string ipath, string opath, bool cut_gc) {
     printf("converting %s to %s\n", ipath.c_str(), opath.c_str());fflush(stdout);
+    fflush(stdout);
     ifstream ifs(ipath);
     size_t imax, jmax, kmax, gc;
     ifs >> imax >> jmax >> kmax >> gc;

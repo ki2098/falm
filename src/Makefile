@@ -67,10 +67,10 @@ cfd: cfddevcall cpm
 Falm: cfd eq alm
 
 reconstructor:
-	$(c++) $(falmdir)/src/postfalm/reconstructor.cpp -std=c++11 $(fomp) $(fstl) -o $(falmdir)/bin/reconstructor
+	$(c++) $(falmdir)/src/postfalm/reconstructor.cpp -O3 -std=c++11 $(fomp) $(fstl) -o $(falmdir)/bin/reconstructor
 
 visifalm:
-	$(c++) $(falmdir)/src/postfalm/visifalm.cpp -std=c++11 $(fstl) -o $(falmdir)/bin/visifalm
+	$(c++) $(falmdir)/src/postfalm/visifalm.cpp -O3 -std=c++11 $(fstl) -o $(falmdir)/bin/visifalm
 
 postfalm: reconstructor visifalm
 
