@@ -23,3 +23,4 @@ ls -l --block-size=M data
 
 ${falmdir}/bin/reconstructor data/uvwp
 # ${falmdir}/bin/visifalm data/uvwp
+date

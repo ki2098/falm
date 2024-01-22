@@ -14,6 +14,19 @@ public:
         _ptr = new T[n];
     }
 
+    void alloc(size_t n) {
+        if (_size == 0) {
+            _ptr = new T[n];
+            _size = n;
+        }
+    }
+
+    void release() {
+        delete[] _ptr;
+        _ptr = nullptr;
+        _size = 0;
+    }
+
     ~farray() {
         delete[] _ptr;
     }
