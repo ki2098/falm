@@ -22,4 +22,4 @@ ls -l --block-size=M data
 # module load oneapi/2022.3.1
 
 ${falmdir}/bin/reconstructor data/uvwp
-${falmdir}/bin/visifalm data/uvwp
+# ${falmdir}/bin/visifalm data/uvwp
