@@ -47,7 +47,7 @@ cpmcomm: cpmdevcall
 cpm: cpmcomm
 
 mvdevcall:
-	$(nvnvcc) -c $(falmdir)/src/dev/MVDevCall.cu $(cuflag) -o $(mvdevcallobj)
+	$(nvnvcc) -c $(falmdir)/src/dev/MVDevCallv2.cu $(cuflag) -o $(mvdevcallobj)
 
 mv: mvdevcall cpm
 

@@ -6,7 +6,7 @@
 
 using namespace Falm;
 
-Cprof::cprof_Profiler profiler, pprofiler;
+Cprof::cprof_Profiler profiler;
 
 #define TERMINAL_OUTPUT_RANK 1
 
@@ -167,6 +167,9 @@ REAL main_loop(RmcpAlm &alm, RmcpTurbineArray &turbineArray, STREAM *s) {
     REAL divnorm = FalmMV::EuclideanNormSq(fv.divergence, falm.cpm, block);
     profiler.endEvent("||div(U)||");
 
+    falm.TAvg();
+    falm.outputUVWP();
+
     return divnorm;
 }
 
@@ -217,15 +220,14 @@ int main(int argc, char **argv) {
         }
     }
 
-    falm.it = 0;
     printf("\n");
     if (falm.cpm.rank == TERMINAL_OUTPUT_RANK) {
         printf("maxdiag = %e\n", maxdiag);
     }
     profiler.startEvent("global loop");
-    while (falm.it < falm.maxIt) {
+    for (falm.it = 1; falm.it <= falm.maxIt; falm.it ++) {
         REAL divnorm = sqrt(main_loop(alm, turbineArray, streams)) / PRODUCT3(falm.cpm.pdm_list[falm.cpm.rank].shape - INT(2 * falm.cpm.gc));
-        falm.it ++;
+        // falm.it ++;
         if (falm.cpm.rank == TERMINAL_OUTPUT_RANK) {
             printf("%8d %12.5e, %12.5e, %3d, %12.5e\n", falm.it, falm.gettime(), divnorm, falm.falmEq.it, falm.falmEq.err);
             fflush(stdout);
@@ -237,7 +239,7 @@ FIN:
     if (falm.cpm.rank == TERMINAL_OUTPUT_RANK) {
         profiler.output();
         printf("\n");
-        pprofiler.output();
+        // pprofiler.output();
     }
     finalize();
     return 0;

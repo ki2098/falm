@@ -171,7 +171,7 @@ public:
             }
             printf("Using Cuda-aware-MPI %d\n", cpm.use_cuda_aware_mpi);
             printf("MPI INFO END\n");
-            printf("reduction buffer size %d\n", FalmMV::reduction_buffer_size);
+            // printf("reduction buffer size %d\n", FalmMV::reduction_buffer_size);
         }
 
 
