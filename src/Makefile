@@ -14,8 +14,8 @@ else
 	fstl =
 endif
 
-
-flag   = -O3 --std=c++14
+cppstd = -std=c++14
+flag   = -O3 $(cppstd)
 
 include $(falmdir)/src/rmcp/Makefile
 
