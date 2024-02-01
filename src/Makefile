@@ -14,7 +14,7 @@ else
 	fstl =
 endif
 
-cppstd = -std=c++14
+cppstd = -std=c++11
 flag   = -O3 $(cppstd)
 
 include $(falmdir)/src/rmcp/Makefile
@@ -47,7 +47,7 @@ cpmcomm: cpmdevcall
 cpm: cpmcomm
 
 mvdevcall:
-	$(nvnvcc) -c $(falmdir)/src/dev/MVDevCallv2.cu $(cuflag) -o $(mvdevcallobj)
+	$(nvnvcc) -c $(falmdir)/src/dev/MVDevCall.cu $(cuflag) -o $(mvdevcallobj)
 
 mv: mvdevcall cpm
 
