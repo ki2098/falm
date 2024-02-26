@@ -84,7 +84,7 @@ public:
         FalmMV::init();
     }
 
-    void env_finalize() {
+    void env_finalize(std::string messagestr = "") {
         if (cpm.rank == 0) {
             FalmIO::writeIndexFile(wpath(outputPrefix + ".json"), cpm, timeSlices);
         }
@@ -94,6 +94,11 @@ public:
         falmEq.release();
         falmCfd.release();
         CPM_Finalize(cpm);
+
+        std::string message_file_name = outputPrefix + "_endmsg.txt";
+        std::ofstream mfs(message_file_name);
+        mfs << messagestr;
+        mfs.close();
     }
 
     std::string wpath(std::string str) {
