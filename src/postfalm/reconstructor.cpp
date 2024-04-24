@@ -187,5 +187,9 @@ int main(int argc, char **argv) {
         }
     }
 
+    ofstream endmsgfile(path + "_reconstructor_endmsg.txt");
+    endmsgfile << "Falm/Reconstructor ends normally.";
+    endmsgfile.close();
+
     return 0;
 }

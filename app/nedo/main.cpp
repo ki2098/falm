@@ -176,7 +176,7 @@ REAL main_loop(RmcpAlm &alm, RmcpTurbineArray &turbineArray, STREAM *s) {
 void finalize() {
     for (int i = 0; i < 6; i ++) cudaStreamDestroy(facestream[i]);
     u_previous.release();
-    falm.env_finalize("Job completed.");
+    falm.env_finalize();
 }
 
 int main(int argc, char **argv) {
