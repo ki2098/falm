@@ -4,7 +4,7 @@
 #PJM -o nedo.log
 #PJM -j
 #PJM -X
-#PJM -L rscgrp=small-a
+#PJM -L rscgrp=regular-a
 #PJM -L node=1
 #PJM -L elapse=03:00:00
 #PJM --mpi proc=8

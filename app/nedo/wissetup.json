@@ -9,7 +9,7 @@
             "start":20
         },
         "output":{
-            "start":20,
+            "start":10,
             "interval":5,
             "prefix":"data/uvwp"
         }
