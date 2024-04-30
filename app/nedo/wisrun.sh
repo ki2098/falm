@@ -18,6 +18,6 @@ module list
 
 cp wissetup.json setup.json
 
-mpiexec -machinefile $PJM_O_NODEINF -n $PJM_MPI_PROC -npernode 8 --report-bindings .bin/main
+mpiexec -machinefile $PJM_O_NODEINF -n $PJM_MPI_PROC -npernode 8 --report-bindings bin/main
 
 date
