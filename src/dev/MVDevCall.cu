@@ -673,4 +673,23 @@ void FalmMVDevCall::MatrixAdd(Matrix<REAL> &a, Matrix<REAL> &b, dim3 block_dim) 
     falmWaitStream();
 }
 
+__global__ void kernel_Vecaxby(REAL a, const MatrixFrame<REAL> *vx, REAL b, const MatrixFrame<REAL> *vy, MatrixFrame<REAL> *vresult) {
+    const MatrixFrame<REAL> &x=*vx, &y=*vy;
+    MatrixFrame<REAL> &result=*vresult;
+    INT tidx  = IDX(threadIdx, blockDim);
+    INT bidx  = IDX(blockIdx, gridDim);
+    INT bsize = PRODUCT3(blockDim);
+    INT gtidx = tidx + bidx * bsize;
+    if (gtidx < x.size) {
+        result(gtidx) = a*x(gtidx) + b*y(gtidx);
+    }
+}
+
+void FalmMVDevCall::Vecaxby(REAL a, Matrix<REAL> &x, REAL b, Matrix<REAL> &y, Matrix<REAL> &result, dim3 block_dim) {
+    INT n_threads = PRODUCT3(block_dim);
+    INT n_blocks = (x.size + n_threads - 1) / n_threads;
+    kernel_Vecaxby<<<n_blocks, n_threads>>>(a, x.devptr, b, y.devptr, result.devptr);
+    falmWaitStream();
+}
+
 }

@@ -373,6 +373,8 @@ public:
         if (timeAvgEndIt > timeAvgStartIt) {
             fv.utavg.alloc(shape, 3, HDC::Device, "time-avg velocity");
             fv.ptavg.alloc(shape, 1, HDC::Device, "time-avg pressure");
+            fv.utavg.clear(HDC::Device);
+            fv.ptavg.clear(HDC::Device);
         }
         fv.uvwp.alloc(shape, 4, HDC::HstDev, "uvwp buffer");
 
@@ -382,9 +384,14 @@ public:
 
     void TAvg(dim3 block={8,8,8}) {
         if (it >= timeAvgStartIt && it <= timeAvgEndIt) {
-            FalmMV::MatrixAdd(fv.utavg, fv.u, block);
-            FalmMV::MatrixAdd(fv.ptavg, fv.p, block);
-            timeAvgCount ++;
+            // FalmMV::MatrixAdd(fv.utavg, fv.u, block);
+            // FalmMV::MatrixAdd(fv.ptavg, fv.p, block);
+            // timeAvgCount ++;
+            timeAvgCount = it - timeAvgStartIt + 1;
+            REAL b = 1./timeAvgCount;
+            REAL a = 1. - b;
+            FalmMV::Vecaxby(a, fv.utavg, b, fv.u, fv.utavg, block);
+            FalmMV::Vecaxby(a, fv.ptavg, b, fv.p, fv.ptavg, block);
         }
     }
 
@@ -408,7 +415,7 @@ public:
         if (it >= timeAvgStartIt && it < timeAvgEndIt) {
             falmMemcpy(&fv.uvwp.dev(0, 0), &fv.utavg.dev(0), sizeof(REAL) * fv.uvwp.shape[0] * 3, MCP::Dev2Dev);
             falmMemcpy(&fv.uvwp.dev(0, 3), &fv.ptavg.dev(0), sizeof(REAL) * fv.uvwp.shape[0]    , MCP::Dev2Dev);
-            FalmMV::ScaleMatrix(fv.uvwp, 1.0 / timeAvgCount, block);
+            // FalmMV::ScaleMatrix(fv.uvwp, 1.0 / timeAvgCount, block);
             fv.uvwp.sync(MCP::Dev2Hst);
             std::string tAvgPrefix = outputPrefix + "_tavg";
             len = tAvgPrefix.size() + 32;

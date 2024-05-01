@@ -286,24 +286,24 @@ template<typename T> void Matrix<T>::sync(FLAG _mcptype) {
 }
 
 template<typename T> void Matrix<T>::copy(Matrix<T> &src, FLAG _hdctype) {
-    if (_hdctype & HDC::Host) {
-        assert((hdctype & src.hdctype & HDC::Host) && (size == src.size));
+    if (_hdctype & hdctype & HDC::Host) {
+        assert((src.hdctype & HDC::Host) && (size == src.size));
         falmErrCheckMacro(falmMemcpy(host.ptr, src.host.ptr, sizeof(T) * size, MCP::Hst2Hst));
     }
-    if (_hdctype & HDC::Device) {
-        assert((hdctype & src.hdctype & HDC::Device) && (size == src.size));
+    if (_hdctype & hdctype & HDC::Device) {
+        assert((src.hdctype & HDC::Device) && (size == src.size));
         falmErrCheckMacro(falmMemcpy(dev.ptr, src.dev.ptr, sizeof(T) * size, MCP::Dev2Dev));
     }
 }
 
 template<typename T> void Matrix<T>::clear(FLAG _hdctype) {
-    if (_hdctype & HDC::Host) {
-        assert(hdctype & HDC::Host);
+    if (_hdctype & hdctype & HDC::Host) {
+        // assert(hdctype & HDC::Host);
         // falmMemset(host.ptr, 0, sizeof(T) * size);
         host.clear();
     }
-    if (_hdctype & HDC::Device) {
-        assert(hdctype & HDC::Device);
+    if (_hdctype & hdctype & HDC::Device) {
+        // assert(hdctype & HDC::Device);
         // falmMemsetDevice(dev.ptr, 0, sizeof(T) * size);
         dev.clear();
     }
