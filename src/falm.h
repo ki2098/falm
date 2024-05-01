@@ -72,14 +72,16 @@ public:
     std::string    setupFile;
     std::string       cvFile;
     std::vector<FalmSnapshotInfo> timeSlices;
+    int ngpu;
+    int gpuid;
 
     REAL gettime() {return dt * it;}
 
     void env_init(int &argc, char **&argv) {
         CPM_Init(&argc, &argv, cpm);
-        int ngpu;
         cudaGetDeviceCount(&ngpu);
-        cudaSetDevice(cpm.rank % ngpu);
+        gpuid = cpm.rank % ngpu;
+        cudaSetDevice(gpuid);
         timeSlices = {};
         FalmMV::init();
     }
@@ -177,6 +179,15 @@ public:
             printf("Using Cuda-aware-MPI %d\n", cpm.use_cuda_aware_mpi);
             printf("MPI INFO END\n");
             // printf("reduction buffer size %d\n", FalmMV::reduction_buffer_size);
+        }
+
+        if (cpm.rank == output_rank) {
+            printf("GPU INFO START\n");
+            printf("\t%d GPUs in 1 Node\n", ngpu);
+            for (int i = 0; i < cpm.size; i ++) {
+                printf("\tRank %d on GPU %d\n", i, i%ngpu);
+            }
+            printf("GPU INFO END\n");
         }
 
 

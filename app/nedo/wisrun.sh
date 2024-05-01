@@ -9,7 +9,6 @@
 #PJM -L elapse=03:00:00
 #PJM --mpi proc=8
 
-date
 . ./env
 
 module load nvidia
@@ -17,6 +16,8 @@ module load nvmpi
 module list
 
 cp wissetup.json setup.json
+
+date
 
 mpiexec -machinefile $PJM_O_NODEINF -n $PJM_MPI_PROC -npernode 8 --report-bindings bin/main
 
