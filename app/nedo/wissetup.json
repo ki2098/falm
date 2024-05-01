@@ -6,11 +6,11 @@
             "dt":1e-3
         },
         "timeAvg":{
-            "start":20
+            "start":120
         },
         "output":{
-            "start":10,
-            "interval":5,
+            "start":20,
+            "interval":10,
             "prefix":"data/uvwp"
         }
     },
@@ -36,7 +36,7 @@
         }
     },
     "mesh":{
-        "convert":"mesh/test",
+        "convert":"mesh",
         "controlVolumeFile":"controlVolume.txt",
         "controlVolumeCenter":"innerNode"
     }
