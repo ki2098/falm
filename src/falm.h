@@ -77,6 +77,10 @@ public:
 
     REAL gettime() {return dt * it;}
 
+    bool is_time_averaging() {
+        return (it >= timeAvgStartIt && it <= timeAvgEndIt);
+    }
+
     void env_init(int &argc, char **&argv) {
         CPM_Init(&argc, &argv, cpm);
         cudaGetDeviceCount(&ngpu);
@@ -383,7 +387,7 @@ public:
     }
 
     void TAvg(dim3 block={8,8,8}) {
-        if (it >= timeAvgStartIt && it <= timeAvgEndIt) {
+        if (is_time_averaging()) {
             // FalmMV::MatrixAdd(fv.utavg, fv.u, block);
             // FalmMV::MatrixAdd(fv.ptavg, fv.p, block);
             // timeAvgCount ++;
@@ -412,7 +416,7 @@ public:
         FalmIO::writeVectorFile(wpath(fpath), cpm, fv.uvwp, it, gettime());
         // free(tmp);
         FalmSnapshotInfo snapshot = {it, gettime(), false};
-        if (it >= timeAvgStartIt && it < timeAvgEndIt) {
+        if (is_time_averaging()) {
             falmMemcpy(&fv.uvwp.dev(0, 0), &fv.utavg.dev(0), sizeof(REAL) * fv.uvwp.shape[0] * 3, MCP::Dev2Dev);
             falmMemcpy(&fv.uvwp.dev(0, 3), &fv.ptavg.dev(0), sizeof(REAL) * fv.uvwp.shape[0]    , MCP::Dev2Dev);
             // FalmMV::ScaleMatrix(fv.uvwp, 1.0 / timeAvgCount, block);
