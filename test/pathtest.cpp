@@ -4,28 +4,35 @@
 
 using namespace std;
 
-std::string cut_filename(const std::string &path) {
-    if (path.find_last_of('/') == std::string::npos) {
-        return path;
+string wpath(string workdir, string str) {
+    if (str[0] == '/') {
+        return str;
+    } else if (workdir.back() == '/') {
+        return workdir + str;
     } else {
-        return path.substr(path.find_last_of('/') + 1);
-    }
-}
-
-std::string cut_dirpath(const std::string &path) {
-    if (path.find_first_of('/') == std::string::npos) {
-        return "";
-    } else {
-        return path.substr(0, path.find_last_of('/'));
+        return workdir + "/" + str;
     }
 }
 
 int main(int argc, char **argv) {
-    string path(argv[1]);
-    // cin >> path;
-    string filename = cut_filename(path);
-    string dir = cut_dirpath(path);
-    cout << dir << " + " << filename << endl;
+    string setup_file_path(argv[1]);
+    int cutat = setup_file_path.find_last_of('/');
+    string workdir, setupFile;
+    if (cutat == string::npos) {
+        workdir = ".";
+        setupFile = setup_file_path;
+    } else if (cutat == 0) {
+        workdir = "/";
+        setupFile = setup_file_path.substr(1);
+    } else {
+        workdir = setup_file_path.substr(0, cutat);
+        setupFile = setup_file_path.substr(cutat + 1);
+    }
+    cout << workdir << " " << setupFile << endl;
+    cout << wpath(workdir, setupFile) <<endl;
+
+    string outputfile(argv[2]);
+    cout << wpath(workdir, outputfile) << endl;
     
     return 0;
 }

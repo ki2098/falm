@@ -9,11 +9,11 @@
 class Mesher {
 
 public:
-    static void build_mesh(std::string workdir, std::string cvcenter, std::string meshpath, std::string outputfile, int gc) {
+    static void build_mesh(std::string cvcenter, std::string meshpath, std::string outputfile, int gc) {
         int ogc = gc;
         int imax, jmax, kmax;
         double *x, *y, *z, *hx, *hy, *hz;
-        std::ifstream mjfile(workdir + "/" + meshpath + "/mesh.json");
+        std::ifstream mjfile(meshpath + "/mesh.json");
         auto mjson = nlohmann::json::parse(mjfile);
         std::string coordcenter = mjson["coordinatePoint"];
         if (coordcenter == "node") {
@@ -22,7 +22,7 @@ public:
                 std::ifstream txtfile;
                 std::string line;
 
-                txtfile.open(workdir + "/" + meshpath + "/x.txt");
+                txtfile.open(meshpath + "/x.txt");
                 std::getline(txtfile, line);
                 imax = std::stoi(line) + 2 * gc;
                 x = (double*)malloc(sizeof(double)*imax);
@@ -32,7 +32,7 @@ public:
                 }
                 txtfile.close();
 
-                txtfile.open(workdir + "/" + meshpath + "/y.txt");
+                txtfile.open(meshpath + "/y.txt");
                 std::getline(txtfile, line);
                 jmax = std::stoi(line) + 2 * gc;
                 y = (double*)malloc(sizeof(double)*jmax);
@@ -42,7 +42,7 @@ public:
                 }
                 txtfile.close();
 
-                txtfile.open(workdir + "/" + meshpath + "/z.txt");
+                txtfile.open(meshpath + "/z.txt");
                 std::getline(txtfile, line);
                 kmax = std::stoi(line) + 2 * gc;
                 z = (double*)malloc(sizeof(double)*kmax);
@@ -108,7 +108,7 @@ public:
                 std::ifstream txtfile;
                 std::string line;
 
-                txtfile.open(workdir + "/" + meshpath + "/x.txt");
+                txtfile.open(meshpath + "/x.txt");
                 std::getline(txtfile, line);
                 int nimax = std::stoi(line);
                 imax = nimax - 1 + 2 * gc;
@@ -119,7 +119,7 @@ public:
                 }
                 txtfile.close();
 
-                txtfile.open(workdir + "/" + meshpath + "/y.txt");
+                txtfile.open(meshpath + "/y.txt");
                 std::getline(txtfile, line);
                 int njmax = std::stoi(line);
                 jmax = njmax - 1 + 2 * gc;
@@ -130,7 +130,7 @@ public:
                 }
                 txtfile.close();
 
-                txtfile.open(workdir + "/" + meshpath + "/z.txt");
+                txtfile.open(meshpath + "/z.txt");
                 std::getline(txtfile, line);
                 int nkmax = std::stoi(line);
                 kmax = nkmax - 1 + 2 * gc;
@@ -238,7 +238,7 @@ public:
             }
         }
 
-        std::string output_path = workdir + "/" + outputfile;
+        std::string output_path = outputfile;
         FILE *ofile = fopen(output_path.c_str(), "w");
         if (ofile) {
             fprintf(ofile, "%d %d %d %d\n", imax, jmax, kmax, ogc);

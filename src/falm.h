@@ -108,7 +108,13 @@ public:
     }
 
     std::string wpath(std::string str) {
-        return workdir + "/" + str;
+        if (str[0] == '/') {
+           return str;
+        } else if (workdir.back() == '/') {
+            return workdir + str;
+        } else {
+            return workdir + "/" + str;
+        }
     }
 
     void print_info(int output_rank = 0) {
@@ -203,6 +209,9 @@ public:
         if (cutat == std::string::npos) {
             workdir = ".";
             setupFile = setup_file_path;
+        } else if (cutat == 0) {
+            workdir = "/";
+            setupFile = setup_file_path.substr(cutat + 1);
         } else {
             workdir = setup_file_path.substr(0, cutat);
             setupFile = setup_file_path.substr(cutat + 1);
@@ -317,7 +326,7 @@ public:
 
     void computation_init(const INT3 &division, int gc) {
         if (falmMeshInfo.convert && cpm.rank == 0) {
-            Mesher::build_mesh(workdir, falmMeshInfo.cvCenter, wpath(falmMeshInfo.convertSrc), wpath(falmMeshInfo.cvFile), gc);
+            Mesher::build_mesh(falmMeshInfo.cvCenter, wpath(falmMeshInfo.convertSrc), wpath(falmMeshInfo.cvFile), gc);
         }
         CPM_Barrier(MPI_COMM_WORLD);
         Matrix<REAL> x,y,z,hx,hy,hz;
