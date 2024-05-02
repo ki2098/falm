@@ -20,12 +20,14 @@ for snapshot in data["outputSteps"]:
         filename = makefilename(prefix, step, rank)
         if os.path.exists(filename):
             os.remove(filename)
+            print("file %s deleted"%(filename))
         else:
             print("ERROR: data file %s does not exist"%(filename))
         if "timeAvg" in snapshot:
             filename = makefilename(prefix+"_tavg", step, rank)
             if os.path.exists(filename):
                 os.remove(filename)
+                print("file %s deleted"%(filename))
             else:
                 print("ERROR: data file %s does not exist"%(filename))
 

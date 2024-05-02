@@ -107,7 +107,7 @@ public:
         mfs.close();
     }
 
-    std::string wpath(std::string str) {
+    std::string wpath(const std::string &str) {
         if (str[0] == '/') {
            return str;
         } else if (workdir.back() == '/') {
