@@ -1,6 +1,8 @@
 import numpy as np
 import sys
 
+print(np.__version__)
+
 path = sys.argv[1]
 
 imax = np.fromfile(path, dtype='uint64', count=1, offset=0)
