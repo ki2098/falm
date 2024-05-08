@@ -1,7 +1,7 @@
 import numpy as np
 import sys
 
-print(np.__version__)
+# print(np.__version__)
 
 path = sys.argv[1]
 file = open(path, 'rb')
