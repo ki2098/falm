@@ -24,7 +24,7 @@ dtype = np.fromfile(file, dtype='uint64', count=1)
 
 print("%s info:"%(path))
 print("size=(%d %d %d)"%(imax, jmax, kmax))
-print("vars=%d"%(nvar))
+print("number of vars=%d"%(nvar))
 print("gc=%d"%(gc))
 print("step=%d"%(step))
 print("time=%s"%(time))
