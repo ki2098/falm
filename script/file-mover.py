@@ -28,5 +28,7 @@ for snapshot in srcIndexData["outputSteps"]:
 
 shutil.move(srcPrefix+".json", dstPrefix+".json")
 print("%s moved to %s"%(srcPrefix+".json", dstPrefix+".json"))
+shutil.move(srcPrefix+"_setup.json", dstPrefix+"_setup.json")
+print("%s moved to %s"%(srcPrefix+"_setup.json", dstPrefix+"_setup.json"))
 shutil.move(srcPrefix+".cv", dstPrefix+".cv")
 print("%s moved to %s"%(srcPrefix+".cv", dstPrefix+".cv"))
