@@ -8,6 +8,7 @@ def makefilename(prefix, step, rank):
 prefix = sys.argv[1]
 indexFile = open(prefix+".json")
 data = json.load(indexFile)
+indexFile.close()
 
 mpisize = len(data["ranks"])
 nsteps = len(data["outputSteps"])
@@ -31,6 +32,3 @@ for snapshot in data["outputSteps"]:
             else:
                 print("ERROR: data file %s does not exist"%(filename))
 
-
-
-indexFile.close()

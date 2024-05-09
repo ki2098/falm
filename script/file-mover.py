@@ -11,6 +11,7 @@ dstPrefix = sys.argv[2]
 
 srcIndexFile = open(srcPrefix+".json")
 srcIndexData = json.load(srcIndexFile)
+srcIndexFile.close()
 
 for snapshot in srcIndexData["outputSteps"]:
     step = snapshot["step"]
