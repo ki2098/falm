@@ -15,6 +15,12 @@ namespace Falm {
 class FalmIO {
 public:
 
+static void writeSetupFile(std::string fpath, json params) {
+    std::ofstream jfile(fpath);
+    jfile << params.dump(2);
+    jfile.close();
+}
+
 static void writeIndexFile(std::string fpath, CPM &cpm, const std::vector<FalmSnapshotInfo> &itlist) {
     json idxjson;
     INT gimax, gjmax, gkmax, gc;

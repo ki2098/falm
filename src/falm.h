@@ -337,12 +337,12 @@ public:
         cpm.initPartition(idmax, gc, division);
         INT3 &shape  = cpm.pdm_list[cpm.rank].shape;
         INT3 &offset = cpm.pdm_list[cpm.rank].offset;
-        if (cpm.rank == 0) {
+        if (cpm.rank == 0 && outputEndIt >= outputStartIt) {
             FalmIO::writeIndexFile(wpath(outputPrefix + ".json"), cpm, timeSlices);
+            FalmIO::writeControlVolumeFile(wpath(outputPrefix + ".cv"), x, y, z, hx, hy, hz, idmax, gc);
+            FalmIO::writeSetupFile(wpath(outputPrefix + "_setup.json"), params);
         }
-        FalmIO::writeControlVolumeFile(wpath(outputPrefix + ".cv"), x, y, z, hx, hy, hz, idmax, gc);
         
-
         fv.xyz.alloc(shape, 3, HDC::HstDev, "coordinate");
         fv.kx.alloc(shape, 3, HDC::HstDev, "d kxi / d x");
         fv.g.alloc(shape, 3, HDC::HstDev, "metric tensor");
