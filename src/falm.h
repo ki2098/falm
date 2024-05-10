@@ -13,7 +13,7 @@
 namespace Falm {
 
 struct FalmBasicVar {
-    Matrix<REAL> xyz, kx, g, ja; // Non-uniform cartesian structured mesh variables
+    Matrix<REAL> xyz, kx, g, ja; // Non-uniform structured cartesian mesh variables
     Matrix<REAL> u, uu, uc, p, nut; // basic physical fields
     Matrix<REAL> poi_a, poi_rhs, poi_res; // variables for pressure poisson equation
     Matrix<REAL> ff; // actuator model force
@@ -56,6 +56,8 @@ public:
     FalmMeshInfo falmMeshInfo;
     CPM                   cpm;
     FalmBasicVar           fv;
+    FalmBaseMesh    gBaseMesh;
+    FalmBaseMesh     baseMesh;
     
     INT it;
     REAL dt;
@@ -99,6 +101,8 @@ public:
         fv.release_all();
         falmEq.release();
         falmCfd.release();
+        gBaseMesh.release();
+        baseMesh.release();
         CPM_Finalize(cpm);
 
         std::string message_file_name = outputPrefix + "_endmsg.txt";
@@ -329,17 +333,18 @@ public:
             Mesher::build_mesh(falmMeshInfo.cvCenter, wpath(falmMeshInfo.convertSrc), wpath(falmMeshInfo.cvFile), gc);
         }
         CPM_Barrier(MPI_COMM_WORLD);
-        Matrix<REAL> x,y,z,hx,hy,hz;
         INT3 idmax;
         INT _gc;
-        FalmIO::readControlVolumeFile(wpath(falmMeshInfo.cvFile), x, y, z, hx, hy, hz, idmax, _gc);
+        FalmIO::readControlVolumeFile(wpath(falmMeshInfo.cvFile), gBaseMesh, idmax, _gc);
+        gBaseMesh.sync(MCP::Hst2Dev);
+
         assert(_gc == gc);
         cpm.initPartition(idmax, gc, division);
         INT3 &shape  = cpm.pdm_list[cpm.rank].shape;
         INT3 &offset = cpm.pdm_list[cpm.rank].offset;
         if (cpm.rank == 0 && outputEndIt >= outputStartIt) {
             FalmIO::writeIndexFile(wpath(outputPrefix + ".json"), cpm, timeSlices);
-            FalmIO::writeControlVolumeFile(wpath(outputPrefix + ".cv"), x, y, z, hx, hy, hz, idmax, gc);
+            FalmIO::writeControlVolumeFile(wpath(outputPrefix + ".cv"), gBaseMesh, idmax, gc);
             FalmIO::writeSetupFile(wpath(outputPrefix + "_setup.json"), params);
         }
         
@@ -352,20 +357,22 @@ public:
         for (INT j = 0; j < shape[1]; j ++) {
         for (INT i = 0; i < shape[0]; i ++) {
             INT idx = IDX(i, j, k, shape);
-            fv.xyz(idx, 0) = x(i + offset[0]);
-            fv.xyz(idx, 1) = y(j + offset[1]);
-            fv.xyz(idx, 2) = z(k + offset[2]);
+            fv.xyz(idx, 0) = gBaseMesh.x(i + offset[0]);
+            fv.xyz(idx, 1) = gBaseMesh.y(j + offset[1]);
+            fv.xyz(idx, 2) = gBaseMesh.z(k + offset[2]);
             REAL3 pitch;
-            pitch[0] = hx(i + offset[0]);
-            pitch[1] = hy(j + offset[1]);
-            pitch[2] = hz(k + offset[2]);
+            pitch[0] = gBaseMesh.hx(i + offset[0]);
+            pitch[1] = gBaseMesh.hy(j + offset[1]);
+            pitch[2] = gBaseMesh.hz(k + offset[2]);
             REAL volume = PRODUCT3(pitch);
             REAL3 dkdx = REAL(1) / pitch;
             fv.ja(idx) = volume;
-            for (int n = 0; n < 3; n ++) {
-                fv.g(idx, n) = volume * dkdx[n] * dkdx[n];
-                fv.kx(idx, n) = dkdx[n];
-            }
+            fv.g(idx, 0) = volume*dkdx[0]*dkdx[0];
+            fv.g(idx, 1) = volume*dkdx[1]*dkdx[1];
+            fv.g(idx, 2) = volume*dkdx[2]*dkdx[2];
+            fv.kx(idx, 0) = dkdx[0];
+            fv.kx(idx, 1) = dkdx[1];
+            fv.kx(idx, 2) = dkdx[2];
         }}}
 
         fv.xyz.sync(MCP::Hst2Dev);

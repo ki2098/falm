@@ -7,21 +7,21 @@
 namespace Falm {
 
 struct TurbineArray {
-    int NT, NBPT, NAPPB;
+    int NTurbine, NBladePerTurbine, NAPPerBlade;
     Matrix<REAL> x;
     Matrix<REAL> rcxT, R;
     Matrix<REAL> pitch, pitchRate, tipRate;
 
     void init(int _NT, int _NBPT, int _NAPPB) {
-        NT = _NT;
-        NBPT = _NBPT;
-        NAPPB = _NAPPB;
-        x.alloc(NT, 3, HDC::HstDev);
-        rcxT.alloc(NT, 3, HDC::HstDev);
-        R.alloc(NT, 1, HDC::HstDev);
-        pitch.alloc(NT, 1, HDC::HstDev);
-        pitchRate.alloc(NT, 1, HDC::HstDev);
-        tipRate.alloc(NT, 1, HDC::HstDev);
+        NTurbine = _NT;
+        NBladePerTurbine = _NBPT;
+        NAPPerBlade = _NAPPB;
+        x.alloc(NTurbine, 3, HDC::HstDev);
+        rcxT.alloc(NTurbine, 3, HDC::HstDev);
+        R.alloc(NTurbine, 1, HDC::HstDev);
+        pitch.alloc(NTurbine, 1, HDC::HstDev);
+        pitchRate.alloc(NTurbine, 1, HDC::HstDev);
+        tipRate.alloc(NTurbine, 1, HDC::HstDev);
     }
 
     void release() {
@@ -119,6 +119,10 @@ public:
         for (int k = 0; k < cpm.shape[2]; k ++) {
             KOffset(k) = cpm.pdm_list[IDX(0,0,k,cpm.shape)].offset[2] + cpm.gc - 1;
         }
+        IOffset.sync(MCP::Hst2Dev);
+        JOffset.sync(MCP::Hst2Dev);
+        KOffset.sync(MCP::Hst2Dev);
+        mpi_shape = cpm.shape;
     }
 
     void release() {

@@ -9,6 +9,7 @@
 #include "typedef.h"
 #include "matrix.h"
 #include "CPMBase.h"
+#include "FalmMeshBase.h"
 
 namespace Falm {
 
@@ -95,39 +96,34 @@ static void writeVectorFile(std::string fpath, CPM &cpm, Matrix<REAL> &v, size_t
     vfile.close();
 }
 
-static void readControlVolumeFile(std::string srcpath, Matrix<REAL> &x, Matrix<REAL> &y, Matrix<REAL> &z, Matrix<REAL> &hx, Matrix<REAL> &hy, Matrix<REAL> &hz, INT3 &idmax, INT &gc) {
+static void readControlVolumeFile(std::string srcpath, FalmBaseMesh &mesh, INT3 &idmax, INT &gc) {
     std::ifstream cvfs(srcpath);
     cvfs >> idmax[0] >> idmax[1] >> idmax[2] >> gc;
-    x.alloc(idmax[0], 1, HDC::Host);
-    y.alloc(idmax[1], 1, HDC::Host);
-    z.alloc(idmax[2], 1, HDC::Host);
-    hx.alloc(idmax[0], 1, HDC::Host);
-    hy.alloc(idmax[1], 1, HDC::Host);
-    hz.alloc(idmax[2], 1, HDC::Host);
+    mesh.alloc(idmax[0], idmax[1], idmax[2], HDC::HstDev);
     for (int i = 0; i < idmax[0]; i ++) {
-        cvfs >> x(i) >> hx(i);
+        cvfs >> mesh.x(i) >> mesh.hx(i);
     }
     for (int j = 0; j < idmax[1]; j ++) {
-        cvfs >> y(j) >> hy(j);
+        cvfs >> mesh.y(j) >> mesh.hy(j);
     }
     for (int k = 0; k < idmax[2]; k ++) {
-        cvfs >> z(k) >> hz(k);
+        cvfs >> mesh.z(k) >> mesh.hz(k);
     }
     cvfs.close();
 }
 
-static void writeControlVolumeFile(std::string path, Matrix<REAL> &x, Matrix<REAL> &y, Matrix<REAL> &z, Matrix<REAL> &hx, Matrix<REAL> &hy, Matrix<REAL> &hz, INT3 &idmax, INT gc) {
+static void writeControlVolumeFile(std::string path, FalmBaseMesh &mesh, INT3 &idmax, INT gc) {
     FILE *cvfile = fopen(path.c_str(), "w");
     if (cvfile) {
         fprintf(cvfile, "%d %d %d %d\n", idmax[0], idmax[1], idmax[2], gc);
             for (int i = 0; i < idmax[0]; i ++) {
-                fprintf(cvfile, "\t%.15e\t%.15e\n", x(i), hx(i));
+                fprintf(cvfile, "\t%.15e\t%.15e\n", mesh.x(i), mesh.hx(i));
             }
             for (int j = 0; j < idmax[1]; j ++) {
-                fprintf(cvfile, "\t%.15e\t%.15e\n", y(j), hy(j));
+                fprintf(cvfile, "\t%.15e\t%.15e\n", mesh.y(j), mesh.hy(j));
             }
             for (int k = 0; k < idmax[2]; k ++) {
-                fprintf(cvfile, "\t%.15e\t%.15e\n", z(k), hz(k));
+                fprintf(cvfile, "\t%.15e\t%.15e\n", mesh.z(k), mesh.hz(k));
             }
     }
     fclose(cvfile);
