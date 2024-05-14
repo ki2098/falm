@@ -11,7 +11,7 @@
         "output":{
             "start":20,
             "interval":5,
-            "prefix":"data/uvwp1.0"
+            "prefix":"data/uvwp1.5"
         }
     },
     "inflow":{
@@ -42,7 +42,7 @@
     },
     "turbine":{
         "radius":1.0,
-        "radialVelocity":1.0,
+        "radialVelocity":1.5,
         "position":[0.0, 0.0, 0.0]
     }
 }
