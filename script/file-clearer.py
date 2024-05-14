@@ -32,3 +32,6 @@ for snapshot in data["outputSteps"]:
             else:
                 print("ERROR: data file %s does not exist"%(filename))
 
+os.remove(prefix+".json")
+os.remove(prefix+"_setup.json")
+os.remove(prefix+".cv")
