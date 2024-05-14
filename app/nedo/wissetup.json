@@ -11,7 +11,7 @@
         "output":{
             "start":20,
             "interval":5,
-            "prefix":"data/uvwp"
+            "prefix":"data/uvwp1.0"
         }
     },
     "inflow":{
