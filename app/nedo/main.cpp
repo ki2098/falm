@@ -184,12 +184,16 @@ int main(int argc, char **argv) {
 
     RmcpTurbineArray turbineArray(1);
     RmcpTurbine turbine;
-    turbine.pos = {{0, 0, 0}};
+    turbine.pos = {{
+        falm.params["turbine"]["position"][0].get<REAL>(),
+        falm.params["turbine"]["position"][1].get<REAL>(),
+        falm.params["turbine"]["position"][2].get<REAL>()
+    }};
     turbine.rotpos = {{0, 0, 0}};
-    turbine.R = 1;
+    turbine.R = falm.params["turbine"]["radius"].get<REAL>();
     turbine.width = 0.2;
     turbine.thick = 0.1;
-    turbine.tip = 4;
+    turbine.tip = falm.params["turbine"]["radialVelocity"].get<REAL>();
     turbine.hub = 0.1;
     turbine.yaw = 0;
     turbine.chord_a = {{

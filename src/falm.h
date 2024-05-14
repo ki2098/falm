@@ -204,6 +204,15 @@ public:
             printf("GPU INFO END\n");
         }
 
+        if (cpm.rank == output_rank && params.contains("turbine")) {
+            printf("TURBINE INFO START\n");
+            printf("\tTurbine blade length %lf\n", params["turbine"]["radius"].get<REAL>());
+            printf("\tTurbine radial velocity %lf\n", params["turbine"]["radialVelocity"].get<REAL>());
+            json position = params["turbine"]["position"];
+            printf("\tTurbine at (%lf %lf %lf)\n", position[0].get<REAL>(), position[1].get<REAL>(), position[2].get<REAL>());
+            printf("TURBINE INFO END\n");
+        }
+
 
         // free(ngh);
     }
