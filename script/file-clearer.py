@@ -32,17 +32,17 @@ for snapshot in data["outputSteps"]:
             else:
                 print("ERROR: data file %s does not exist"%(filename))
 
-filename = prefix+".json"
-if os.path.exists(filename):
-    os.remove(filename)
-    print(filename)
+# filename = prefix+".json"
+# if os.path.exists(filename):
+#     os.remove(filename)
+#     print(filename)
 
-filename = prefix+"_setup.json"
-if os.path.exists(filename):
-    os.remove(filename)
-    print(filename)
+# filename = prefix+"_setup.json"
+# if os.path.exists(filename):
+#     os.remove(filename)
+#     print(filename)
 
-filename = prefix+".cv"
-if os.path.exists(filename):
-    os.remove(filename)
-    print(filename)
+# filename = prefix+".cv"
+# if os.path.exists(filename):
+#     os.remove(filename)
+#     print(filename)
