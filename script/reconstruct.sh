@@ -1,6 +1,5 @@
 #!/usr/bin/expect
 
-echo $1
 #必ずspawnで実行
 spawn pjsub --interact -g gg18 -L rscgrp=prepost,node=1
 
