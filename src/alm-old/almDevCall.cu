@@ -91,7 +91,7 @@ __global__ void kernel_UpdateAPX(
         apth(apid) = theta;
 
         REAL R = apr(apid);
-        REAL3 apvect = rcxt(apid) + REAL3{{0., R*cos(theta), R*sin(theta)}};
+        REAL3 apvect = rcxt(ap_turbine_id) + REAL3{{0., R*cos(theta), R*sin(theta)}};
         REAL3 apvec = pitch_only_vector_turbine2abs(apvect, pitch(ap_turbine_id));
         REAL apX = turbinex(ap_turbine_id, 0) + apvec[0];
         REAL apY = turbinex(ap_turbine_id, 1) + apvec[1];
