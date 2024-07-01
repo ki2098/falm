@@ -13,6 +13,7 @@ Cprof::cprof_Profiler profiler;
 FalmCore falm;
 REAL maxdiag;
 Matrix<REAL> u_previous;
+BladeHandler blades;
 
 dim3 block{8, 8, 8};
 
@@ -117,6 +118,7 @@ void init(int &argc, char **&argv) {
     falm.falmCfd.SGS(fv.u, fv.nut, fv.xyz, fv.kx, fv.ja, falm.cpm, block, streams);
 
     make_poisson_coefficient_matrix();
+    blades.alloc(falm.wpath(falm.params["turbine"]["properties"]));
 }
 
 REAL main_loop(RmcpAlm &alm, RmcpTurbineArray &turbineArray, STREAM *s) {
@@ -124,7 +126,7 @@ REAL main_loop(RmcpAlm &alm, RmcpTurbineArray &turbineArray, STREAM *s) {
     u_previous.copy(fv.u, HDC::Device);
     profiler.startEvent("ALM");
     alm.SetALMFlag(fv.xyz, falm.gettime(), turbineArray, falm.cpm, block);
-    alm.ALM(fv.u, fv.xyz, fv.ff, falm.gettime(), turbineArray, falm.cpm, block);
+    alm.ALM(blades, fv.u, fv.xyz, fv.ff, falm.gettime(), turbineArray, falm.cpm, block);
     profiler.endEvent("ALM");
 
     FalmCFD &fcfd = falm.falmCfd;
@@ -177,6 +179,7 @@ void finalize() {
     for (int i = 0; i < 6; i ++) cudaStreamDestroy(facestream[i]);
     u_previous.release();
     falm.env_finalize();
+    blades.release();
 }
 
 int main(int argc, char **argv) {

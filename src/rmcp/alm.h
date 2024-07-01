@@ -26,6 +26,12 @@ public:
         RmcpAlmDevCall::ALM(u, x, ff, t, wf, pdm, map, block_dim);
     }
 
+    void ALM(BladeHandler &blades, Matrix<REAL> &u, Matrix<REAL> &x, Matrix<REAL> &ff, REAL t, RmcpTurbineArray &wf, CPM &cpm, dim3 block_dim={8,8,8}) {
+        Region &pdm = cpm.pdm_list[cpm.rank];
+        Region  map(pdm.shape, cpm.gc);
+        RmcpAlmDevCall::ALM(blades, u, x, ff, t, wf, pdm, map, block_dim);
+    }
+
     void SetALMFlag(Matrix<REAL> &x, REAL t, RmcpTurbineArray &wf, CPM &cpm, dim3 block_dim={8,8,8}) {
         Region &pdm = cpm.pdm_list[cpm.rank];
         Region  map(pdm.shape, cpm.gc);

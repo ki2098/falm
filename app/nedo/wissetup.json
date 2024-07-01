@@ -43,6 +43,7 @@
     "turbine":{
         "radius":1.0,
         "radialVelocity":2.0,
-        "position":[0.0, 0.0, 0.0]
+        "position":[0.0, 0.0, 0.0],
+        "properties":"bladeProperties.json"
     }
 }

@@ -12,6 +12,7 @@
 namespace Falm {
 
 class BladeHandler {
+public:
     static void buildAP(std::string inputfname, std::string outputfname, int apcount, int apperblade, int bladeperturbine, double radius) {
         std::ifstream ifs(inputfname);
         auto bdjson = json::parse(ifs);
@@ -47,7 +48,7 @@ class BladeHandler {
         int apperturbine = apperblade*bladeperturbine;
         int imax = rr.size()-1;
         for (int apid = 0; apid < apcount; apid ++) {
-            double apr = (apid%apperblade)*dr;
+            double apr = (apid%apperblade + 1)*dr;
             double apchord;
             double aptwist;
             int aptid = apid/apperturbine;
@@ -84,6 +85,9 @@ class BladeHandler {
             apj["id"] = apid;
             apj["turbineId"] = aptid;
             apj["bladeId"] = apbid;
+            apj["chord"] = apchord;
+            apj["twist"] = aptwist;
+            apj["r"] = apr;
             auto apattack = json::array();
             for (int j = 0; j < attack.size(); j ++) {
                 json tmp;

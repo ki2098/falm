@@ -71,6 +71,63 @@ void RmcpAlmDevCall::SetALMFlag(Matrix<REAL> &x, REAL t, RmcpTurbineArray &wf, c
 }
 
 __global__ void kernel_ALM(
+    BHFrame             *vblades,
+    MatrixFrame<INT>    *vflag,
+    MatrixFrame<REAL>   *vu,
+    MatrixFrame<REAL>   *vx,
+    MatrixFrame<REAL>   *vff,
+    RmcpTurbine         *turbines,
+    INT                  nTurbine,
+    INT3                 pdm_shape,
+    INT3                 map_shape,
+    INT3                 map_offset
+) {
+    BHFrame           &blades = *vblades;
+    MatrixFrame<INT>  &flag   = *vflag;
+    MatrixFrame<REAL> &u      = *vu;
+    MatrixFrame<REAL> &x      = *vx;
+    MatrixFrame<REAL> &ff     = *vff;
+    INT i, j, k;
+    GLOBAL_THREAD_IDX_3D(i, j, k);
+    if (i < map_shape[0] && j < map_shape[1] && k < map_shape[2]) {
+        i += map_offset[0];
+        j += map_offset[1];
+        k += map_offset[2];
+        INT idx = IDX(i, j, k, pdm_shape);
+
+        INT  tflag = flag(idx);
+        if (tflag > 0) {
+            RmcpTurbine &turb = turbines[tflag - 1];
+            REAL3 dxyz = REAL3{{x(idx, 0), x(idx, 1), x(idx, 2)}} - turb.pos;
+            dxyz  = turb.transform(dxyz);
+            dxyz -= turb.rotpos;
+            REAL dx = dxyz[0], dy = dxyz[1], dz = dxyz[2];
+            REAL th = atan2(dz, dy);
+            REAL rr = sqrt(dy * dy + dz * dz);
+            REAL3 uvw = turb.transform({{u(idx, 0), u(idx, 1), u(idx, 2)}});
+            REAL  ux  = uvw[0];
+            REAL  ut  = turb.tip * rr + uvw[1] * sin(th) - uvw[2] * cos(th);
+            REAL  uRel2 = ux * ux + ut * ut;
+            REAL phi = atan(ux / ut);
+            REAL chord, twist, cl, cd;
+            blades.get_airfoil_params(rr, phi*180./Pi, chord, twist, cl, cd);
+            REAL Cf = 0.5 * chord / (2 * rr * asin(0.5 * turb.width / rr) * turb.thick);
+            REAL ffx = fabs((cl * cos(phi) + cd * sin(phi)) * Cf * uRel2);
+            REAL fft = fabs((cl * sin(phi) - cd * cos(phi)) * Cf * uRel2);
+            REAL3 ffxyz{{- ffx, fft * sin(th), - fft * cos(th)}};
+            ffxyz = turb.invert_transform(ffxyz);
+            ff(idx, 0) = ffxyz[0];
+            ff(idx, 1) = ffxyz[1];
+            ff(idx, 2) = ffxyz[2];
+        } else {
+            ff(idx, 0) = 0;
+            ff(idx, 1) = 0;
+            ff(idx, 2) = 0;
+        }
+    }
+}
+
+__global__ void kernel_ALM(
     const MatrixFrame<INT>  *vflag,
     const MatrixFrame<REAL> *vu,
     const MatrixFrame<REAL> *vx,
@@ -128,6 +185,16 @@ __global__ void kernel_ALM(
             ff(idx, 2) = 0;
         }
     }
+}
+
+void RmcpAlmDevCall::ALM(BladeHandler &blades, Matrix<REAL> &u, Matrix<REAL> &x, Matrix<REAL> &ff, REAL t, RmcpTurbineArray &wf, const Region &pdm, const Region &map, dim3 block_dim) {
+    dim3 grid_dim(
+        (map.shape[0] + block_dim.x - 1) / block_dim.x,
+        (map.shape[1] + block_dim.y - 1) / block_dim.y,
+        (map.shape[2] + block_dim.z - 1) / block_dim.z
+    );
+
+    kernel_ALM<<<grid_dim, block_dim>>>(blades.devptr, alm_flag.devptr, u.devptr, x.devptr, ff.devptr, wf.tdevptr, wf.nTurbine, pdm.shape, map.shape, map.offset);
 }
 
 void RmcpAlmDevCall::ALM(Matrix<REAL> &u, Matrix<REAL> &x, Matrix<REAL> &ff, REAL t, RmcpTurbineArray &wf, const Region &pdm, const Region &map, dim3 block_dim) {
