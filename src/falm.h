@@ -362,6 +362,7 @@ public:
         fv.kx.alloc(shape, 3, HDC::HstDev, "d kxi / d x");
         fv.g.alloc(shape, 3, HDC::HstDev, "metric tensor");
         fv.ja.alloc(shape, 1, HDC::HstDev, "jacobian");
+        printf("(%d %d %d) (%d %d %d)\n", shape[0], shape[1], shape[2], offset[0], offset[1], offset[1]);
 
         for (INT k = 0; k < shape[2]; k ++) {
         for (INT j = 0; j < shape[1]; j ++) {
@@ -377,6 +378,7 @@ public:
             REAL volume = PRODUCT3(pitch);
             REAL3 dkdx = REAL(1) / pitch;
             fv.ja(idx) = volume;
+            // printf("%d %d %d %e %e %e\n", i + offset[0], j + offset[1], k + offset[2], gBaseMesh.hx(i + offset[0]), gBaseMesh.hy(j + offset[1]), gBaseMesh.hz(k + offset[2]));
             fv.g(idx, 0) = volume*dkdx[0]*dkdx[0];
             fv.g(idx, 1) = volume*dkdx[1]*dkdx[1];
             fv.g(idx, 2) = volume*dkdx[2]*dkdx[2];

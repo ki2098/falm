@@ -68,6 +68,7 @@ static REAL MaxDiag(Matrix<REAL> &a, CPM &cpm, dim3 block_dim) {
     Region &pdm = cpm.pdm_list[cpm.rank];
     Region map(pdm.shape, cpm.gc);
     REAL r = FalmMVDevCall::MatColAbsMax(a, 0, pdm, map, block_dim);
+    // printf("%d %lf\n", cpm.rank, r);
     if (cpm.size > 1) {
         CPM_AllReduce(&r, 1, getMPIDtype<REAL>(), MPI_MAX, MPI_COMM_WORLD);
     }

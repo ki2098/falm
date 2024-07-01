@@ -102,12 +102,15 @@ static void readControlVolumeFile(std::string srcpath, FalmBaseMesh &mesh, INT3 
     mesh.alloc(idmax[0], idmax[1], idmax[2], HDC::HstDev);
     for (int i = 0; i < idmax[0]; i ++) {
         cvfs >> mesh.x(i) >> mesh.hx(i);
+        // printf("%e %e\n", mesh.x(i), mesh.hx(i));
     }
     for (int j = 0; j < idmax[1]; j ++) {
         cvfs >> mesh.y(j) >> mesh.hy(j);
+        // printf("%e %e\n", mesh.y(j), mesh.hy(j));
     }
     for (int k = 0; k < idmax[2]; k ++) {
         cvfs >> mesh.z(k) >> mesh.hz(k);
+        // printf("%e %e\n", mesh.z(k), mesh.hz(k));
     }
     cvfs.close();
 }

@@ -467,7 +467,7 @@ REAL FalmMVDevCall::MatColAbsMax(Matrix<REAL> &a, INT col, Region &pdm, const Re
 
     // falmErrCheckMacro(falmFree(partial_max));
     // falmErrCheckMacro(falmFreeDevice(partial_max_dev));
-
+    // printf("%e\n", maximum);
     return maximum;
 }
 

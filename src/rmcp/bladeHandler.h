@@ -89,6 +89,7 @@ struct BHFrame {
                     return i;
                 }
             }
+            return -2;
         }
     }
 

@@ -8,10 +8,10 @@ using namespace Falm;
 
 Cprof::cprof_Profiler profiler;
 
-#define TERMINAL_OUTPUT_RANK 1
+#define TERMINAL_OUTPUT_RANK 0
 
 FalmCore falm;
-REAL maxdiag;
+REAL maxdiag, maxdiag2=0;
 Matrix<REAL> u_previous;
 BladeHandler blades;
 
@@ -86,6 +86,10 @@ void make_poisson_coefficient_matrix() {
         fv.poi_a(idxcc, 4) = an;
         fv.poi_a(idxcc, 5) = ab;
         fv.poi_a(idxcc, 6) = at;
+        // printf("%e\n", jacob);
+        // if (fabs(ac) > maxdiag2) {
+        //     maxdiag2 = fabs(ac);
+        // }
     }}}
     fv.poi_a.sync(MCP::Hst2Dev);
     maxdiag = FalmMV::MaxDiag(fv.poi_a, falm.cpm, block);
@@ -229,7 +233,7 @@ int main(int argc, char **argv) {
 
     printf("\n");
     if (falm.cpm.rank == TERMINAL_OUTPUT_RANK) {
-        printf("maxdiag = %e\n", maxdiag);
+        printf("maxdiag = %e %e\n", maxdiag, maxdiag2);
     }
     profiler.startEvent("global loop");
     for (falm.it = 1; falm.it <= falm.maxIt; falm.it ++) {
