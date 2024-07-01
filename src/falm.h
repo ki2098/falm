@@ -210,6 +210,7 @@ public:
             printf("\tTurbine radial velocity %lf\n", params["turbine"]["radialVelocity"].get<REAL>());
             json position = params["turbine"]["position"];
             printf("\tTurbine at (%lf %lf %lf)\n", position[0].get<REAL>(), position[1].get<REAL>(), position[2].get<REAL>());
+            printf("\tTurbine property file: %s\n", wpath(params["turbine"]["properties"]).c_str());
             printf("TURBINE INFO END\n");
         }
 
