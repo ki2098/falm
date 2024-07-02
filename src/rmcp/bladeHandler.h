@@ -117,7 +117,7 @@ struct BHFrame {
             _cl = interpolate(attack, &getcl(rcount-1,0), _attack, aid, acount);
             _cd = interpolate(attack, &getcd(rcount-1,0), _attack, aid, acount);
         } else {
-            REAL p = (_attack - attack[aid])/(attack[aid+1] - attack[aid]);
+            REAL p = (_r - r[rid])/(r[rid+1] - r[rid]);
             REAL cl0 = interpolate(attack, &getcl(rid  ,0), _attack, aid, acount);
             REAL cl1 = interpolate(attack, &getcl(rid+1,0), _attack, aid, acount);
             REAL cd0 = interpolate(attack, &getcd(rid  ,0), _attack, aid, acount);

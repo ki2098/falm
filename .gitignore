@@ -12,3 +12,4 @@ data/
 *.avi
 *.zip
 *.tar.gz
+setup.json
