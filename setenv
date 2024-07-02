@@ -1,2 +1,2 @@
-export nvmpicxx=/opt/nvidia/hpc_sdk/Linux_x86_64/23.3/comm_libs/mpi/bin/mpic++
-export nvmpirun=/opt/nvidia/hpc_sdk/Linux_x86_64/23.3/comm_libs/mpi/bin/mpirun
+export nvmpicxx=/opt/nvidia/hpc_sdk/Linux_x86_64/2023/comm_libs/mpi/bin/mpic++
+export nvmpirun=/opt/nvidia/hpc_sdk/Linux_x86_64/2023/comm_libs/mpi/bin/mpirun
