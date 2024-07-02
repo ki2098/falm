@@ -206,13 +206,13 @@ __global__ void kernel_pbc_zplus(const MatrixFrame<REAL> *vp, INT3 shape, INT gc
 
 void pbc_xminus(Matrix<REAL> &p, Region &pdm, INT gc, STREAM s) {
     dim3 grid(1, (pdm.shape[1] - gc*2 + 7) / 8, (pdm.shape[2] - gc*2 + 7) / 8);
-    dim3 block(8, 8, 1);
+    dim3 block(1, 8, 8);
     kernel_pbc_xminus<<<grid, block, 0, s>>>(p.devptr, pdm.shape, gc);
 }
 
 void pbc_xplus(Matrix<REAL> &p, Region &pdm, INT gc, STREAM s) {
     dim3 grid(1, (pdm.shape[1] - gc*2 + 7) / 8, (pdm.shape[2] - gc*2 + 7) / 8);
-    dim3 block(8, 8, 1);
+    dim3 block(1, 8, 8);
     kernel_pbc_xplus<<<grid, block, 0, s>>>(p.devptr, pdm.shape, gc);
 }
 

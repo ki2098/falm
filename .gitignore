@@ -13,3 +13,4 @@ data/
 *.zip
 *.tar.gz
 setup.json
+controlVolume.txt

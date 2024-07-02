@@ -46,68 +46,68 @@ public:
             gShape,
             INT3{{0, 0, 0}}
         );
-        for (int d = 0; d < 3; d ++) {
-            pdshape[d] = std::vector<INT>(shape[d]);
-            pdoffset[d] = std::vector<INT>(shape[d]);
-        }
-        for (int i = 0; i < shape[0]; i ++) {
-            INT ox = 0;
-            for (int __x = 0; __x < i; __x ++) {
-                ox += dim_division(gShape[0] - gcgc, shape[0], __x);
-            }
-            pdoffset[0][i] = ox;
-            pdshape[0][i] = dim_division(gShape[0] - gcgc, shape[0], i) + gcgc;
-        }
-        for (int j = 0; j < shape[1]; j ++) {
-            INT oy = 0;
-            for (int __y = 0; __y < j; __y ++) {
-                oy += dim_division(gShape[1] - gcgc, shape[1], __y);
-            }
-            pdoffset[1][j] = oy;
-            pdshape[1][j] = dim_division(gShape[1] - gcgc, shape[1], j) + gcgc;
-        }
-        for (int k = 0; k < shape[2]; k ++) {
-            INT oz = 0;
-            for (int __z = 0; __z < k; __z ++) {
-                oz += dim_division(gShape[2] - gcgc, shape[2], __z);
-            }
-            pdoffset[2][k] = oz;
-            pdshape[2][k] = dim_division(gShape[2] - gcgc, shape[2], k) + gcgc;
-        }
-
-        pdm_list = std::vector<Region>(size, Region());
-        for (int k = 0; k < shape[2]; k ++) {
-        for (int j = 0; j < shape[1]; j ++) {
-        for (int i = 0; i < shape[0]; i ++) {
-            pdm_list[IDX(i,j,k,shape)] = Region(
-                INT3{{pdshape[0][i], pdshape[1][j], pdshape[2][k]}},
-                INT3{{pdoffset[0][i], pdoffset[1][j], pdoffset[2][k]}}
-            );
-        }}}
-
-        // pdm_list = std::vector<Region>(size, Region());
-        // for (INT k = 0; k < shape[2]; k ++) {
-        // for (INT j = 0; j < shape[1]; j ++) {
-        // for (INT i = 0; i < shape[0]; i ++) {
-        //     INT ox = 0, oy = 0, oz = 0;
-        //     for (INT __x = 0; __x < i; __x ++) {
+        // for (int d = 0; d < 3; d ++) {
+        //     pdshape[d] = std::vector<INT>(shape[d]);
+        //     pdoffset[d] = std::vector<INT>(shape[d]);
+        // }
+        // for (int i = 0; i < shape[0]; i ++) {
+        //     INT ox = 0;
+        //     for (int __x = 0; __x < i; __x ++) {
         //         ox += dim_division(gShape[0] - gcgc, shape[0], __x);
         //     }
-        //     for (INT __y = 0; __y < j; __y ++) {
+        //     pdoffset[0][i] = ox;
+        //     pdshape[0][i] = dim_division(gShape[0] - gcgc, shape[0], i) + gcgc;
+        // }
+        // for (int j = 0; j < shape[1]; j ++) {
+        //     INT oy = 0;
+        //     for (int __y = 0; __y < j; __y ++) {
         //         oy += dim_division(gShape[1] - gcgc, shape[1], __y);
         //     }
-        //     for (INT __z = 0; __z < k; __z ++) {
+        //     pdoffset[1][j] = oy;
+        //     pdshape[1][j] = dim_division(gShape[1] - gcgc, shape[1], j) + gcgc;
+        // }
+        // for (int k = 0; k < shape[2]; k ++) {
+        //     INT oz = 0;
+        //     for (int __z = 0; __z < k; __z ++) {
         //         oz += dim_division(gShape[2] - gcgc, shape[2], __z);
         //     }
-        //     pdm_list[IDX(i, j, k, shape)] = Region(
-        //         INT3{{
-        //             dim_division(gShape[0] - gcgc, shape[0], i) + gc*2,
-        //             dim_division(gShape[1] - gcgc, shape[1], j) + gc*2,
-        //             dim_division(gShape[2] - gcgc, shape[2], k) + gc*2
-        //         }},
-        //         INT3{{ox, oy, oz}}
+        //     pdoffset[2][k] = oz;
+        //     pdshape[2][k] = dim_division(gShape[2] - gcgc, shape[2], k) + gcgc;
+        // }
+
+        // pdm_list = std::vector<Region>(size, Region());
+        // for (int k = 0; k < shape[2]; k ++) {
+        // for (int j = 0; j < shape[1]; j ++) {
+        // for (int i = 0; i < shape[0]; i ++) {
+        //     pdm_list[IDX(i,j,k,shape)] = Region(
+        //         INT3{{pdshape[0][i], pdshape[1][j], pdshape[2][k]}},
+        //         INT3{{pdoffset[0][i], pdoffset[1][j], pdoffset[2][k]}}
         //     );
         // }}}
+
+        pdm_list = std::vector<Region>(size, Region());
+        for (INT k = 0; k < shape[2]; k ++) {
+        for (INT j = 0; j < shape[1]; j ++) {
+        for (INT i = 0; i < shape[0]; i ++) {
+            INT ox = 0, oy = 0, oz = 0;
+            for (INT __x = 0; __x < i; __x ++) {
+                ox += dim_division(gShape[0] - gcgc, shape[0], __x);
+            }
+            for (INT __y = 0; __y < j; __y ++) {
+                oy += dim_division(gShape[1] - gcgc, shape[1], __y);
+            }
+            for (INT __z = 0; __z < k; __z ++) {
+                oz += dim_division(gShape[2] - gcgc, shape[2], __z);
+            }
+            pdm_list[IDX(i, j, k, shape)] = Region(
+                INT3{{
+                    dim_division(gShape[0] - gcgc, shape[0], i) + gc*2,
+                    dim_division(gShape[1] - gcgc, shape[1], j) + gc*2,
+                    dim_division(gShape[2] - gcgc, shape[2], k) + gc*2
+                }},
+                INT3{{ox, oy, oz}}
+            );
+        }}}
 
     }
 

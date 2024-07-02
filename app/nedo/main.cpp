@@ -130,7 +130,7 @@ REAL main_loop(RmcpAlm &alm, RmcpTurbineArray &turbineArray, STREAM *s) {
     u_previous.copy(fv.u, HDC::Device);
     profiler.startEvent("ALM");
     alm.SetALMFlag(fv.xyz, falm.gettime(), turbineArray, falm.cpm, block);
-    alm.ALM(blades, fv.u, fv.xyz, fv.ff, falm.gettime(), turbineArray, falm.cpm, block);
+    alm.ALM(/* blades,  */fv.u, fv.xyz, fv.ff, falm.gettime(), turbineArray, falm.cpm, block);
     profiler.endEvent("ALM");
 
     FalmCFD &fcfd = falm.falmCfd;
