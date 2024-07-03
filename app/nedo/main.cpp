@@ -130,7 +130,7 @@ REAL main_loop(RmcpAlm &alm, RmcpTurbineArray &turbineArray, STREAM *s) {
     u_previous.copy(fv.u, HDC::Device);
     profiler.startEvent("ALM");
     alm.SetALMFlag(fv.xyz, falm.gettime(), turbineArray, falm.cpm, block);
-    alm.ALM(/* blades,  */fv.u, fv.xyz, fv.ff, falm.gettime(), turbineArray, falm.cpm, block);
+    alm.ALM(blades, fv.u, fv.xyz, fv.ff, falm.gettime(), turbineArray, falm.cpm, block);
     profiler.endEvent("ALM");
 
     FalmCFD &fcfd = falm.falmCfd;
@@ -198,7 +198,7 @@ int main(int argc, char **argv) {
     }};
     turbine.rotpos = {{0, 0, 0}};
     turbine.R = falm.params["turbine"]["radius"].get<REAL>();
-    turbine.width = 0.2;
+    turbine.width = 0.1;
     turbine.thick = 0.1;
     turbine.tip = falm.params["turbine"]["radialVelocity"].get<REAL>();
     turbine.hub = 0.1;

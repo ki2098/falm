@@ -192,6 +192,10 @@ struct BladeHandler {
         falmErrCheckMacro(falmFreeDevice(devptr));
         hdc = HDC::Empty;
     }
+
+    void get_airfoil_params(REAL _r, REAL _phi, REAL &_chord, REAL &_twist, REAL &_cl, REAL &_cd) {
+        host.get_airfoil_params(_r, _phi, _chord, _twist, _cl, _cd);
+    }
 };
 
 
