@@ -24,6 +24,7 @@ typedef VECTOR<REAL, 2>  REAL2;
 typedef cudaStream_t STREAM;
 
 typedef nlohmann::json json;
+typedef nlohmann::ordered_json ordered_json;
 
 // typedef int           INT_T;
 // typedef char         CHAR_T;

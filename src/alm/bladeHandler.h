@@ -1,74 +1,74 @@
 #ifndef FALM_ALM_BLADEHANDLER_H
 #define FALM_ALM_BLADEHANDLER_H
 
-#include <stdio.h>
-#include <stdlib.h>
+#include <fstream>
 #include <string>
 #include <vector>
-#include <fstream>
-#include <iostream>
 #include "../typedef.h"
 
 namespace Falm {
 
 class BladeHandler {
+
 public:
-    static void buildAP(std::string inputfname, std::string outputfname, int apcount, int apperblade, int bladeperturbine, double radius) {
-        std::ifstream ifs(inputfname);
-        auto bdjson = json::parse(ifs);
-        auto aflist = bdjson["airfoils"];
-        auto atlist = bdjson["attacks"];
-
-        std::vector<double> attack(atlist.size());
-        std::vector<double> rr(aflist.size());
-        std::vector<double> chord(aflist.size());
-        std::vector<double> twist(aflist.size());
-        std::vector<std::vector<double>> cl(aflist.size(), std::vector<double>(atlist.size()));
-        std::vector<std::vector<double>> cd(aflist.size(), std::vector<double>(atlist.size()));
-
-        for (int i = 0; i < aflist.size(); i ++) {
+    static void buildAP(std::string bladefilepath, std::string apfilepath, int turbinecount, int bladeperturbine, int apperblade, double radius) {
+        int apcount = turbinecount*bladeperturbine*apperblade;
+        std::ifstream bladefile(bladefilepath);
+        auto bladejson = json::parse(bladefile);
+        bladefile.close();
+        auto aflist = bladejson["airfoils"];
+        auto atlist = bladejson["attacks"];
+        size_t imax = aflist.size();
+        size_t jmax = atlist.size();
+        
+        std::vector<double> attack(jmax);
+        std::vector<double> rr(imax);
+        std::vector<double> chord(imax);
+        std::vector<double> twist(imax);
+        std::vector<std::vector<double>> cl(imax);
+        std::vector<std::vector<double>> cd(jmax);
+        for (size_t i = 0; i < imax; i ++) {
             auto af = aflist[i];
             rr[i] = af["r/R"].get<double>();
             chord[i] = af["chord/R"].get<double>();
             twist[i] = af["twist"].get<double>();
             auto cllist = af["Cl"];
             auto cdlist = af["Cd"];
-            for (int j = 0; j < atlist.size(); j ++) {
+            cl[i].resize(jmax);
+            cd[i].resize(jmax);
+            for (size_t j = 0; j < jmax; j ++) {
                 cl[i][j] = cllist[j].get<double>();
                 cd[i][j] = cdlist[j].get<double>();
             }
         }
-
-        for (int j = 0; j < atlist.size(); j ++) {
+        for (size_t j = 0; j < jmax; j ++) {
             attack[j] = atlist[j].get<double>();
         }
 
-        auto apjs = json::array();
+        auto aparrayjson = ordered_json::array();
         double dr = radius/apperblade;
-        int apperturbine = apperblade*bladeperturbine;
-        int imax = rr.size()-1;
+        // int apperturbine = apperblade*bladeperturbine;
         for (int apid = 0; apid < apcount; apid ++) {
-            double apr = (apid%apperblade + 1)*dr;
-            double apchord;
-            double aptwist;
-            int aptid = apid/apperturbine;
-            int apbid = (apid%apperturbine)/apperblade;
-            std::vector<double> apcd(attack.size());
-            std::vector<double> apcl(attack.size());
+            double apr = (apid%apperblade + 0.5)*dr;
+            double apchord, aptwist;
+            // int aptid = apid/apperturbine;
+            // int apbid = (apid%apperturbine)/apperblade;
+            std::vector<double> apcl;
+            std::vector<double> apcd;
             if (apr < rr[0]) {
                 apchord = chord[0];
                 aptwist = twist[0];
-                apcd = cd[0];
                 apcl = cl[0];
-            } else if (apr >= rr[imax]) {
-                apchord = chord[imax];
-                aptwist = twist[imax];
-                apcd = cd[imax];
-                apcl = cl[imax];
+                apcd = cd[0];
+            } else if (apr >= rr[imax-1]) {
+                apchord = chord[imax-1];
+                aptwist = twist[imax-1];
+                apcl = cl[imax-1];
+                apcd = cd[imax-1];
             } else {
-                int i;
+                size_t i;
                 double p;
-                for (i = 0; i < imax; i ++) {
+                for (i = 0; i < imax-1; i ++) {
                     if (rr[i] <= apr && rr[i+1] > apr) {
                         p = (apr - rr[i])/(rr[i+1] - rr[i]);
                         break;
@@ -76,34 +76,34 @@ public:
                 }
                 apchord = (1. - p)*chord[i] + p*chord[i+1];
                 aptwist = (1. - p)*twist[i] + p*twist[i+1];
-                for (int j = 0; j < attack.size(); j ++) {
+                apcl.resize(jmax);
+                apcd.resize(jmax);
+                for (size_t j = 0; j < jmax; j ++) {
                     apcl[j] = (1. - p)*cl[i][j] + p*cl[i+1][j];
                     apcd[j] = (1. - p)*cd[i][j] + p*cd[i+1][j];
                 }
             }
-            json apj;
-            apj["id"] = apid;
-            apj["turbineId"] = aptid;
-            apj["bladeId"] = apbid;
-            apj["chord"] = apchord;
-            apj["twist"] = aptwist;
-            apj["r"] = apr;
-            auto apattack = json::array();
-            for (int j = 0; j < attack.size(); j ++) {
-                json tmp;
-                tmp["attack"] = attack[j];
-                tmp["Cl"] = apcl[j];
-                tmp["Cd"] = apcd[j];
-                apattack.push_back(tmp);
-            }
-            apj["airfoilProperty"] = apattack;
-            apjs.push_back(apj);
+            ordered_json apjson;
+            apjson["id"] = apid;
+            // apjson["turbineId"] = aptid;
+            // apjson["bladeId"] = apbid;
+            apjson["r"] = apr;
+            apjson["chord"] = apchord;
+            apjson["twist"] = aptwist;
+            apjson["Cl"] = apcl;
+            apjson["Cd"] = apcd;
+            aparrayjson.push_back(apjson);
         }
+        ordered_json tmp;
+        tmp["aps"] = aparrayjson;
+        tmp["attacks"] = attack;
+        // tmp["dr"] = dr;
 
-        std::ofstream ofs(outputfname);
-        ofs << apjs.dump(2);
-        ofs.close();
+        std::ofstream apfile(apfilepath);
+        apfile << tmp.dump(2);
+        apfile.close();
     }
+
 };
 
 }
