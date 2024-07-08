@@ -132,6 +132,7 @@ struct BladeHandler {
     BHFrame host, dev, *devptr;
     INT rcount, acount;
     FLAG hdc;
+    std::string property_file_path;
 
     BladeHandler() : host(), dev(), devptr(nullptr), rcount(0), acount(0), hdc(HDC::Empty) {}
 
@@ -146,6 +147,9 @@ struct BladeHandler {
     void alloc(
         std::string bpfname
     ) {
+        // printf("BLADE PROPERTY INFO\n");
+        // printf("\tPath %s\n", bpfname.c_str());
+        property_file_path = bpfname;
         std::ifstream ifs(bpfname);
         json bpjson = json::parse(ifs);
         json aflist = bpjson["airfoils"];

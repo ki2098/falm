@@ -167,6 +167,7 @@ struct APHandler {
         attackcount = attackjson.size();
         host.alloc(apcount, attackcount/* , dr */, HDC::Host);
         dev.alloc(apcount, attackcount/* , dr */, HDC::Device);
+        hdc = HDC::HstDev;
         for (size_t apid = 0; apid < apcount; apid ++) {
             auto apjson = aparrayjson[apid];
             // host.turbineid[apid] = apjson["turbineId"].get<int>();

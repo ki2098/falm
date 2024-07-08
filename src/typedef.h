@@ -20,6 +20,7 @@ typedef VECTOR<INT , 3>   INT3;
 typedef VECTOR<REAL, 3>  REAL3;
 typedef VECTOR<INT , 2>   INT2;
 typedef VECTOR<REAL, 2>  REAL2;
+typedef VECTOR<REAL, 6>  REAL6;
 
 typedef cudaStream_t STREAM;
 

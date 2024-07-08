@@ -79,6 +79,14 @@ struct VECTOR {
     __host__ __device__ T &operator[](size_t i) {return _m_vector[i];}
     __host__ __device__ const T &operator[](size_t i) const {return _m_vector[i];}
 
+    // @ vector
+
+    __host__ __device__ VECTOR operator-() const {
+        VECTOR vv;
+        for (size_t i = 0; i < N; i ++) vv[i] = - _m_vector[i];
+        return vv;
+    }
+
     // vector @ vector
 
     __host__ __device__ VECTOR operator+(const VECTOR &v) const {

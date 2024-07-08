@@ -3,7 +3,67 @@
 #include "../dev/devutil.cuh"
 #include "../falmath.h"
 
+#define BLADE_WIDTH 0.1
+#define BLADE_THICK 0.1
+
 namespace Falm {
+
+__global__ void kernel_SetALMFlag(
+    MatrixFrame<INT>  *vflag,
+    MatrixFrame<REAL> *vx,
+    REAL               tt,
+    TurbineFrame      *vturbines,
+    INT3               pdm_shape,
+    INT3               map_shape,
+    INT3               map_offset 
+) {
+    MatrixFrame<INT>  &flag = *vflag;
+    MatrixFrame<REAL> &x    = *vx;
+    TurbineFrame &tf = *vturbines;
+
+    INT i, j, k;
+    GLOBAL_THREAD_IDX_3D(i, j, k);
+    if (i < map_shape[0] && j < map_shape[1] && k < map_shape[2]) {
+        i += map_offset[0];
+        j += map_offset[1];
+        k += map_offset[2];
+        INT idx = IDX(i, j, k, pdm_shape);
+        REAL3 point{{x(idx,0), x(idx,1), x(idx,2)}};
+
+        bool something = false;
+        for (size_t tid = 0; tid < tf.n_turbine; tid ++) {
+            REAL3 dxyz = point - tf.base[tid];
+            dxyz = one_angle_frame_rotation(dxyz, tf.angle[tid], tf.angle_type[tid]);
+            dxyz -= tf.hub[tid];
+
+            REAL dx = dxyz[0], dy = dxyz[1], dz = dxyz[2];
+            REAL rr = sqrt(dy * dy + dz * dz);
+            REAL th = atan2(dz, dy);
+            if (th < 0) {
+                th += 2 * Pi;
+            }
+
+            REAL rt = tf.tip_rate[tid]*tt;
+            const size_t Nb = tf.n_blade;
+            for (size_t bid = 0; bid < Nb; bid ++) {
+                REAL rtblade = rt + (bid*2./Nb)*Pi;
+                REAL thblade = floormod(th - rtblade, 2.*Pi);
+                bool isblade = (rr <= tf.radius && rr > tf.hub_radius);
+                isblade = isblade && (thblade >= (Nb-1)*Pi / (Nb*2)) && (thblade <= (Nb+1)*Pi / (Nb*2));
+                isblade = isblade && (rr <= BLADE_WIDTH / (2 * cos(thblade)) || rr <= BLADE_WIDTH / (2 * cos(thblade + Pi)));
+                isblade = isblade && dx >= 0 && dx < BLADE_THICK;
+                if (isblade) {
+                    something = true;
+                    flag(idx) = tid + 1;
+                }
+            }
+        }
+        if (!something) {
+            flag(idx) = 0;
+        }
+    }
+}
+
 
 __global__ void kernel_SetALMFlag(
     const MatrixFrame<INT>  *vflag,
@@ -33,7 +93,7 @@ __global__ void kernel_SetALMFlag(
             RmcpTurbine &turb = turbines[_ti];
             REAL3 dxyz = REAL3{{tx, ty, tz}} - turb.pos;
             dxyz = turb.transform(dxyz);
-            dxyz = dxyz - turb.rotpos;
+            dxyz -= turb.rotpos;
             REAL dx = dxyz[0], dy = dxyz[1], dz = dxyz[2];
             REAL rr = sqrt(dy * dy + dz * dz);
             REAL th = atan2(dz, dy);
@@ -68,6 +128,80 @@ void RmcpAlmDevCall::SetALMFlag(Matrix<REAL> &x, REAL t, RmcpTurbineArray &wf, c
         (map.shape[2] + block_dim.z - 1) / block_dim.z
     );
     kernel_SetALMFlag<<<grid_dim, block_dim, 0, 0>>>(alm_flag.devptr, x.devptr, t, wf.tdevptr, wf.nTurbine, pdm.shape, map.shape, map.offset);
+}
+
+void RmcpAlmDevCall::SetALMFlag(Matrix<REAL> &x, REAL t, const Region &pdm, const Region &map, dim3 block_dim) {
+    dim3 grid_dim(
+        (map.shape[0] + block_dim.x - 1) / block_dim.x,
+        (map.shape[1] + block_dim.y - 1) / block_dim.y,
+        (map.shape[2] + block_dim.z - 1) / block_dim.z
+    );
+    kernel_SetALMFlag<<<grid_dim, block_dim>>>(alm_flag.devptr, x.devptr, t, turbines.devptr, pdm.shape, map.shape, map.offset);
+}
+
+__global__ void kernel_ALM(
+    BHFrame             *vblades,
+    MatrixFrame<INT>    *vflag,
+    MatrixFrame<REAL>   *vu,
+    MatrixFrame<REAL>   *vx,
+    MatrixFrame<REAL>   *vff,
+    TurbineFrame        *vturbines,
+    INT3                 pdm_shape,
+    INT3                 map_shape,
+    INT3                 map_offset
+) {
+    BHFrame           &blades   = *vblades;
+    MatrixFrame<INT>  &flag     = *vflag;
+    MatrixFrame<REAL> &u        = *vu;
+    MatrixFrame<REAL> &x        = *vx;
+    MatrixFrame<REAL> &ff       = *vff;
+    TurbineFrame      &turbines = *vturbines;
+    INT i, j, k;
+    GLOBAL_THREAD_IDX_3D(i, j, k);
+    if (i < map_shape[0] && j < map_shape[1] && k < map_shape[2]) {
+        i += map_offset[0];
+        j += map_offset[1];
+        k += map_offset[2];
+        INT idx = IDX(i, j, k, pdm_shape);
+        REAL3 point{{x(idx,0), x(idx,1), x(idx,2)}};
+
+        INT  tflag = flag(idx);
+        if (tflag > 0) {
+            size_t tid = tflag - 1;
+            REAL3 xyz  = point - turbines.base[tid];
+            REAL3 uvw  = REAL3{{u(idx,0), u(idx,1), u(idx,2)}} - turbines.base_velocity[tid];
+            REAL3 xyz1 = one_angle_frame_rotation(xyz, turbines.angle[tid], turbines.angle_type[tid]);
+            REAL3 uvw1 = one_angle_frame_rotation_dt(xyz, uvw, turbines.angle[tid], turbines.angular_velocity[tid], turbines.angle_type[tid]);
+            REAL3 dxyz = xyz1 - turbines.hub[tid];
+
+            REAL dx = dxyz[0], dy = dxyz[1], dz = dxyz[2];
+            REAL th = atan2(dz, dy);
+            REAL rr = sqrt(dy * dy + dz * dz);
+
+            REAL  ux  = uvw1[0];
+            REAL  ut  = turbines.tip_rate[tid] * rr + uvw1[1] * sin(th) - uvw1[2] * cos(th);
+            REAL  urel2 = ux * ux + ut * ut;
+            REAL phi = atan(ux / ut);
+            REAL chord, twist, cl, cd;
+            blades.get_airfoil_params(rr, phi*180./Pi, chord, twist, cl, cd);
+
+            REAL ps = (rr > BLADE_WIDTH)? asin(0.5 * BLADE_WIDTH / rr) : 0.5*Pi/turbines.n_blade;
+            REAL Cf = 0.5 * chord / (2 * rr * ps * BLADE_THICK);
+            REAL ffx = fabs((cl * cos(phi) + cd * sin(phi)) * Cf * urel2);
+            REAL fft = fabs((cl * sin(phi) - cd * cos(phi)) * Cf * urel2);
+            REAL3 ffxyz{{- ffx, fft * sin(th), - fft * cos(th)}};
+
+            ffxyz = one_angle_frame_rotation(ffxyz, - turbines.angle[tid], turbines.angle_type[tid]);
+            ff(idx, 0) = ffxyz[0];
+            ff(idx, 1) = ffxyz[1];
+            ff(idx, 2) = ffxyz[2];
+            // printf("(%d %d %d) (%e %e %e) %e %e %e (%e %e %e) (%e %e %e)\n", i, j, k, ffxyz[0], ffxyz[1], ffxyz[2], ux, ut, rr, point[0], point[1], point[2], cl, cd, asin(0.5 * BLADE_WIDTH / rr));
+        } else {
+            ff(idx, 0) = 0;
+            ff(idx, 1) = 0;
+            ff(idx, 2) = 0;
+        }
+    }
 }
 
 __global__ void kernel_ALM(
@@ -205,6 +339,15 @@ void RmcpAlmDevCall::ALM(Matrix<REAL> &u, Matrix<REAL> &x, Matrix<REAL> &ff, REA
     );
 
     kernel_ALM<<<grid_dim, block_dim>>>(alm_flag.devptr, u.devptr, x.devptr, ff.devptr, wf.tdevptr, wf.nTurbine, pdm.shape, map.shape, map.offset);
+}
+
+void RmcpAlmDevCall::ALM(Matrix<REAL> &u, Matrix<REAL> &x, Matrix<REAL> &ff, REAL t, const Region &pdm, const Region &map, dim3 block_dim) {
+    dim3 grid_dim(
+        (map.shape[0] + block_dim.x - 1) / block_dim.x,
+        (map.shape[1] + block_dim.y - 1) / block_dim.y,
+        (map.shape[2] + block_dim.z - 1) / block_dim.z
+    );
+    kernel_ALM<<<grid_dim, block_dim>>>(blades.devptr, alm_flag.devptr, u.devptr, x.devptr, ff.devptr, turbines.devptr, pdm.shape, map.shape, map.offset);
 }
 
 __global__ void kernel_CalcTorque(
