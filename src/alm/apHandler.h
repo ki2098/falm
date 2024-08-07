@@ -45,7 +45,7 @@ struct APFrame {
         dr(0) */
     {}
 
-    __host__ __device__ size_t id(size_t apid, size_t n) {
+    __host__ __device__ size_t id(size_t apid, size_t n) const {
         return apid + n*apcount;
     }
 
@@ -170,6 +170,10 @@ struct APHandler {
         hdc = HDC::HstDev;
         for (size_t apid = 0; apid < apcount; apid ++) {
             auto apjson = aparrayjson[apid];
+            size_t __id = apjson["id"].get<size_t>();
+            if (__id != apid) {
+                printf("AP ID ERROR: %lu != %lu\n", apid, __id);
+            }
             // host.turbineid[apid] = apjson["turbineId"].get<int>();
             // host.bladeid[apid] = apjson["bladeId"].get<int>();
             host.r[apid] = apjson["r"].get<REAL>();
@@ -195,7 +199,7 @@ struct APHandler {
         falmErrCheckMacro(falmMemcpy(dev.cd, host.cd, sizeof(REAL)*apcount*attackcount, MCP::Hst2Dev));
         falmErrCheckMacro(falmMemcpy(dev.attack, host.attack, sizeof(REAL)*attackcount, MCP::Hst2Dev));
 
-        falmErrCheckMacro(falmMalloc((void**)&devptr, sizeof(APFrame)));
+        falmErrCheckMacro(falmMallocDevice((void**)&devptr, sizeof(APFrame)));
         falmErrCheckMacro(falmMemcpy(devptr, &dev, sizeof(APFrame), MCP::Hst2Dev));
     }
 

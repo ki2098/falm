@@ -253,6 +253,23 @@ FIN:
         profiler.output();
         printf("\n");
         // pprofiler.output();
+
+        falm.fv.ff.sync(MCP::Dev2Hst);
+        falm.fv.xyz.sync(MCP::Dev2Hst);
+        alm.alm_flag.sync(MCP::Dev2Hst);
+        FILE *csv = fopen("data/alm.csv", "w");
+        fprintf(csv, "x,y,z,flag,fx,fy,fz\n");
+        const INT3 &shape = falm.cpm.pdm_list[falm.cpm.rank].shape;
+        for (INT k = 0; k < shape[2]; k ++) {
+        for (INT j = 0; j < shape[1]; j ++) {
+        for (INT i = 0; i < shape[0]; i ++) {
+            INT idx = IDX(i, j, k, shape);
+            Matrix<REAL> &ff = falm.fv.ff;
+            Matrix<REAL> &x  = falm.fv.xyz;
+            Matrix<INT>  &flag = alm.alm_flag;
+            fprintf(csv, "%lf,%lf,%lf,%d,%e,%e,%e\n", x(idx,0), x(idx,1), x(idx,2), flag(idx), ff(idx,0), ff(idx,1), ff(idx,2));
+        }}}
+        fclose(csv);
     }
     finalize();
     return 0;
