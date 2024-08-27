@@ -170,16 +170,16 @@ __global__ void kernel_ALM(
             size_t tid = tflag - 1;
             REAL3 xyz  = point - turbines.base[tid];
             REAL3 uvw  = REAL3{{u(idx,0), u(idx,1), u(idx,2)}} - turbines.base_velocity[tid];
-            REAL3 xyz1 = one_angle_frame_rotation(xyz, turbines.angle[tid], turbines.angle_type[tid]);
-            REAL3 uvw1 = one_angle_frame_rotation_dt(xyz, uvw, turbines.angle[tid], turbines.angular_velocity[tid], turbines.angle_type[tid]);
-            REAL3 dxyz = xyz1 - turbines.hub[tid];
+            xyz = one_angle_frame_rotation(xyz, turbines.angle[tid], turbines.angle_type[tid]);
+            uvw = one_angle_frame_rotation_dt(xyz, uvw, turbines.angle[tid], turbines.angular_velocity[tid], turbines.angle_type[tid]);
+            REAL3 dxyz = xyz - turbines.hub[tid];
 
             REAL dx = dxyz[0], dy = dxyz[1], dz = dxyz[2];
             REAL th = atan2(dz, dy);
             REAL rr = sqrt(dy * dy + dz * dz);
 
-            REAL  ux  = uvw1[0];
-            REAL  ut  = turbines.tip_rate[tid] * rr + uvw1[1] * sin(th) - uvw1[2] * cos(th);
+            REAL  ux  = uvw[0];
+            REAL  ut  = turbines.tip_rate[tid] * rr + uvw[1] * sin(th) - uvw[2] * cos(th);
             REAL  urel2 = ux * ux + ut * ut;
             REAL phi = atan(ux / ut);
             REAL chord, twist, cl, cd;

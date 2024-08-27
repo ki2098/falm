@@ -75,6 +75,7 @@ public:
                         printf("\t\tCoordinate[%d] subject to %s\n", j, turbines.turbine_param["turbineArray"][i]["baseLocation"][j].get_ref<std::string&>().c_str());
                     }
                 }
+                printf("\t\tAngle type %d\n", int(turbines.host.angle_type[i]));
                 printf("\t\tAngle (%lf %lf %lf)\n", rad2deg(turbines.host.angle[i][0]), rad2deg(turbines.host.angle[i][1]), rad2deg(turbines.host.angle[i][2]));
                 printf("\t\tAngular velocity (%lf %lf %lf)\n", rad2deg(turbines.host.angular_velocity[i][0]), rad2deg(turbines.host.angular_velocity[i][1]), rad2deg(turbines.host.angular_velocity[i][2]));
                 for (int j = 0; j < 3; j ++) {
