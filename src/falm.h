@@ -7,6 +7,7 @@
 #include "falmath.h"
 #include "mesher/mesher.hpp"
 #include "rmcp/alm.h"
+#include "alm/alm.h"
 #include "vcdm/VCDM.h"
 #include "FalmIO.h"
 
