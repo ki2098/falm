@@ -6,6 +6,8 @@
 
 namespace Falm {
 
+namespace Rmcp {
+
 class RmcpAlm : public RmcpAlmDevCall {
 public:
 
@@ -90,6 +92,8 @@ public:
         }
     }
 };
+
+}
 
 }
 

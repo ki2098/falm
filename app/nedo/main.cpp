@@ -14,7 +14,7 @@ FalmCore falm;
 REAL maxdiag, maxdiag2=0;
 Matrix<REAL> u_previous;
 // BladeHandler blades;
-RmcpAlm alm;
+Rmcp::RmcpAlm alm;
 
 dim3 block{8, 8, 8};
 
@@ -127,7 +127,7 @@ void init(int &argc, char **&argv) {
     alm.print_info(falm.cpm.rank == TERMINAL_OUTPUT_RANK);
 }
 
-REAL main_loop(RmcpAlm &alm, RmcpTurbineArray &turbineArray, STREAM *s) {
+REAL main_loop(Rmcp::RmcpAlm &alm, Rmcp::RmcpTurbineArray &turbineArray, STREAM *s) {
     FalmBasicVar &fv = falm.fv;
     u_previous.copy(fv.u, HDC::Device);
     profiler.startEvent("ALM");
@@ -191,8 +191,8 @@ void finalize() {
 int main(int argc, char **argv) {
     init(argc, argv);
 
-    RmcpTurbineArray turbineArray(1);
-    RmcpTurbine turbine;
+    Rmcp::RmcpTurbineArray turbineArray(1);
+    Rmcp::RmcpTurbine turbine;
     // turbine.pos = {{
     //     falm.params["turbine"]["position"][0].get<REAL>(),
     //     falm.params["turbine"]["position"][1].get<REAL>(),

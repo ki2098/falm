@@ -8,6 +8,8 @@
 
 namespace Falm {
 
+namespace Rmcp {
+
 struct BHFrame {
     REAL *r;
     REAL *attack;
@@ -167,7 +169,7 @@ struct BladeHandler {
             auto af = aflist[i];
             host.r[i] = af["r/R"].get<REAL>();
             host.chord[i] = af["chord/R"].get<REAL>();
-            host.twist[i] = af["twist"].get<REAL>();
+            host.twist[i] = af["twist[deg]"].get<REAL>();
             auto cllist = af["Cl"];
             auto cdlist = af["Cd"];
             for (INT j = 0; j < acount; j ++) {
@@ -202,6 +204,7 @@ struct BladeHandler {
     }
 };
 
+}
 
 }
 

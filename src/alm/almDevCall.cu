@@ -5,6 +5,8 @@
 
 namespace Falm {
 
+namespace Alm {
+
 template <typename T>
 __host__ __device__ static INT find_index(T *seq, T value, INT size) {
     if (value < seq[0]) {
@@ -184,8 +186,9 @@ __global__ void kernel_CalcAPForce(
             REAL w_at_ap = trilinear_interpolation(xd, yd, zd, c0, c1, c2, c3, c4, c5, c6, c7);
 
             REAL3 base = turbines.base[turbine_id];
+            REAL3 base_velocity = turbines.base_velocity[turbine_id];
             REAL3 apxyz_tt = one_angle_frame_rotation(apxyz - base, angle, angle_type);
-            REAL3 uvw_at_ap_tt = one_angle_frame_rotation_dt(apxyz - base, {{u_at_ap, v_at_ap, w_at_ap}}, angle, angular_velocity, angle_type);
+            REAL3 uvw_at_ap_tt = one_angle_frame_rotation_dt(apxyz - base, REAL3{{u_at_ap, v_at_ap, w_at_ap}} - base_velocity, angle, angular_velocity, angle_type);
 
             REAL theta0 = (2*Pi/n_blade)*blade_id;
             t = floormod(t, 2*Pi/tip);
@@ -196,7 +199,7 @@ __global__ void kernel_CalcAPForce(
             REAL urel2 = ux_tt*ux_tt + ut_tt*ut_tt;
             REAL phi = atan(ux_tt/ut_tt);
             REAL chord, twist, cl, cd;
-            aps.get_airfoil_params(ap_id, phi, chord, twist, cl, cd);
+            aps.get_airfoil_params(ap_id, rad2deg(phi), chord, twist, cl, cd);
 
             const REAL dr_per_ap = turbines.radius/turbines.n_ap_per_blade;
             REAL fl = .5*cl*urel2*chord*dr_per_ap;
@@ -314,6 +317,8 @@ void AlmDevCall::DryDistribution(Matrix<REAL> &x, Matrix<REAL> &y, Matrix<REAL> 
         (pdm_shape[2] + block_size.z - 1) / block_size.z
     );
     kernel_DryDistribution<<<block_number, block_size>>>(x.devptr, y.devptr, z.devptr, phi.devptr, aps.devptr, euler_eps, pdm_shape, gc);
+}
+
 }
 
 }

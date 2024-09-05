@@ -365,6 +365,21 @@ public:
         fv.ja.alloc(shape, 1, HDC::HstDev, "jacobian");
         printf("(%d %d %d) (%d %d %d)\n", shape[0], shape[1], shape[2], offset[0], offset[1], offset[1]);
 
+        baseMesh.alloc(shape[0], shape[1], shape[2], HDC::HstDev);
+        for (INT i = 0; i < shape[0]; i ++) {
+            baseMesh.x(i) = gBaseMesh.x(i + offset[0]);
+            baseMesh.hx(i) = gBaseMesh.hx(i + offset[0]);
+        }
+        for (INT j = 0; j < shape[1]; j ++) {
+            baseMesh.y(j) = gBaseMesh.y(j + offset[1]);
+            baseMesh.hy(j) = gBaseMesh.hy(j + offset[1]);
+        }
+        for (INT k = 0; k < shape[2]; k ++) {
+            baseMesh.z(k) = gBaseMesh.z(k + offset[2]);
+            baseMesh.hz(k) = gBaseMesh.hz(k + offset[2]);
+        }
+        baseMesh.sync(MCP::Hst2Dev);
+
         for (INT k = 0; k < shape[2]; k ++) {
         for (INT j = 0; j < shape[1]; j ++) {
         for (INT i = 0; i < shape[0]; i ++) {

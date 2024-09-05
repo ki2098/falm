@@ -8,6 +8,8 @@
 
 namespace Falm {
 
+namespace Rmcp {
+
 __global__ void kernel_SetALMFlag(
     MatrixFrame<INT>  *vflag,
     MatrixFrame<REAL> *vx,
@@ -183,7 +185,7 @@ __global__ void kernel_ALM(
             REAL  urel2 = ux * ux + ut * ut;
             REAL phi = atan(ux / ut);
             REAL chord, twist, cl, cd;
-            blades.get_airfoil_params(rr, phi*180./Pi, chord, twist, cl, cd);
+            blades.get_airfoil_params(rr, rad2deg(phi), chord, twist, cl, cd);
 
             REAL ps = (rr > BLADE_WIDTH)? asin(0.5 * BLADE_WIDTH / rr) : 0.5*Pi/turbines.n_blade;
             REAL Cf = 0.5 * chord / (2 * rr * ps * BLADE_THICK);
@@ -431,6 +433,8 @@ void RmcpAlmDevCall::CalcTorque(Matrix<REAL> &x, Matrix<REAL> &ff, RmcpTurbineAr
     }
     falmErrCheckMacro(falmFree(partial_sum));
     falmErrCheckMacro(falmFreeDevice(partial_sum_dev));
+}
+
 }
 
 }

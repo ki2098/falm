@@ -9,6 +9,8 @@
 
 namespace Falm {
 
+namespace Rmcp {
+
 class RmcpAlmDevCall {
 public:
     Matrix<INT> alm_flag;
@@ -56,6 +58,8 @@ public:
     // void CalcTorque(Matrix<REAL> &x, Matrix<REAL> &ff, const Region &pdm, const Region &map, dim3 block_dim={8,8,8});
 
 };
+
+}
 
 }
 

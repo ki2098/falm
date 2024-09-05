@@ -12,6 +12,8 @@
 
 namespace Falm {
 
+namespace Alm {
+
 class AlmDevCall {
 
 public:
@@ -22,10 +24,12 @@ public:
     Matrix<INT> x_offset, y_offset, z_offset;
     INT3 pdm_shape;
     INT gc;
+    std::string workdir;
 
     AlmDevCall() : turbines(), aps() {}
 
     void init(const std::string &workdir, const json &turbine_params, std::string ap_path, const CPM &cpm) {
+        this->workdir = workdir;
         turbines.alloc(turbine_params);
         std::string blade_path = turbine_params["bladeProperties"];
         blade_path = glue_path(workdir, blade_path);
@@ -71,6 +75,8 @@ public:
 
     void DryDistribution(Matrix<REAL> &x, Matrix<REAL> &y, Matrix<REAL> &z, Matrix<REAL> &phi, REAL euler_eps, dim3 block_size={8,8,8});
 };
+
+}
 
 }
 

@@ -7,6 +7,8 @@
 
 namespace Falm {
 
+namespace Alm {
+
 struct APFrame {
     REAL3 *xyz; 
     INT3  *ijk; 
@@ -103,6 +105,7 @@ struct APFrame {
         }
     }
 
+    // apphi and aptwist are in deg
     __host__ __device__ void get_airfoil_params(size_t apid, REAL apphi, REAL &apchord, REAL &aptwist, REAL &apcl, REAL &apcd) {
         apchord = chord[apid];
         aptwist = twist[apid];
@@ -165,7 +168,7 @@ struct APHandler {
             }
             host.r[apid] = apjson["r"].get<REAL>();
             host.chord[apid] = apjson["chord"].get<REAL>();
-            host.twist[apid] = apjson["twist"].get<REAL>();
+            host.twist[apid] = apjson["twist[deg]"].get<REAL>();
             auto cljson = apjson["Cl"];
             auto cdjson = apjson["Cd"];
             for (size_t akid = 0; akid < attackcount; akid ++) {
@@ -195,6 +198,8 @@ struct APHandler {
         hdc = HDC::Empty;
     }
 };
+
+}
 
 }
 

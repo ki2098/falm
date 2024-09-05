@@ -8,6 +8,8 @@
 
 namespace Falm {
 
+namespace Alm {
+
 class BladeHandler {
 
 public:
@@ -31,7 +33,7 @@ public:
             auto af = aflist[i];
             rr[i] = af["r/R"].get<double>();
             chord[i] = af["chord/R"].get<double>();
-            twist[i] = af["twist"].get<double>();
+            twist[i] = af["twist[deg]"].get<double>();
             auto cllist = af["Cl"];
             auto cdlist = af["Cd"];
             cl[i].resize(jmax);
@@ -89,7 +91,7 @@ public:
             // apjson["bladeId"] = apbid;
             apjson["r"] = apr;
             apjson["chord"] = apchord;
-            apjson["twist"] = aptwist;
+            apjson["twist[deg]"] = aptwist;
             apjson["Cl"] = apcl;
             apjson["Cd"] = apcd;
             aparrayjson.push_back(apjson);
@@ -105,6 +107,8 @@ public:
     }
 
 };
+
+}
 
 }
 

@@ -18,6 +18,7 @@ cppstd = -std=c++11
 flag   = -O3 $(cppstd)
 
 include $(falmdir)/src/rmcp/Makefile
+include $(falmdir)/src/alm/Makefile
 
 mvdevcallobj    = $(falmdir)/bin/MVDevCall.o
 eqdevcallobj    = $(falmdir)/bin/FalmEqDevCall.o
@@ -29,15 +30,15 @@ eqobj           = $(falmdir)/bin/FalmEq.o
 cpmobj          = 
 cfdobj          = $(falmdir)/bin/CFD.o
 
-alm_obj         = $(rmcp_obj)
+alms_obj         = $(rmcp_obj) $(alm_obj)
 
 mv_obj      = $(mvdevcallobj) $(mvobj)
 eq_obj      = $(eqdevcallobj) $(eqobj)
 cpm_obj     = $(cpmdevcallobj) $(cpmobj)
 cfd_obj     = $(cfddevcallobj) $(cfdobj)
-falmobj    = $(mv_obj) $(eq_obj) $(cpm_obj) $(cfd_obj) $(alm_obj)
+falmobj    = $(mv_obj) $(eq_obj) $(cpm_obj) $(cfd_obj) $(alms_obj)
 
-alm: rmcp
+alms: rmcp alm
 
 cpmdevcall:
 	$(nvnvcc) -c $(falmdir)/src/dev/CPMDevCall.cu $(cuflag) -o $(cpmdevcallobj)
@@ -64,7 +65,7 @@ cfd: cfddevcall cpm
 	$(nvmpicxx) -cuda -c $(falmdir)/src/FalmCFD.cpp $(flag) -o $(cfdobj)
 
 
-Falm: cfd eq alm
+Falm: cfd eq alms
 
 reconstructor:
 	$(c++) $(falmdir)/src/postfalm/reconstructor.cpp -O3 -std=c++11 $(fomp) $(fstl) -o $(falmdir)/bin/reconstructor

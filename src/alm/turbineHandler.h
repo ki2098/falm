@@ -8,6 +8,8 @@
 
 namespace Falm {
 
+namespace Alm {
+
 struct TurbineFrame {
     REAL3      *base;
     REAL3      *base_velocity;
@@ -181,6 +183,8 @@ struct TurbineHandler {
         hdc = HDC::Empty;
     }
 };
+
+}
 
 }
 

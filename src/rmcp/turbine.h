@@ -8,6 +8,8 @@
 
 namespace Falm {
 
+namespace Rmcp {
+
 struct RmcpTurbine {
     REAL  torque = 0;
     REAL  cpower = 0;
@@ -147,6 +149,8 @@ struct RmcpTurbineArray {
         return tptr[i];
     }
 };
+
+}
 
 }
 
