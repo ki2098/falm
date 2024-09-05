@@ -14,7 +14,8 @@ FalmCore falm;
 REAL maxdiag, maxdiag2=0;
 Matrix<REAL> u_previous;
 // BladeHandler blades;
-Rmcp::RmcpAlm alm;
+// Rmcp::RmcpAlm alm;
+Alm::AlmHandler aalm;
 
 dim3 block{8, 8, 8};
 
@@ -100,7 +101,7 @@ void make_poisson_coefficient_matrix() {
 void init(int &argc, char **&argv) {
     falm.env_init(argc, argv);
     falm.parse_settings("setup.json");
-    falm.computation_init({{falm.cpm.size, 1, 1,}}, GuideCell);
+    falm.computation_init({{1, falm.cpm.size, 1,}}, GuideCell);
     falm.print_info(TERMINAL_OUTPUT_RANK);
     u_previous.alloc(falm.fv.u.shape[0], falm.fv.u.shape[1], HDC::Device, "previous velocity");
 
@@ -123,16 +124,27 @@ void init(int &argc, char **&argv) {
     falm.falmCfd.SGS(fv.u, fv.nut, fv.xyz, fv.kx, fv.ja, falm.cpm, block, streams);
 
     make_poisson_coefficient_matrix();
-    alm.init(falm.cpm, falm.params["turbine"], falm.workdir);
-    alm.print_info(falm.cpm.rank == TERMINAL_OUTPUT_RANK);
+    // alm.init(falm.cpm, falm.params["turbine"], falm.workdir);
+    // alm.print_info(falm.cpm.rank == TERMINAL_OUTPUT_RANK);
+
+    aalm.init(falm.workdir, falm.params["turbine"], falm.params["turbine"]["apFile"], falm.cpm);
+    for (int rank = 0; rank < falm.cpm.size; rank ++) {
+        if (rank == falm.cpm.rank) {
+            printf("rank %d\n", rank);
+            aalm.print_info(rank);
+            fflush(stdout);
+        }
+        CPM_Barrier(MPI_COMM_WORLD);
+    }
 }
 
-REAL main_loop(Rmcp::RmcpAlm &alm, Rmcp::RmcpTurbineArray &turbineArray, STREAM *s) {
+REAL main_loop(Alm::AlmHandler &alm, Rmcp::RmcpTurbineArray &turbineArray, STREAM *s) {
     FalmBasicVar &fv = falm.fv;
     u_previous.copy(fv.u, HDC::Device);
     profiler.startEvent("ALM");
-    alm.SetALMFlag(fv.xyz, falm.gettime(), falm.cpm, block);
-    alm.ALM(fv.u, fv.xyz, fv.ff, falm.gettime(), falm.cpm, block);
+    // alm.SetALMFlag(fv.xyz, falm.gettime(), falm.cpm, block);
+    // alm.ALM(fv.u, fv.xyz, fv.ff, falm.gettime(), falm.cpm, block);
+    alm.Alm(falm.baseMesh.x, falm.baseMesh.y, falm.baseMesh.z, fv.u, fv.ff, falm.gettime(), block);
     profiler.endEvent("ALM");
 
     FalmCFD &fcfd = falm.falmCfd;
@@ -185,7 +197,8 @@ void finalize() {
     for (int i = 0; i < 6; i ++) cudaStreamDestroy(facestream[i]);
     u_previous.release();
     falm.env_finalize();
-    alm.finalize();
+    // alm.finalize();
+    aalm.finalize();
 }
 
 int main(int argc, char **argv) {
@@ -239,7 +252,7 @@ int main(int argc, char **argv) {
     }
     profiler.startEvent("global loop");
     for (falm.it = 1; falm.it <= falm.maxIt; falm.it ++) {
-        REAL divnorm = sqrt(main_loop(alm, turbineArray, streams)) / PRODUCT3(falm.cpm.pdm_list[falm.cpm.rank].shape - INT(2 * falm.cpm.gc));
+        REAL divnorm = sqrt(main_loop(aalm, turbineArray, streams)) / PRODUCT3(falm.cpm.pdm_list[falm.cpm.rank].shape - INT(2 * falm.cpm.gc));
         // falm.it ++;
         if (falm.cpm.rank == TERMINAL_OUTPUT_RANK) {
             printf("%8d %12.5e, %12.5e, %3d, %12.5e\n", falm.it, falm.gettime(), divnorm, falm.falmEq.it, falm.falmEq.err);
@@ -256,9 +269,9 @@ FIN:
 
         falm.fv.ff.sync(MCP::Dev2Hst);
         falm.fv.xyz.sync(MCP::Dev2Hst);
-        alm.alm_flag.sync(MCP::Dev2Hst);
+        // alm.alm_flag.sync(MCP::Dev2Hst);
         FILE *csv = fopen("data/alm.csv", "w");
-        fprintf(csv, "x,y,z,flag,fx,fy,fz\n");
+        fprintf(csv, "x,y,z,fx,fy,fz\n");
         const INT3 &shape = falm.cpm.pdm_list[falm.cpm.rank].shape;
         for (INT k = 0; k < shape[2]; k ++) {
         for (INT j = 0; j < shape[1]; j ++) {
@@ -266,8 +279,8 @@ FIN:
             INT idx = IDX(i, j, k, shape);
             Matrix<REAL> &ff = falm.fv.ff;
             Matrix<REAL> &x  = falm.fv.xyz;
-            Matrix<INT>  &flag = alm.alm_flag;
-            fprintf(csv, "%lf,%lf,%lf,%d,%e,%e,%e\n", x(idx,0), x(idx,1), x(idx,2), flag(idx), ff(idx,0), ff(idx,1), ff(idx,2));
+            // Matrix<INT>  &flag = alm.alm_flag;
+            fprintf(csv, "%lf,%lf,%lf,%e,%e,%e\n", x(idx,0), x(idx,1), x(idx,2), ff(idx,0), ff(idx,1), ff(idx,2));
         }}}
         fclose(csv);
     }

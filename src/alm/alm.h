@@ -14,9 +14,21 @@ public:
 
     AlmHandler() : AlmDevCall() {}
 
-    void init(const std::string &workdir, const json &turbine_params, std::string ap_path, const CPM &cpm, REAL euler_eps) {
+    void init(const std::string &workdir, const json &turbine_params, std::string ap_path, const CPM &cpm) {
+        this->workdir = workdir;
+        mpi_shape = cpm.shape;
+        rank = cpm.rank;
+        turbines.alloc(turbine_params);
+        std::string blade_path = turbine_params["bladeProperties"];
+        blade_path = glue_path(workdir, blade_path);
+        ap_path = glue_path(workdir, ap_path);
+        if (rank == 0) {
+            BladeHandler::buildAP(blade_path, ap_path, turbines.n_turbine, turbines.n_blade, turbines.n_ap_per_blade, turbines.radius);
+        }
+        CPM_Barrier(MPI_COMM_WORLD);
+        aps.alloc(ap_path);
         AlmDevCall::init(workdir, turbine_params, ap_path, cpm);
-        this->euler_eps = euler_eps;
+        this->euler_eps = turbine_params["projectionWidth"].get<REAL>();
     }
 
     void finalize() {
@@ -42,6 +54,7 @@ public:
             printf("\tBlade length %lf", turbines.host.radius);
             printf("\tBlade number %d\n", turbines.host.n_blade);
             printf("\tBlade point number %d\n", turbines.n_ap_per_blade);
+            printf("\tEuler projection width %lf\n", euler_eps);
             printf("\tBlade property file %s\n\n", glue_path(workdir, turbines.turbine_param["bladeProperties"]).c_str());
             for (int i = 0; i < turbines.host.n_turbine; i ++) {
                 printf("\tTurbine %d\n", i);

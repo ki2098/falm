@@ -42,20 +42,21 @@ __global__ void kernel_UpdateAPX(
     MatrixFrame<REAL> *vx,
     MatrixFrame<REAL> *vy,
     MatrixFrame<REAL> *vz,
-    MatrixFrame<INT> *vxoffset,
-    MatrixFrame<INT> *vyoffset,
-    MatrixFrame<INT> *vzoffset,
+    // MatrixFrame<INT> *vxoffset,
+    // MatrixFrame<INT> *vyoffset,
+    // MatrixFrame<INT> *vzoffset,
     TurbineFrame *vturbines,
     APFrame *vaps,
     REAL t,
-    INT3 mpi_shape
+    INT gc,
+    int rank
 ) {
     const MatrixFrame<REAL> &x = *vx;
     const MatrixFrame<REAL> &y = *vy;
     const MatrixFrame<REAL> &z = *vz;
-    const MatrixFrame<INT> &xoffset = *vxoffset;
-    const MatrixFrame<INT> &yoffset = *vyoffset;
-    const MatrixFrame<INT> &zoffset = *vzoffset;
+    // const MatrixFrame<INT> &xoffset = *vxoffset;
+    // const MatrixFrame<INT> &yoffset = *vyoffset;
+    // const MatrixFrame<INT> &zoffset = *vzoffset;
     const TurbineFrame &turbines = *vturbines;
     APFrame &aps = *vaps;
 
@@ -92,10 +93,17 @@ __global__ void kernel_UpdateAPX(
         INT apK = find_index(z.ptr, coordinate0[2], z.size);
         aps.ijk[ap_id] = INT3{{apI, apJ, apK}};
 
-        INT apRankI = find_index(xoffset.ptr, apI, xoffset.size);
-        INT apRankJ = find_index(yoffset.ptr, apJ, yoffset.size);
-        INT apRankK = find_index(zoffset.ptr, apK, zoffset.size);
-        aps.rank[ap_id] = IDX(apRankI, apRankJ, apRankK, mpi_shape);
+        if (apI >= gc-1 && apI < x.size-gc-1 && apJ >= gc-1 && apJ < y.size-gc-1 && apK >= gc-1 && apK < z.size-gc-1) {
+            aps.rank[ap_id] = rank;
+        } else {
+            aps.rank[ap_id] = -1;
+        }
+
+        // INT apRankI = find_index(xoffset.ptr, apI, xoffset.size);
+        // INT apRankJ = find_index(yoffset.ptr, apJ, yoffset.size);
+        // INT apRankK = find_index(zoffset.ptr, apK, zoffset.size);
+        // aps.rank[ap_id] = IDX(apRankI, apRankJ, apRankK, mpi_shape);
+        // printf("%d %d: %d (%lf %lf %lf) (%d %d %d)\n", rank, ap_id, aps.rank[ap_id], coordinate0[0], coordinate0[1], coordinate0[2], apI, apJ, apK);
     }
 }
 
@@ -134,9 +142,9 @@ __global__ void kernel_CalcAPForce(
         const REAL apr = aps.r[ap_id];
         if (aps.rank[ap_id] == rank) {
             INT3 apijk = aps.ijk[ap_id];
-            INT  i0 = apijk[0], i1 = apijk[0]+1;
-            INT  j0 = apijk[1], j1 = apijk[1]+1;
-            INT  k0 = apijk[2], k1 = apijk[2]+1;
+            INT  i0 = apijk[0], i1 = apijk[0] + 1;
+            INT  j0 = apijk[1], j1 = apijk[1] + 1;
+            INT  k0 = apijk[2], k1 = apijk[2] + 1;
             REAL x0 = x(i0), x1 = x(i1);
             REAL y0 = y(j0), y1 = y(j1);
             REAL z0 = z(k0), z1 = z(k1);
@@ -293,7 +301,7 @@ __global__ void kernel_DryDistribution(
 
 void AlmDevCall::UpdateAPX(Matrix<REAL> &x, Matrix<REAL> &y, Matrix<REAL> &z, REAL t, size_t block_size) {
     size_t block_number = (aps.apcount + block_size - 1)/block_size;
-    kernel_UpdateAPX<<<block_number, block_size>>>(x.devptr, y.devptr, z.devptr, x_offset.devptr, y_offset.devptr, z_offset.devptr, turbines.devptr, aps.devptr, t, mpi_shape);
+    kernel_UpdateAPX<<<block_number, block_size>>>(x.devptr, y.devptr, z.devptr, turbines.devptr, aps.devptr, t, gc, rank);
 }
 
 void AlmDevCall::CalcAPForce(Matrix<REAL> &x, Matrix<REAL> &y, Matrix<REAL> &z, Matrix<REAL> &uvw, REAL t, size_t block_size) {

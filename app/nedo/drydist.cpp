@@ -17,7 +17,7 @@ void init(int &argc, char **&argv) {
     falm.computation_init({{falm.cpm.size, 1, 1,}}, GuideCell);
     falm.print_info(TERMINAL_OUTPUT_RANK);
 
-    alm.init(falm.workdir, falm.params["turbine"], falm.params["turbine"]["apFile"], falm.cpm, 0.1);
+    alm.init(falm.workdir, falm.params["turbine"], falm.params["turbine"]["apFile"], falm.cpm);
     alm.print_info(TERMINAL_OUTPUT_RANK);
 
     REAL u_inflow = falm.params["inflow"]["velocity"].get<REAL>();
