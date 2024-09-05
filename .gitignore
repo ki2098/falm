@@ -14,3 +14,4 @@ data/
 *.tar.gz
 setup.json
 controlVolume.txt
+ap.json
