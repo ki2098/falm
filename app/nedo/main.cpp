@@ -101,7 +101,7 @@ void make_poisson_coefficient_matrix() {
 void init(int &argc, char **&argv) {
     falm.env_init(argc, argv);
     falm.parse_settings("setup.json");
-    falm.computation_init({{1, falm.cpm.size, 1,}}, GuideCell);
+    falm.computation_init({{falm.cpm.size, 1, 1}}, GuideCell);
     falm.print_info(TERMINAL_OUTPUT_RANK);
     u_previous.alloc(falm.fv.u.shape[0], falm.fv.u.shape[1], HDC::Device, "previous velocity");
 
@@ -267,23 +267,39 @@ FIN:
         printf("\n");
         // pprofiler.output();
 
-        falm.fv.ff.sync(MCP::Dev2Hst);
-        falm.fv.xyz.sync(MCP::Dev2Hst);
-        // alm.alm_flag.sync(MCP::Dev2Hst);
-        FILE *csv = fopen("data/alm.csv", "w");
-        fprintf(csv, "x,y,z,fx,fy,fz\n");
-        const INT3 &shape = falm.cpm.pdm_list[falm.cpm.rank].shape;
-        for (INT k = 0; k < shape[2]; k ++) {
-        for (INT j = 0; j < shape[1]; j ++) {
-        for (INT i = 0; i < shape[0]; i ++) {
-            INT idx = IDX(i, j, k, shape);
-            Matrix<REAL> &ff = falm.fv.ff;
-            Matrix<REAL> &x  = falm.fv.xyz;
-            // Matrix<INT>  &flag = alm.alm_flag;
-            fprintf(csv, "%lf,%lf,%lf,%e,%e,%e\n", x(idx,0), x(idx,1), x(idx,2), ff(idx,0), ff(idx,1), ff(idx,2));
-        }}}
-        fclose(csv);
+        // falm.fv.ff.sync(MCP::Dev2Hst);
+        // falm.fv.xyz.sync(MCP::Dev2Hst);
+        // // alm.alm_flag.sync(MCP::Dev2Hst);
+        // FILE *csv = fopen("data/alm.csv", "w");
+        // fprintf(csv, "x,y,z,fx,fy,fz\n");
+        // const INT3 &shape = falm.cpm.pdm_list[falm.cpm.rank].shape;
+        // for (INT k = 0; k < shape[2]; k ++) {
+        // for (INT j = 0; j < shape[1]; j ++) {
+        // for (INT i = 0; i < shape[0]; i ++) {
+        //     INT idx = IDX(i, j, k, shape);
+        //     Matrix<REAL> &ff = falm.fv.ff;
+        //     Matrix<REAL> &x  = falm.fv.xyz;
+        //     // Matrix<INT>  &flag = alm.alm_flag;
+        //     fprintf(csv, "%lf,%lf,%lf,%e,%e,%e\n", x(idx,0), x(idx,1), x(idx,2), ff(idx,0), ff(idx,1), ff(idx,2));
+        // }}}
+        // fclose(csv);
     }
+    std::string fname = "data/alm_rank" + std::to_string(falm.cpm.rank) + ".csv";
+    falm.fv.ff.sync(MCP::Dev2Hst);
+    falm.fv.xyz.sync(MCP::Dev2Hst);
+    FILE *csv = fopen(fname.c_str(), "w");
+    fprintf(csv, "x,y,z,fx,fy,fz\n");
+    const INT3 &shape = falm.cpm.pdm_list[falm.cpm.rank].shape;
+    for (INT k = 0; k < shape[2]; k ++) {
+    for (INT j = 0; j < shape[1]; j ++) {
+    for (INT i = 0; i < shape[0]; i ++) {
+        INT idx = IDX(i, j, k, shape);
+        Matrix<REAL> &ff = falm.fv.ff;
+        Matrix<REAL> &x  = falm.fv.xyz;
+        // Matrix<INT>  &flag = alm.alm_flag;
+        fprintf(csv, "%lf,%lf,%lf,%e,%e,%e\n", x(idx,0), x(idx,1), x(idx,2), ff(idx,0), ff(idx,1), ff(idx,2));
+    }}}
+    fclose(csv);
     finalize();
     return 0;
 }
