@@ -105,20 +105,29 @@ int main() {
         q[id(i,j,k)] = - 0.5*(dudx*dudx + dvdy*dvdy + dwdz*dwdz + 2*(dudy*dvdx + dudz*dwdx + dvdz*dwdy));
     }}}
 
-    file = fopen((fname+".csv").c_str(), "w");
-
-    fprintf(file, "x,y,z,u,v,w,p,q\n");
+    file = fopen((fname+"_uvwp.csv").c_str(), "w");
+    fprintf(file, "x,y,z,u,v,w,p\n");
     for (size_t k = 0; k < kmax; k ++) {
     for (size_t j = 0; j < jmax; j ++) {
     for (size_t i = 0; i < imax; i ++) {
-        fprintf(file, "%e,%e,%e,%e,%e,%e,%e,%e\n", x[i], y[j], z[k], data[id(i,j,k,0)], data[id(i,j,k,1)], data[id(i,j,k,2)], data[id(i,j,k,3)], q[id(i,j,k)]);
+        fprintf(file, "%.5e,%.5e,%.5e,%.3e,%.3e,%.3e,%.3e\n", x[i], y[j], z[k], data[id(i,j,k,0)], data[id(i,j,k,1)], data[id(i,j,k,2)], data[id(i,j,k,3)]);
     }}}
     printf("%lu %lu %lu\n", imax, jmax, kmax);
+    fclose(file);
+
+    file = fopen((fname+"_q.csv").c_str(), "w");
+    fprintf(file, "x,y,z,q\n");
+    for (size_t k = 0; k < kmax; k ++) {
+    for (size_t j = 0; j < jmax; j ++) {
+    for (size_t i = 0; i < imax; i ++) {
+        fprintf(file, "%.5e,%.5e,%.5e,%.3e\n", x[i], y[j], z[k], q[id(i,j,k)]);
+    }}}
+    printf("%lu %lu %lu\n", imax, jmax, kmax);
+    fclose(file);
 
     free(data);
     free(x);
     free(y);
     free(z);
     free(q);
-    fclose(file);
 }
