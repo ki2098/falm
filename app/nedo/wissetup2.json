@@ -2,7 +2,7 @@
     "runtime":{
         "time":{
             "start":0,
-            "end":60,
+            "end":120,
             "dt":1e-3
         },
         "timeAvg":{
@@ -10,8 +10,8 @@
         },
         "output":{
             "start":20,
-            "interval":10,
-            "prefix":"data/uvwp"
+            "interval":20,
+            "prefix":"data/alm_uvwp"
         }
     },
     "inflow":{
@@ -43,16 +43,23 @@
     "turbine":{
         "radius":1.0,
         "bladeNumber":3,
-        "bladePointNumber":20,
+        "bladePointNumber":10,
         "bladeProperties":"bladeProperties.json",
         "tower":0,
         "overhang":0,
+        "projectionWidth":0.1,
         "turbineArray":[
             {
                 "baseLocation":[0, 0, 0],
-                "angle":[0, 0, 15],
+                "angle":[0, 0, 0],
+                "tipRate":4
+            },
+            {
+                "baseLocation":[10, 1, 0],
+                "angle":[0, 0, 0],
                 "tipRate":4
             }
-        ]
+        ],
+        "apFile":"ap.json"
     }
 }
