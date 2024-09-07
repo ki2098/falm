@@ -47,7 +47,7 @@
         "bladeProperties":"bladeProperties.json",
         "tower":0,
         "overhang":0,
-        "projectionWidth":5e-2,
+        "projectionWidth":8e-2,
         "turbineArray":[
             {
                 "baseLocation":[0, 0, 0],
