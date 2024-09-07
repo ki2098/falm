@@ -18,7 +18,7 @@ size_t id(size_t i, size_t j, size_t k) {
 
 int main() {
     string prefix = "data/alm_uvwp";
-    string fname = prefix + "_0000020000";
+    string fname = prefix + "_0000120000";
     string cvname = prefix + ".cv";
     FILE *file = fopen(fname.c_str(), "rb");
 
