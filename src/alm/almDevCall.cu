@@ -210,6 +210,7 @@ __global__ void kernel_CalcAPForce(
             aps.get_airfoil_params(ap_id, rad2deg(phi), chord, twist, cl, cd);
 
             const REAL dr_per_ap = turbines.radius/turbines.n_ap_per_blade;
+            // printf("%lf\n", dr_per_ap);
             REAL fl = .5*cl*urel2*chord*dr_per_ap;
             REAL fd = .5*cd*urel2*chord*dr_per_ap;
             REAL fx = fl*cos(phi) + fd*sin(phi);
