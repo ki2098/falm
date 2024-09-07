@@ -43,7 +43,7 @@
     "turbine":{
         "radius":1.0,
         "bladeNumber":3,
-        "bladePointNumber":10,
+        "bladePointNumber":20,
         "bladeProperties":"bladeProperties.json",
         "tower":0,
         "overhang":0,
