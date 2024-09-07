@@ -28,6 +28,10 @@ size_t id(size_t i, size_t j, size_t k) {
     return k*imax*jmax + j*imax + i;
 }
 
+size_t vid(size_t i, size_t j, size_t k, size_t n, size_t n_size) {
+    return k*imax*jmax*n_size + j*imax*n_size + i*n_size + n;
+}
+
 double *x, *y, *z;
 string prefix;
 string suffix;
@@ -149,7 +153,7 @@ void convert_data() {
     for (size_t j = 0; j < jmax; j ++) {
     for (size_t i = 0; i < imax; i ++) {
     for (size_t d = 0; d < 3; d ++) {
-        uvtk->SetValue(id(i,j,k,d), data[id(i,j,k,d)]);
+        uvtk->SetValue(vid(i,j,k,d,3), data[id(i,j,k,d)]);
     }}}}
     grid->GetPointData()->AddArray(uvtk);
 
@@ -160,7 +164,7 @@ void convert_data() {
     for (size_t k = 0; k < kmax; k ++) {
     for (size_t j = 0; j < jmax; j ++) {
     for (size_t i = 0; i < imax; i ++) {
-        pvtk->SetValue(id(i,j,k), data[id(i,j,k,3)]);
+        pvtk->SetValue(vid(i,j,k,0,1), data[id(i,j,k,3)]);
     }}}
     grid->GetPointData()->AddArray(pvtk);
 
@@ -178,7 +182,7 @@ void convert_data() {
     for (size_t k = 0; k < kmax; k ++) {
     for (size_t j = 0; j < jmax; j ++) {
     for (size_t i = 0; i < imax; i ++) {
-        qvtk->SetValue(id(i,j,k), q[id(i,j,k)]);
+        qvtk->SetValue(vid(i,j,k,0,1), q[id(i,j,k)]);
     }}}
     grid->GetPointData()->AddArray(qvtk);
 
