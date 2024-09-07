@@ -110,7 +110,7 @@ int main() {
     for (size_t k = 0; k < kmax; k ++) {
     for (size_t j = 0; j < jmax; j ++) {
     for (size_t i = 0; i < imax; i ++) {
-        fprintf(file, "%.5e,%.5e,%.5e,%.3e,%.3e,%.3e,%.3e\n", x[i], y[j], z[k], data[id(i,j,k,0)], data[id(i,j,k,1)], data[id(i,j,k,2)], data[id(i,j,k,3)]);
+        fprintf(file, "%.4e,%.4e,%.4e,%lf,%lf,%lf,%lf\n", x[i], y[j], z[k], data[id(i,j,k,0)], data[id(i,j,k,1)], data[id(i,j,k,2)], data[id(i,j,k,3)]);
     }}}
     printf("%lu %lu %lu\n", imax, jmax, kmax);
     fclose(file);
@@ -120,7 +120,7 @@ int main() {
     for (size_t k = 0; k < kmax; k ++) {
     for (size_t j = 0; j < jmax; j ++) {
     for (size_t i = 0; i < imax; i ++) {
-        fprintf(file, "%.5e,%.5e,%.5e,%.3e\n", x[i], y[j], z[k], q[id(i,j,k)]);
+        fprintf(file, "%.4e,%.4e,%.4e,%lf\n", x[i], y[j], z[k], q[id(i,j,k)]);
     }}}
     printf("%lu %lu %lu\n", imax, jmax, kmax);
     fclose(file);
