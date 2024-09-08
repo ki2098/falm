@@ -6,7 +6,7 @@
 #PJM -X
 #PJM -L rscgrp=regular-a
 #PJM -L node=1
-#PJM -L elapse=09:00:00
+#PJM -L elapse=12:00:00
 #PJM --mpi proc=8
 
 . ./env

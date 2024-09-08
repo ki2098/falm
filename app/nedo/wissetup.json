@@ -50,12 +50,12 @@
         "projectionWidth":5e-2,
         "turbineArray":[
             {
-                "baseLocation":[0.5, 0, 0],
+                "baseLocation":[0, 0, 0],
                 "angle":[0, 0, 0],
                 "tipRate":4
             },
             {
-                "baseLocation":[10.5, 1, 0],
+                "baseLocation":[10, 1, 0],
                 "angle":[0, 0, 0],
                 "tipRate":4
             }
