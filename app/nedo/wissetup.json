@@ -3,7 +3,7 @@
         "time":{
             "start":0,
             "end":120,
-            "dt":1e-3
+            "dt":2e-4
         },
         "timeAvg":{
             "start":20
