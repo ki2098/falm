@@ -53,11 +53,6 @@
                 "baseLocation":[0, 0, 0],
                 "angle":[0, 0, 0],
                 "tipRate":4
-            },
-            {
-                "baseLocation":[10, 1, 0],
-                "angle":[0, 0, 0],
-                "tipRate":4
             }
         ],
         "apFile":"ap.json"
