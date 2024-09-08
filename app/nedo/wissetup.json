@@ -43,21 +43,21 @@
     "turbine":{
         "radius":1.0,
         "bladeNumber":3,
-        "bladePointNumber":40,
+        "bladePointNumber":50,
         "bladeProperties":"bladeProperties.json",
         "tower":0,
         "overhang":0,
-        "projectionWidth":7.5e-2,
+        "projectionWidth":5e-2,
         "turbineArray":[
             {
-                "baseLocation":[0, 0, 0],
+                "baseLocation":[0.5, 0, 0],
                 "angle":[0, 0, 0],
-                "tipRate":8
+                "tipRate":4
             },
             {
-                "baseLocation":[10, 1, 0],
+                "baseLocation":[10.5, 1, 0],
                 "angle":[0, 0, 0],
-                "tipRate":8
+                "tipRate":4
             }
         ],
         "apFile":"ap.json"
