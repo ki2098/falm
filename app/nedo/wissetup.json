@@ -36,18 +36,18 @@
         }
     },
     "mesh":{
-        "convert":"mesh/25",
+        "convert":"mesh/40",
         "controlVolumeFile":"controlVolume.txt",
         "controlVolumeCenter":"innerNode"
     },
     "turbine":{
         "radius":1.0,
         "bladeNumber":3,
-        "bladePointNumber":25,
+        "bladePointNumber":40,
         "bladeProperties":"bladeProperties.json",
         "tower":0,
         "overhang":0,
-        "projectionWidth":0.08,
+        "projectionWidth":0.05,
         "turbineArray":[
             {
                 "baseLocation":[0, 0, 0],

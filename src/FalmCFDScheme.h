@@ -14,18 +14,18 @@ __host__ __device__ static REAL Upwind1st(
     REAL ue1, REAL uw1,
     REAL un1, REAL us1,
     REAL ut1, REAL ub1,
-    REAL UE, REAL UW,
-    REAL VN, REAL VS,
-    REAL WT, REAL WB,
+    REAL JUE, REAL JUW,
+    REAL JVN, REAL JVS,
+    REAL JWT, REAL JWB,
     REAL jacobian
 ) {
     REAL adv = 0.0;
-    adv += UpwindFlux1st(ucc, ue1, UE);
-    adv -= UpwindFlux1st(uw1, ucc, UW);
-    adv += UpwindFlux1st(ucc, un1, VN);
-    adv -= UpwindFlux1st(us1, ucc, VS);
-    adv += UpwindFlux1st(ucc, ut1, WT);
-    adv -= UpwindFlux1st(ub1, ucc, WB);
+    adv += UpwindFlux1st(ucc, ue1, JUE);
+    adv -= UpwindFlux1st(uw1, ucc, JUW);
+    adv += UpwindFlux1st(ucc, un1, JVN);
+    adv -= UpwindFlux1st(us1, ucc, JVS);
+    adv += UpwindFlux1st(ucc, ut1, JWT);
+    adv -= UpwindFlux1st(ub1, ucc, JWB);
     adv /= jacobian;
     return adv;
 } 
@@ -35,32 +35,98 @@ __host__ __device__ static REAL QUICK(
     REAL ue1, REAL ue2, REAL uw1, REAL uw2,
     REAL un1, REAL un2, REAL us1, REAL us2,
     REAL ut1, REAL ut2, REAL ub1, REAL ub2,
-    REAL UE, REAL UW,
-    REAL VN, REAL VS,
-    REAL WT, REAL WB,
+    REAL JUE, REAL JUW,
+    REAL JVN, REAL JVS,
+    REAL JWT, REAL JWB,
     REAL jacobian
 ) {
     REAL adv = 0.;
 
-    adv += UE*(- ue2 + 9*ue1 + 9*ucc - uw1);
-    adv += fabs(UE)*(ue2 - 3*ue1 + 3*ucc - uw1);
+    adv += JUE*(- ue2 + 9*ue1 + 9*ucc - uw1);
+    adv += fabs(JUE)*(ue2 - 3*ue1 + 3*ucc - uw1);
 
-    adv -= UW*(- ue1 + 9*ucc + 9*uw1 - uw2);
-    adv -= fabs(UW)*(ue1 - 3*ucc + 3*uw1 - uw2);
+    adv -= JUW*(- ue1 + 9*ucc + 9*uw1 - uw2);
+    adv -= fabs(JUW)*(ue1 - 3*ucc + 3*uw1 - uw2);
 
-    adv += VN*(- un2 + 9*un1 + 9*ucc - us1);
-    adv += fabs(VN)*(un2 - 3*un1 + 3*ucc - us1);
+    adv += JVN*(- un2 + 9*un1 + 9*ucc - us1);
+    adv += fabs(JVN)*(un2 - 3*un1 + 3*ucc - us1);
 
-    adv -= VS*(- un1 + 9*ucc + 9*us1 - us2);
-    adv -= fabs(VS)*(un1 - 3*ucc + 3*us1 - us2);
+    adv -= JVS*(- un1 + 9*ucc + 9*us1 - us2);
+    adv -= fabs(JVS)*(un1 - 3*ucc + 3*us1 - us2);
 
-    adv += WT*(- ut2 + 9*ut1 + 9*ucc - ub1);
-    adv += fabs(WT)*(ut2 - 3*ut1 + 3*ucc - ub1);
+    adv += JWT*(- ut2 + 9*ut1 + 9*ucc - ub1);
+    adv += fabs(JWT)*(ut2 - 3*ut1 + 3*ucc - ub1);
 
-    adv -= WB*(- ut1 + 9*ucc + 9*ub1 - ub2);
-    adv -= fabs(WB)*(ut1 - 3*ucc + 3*ub1 - ub2);
+    adv -= JWB*(- ut1 + 9*ucc + 9*ub1 - ub2);
+    adv -= fabs(JWB)*(ut1 - 3*ucc + 3*ub1 - ub2);
 
     adv /= (16*jacobian);
+
+    return adv;
+}
+
+__host__ __device__ static REAL KK(
+    REAL ucc,
+    REAL ue1, REAL ue2, REAL uw1, REAL uw2,
+    REAL un1, REAL un2, REAL us1, REAL us2,
+    REAL ut1, REAL ut2, REAL ub1, REAL ub2,
+    REAL Uabs, REAL Vabs, REAL Wabs,
+    REAL JUE, REAL JUW,
+    REAL JVN, REAL JVS,
+    REAL JWT, REAL JWB,
+    REAL jacobian
+) {
+    REAL adv = 0.0;
+    REAL UDL, UDR, UD4;
+    const REAL ALPHA = 1./4.;
+
+    UDL = JUE*(- ue2 + 27*ue1 - 27*ucc + uw1)/24.;
+    UDR = JUW*(- ue1 + 27*ucc - 27*uw1 + uw2)/24;
+    UD4 = Uabs*(ue2 - 4*ue1 + 6*ucc - 4*uw1 + uw2)*ALPHA;
+    adv += .5*(UDL + UDR)/jacobian + UD4;
+
+    UDL = JVN*(- un2 + 27*un1 - 27*ucc + us1)/24.;
+    UDR = JVS*(- un1 + 27*ucc - 27*us1 + us2)/24.;
+    UD4 = Vabs*(un2 - 4*un1 + 6*ucc - 4*us1 + us2)*ALPHA;
+    adv += .5*(UDL + UDR)/jacobian + UD4;
+
+    UDL = JWT*(- ut2 + 27*ut1 - 27*ucc + ub1)/24.;
+    UDR = JWB*(- ut1 + 27*ucc - 27*ub1 + ub2)/24.;
+    UD4 = Wabs*(ut2 - 4*ut1 + 6*ucc - 4*ub1 + ub2)*ALPHA;
+    adv += .5*(UDL + UDR)/jacobian + UD4;
+
+    return adv;
+}
+
+__host__ __device__ static REAL UTOPIA(
+    REAL ucc,
+    REAL ue1, REAL ue2, REAL uw1, REAL uw2,
+    REAL un1, REAL un2, REAL us1, REAL us2,
+    REAL ut1, REAL ut2, REAL ub1, REAL ub2,
+    REAL Uabs, REAL Vabs, REAL Wabs,
+    REAL JUE, REAL JUW,
+    REAL JVN, REAL JVS,
+    REAL JWT, REAL JWB,
+    REAL jacobian
+) {
+    REAL adv = 0.0;
+    REAL UDL, UDR, UD4;
+    const REAL ALPHA = 1./12.;
+
+    UDL = JUE*(- ue2 + 27*ue1 - 27*ucc + uw1)/24.;
+    UDR = JUW*(- ue1 + 27*ucc - 27*uw1 + uw2)/24;
+    UD4 = Uabs*(ue2 - 4*ue1 + 6*ucc - 4*uw1 + uw2)*ALPHA;
+    adv += .5*(UDL + UDR)/jacobian + UD4;
+
+    UDL = JVN*(- un2 + 27*un1 - 27*ucc + us1)/24.;
+    UDR = JVS*(- un1 + 27*ucc - 27*us1 + us2)/24.;
+    UD4 = Vabs*(un2 - 4*un1 + 6*ucc - 4*us1 + us2)*ALPHA;
+    adv += .5*(UDL + UDR)/jacobian + UD4;
+
+    UDL = JWT*(- ut2 + 27*ut1 - 27*ucc + ub1)/24.;
+    UDR = JWB*(- ut1 + 27*ucc - 27*ub1 + ub2)/24.;
+    UD4 = Wabs*(ut2 - 4*ut1 + 6*ucc - 4*ub1 + ub2)*ALPHA;
+    adv += .5*(UDL + UDR)/jacobian + UD4;
 
     return adv;
 }
@@ -71,23 +137,30 @@ __host__ __device__ static REAL Upwind3rd(
     REAL un1, REAL un2, REAL us1, REAL us2,
     REAL ut1, REAL ut2, REAL ub1, REAL ub2,
     REAL Uabs, REAL Vabs, REAL Wabs,
-    REAL UE, REAL UW,
-    REAL VN, REAL VS,
-    REAL WT, REAL WB,
+    REAL JUE, REAL JUW,
+    REAL JVN, REAL JVS,
+    REAL JWT, REAL JWB,
     REAL jacobian
 ) {
     REAL adv = 0.0;
-    REAL jx2 = 2 * jacobian;
-    adv += UE * (- ue2 + 27 * ue1 - 27 * ucc + uw1) / jx2;
-    adv += UW * (- ue1 + 27 * ucc - 27 * uw1 + uw2) / jx2;
-    adv += Uabs * (ue2 - 4 * ue1 + 6 * ucc - 4 * uw1 + uw2);
-    adv += VN * (- un2 + 27 * un1 - 27 * ucc + us1) / jx2;
-    adv += VS * (- un1 + 27 * ucc - 27 * us1 + us2) / jx2;
-    adv += Vabs * (un2 - 4 * un1 + 6 * ucc - 4 * us1 + us2);
-    adv += WT * (- ut2 + 27 * ut1 - 27 * ucc + ub1) / jx2;
-    adv += WB * (- ut1 + 27 * ucc - 27 * ub1 + ub2) / jx2;
-    adv += Wabs * (ut2 - 4 * ut1 + 6 * ucc - 4 * ub1 + ub2);
-    adv /= 24.0;
+    REAL UDL, UDR, UD4;
+    const REAL ALPHA = 1./24.;
+
+    UDL = JUE*(- ue2 + 27*ue1 - 27*ucc + uw1)/24.;
+    UDR = JUW*(- ue1 + 27*ucc - 27*uw1 + uw2)/24;
+    UD4 = Uabs*(ue2 - 4*ue1 + 6*ucc - 4*uw1 + uw2)*ALPHA;
+    adv += .5*(UDL + UDR)/jacobian + UD4;
+
+    UDL = JVN*(- un2 + 27*un1 - 27*ucc + us1)/24.;
+    UDR = JVS*(- un1 + 27*ucc - 27*us1 + us2)/24.;
+    UD4 = Vabs*(un2 - 4*un1 + 6*ucc - 4*us1 + us2)*ALPHA;
+    adv += .5*(UDL + UDR)/jacobian + UD4;
+
+    UDL = JWT*(- ut2 + 27*ut1 - 27*ucc + ub1)/24.;
+    UDR = JWB*(- ut1 + 27*ucc - 27*ub1 + ub2)/24.;
+    UD4 = Wabs*(ut2 - 4*ut1 + 6*ucc - 4*ub1 + ub2)*ALPHA;
+    adv += .5*(UDL + UDR)/jacobian + UD4;
+
     return adv;
 }
 

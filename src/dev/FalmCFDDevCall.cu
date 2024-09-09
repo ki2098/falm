@@ -120,13 +120,32 @@ __global__ void kernel_Cartesian_CalcPseudoU(
                 UE, UW, VN, VS, WT, WB,
                 jacob
             );
+        } else if (advtype == AdvectionSchemeType::UTOPIA) {
+            adv = UTOPIA(
+                ucc,
+                ue1, ue2, uw1, uw2,
+                un1, un2, us1, us2,
+                ut1, ut2, ub1, ub2,
+                Uabs, Vabs, Wabs,
+                UE, UW, VN, VS, WT, WB,
+                jacob
+            );
+        } else if (advtype == AdvectionSchemeType::KK) {
+            adv = KK(
+                ucc,
+                ue1, ue2, uw1, uw2,
+                un1, un2, us1, us2,
+                ut1, ut2, ub1, ub2,
+                Uabs, Vabs, Wabs,
+                UE, UW, VN, VS, WT, WB,
+                jacob
+            );
         } else {
             adv = Upwind1st(
                 ucc, ue1, uw1, un1, us1, ut1, ub1,
                 UE, UW, VN, VS, WT, WB, jacob
             );
         }
-        
         vis = Diffusion(
             ReI,
             ucc, ue1, uw1, un1, us1, ut1, ub1,
@@ -168,6 +187,26 @@ __global__ void kernel_Cartesian_CalcPseudoU(
                 ue1, ue2, uw1, uw2,
                 un1, un2, us1, us2,
                 ut1, ut2, ub1, ub2,
+                UE, UW, VN, VS, WT, WB,
+                jacob
+            );
+        } else if (advtype == AdvectionSchemeType::UTOPIA) {
+            adv = UTOPIA(
+                ucc,
+                ue1, ue2, uw1, uw2,
+                un1, un2, us1, us2,
+                ut1, ut2, ub1, ub2,
+                Uabs, Vabs, Wabs,
+                UE, UW, VN, VS, WT, WB,
+                jacob
+            );
+        } else if (advtype == AdvectionSchemeType::KK) {
+            adv = KK(
+                ucc,
+                ue1, ue2, uw1, uw2,
+                un1, un2, us1, us2,
+                ut1, ut2, ub1, ub2,
+                Uabs, Vabs, Wabs,
                 UE, UW, VN, VS, WT, WB,
                 jacob
             );
@@ -218,6 +257,26 @@ __global__ void kernel_Cartesian_CalcPseudoU(
                 ue1, ue2, uw1, uw2,
                 un1, un2, us1, us2,
                 ut1, ut2, ub1, ub2,
+                UE, UW, VN, VS, WT, WB,
+                jacob
+            );
+        } else if (advtype == AdvectionSchemeType::UTOPIA) {
+            adv = UTOPIA(
+                ucc,
+                ue1, ue2, uw1, uw2,
+                un1, un2, us1, us2,
+                ut1, ut2, ub1, ub2,
+                Uabs, Vabs, Wabs,
+                UE, UW, VN, VS, WT, WB,
+                jacob
+            );
+        } else if (advtype == AdvectionSchemeType::KK) {
+            adv = KK(
+                ucc,
+                ue1, ue2, uw1, uw2,
+                un1, un2, us1, us2,
+                ut1, ut2, ub1, ub2,
+                Uabs, Vabs, Wabs,
                 UE, UW, VN, VS, WT, WB,
                 jacob
             );

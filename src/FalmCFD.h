@@ -115,6 +115,10 @@ public:
             return AdvectionSchemeType::Upwind3;
         } else if (str == "QUICK") {
             return AdvectionSchemeType::QUICK;
+        } else if (str == "UTOPIA") {
+            return AdvectionSchemeType::UTOPIA;
+        } else if (str == "KK") {
+            return AdvectionSchemeType::KK;
         } else {
             return AdvectionSchemeType::Upwind1;
         }
@@ -139,6 +143,10 @@ public:
             return "Upwind3";
         } else if (adv == AdvectionSchemeType::QUICK) {
             return "QUICK";
+        } else if (adv == AdvectionSchemeType::UTOPIA) {
+            return "UTOPIA";
+        } else if (adv == AdvectionSchemeType::KK) {
+            return "KK";
         } else {
             return "Not defined";
         }
