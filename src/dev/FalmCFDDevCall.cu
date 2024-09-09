@@ -17,6 +17,7 @@ __global__ void kernel_Cartesian_CalcPseudoU(
     const MatrixFrame<REAL> *vg,
     const MatrixFrame<REAL> *vja,
     const MatrixFrame<REAL> *vff,
+    FLAG advtype,
     REAL               ReI,
     REAL               dt,
     INT3              pdm_shape,
@@ -100,15 +101,32 @@ __global__ void kernel_Cartesian_CalcPseudoU(
         us2 = u(idxs2, d);
         ut2 = u(idxt2, d);
         ub2 = u(idxb2, d);
-        adv = Upwind3rd(
-            ucc,
-            ue1, ue2, uw1, uw2,
-            un1, un2, us1, us2,
-            ut1, ut2, ub1, ub2,
-            Uabs, Vabs, Wabs,
-            UE, UW, VN, VS, WT, WB,
-            jacob
-        );
+        if (advtype == AdvectionSchemeType::Upwind3) {
+            adv = Upwind3rd(
+                ucc,
+                ue1, ue2, uw1, uw2,
+                un1, un2, us1, us2,
+                ut1, ut2, ub1, ub2,
+                Uabs, Vabs, Wabs,
+                UE, UW, VN, VS, WT, WB,
+                jacob
+            );
+        } else if (advtype == AdvectionSchemeType::QUICK) {
+            adv = QUICK(
+                ucc,
+                ue1, ue2, uw1, uw2,
+                un1, un2, us1, us2,
+                ut1, ut2, ub1, ub2,
+                UE, UW, VN, VS, WT, WB,
+                jacob
+            );
+        } else {
+            adv = Upwind1st(
+                ucc, ue1, uw1, un1, us1, ut1, ub1,
+                UE, UW, VN, VS, WT, WB, jacob
+            );
+        }
+        
         vis = Diffusion(
             ReI,
             ucc, ue1, uw1, un1, us1, ut1, ub1,
@@ -134,15 +152,31 @@ __global__ void kernel_Cartesian_CalcPseudoU(
         us2 = u(idxs2, d);
         ut2 = u(idxt2, d);
         ub2 = u(idxb2, d);
-        adv = Upwind3rd(
-            ucc,
-            ue1, ue2, uw1, uw2,
-            un1, un2, us1, us2,
-            ut1, ut2, ub1, ub2,
-            Uabs, Vabs, Wabs,
-            UE, UW, VN, VS, WT, WB,
-            jacob
-        );
+        if (advtype == AdvectionSchemeType::Upwind3) {
+            adv = Upwind3rd(
+                ucc,
+                ue1, ue2, uw1, uw2,
+                un1, un2, us1, us2,
+                ut1, ut2, ub1, ub2,
+                Uabs, Vabs, Wabs,
+                UE, UW, VN, VS, WT, WB,
+                jacob
+            );
+        } else if (advtype == AdvectionSchemeType::QUICK) {
+            adv = QUICK(
+                ucc,
+                ue1, ue2, uw1, uw2,
+                un1, un2, us1, us2,
+                ut1, ut2, ub1, ub2,
+                UE, UW, VN, VS, WT, WB,
+                jacob
+            );
+        } else {
+            adv = Upwind1st(
+                ucc, ue1, uw1, un1, us1, ut1, ub1,
+                UE, UW, VN, VS, WT, WB, jacob
+            );
+        }
         vis = Diffusion(
             ReI,
             ucc, ue1, uw1, un1, us1, ut1, ub1,
@@ -168,15 +202,31 @@ __global__ void kernel_Cartesian_CalcPseudoU(
         us2 = u(idxs2, d);
         ut2 = u(idxt2, d);
         ub2 = u(idxb2, d);
-        adv = Upwind3rd(
-            ucc,
-            ue1, ue2, uw1, uw2,
-            un1, un2, us1, us2,
-            ut1, ut2, ub1, ub2,
-            Uabs, Vabs, Wabs,
-            UE, UW, VN, VS, WT, WB,
-            jacob
-        );
+        if (advtype == AdvectionSchemeType::Upwind3) {
+            adv = Upwind3rd(
+                ucc,
+                ue1, ue2, uw1, uw2,
+                un1, un2, us1, us2,
+                ut1, ut2, ub1, ub2,
+                Uabs, Vabs, Wabs,
+                UE, UW, VN, VS, WT, WB,
+                jacob
+            );
+        } else if (advtype == AdvectionSchemeType::QUICK) {
+            adv = QUICK(
+                ucc,
+                ue1, ue2, uw1, uw2,
+                un1, un2, us1, us2,
+                ut1, ut2, ub1, ub2,
+                UE, UW, VN, VS, WT, WB,
+                jacob
+            );
+        } else {
+            adv = Upwind1st(
+                ucc, ue1, uw1, un1, us1, ut1, ub1,
+                UE, UW, VN, VS, WT, WB, jacob
+            );
+        }
         vis = Diffusion(
             ReI,
             ucc, ue1, uw1, un1, us1, ut1, ub1,
@@ -533,6 +583,7 @@ void FalmCFDDevCall::FSPseudoU(
         g.devptr,
         ja.devptr,
         ff.devptr,
+        AdvScheme,
         ReI,
         dt,
         pdm.shape,

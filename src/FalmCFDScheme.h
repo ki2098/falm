@@ -30,6 +30,41 @@ __host__ __device__ static REAL Upwind1st(
     return adv;
 } 
 
+__host__ __device__ static REAL QUICK(
+    REAL ucc,
+    REAL ue1, REAL ue2, REAL uw1, REAL uw2,
+    REAL un1, REAL un2, REAL us1, REAL us2,
+    REAL ut1, REAL ut2, REAL ub1, REAL ub2,
+    REAL UE, REAL UW,
+    REAL VN, REAL VS,
+    REAL WT, REAL WB,
+    REAL jacobian
+) {
+    REAL adv = 0.;
+
+    adv += UE*(- ue2 + 9*ue1 + 9*ucc - uw1);
+    adv += fabs(UE)*(ue2 - 3*ue1 + 3*ucc - uw1);
+
+    adv -= UW*(- ue1 + 9*ucc + 9*uw1 - uw2);
+    adv -= fabs(UW)*(ue1 - 3*ucc + 3*uw1 - uw2);
+
+    adv += VN*(- un2 + 9*un1 + 9*ucc - us1);
+    adv += fabs(VN)*(un2 - 3*un1 + 3*ucc - us1);
+
+    adv -= VS*(- un1 + 9*ucc + 9*us1 - us2);
+    adv -= fabs(VS)*(un1 - 3*ucc + 3*us1 - us2);
+
+    adv += WT*(- ut2 + 9*ut1 + 9*ucc - ub1);
+    adv += fabs(WT)*(ut2 - 3*ut1 + 3*ucc - ub1);
+
+    adv -= WB*(- ut1 + 9*ucc + 9*ub1 - ub2);
+    adv -= fabs(WB)*(ut1 - 3*ucc + 3*ub1 - ub2);
+
+    adv /= (16*jacobian);
+
+    return adv;
+}
+
 __host__ __device__ static REAL Upwind3rd(
     REAL ucc,
     REAL ue1, REAL ue2, REAL uw1, REAL uw2,

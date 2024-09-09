@@ -30,7 +30,7 @@
         },
         "cfd":{
             "Re":270000,
-            "advectionScheme":"Upwind3",
+            "advectionScheme":"QUICK",
             "SGS":"Smagorinsky",
             "Cs":0.1
         }
@@ -43,11 +43,11 @@
     "turbine":{
         "radius":1.0,
         "bladeNumber":3,
-        "bladePointNumber":50,
+        "bladePointNumber":25,
         "bladeProperties":"bladeProperties.json",
         "tower":0,
         "overhang":0,
-        "projectionWidth":5e-2,
+        "projectionWidth":0.08,
         "turbineArray":[
             {
                 "baseLocation":[0, 0, 0],

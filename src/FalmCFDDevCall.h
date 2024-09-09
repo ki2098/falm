@@ -11,6 +11,7 @@ class AdvectionSchemeType {
 public:
     static const FLAG Upwind1 = 0;
     static const FLAG Upwind3 = 1;
+    static const FLAG QUICK   = 2;
 };
 
 class SGSType {

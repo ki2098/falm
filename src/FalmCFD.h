@@ -113,6 +113,8 @@ public:
             return AdvectionSchemeType::Upwind1;
         } else if (str == "Upwind3") {
             return AdvectionSchemeType::Upwind3;
+        } else if (str == "QUICK") {
+            return AdvectionSchemeType::QUICK;
         } else {
             return AdvectionSchemeType::Upwind1;
         }
@@ -135,6 +137,8 @@ public:
             return "Upwind1";
         } else if (adv == AdvectionSchemeType::Upwind3) {
             return "Upwind3";
+        } else if (adv == AdvectionSchemeType::QUICK) {
+            return "QUICK";
         } else {
             return "Not defined";
         }

@@ -72,7 +72,7 @@ __global__ void kernel_UpdateAPX(
         const REAL tip = turbines.tip_rate[turbine_id];
 
         double theta0 = (2*Pi/n_blade)*blade_id;
-        t = floormod(t, 2*Pi/tip);
+        // t = floormod(t, 2*Pi/tip);
         double theta  = tip*t + theta0;
 
         const REAL3 &hub = turbines.hub[turbine_id];
@@ -199,7 +199,7 @@ __global__ void kernel_CalcAPForce(
             REAL3 uvw_at_ap_tt = one_angle_frame_rotation_dt(apxyz - base, REAL3{{u_at_ap, v_at_ap, w_at_ap}} - base_velocity, angle, angular_velocity, angle_type);
 
             REAL theta0 = (2*Pi/n_blade)*blade_id;
-            t = floormod(t, 2*Pi/tip);
+            // t = floormod(t, 2*Pi/tip);
             REAL theta  = tip*t + theta0;
 
             REAL ux_tt = uvw_at_ap_tt[0];
