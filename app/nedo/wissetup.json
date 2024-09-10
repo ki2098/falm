@@ -29,7 +29,7 @@
             }
         },
         "cfd":{
-            "Re":270000,
+            "Re":5e4,
             "advectionScheme":"QUICK",
             "SGS":"Smagorinsky",
             "Cs":0.1
