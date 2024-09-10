@@ -36,7 +36,7 @@
         }
     },
     "mesh":{
-        "convert":"mesh/40",
+        "convert":"mesh/50",
         "controlVolumeFile":"controlVolume.txt",
         "controlVolumeCenter":"innerNode"
     },
