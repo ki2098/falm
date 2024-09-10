@@ -22,7 +22,7 @@
 				"Label": "Stretch_x_01",
 				"Begin": -5,
 				"End": 0,
-				"Begin_width": 0.3,
+				"Begin_width": 0.35,
 				"End_width": 0.05,
 				"Division": 25
 			}
@@ -43,7 +43,7 @@
 				"Label": "Stretch_y_01",
 				"Begin": -7.5,
 				"End": -2.5,
-				"Begin_width": 0.3,
+				"Begin_width": 0.35,
 				"End_width": 0.05,
 				"Division": 25
 			},
@@ -52,7 +52,7 @@
 				"Begin": 2.5,
 				"End": 7.5,
 				"Begin_width": 0.05,
-				"End_width": 0.3,
+				"End_width": 0.35,
 				"Division":25
 			}
 		]
@@ -67,7 +67,7 @@
 				"Label": "Stretch_z_01",
 				"Begin": -7.5,
 				"End": -2.5,
-				"Begin_width": 0.3,
+				"Begin_width": 0.35,
 				"End_width": 0.05,
 				"Division": 25
 			},
@@ -84,7 +84,7 @@
 				"Begin": 2.5,
 				"End": 7.5,
 				"Begin_width": 0.05,
-				"End_width": 0.4,
+				"End_width": 0.35,
 				"Division": 25
 			}
 		]
