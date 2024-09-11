@@ -29,10 +29,10 @@
             }
         },
         "cfd":{
-            "Re":5e4,
+            "Re":2.9e5,
             "advectionScheme":"QUICK",
             "SGS":"Smagorinsky",
-            "Cs":0.1
+            "Cs":0.11
         }
     },
     "mesh":{
@@ -50,7 +50,7 @@
         "projectionWidth":0.05,
         "turbineArray":[
             {
-                "baseLocation":[1, 0, 0],
+                "baseLocation":[0, 0, 0],
                 "angle":[0, 0, 0],
                 "tipRate":8
             }
