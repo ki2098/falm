@@ -35,6 +35,7 @@ size_t vid(size_t i, size_t j, size_t k, size_t n, size_t n_size) {
 double *x, *y, *z;
 string prefix;
 string suffix;
+bool is_tavg = false;
 
 void convert_mesh() {
     string cvname = prefix + ".cv";
@@ -80,7 +81,11 @@ void convert_mesh() {
 }
 
 void convert_data() {
-    string fname = prefix + "_" + suffix;
+    string middle_name = "_";
+    if (is_tavg) {
+        middle_name += "tavg_";
+    }
+    string fname = prefix + middle_name + suffix;
     FILE *file = fopen(fname.c_str(), "rb");
     fread(&imax, sizeof(size_t), 1, file);
     fread(&jmax, sizeof(size_t), 1, file);
@@ -93,6 +98,39 @@ void convert_data() {
     double *data = (double*)malloc(sizeof(double)*imax*jmax*kmax*nmax);
     fread(data, sizeof(double), imax*jmax*kmax*nmax, file);
     cout << "read uvwp data from " << fname << endl;
+    fclose(file);
+
+    vtkNew<vtkFloatArray> uvtk;
+    uvtk->SetNumberOfComponents(3);
+    uvtk->SetNumberOfTuples(imax*jmax*kmax);
+    uvtk->SetName("u");
+    for (size_t k = 0; k < kmax; k ++) {
+    for (size_t j = 0; j < jmax; j ++) {
+    for (size_t i = 0; i < imax; i ++) {
+    for (size_t d = 0; d < 3; d ++) {
+        uvtk->SetValue(vid(i,j,k,d,3), data[id(i,j,k,d)]);
+    }}}}
+    grid->GetPointData()->AddArray(uvtk);
+
+    vtkNew<vtkFloatArray> pvtk;
+    pvtk->SetNumberOfComponents(1);
+    pvtk->SetNumberOfTuples(imax*jmax*kmax);
+    pvtk->SetName("p");
+    for (size_t k = 0; k < kmax; k ++) {
+    for (size_t j = 0; j < jmax; j ++) {
+    for (size_t i = 0; i < imax; i ++) {
+        pvtk->SetValue(vid(i,j,k,0,1), data[id(i,j,k,3)]);
+    }}}
+    grid->GetPointData()->AddArray(pvtk);
+
+    writer->SetFileName((fname + "_uvwp.vtr").c_str());
+    writer->Write();
+    cout << "uvwp data output to " << (fname + "_uvwp.vtr") << endl;
+
+    if (!is_tavg) {
+
+    grid->GetPointData()->RemoveArray("u");
+    grid->GetPointData()->RemoveArray("p");
 
     double *q = (double*)malloc(sizeof(double)*imax*jmax*kmax);
     memset(q, 0, sizeof(double)*imax*jmax*kmax);
@@ -145,36 +183,6 @@ void convert_data() {
     }}}
     cout << "complete calculating Q" << endl;
 
-    vtkNew<vtkFloatArray> uvtk;
-    uvtk->SetNumberOfComponents(3);
-    uvtk->SetNumberOfTuples(imax*jmax*kmax);
-    uvtk->SetName("u");
-    for (size_t k = 0; k < kmax; k ++) {
-    for (size_t j = 0; j < jmax; j ++) {
-    for (size_t i = 0; i < imax; i ++) {
-    for (size_t d = 0; d < 3; d ++) {
-        uvtk->SetValue(vid(i,j,k,d,3), data[id(i,j,k,d)]);
-    }}}}
-    grid->GetPointData()->AddArray(uvtk);
-
-    vtkNew<vtkFloatArray> pvtk;
-    pvtk->SetNumberOfComponents(1);
-    pvtk->SetNumberOfTuples(imax*jmax*kmax);
-    pvtk->SetName("p");
-    for (size_t k = 0; k < kmax; k ++) {
-    for (size_t j = 0; j < jmax; j ++) {
-    for (size_t i = 0; i < imax; i ++) {
-        pvtk->SetValue(vid(i,j,k,0,1), data[id(i,j,k,3)]);
-    }}}
-    grid->GetPointData()->AddArray(pvtk);
-
-    writer->SetFileName((fname + "_uvwp.vtr").c_str());
-    writer->Write();
-    cout << "uvwp data output to " << (fname + "_uvwp.vtr") << endl;
-
-    grid->GetPointData()->RemoveArray("u");
-    grid->GetPointData()->RemoveArray("p");
-
     vtkNew<vtkFloatArray> qvtk;
     qvtk->SetNumberOfComponents(1);
     qvtk->SetNumberOfTuples(imax*jmax*kmax);
@@ -190,7 +198,7 @@ void convert_data() {
     writer->Write();
     cout << "Q data output to " << (fname + "_q.vtr") << endl;
 
-    fclose(file);
+    }
 }
 
 int main(int argc, char **argv) {
@@ -198,6 +206,9 @@ int main(int argc, char **argv) {
     writer->SetInputData(grid);
     prefix = string(argv[1]);
     suffix = string(argv[2]);
+    if (argc == 4) {
+        is_tavg = true;
+    }
     convert_mesh();
     convert_data();
 }
