@@ -47,6 +47,7 @@ __global__ void kernel_UpdateAPX(
     // MatrixFrame<INT> *vzoffset,
     TurbineFrame *vturbines,
     APFrame *vaps,
+    INT n_ap_per_blade,
     REAL t,
     INT gc,
     int rank
@@ -65,7 +66,6 @@ __global__ void kernel_UpdateAPX(
         const INT ap_id = thread_id;
         const INT n_turbine = turbines.n_turbine;
         const INT n_blade = turbines.n_blade;
-        const INT n_ap_per_blade = turbines.n_ap_per_blade;
         const INT n_ap_per_turbine = n_ap_per_blade*n_blade;
         const INT turbine_id = ap_id/n_ap_per_turbine;
         const INT blade_id = (ap_id%n_ap_per_turbine)/n_ap_per_blade;
@@ -78,7 +78,6 @@ __global__ void kernel_UpdateAPX(
         const REAL3 &hub = turbines.hub[turbine_id];
         const REAL3 &base = turbines.base[turbine_id];
         const REAL3 &angle = turbines.angle[turbine_id];
-        const REAL3 &angular_velocity = turbines.angular_velocity[turbine_id];
         const EulerAngle angle_type = turbines.angle_type[turbine_id];
         const REAL apr = aps.r[ap_id];
 
@@ -114,6 +113,7 @@ __global__ void kernel_CalcAPForce(
     MatrixFrame<REAL> *vuvw,
     TurbineFrame *vturbines,
     APFrame *vaps,
+    INT n_ap_per_blade,
     INT3 shape,
     REAL t,
     int rank
@@ -130,7 +130,6 @@ __global__ void kernel_CalcAPForce(
         const INT ap_id = thread_id;
         const INT n_turbine = turbines.n_turbine;
         const INT n_blade = turbines.n_blade;
-        const INT n_ap_per_blade = turbines.n_ap_per_blade;
         const INT n_ap_per_turbine = n_ap_per_blade*n_blade;
         const INT turbine_id = ap_id/n_ap_per_turbine;
         const INT blade_id = (ap_id%n_ap_per_turbine)/n_ap_per_blade;
@@ -140,6 +139,7 @@ __global__ void kernel_CalcAPForce(
         const REAL3 &angular_velocity = turbines.angular_velocity[turbine_id];
         const EulerAngle angle_type = turbines.angle_type[turbine_id];
         const REAL apr = aps.r[ap_id];
+        const REAL dr_per_ap = (turbines.radius - turbines.hub_radius)/n_ap_per_blade;
         if (aps.rank[ap_id] == rank) {
             INT3 apijk = aps.ijk[ap_id];
             INT  i0 = apijk[0], i1 = apijk[0] + 1;
@@ -209,7 +209,6 @@ __global__ void kernel_CalcAPForce(
             REAL chord, twist, cl, cd;
             aps.get_airfoil_params(ap_id, rad2deg(phi), chord, twist, cl, cd);
 
-            const REAL dr_per_ap = turbines.radius/turbines.n_ap_per_blade;
             // printf("%lf\n", dr_per_ap);
             REAL fl = .5*cl*urel2*chord*dr_per_ap;
             REAL fd = .5*cd*urel2*chord*dr_per_ap;
@@ -302,12 +301,12 @@ __global__ void kernel_DryDistribution(
 
 void AlmDevCall::UpdateAPX(Matrix<REAL> &x, Matrix<REAL> &y, Matrix<REAL> &z, REAL t, size_t block_size) {
     size_t block_number = (aps.apcount + block_size - 1)/block_size;
-    kernel_UpdateAPX<<<block_number, block_size>>>(x.devptr, y.devptr, z.devptr, turbines.devptr, aps.devptr, t, gc, rank);
+    kernel_UpdateAPX<<<block_number, block_size>>>(x.devptr, y.devptr, z.devptr, turbines.devptr, aps.devptr, n_ap_per_blade, t, gc, rank);
 }
 
 void AlmDevCall::CalcAPForce(Matrix<REAL> &x, Matrix<REAL> &y, Matrix<REAL> &z, Matrix<REAL> &uvw, REAL t, size_t block_size) {
     size_t block_number = (aps.apcount + block_size - 1)/block_size;
-    kernel_CalcAPForce<<<block_number, block_size>>>(x.devptr, y.devptr, z.devptr, uvw.devptr, turbines.devptr, aps.devptr, pdm_shape, t, rank);
+    kernel_CalcAPForce<<<block_number, block_size>>>(x.devptr, y.devptr, z.devptr, uvw.devptr, turbines.devptr, aps.devptr, n_ap_per_blade, pdm_shape, t, rank);
 }
 
 void AlmDevCall::DistributeAPForce(Matrix<REAL> &x, Matrix<REAL> &y, Matrix<REAL> &z, Matrix<REAL> &ff, REAL euler_eps, dim3 block_size) {

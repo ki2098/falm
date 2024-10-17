@@ -127,7 +127,7 @@ void init(int &argc, char **&argv) {
     // alm.init(falm.cpm, falm.params["turbine"], falm.workdir);
     // alm.print_info(falm.cpm.rank == TERMINAL_OUTPUT_RANK);
 
-    aalm.init(falm.workdir, falm.params["turbine"], falm.params["turbine"]["apFile"], falm.cpm);
+    aalm.init(falm.workdir, falm.params["turbine"], falm.cpm);
     for (int rank = 0; rank < falm.cpm.size; rank ++) {
         if (rank == falm.cpm.rank) {
             printf("rank %d\n", rank);
@@ -138,7 +138,7 @@ void init(int &argc, char **&argv) {
     }
 }
 
-REAL main_loop(Alm::AlmHandler &alm, Rmcp::RmcpTurbineArray &turbineArray, STREAM *s) {
+REAL main_loop(Alm::AlmHandler &alm, STREAM *s) {
     FalmBasicVar &fv = falm.fv;
     u_previous.copy(fv.u, HDC::Device);
     profiler.startEvent("ALM");
@@ -204,41 +204,6 @@ void finalize() {
 int main(int argc, char **argv) {
     init(argc, argv);
 
-    Rmcp::RmcpTurbineArray turbineArray(1);
-    Rmcp::RmcpTurbine turbine;
-    // turbine.pos = {{
-    //     falm.params["turbine"]["position"][0].get<REAL>(),
-    //     falm.params["turbine"]["position"][1].get<REAL>(),
-    //     falm.params["turbine"]["position"][2].get<REAL>()
-    // }};
-    // turbine.rotpos = {{0, 0, 0}};
-    // turbine.R = falm.params["turbine"]["radius"].get<REAL>();
-    // turbine.width = 0.1;
-    // turbine.thick = 0.1;
-    // turbine.tip = falm.params["turbine"]["radialVelocity"].get<REAL>();
-    // turbine.hub = 0.1;
-    // turbine.yaw = 0;
-    // turbine.chord_a = {{
-    //       0.2876200,
-    //     - 0.2795100,
-    //       0.1998600,
-    //     - 0.1753800,
-    //       0.1064600,
-    //     - 0.0025213
-    // }};
-    // turbine.angle_a = {{
-    //       49.992000,
-    //     - 70.551000,
-    //       45.603000,
-    //     - 40.018000,
-    //       24.292000,
-    //     -  0.575430
-    // }};
-    turbineArray[0] = turbine;
-    turbineArray.sync(MCP::Hst2Dev);
-
-    // RmcpAlm alm(falm.cpm);
-
     if (argc > 1) {
         std::string arg(argv[1]);
         if (arg == "info") {
@@ -252,7 +217,7 @@ int main(int argc, char **argv) {
     }
     profiler.startEvent("global loop");
     for (falm.it = 1; falm.it <= falm.maxIt; falm.it ++) {
-        REAL divnorm = sqrt(main_loop(aalm, turbineArray, streams)) / PRODUCT3(falm.cpm.pdm_list[falm.cpm.rank].shape - INT(2 * falm.cpm.gc));
+        REAL divnorm = sqrt(main_loop(aalm, streams)) / PRODUCT3(falm.cpm.pdm_list[falm.cpm.rank].shape - INT(2 * falm.cpm.gc));
         // falm.it ++;
         if (falm.cpm.rank == TERMINAL_OUTPUT_RANK) {
             printf("%8d %12.5e, %12.5e, %3d, %12.5e\n", falm.it, falm.gettime(), divnorm, falm.falmEq.it, falm.falmEq.err);
@@ -284,7 +249,7 @@ FIN:
         // }}}
         // fclose(csv);
     }
-    std::string fname = "data/alm_rank" + std::to_string(falm.cpm.rank) + ".csv";
+    /* std::string fname = "data/alm_rank" + std::to_string(falm.cpm.rank) + ".csv";
     falm.fv.ff.sync(MCP::Dev2Hst);
     falm.fv.xyz.sync(MCP::Dev2Hst);
     FILE *csv = fopen(fname.c_str(), "w");
@@ -299,7 +264,7 @@ FIN:
         // Matrix<INT>  &flag = alm.alm_flag;
         fprintf(csv, "%lf,%lf,%lf,%e,%e,%e\n", x(idx,0), x(idx,1), x(idx,2), ff(idx,0), ff(idx,1), ff(idx,2));
     }}}
-    fclose(csv);
+    fclose(csv); */
     finalize();
     return 0;
 }

@@ -21,7 +21,7 @@ struct TurbineFrame {
     REAL       *torque;
     REAL        radius;
     REAL        hub_radius;
-    size_t      n_turbine, n_blade, n_ap_per_blade;
+    size_t      n_turbine, n_blade;
     FLAG        hdc;
 
     TurbineFrame() :
@@ -40,10 +40,9 @@ struct TurbineFrame {
         return nid*n_turbine + tid;
     }
 
-    void alloc(size_t _tcount, size_t _bcount, size_t _ap_per_blade, REAL _r, REAL _hr, FLAG _hdc) {
+    void alloc(size_t _tcount, size_t _bcount, REAL _r, REAL _hr, FLAG _hdc) {
         n_turbine = _tcount;
         n_blade = _bcount;
-        n_ap_per_blade = _ap_per_blade;
         radius = _r;
         hub_radius = _hr;
         hdc = _hdc;
@@ -94,11 +93,11 @@ struct TurbineFrame {
 
 struct TurbineHandler {
     TurbineFrame host, dev, *devptr;
-    size_t       n_turbine, n_blade, n_ap_per_blade;
+    size_t       n_turbine, n_blade;
     REAL         radius;
     REAL         hub_radius;
     FLAG         hdc;
-    json         turbine_param;
+    json turbine_prop, turbine_arr;
 
     TurbineHandler() :
         host(),
@@ -107,31 +106,33 @@ struct TurbineHandler {
         hdc(HDC::Empty)
     {}
 
-    void alloc(const json &_turbine_param) {
-        turbine_param = _turbine_param;
-        radius = turbine_param["radius"].get<REAL>();
-        n_blade = turbine_param["bladeNumber"].get<size_t>();
-        n_ap_per_blade = turbine_param["bladePointNumber"].get<size_t>();
-        auto turbine_array = turbine_param["turbineArray"];
-        if (turbine_param.contains("hubRadius")) {
-            hub_radius = turbine_param["hubRadius"].get<REAL>();
+    void alloc(const json &_turbine_prop, const json &_turbine_arr) {
+        turbine_arr = _turbine_arr;
+        turbine_prop = _turbine_prop;
+        
+        radius = turbine_prop["radius"];
+        if (turbine_prop.contains("hubRadius")) {
+            hub_radius = turbine_prop["hubRadius"];
         } else {
             hub_radius = 0;
         }
-        n_turbine = turbine_array.size();
-        host.alloc(n_turbine, n_blade, n_ap_per_blade, radius, hub_radius, HDC::Host);
-        dev.alloc(n_turbine, n_blade, n_ap_per_blade, radius, hub_radius, HDC::Device);
+        n_blade = turbine_prop["bladeNumber"];
+
+
+        n_turbine = turbine_arr.size();
+        host.alloc(n_turbine, n_blade, radius, hub_radius, HDC::Host);
+        dev.alloc(n_turbine, n_blade, radius, hub_radius, HDC::Device);
         for (int tid = 0; tid < n_turbine; tid ++) {
-            auto turbine_json = turbine_array[tid];
-            host.hub[tid][0] = - turbine_param["overhang"].get<REAL>();
+            auto turbine_json = turbine_arr[tid];
+            host.hub[tid][0] = - turbine_prop["overhang"].get<REAL>();
             host.hub[tid][1] =   0;
-            host.hub[tid][2] =   turbine_param["tower"].get<REAL>();
-            host.tip_rate[tid] = turbine_json["tipRate"].get<REAL>();
+            host.hub[tid][2] =   turbine_prop["tower"];
+            host.tip_rate[tid] = turbine_json["tipRate"];
             
             auto tmp = turbine_json["baseLocation"];
             for (int i = 0; i < 3; i ++) {
                 if (tmp[i].is_number()) {
-                    host.base[tid][i] = tmp[i].get<REAL>();
+                    host.base[tid][i] = tmp[i];
                     host.base_velocity[tid][i] = 0;
                 }
             }
@@ -140,9 +141,9 @@ struct TurbineHandler {
             int angle_switch[] = {0, 0, 0};
             for (int i = 0; i < 3; i ++) {
                 if (tmp[i].is_number()) {
-                    host.angle[tid][i] = deg2rad(tmp[i].get<REAL>());
+                    host.angle[tid][i] = deg2rad(tmp[i]);
                     host.angular_velocity[tid][i] = 0;
-                    if (tmp[i].get<REAL>() != 0) {
+                    if (tmp[i] != 0) {
                         angle_switch[i] = 1;
                     }
                 } else {

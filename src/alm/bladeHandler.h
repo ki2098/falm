@@ -13,11 +13,8 @@ namespace Alm {
 class BladeHandler {
 
 public:
-    static void buildAP(std::string bladefilepath, std::string apfilepath, int turbinecount, int bladeperturbine, int apperblade, double radius) {
+    static void buildAP(const json &bladejson, std::string apfilepath, int turbinecount, int bladeperturbine, int apperblade, double radius, double hubradius=0.0) {
         int apcount = turbinecount*bladeperturbine*apperblade;
-        std::ifstream bladefile(bladefilepath);
-        auto bladejson = json::parse(bladefile);
-        bladefile.close();
         auto aflist = bladejson["airfoils"];
         auto atlist = bladejson["attacks"];
         size_t imax = aflist.size();
@@ -48,10 +45,10 @@ public:
         }
 
         auto aparrayjson = ordered_json::array();
-        double dr = radius/apperblade;
+        double dr = (radius - hubradius)/apperblade;
         // int apperturbine = apperblade*bladeperturbine;
         for (int apid = 0; apid < apcount; apid ++) {
-            double apr = (apid%apperblade + 0.5)*dr;
+            double apr = (apid%apperblade + 0.5)*dr + hubradius;
             double apchord, aptwist;
             // int aptid = apid/apperturbine;
             // int apbid = (apid%apperturbine)/apperblade;

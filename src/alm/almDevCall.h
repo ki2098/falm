@@ -26,6 +26,8 @@ public:
     INT3 pdm_offset;
     INT gc;
     std::string workdir;
+    REAL euler_eps;
+    INT n_ap_per_blade;
 
     AlmDevCall() : turbines(), aps() {}
 
