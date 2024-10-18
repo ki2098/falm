@@ -52,7 +52,7 @@
             },
             {
                 "baseLocation":[10, 1, 0],
-                "angle":[0, 0, 15],
+                "angle":[0, 0, 0],
                 "tipRate":4
             }
         ],
