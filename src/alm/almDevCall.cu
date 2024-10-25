@@ -64,10 +64,16 @@ __global__ void kernel_UpdateAPX(
     size_t thread_id = GLOBAL_THREAD_IDX();
     if (thread_id < aps.apcount) {
         const INT ap_id = thread_id;
+        const INT n_turbine = turbines.n_turbine;
         const INT n_blade = turbines.n_blade;
-        const INT turbine_id = aps.tid[ap_id];
-        const INT blade_id = aps.bid[ap_id];
+        const INT n_ap_per_turbine = n_ap_per_blade*n_blade;
+        const INT turbine_id = ap_id/n_ap_per_turbine;
+        const INT blade_id = (ap_id%n_ap_per_turbine)/n_ap_per_blade;
         const REAL tip = turbines.tip_rate[turbine_id];
+
+        double theta0 = (2*Pi/n_blade)*blade_id;
+        // t = floormod(t, 2*Pi/tip);
+        double theta  = tip*t + theta0;
 
         const REAL3 &hub = turbines.hub[turbine_id];
         const REAL3 &base = turbines.base[turbine_id];
@@ -76,12 +82,8 @@ __global__ void kernel_UpdateAPX(
         const REAL apr = aps.r[ap_id];
 
         REAL3 coordinate1 = hub;
-        if (blade_id != -1) {
-            double theta0 = (2*Pi/n_blade)*blade_id;
-            double theta  = tip*t + theta0;
-            coordinate1[1] += apr*cos(theta);
-            coordinate1[2] += apr*sin(theta);
-        }
+        coordinate1[1] += apr*cos(theta);
+        coordinate1[2] += apr*sin(theta);
         REAL3 coordinate0 = one_angle_frame_rotation(coordinate1, - angle, angle_type) + base;
 
         aps.xyz[ap_id] = coordinate0;
@@ -126,15 +128,18 @@ __global__ void kernel_CalcAPForce(
     size_t thread_id = GLOBAL_THREAD_IDX();
     if (thread_id < aps.apcount) {
         const INT ap_id = thread_id;
+        const INT n_turbine = turbines.n_turbine;
         const INT n_blade = turbines.n_blade;
-        const INT turbine_id = aps.tid[ap_id];
-        const INT blade_id = aps.bid[ap_id];
+        const INT n_ap_per_turbine = n_ap_per_blade*n_blade;
+        const INT turbine_id = ap_id/n_ap_per_turbine;
+        const INT blade_id = (ap_id%n_ap_per_turbine)/n_ap_per_blade;
         const REAL tip = turbines.tip_rate[turbine_id];
         const REAL3 &hub = turbines.hub[turbine_id];
         const REAL3 &angle = turbines.angle[turbine_id];
         const REAL3 &angular_velocity = turbines.angular_velocity[turbine_id];
         const EulerAngle angle_type = turbines.angle_type[turbine_id];
         const REAL apr = aps.r[ap_id];
+        const REAL dr_per_ap = (turbines.radius - turbines.hub_radius)/n_ap_per_blade;
         if (aps.rank[ap_id] == rank) {
             INT3 apijk = aps.ijk[ap_id];
             INT  i0 = apijk[0], i1 = apijk[0] + 1;
@@ -193,34 +198,25 @@ __global__ void kernel_CalcAPForce(
             REAL3 apxyz_tt = one_angle_frame_rotation(apxyz - base, angle, angle_type);
             REAL3 uvw_at_ap_tt = one_angle_frame_rotation_dt(apxyz - base, REAL3{{u_at_ap, v_at_ap, w_at_ap}} - base_velocity, angle, angular_velocity, angle_type);
 
-            if (blade_id != -1) {
-                REAL theta0 = (2*Pi/n_blade)*blade_id;
-                REAL theta  = tip*t + theta0;
-                REAL ux_tt = uvw_at_ap_tt[0];
-                REAL ut_tt = tip*apr + uvw_at_ap_tt[1]*sin(theta) - uvw_at_ap_tt[2]*cos(theta);
-                REAL urel2 = ux_tt*ux_tt + ut_tt*ut_tt;
-                REAL phi = atan(ux_tt/ut_tt);
-                REAL a, twist, cl, cd;
-                aps.get_airfoil_params(ap_id, rad2deg(phi), a, twist, cl, cd);
-                REAL fl = .5*cl*urel2*a;
-                REAL fd = .5*cd*urel2*a;
-                REAL fx = fl*cos(phi) + fd*sin(phi);
-                REAL ft = fl*sin(phi) - fd*sin(phi);
-                ft *= sign(tip);
-                REAL3 ff_tt{{-fx, ft*sin(theta), -ft*cos(theta)}};
-                aps.force[ap_id] = one_angle_frame_rotation(ff_tt, - angle, angle_type);
-            } else {
-                REAL u_tt = uvw_at_ap_tt[0];
-                REAL v_tt = uvw_at_ap_tt[1];
-                REAL w_tt = uvw_at_ap_tt[2];
-                REAL urel2 = u_tt*u_tt + v_tt*v_tt + w_tt*w_tt;
-                REAL umag = sqrt(urel2);
-                REAL a, twist, cl, cd;
-                aps.get_airfoil_params(ap_id, 0, a, twist, cl, cd);
-                REAL f = .5*cd*urel2*a;
-                REAL3 ff_tt{{-f*u_tt/umag, -f*v_tt/umag, -f*w_tt/umag}};
-                aps.force[ap_id] = one_angle_frame_rotation(ff_tt, - angle, angle_type);
-            }
+            REAL theta0 = (2*Pi/n_blade)*blade_id;
+            // t = floormod(t, 2*Pi/tip);
+            REAL theta  = tip*t + theta0;
+
+            REAL ux_tt = uvw_at_ap_tt[0];
+            REAL ut_tt = tip*apr + uvw_at_ap_tt[1]*sin(theta) - uvw_at_ap_tt[2]*cos(theta);
+            REAL urel2 = ux_tt*ux_tt + ut_tt*ut_tt;
+            REAL phi = atan(ux_tt/ut_tt);
+            REAL chord, twist, cl, cd;
+            aps.get_airfoil_params(ap_id, rad2deg(phi), chord, twist, cl, cd);
+
+            // printf("%lf\n", dr_per_ap);
+            REAL fl = .5*cl*urel2*chord*dr_per_ap;
+            REAL fd = .5*cd*urel2*chord*dr_per_ap;
+            REAL fx = fl*cos(phi) + fd*sin(phi);
+            REAL ft = fl*sin(phi) - fd*sin(phi);
+            ft *= sign(tip);
+            REAL3 ff_tt{{-fx, ft*sin(theta), -ft*cos(theta)}};
+            aps.force[ap_id] = one_angle_frame_rotation(ff_tt, - angle, angle_type);
         } else {
             aps.force[ap_id][0] = 0;
             aps.force[ap_id][1] = 0;

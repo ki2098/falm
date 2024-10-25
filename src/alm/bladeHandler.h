@@ -5,7 +5,6 @@
 #include <string>
 #include <vector>
 #include "../typedef.h"
-#include "../falmath.h"
 
 namespace Falm {
 
@@ -15,8 +14,7 @@ class BladeHandler {
 
 public:
     static void buildAP(const json &bladejson, std::string apfilepath, int turbinecount, int bladeperturbine, int apperblade, double radius, double hubradius=0.0) {
-        int apcount = turbinecount*bladeperturbine*apperblade + turbinecount;
-        int appertutbine = bladeperturbine*apperblade + 1;
+        int apcount = turbinecount*bladeperturbine*apperblade;
         auto aflist = bladejson["airfoils"];
         auto atlist = bladejson["attacks"];
         size_t imax = aflist.size();
@@ -50,55 +48,39 @@ public:
         double dr = (radius - hubradius)/apperblade;
         // int apperturbine = apperblade*bladeperturbine;
         for (int apid = 0; apid < apcount; apid ++) {
-            int tid = apid / appertutbine;
-            int apidt = apid % appertutbine;
-            int bid = (apidt - 1)/apperblade;
-            double apr = ((apidt - 1)%apperblade + 0.5)*dr + hubradius;
-            double apchord, aptwist, apdr, apa;
+            double apr = (apid%apperblade + 0.5)*dr + hubradius;
+            double apchord, aptwist;
             // int aptid = apid/apperturbine;
             // int apbid = (apid%apperturbine)/apperblade;
             std::vector<double> apcl;
             std::vector<double> apcd;
-            if (apidt == 0) {
-                apcl = std::vector<double>(jmax, 0);
-                apcd = std::vector<double>(jmax, 0.5);
-                apchord = 0;
-                aptwist = 0;
-                apdr = 0;
-                apa = Pi*hubradius*hubradius;
-                bid = -1;
-                apr = 0;
+            if (apr < rr[0]) {
+                apchord = chord[0];
+                aptwist = twist[0];
+                apcl = cl[0];
+                apcd = cd[0];
+            } else if (apr >= rr[imax-1]) {
+                apchord = chord[imax-1];
+                aptwist = twist[imax-1];
+                apcl = cl[imax-1];
+                apcd = cd[imax-1];
             } else {
-                if (apr < rr[0]) {
-                    apchord = chord[0];
-                    aptwist = twist[0];
-                    apcl = cl[0];
-                    apcd = cd[0];
-                } else if (apr >= rr[imax-1]) {
-                    apchord = chord[imax-1];
-                    aptwist = twist[imax-1];
-                    apcl = cl[imax-1];
-                    apcd = cd[imax-1];
-                } else {
-                    size_t i;
-                    double p;
-                    for (i = 0; i < imax-1; i ++) {
-                        if (rr[i] <= apr && rr[i+1] > apr) {
-                            p = (apr - rr[i])/(rr[i+1] - rr[i]);
-                            break;
-                        }
-                    }
-                    apchord = (1. - p)*chord[i] + p*chord[i+1];
-                    aptwist = (1. - p)*twist[i] + p*twist[i+1];
-                    apcl.resize(jmax);
-                    apcd.resize(jmax);
-                    for (size_t j = 0; j < jmax; j ++) {
-                        apcl[j] = (1. - p)*cl[i][j] + p*cl[i+1][j];
-                        apcd[j] = (1. - p)*cd[i][j] + p*cd[i+1][j];
+                size_t i;
+                double p;
+                for (i = 0; i < imax-1; i ++) {
+                    if (rr[i] <= apr && rr[i+1] > apr) {
+                        p = (apr - rr[i])/(rr[i+1] - rr[i]);
+                        break;
                     }
                 }
-                apdr = dr;
-                apa = apdr*apchord;
+                apchord = (1. - p)*chord[i] + p*chord[i+1];
+                aptwist = (1. - p)*twist[i] + p*twist[i+1];
+                apcl.resize(jmax);
+                apcd.resize(jmax);
+                for (size_t j = 0; j < jmax; j ++) {
+                    apcl[j] = (1. - p)*cl[i][j] + p*cl[i+1][j];
+                    apcd[j] = (1. - p)*cd[i][j] + p*cd[i+1][j];
+                }
             }
             ordered_json apjson;
             apjson["id"] = apid;
@@ -107,10 +89,6 @@ public:
             apjson["r"] = apr;
             apjson["chord"] = apchord;
             apjson["twist[deg]"] = aptwist;
-            apjson["dr"] = apdr;
-            apjson["a"] = apa;
-            apjson["turbineId"] = tid;
-            apjson["bladeId"] = bid;
             apjson["Cl"] = apcl;
             apjson["Cd"] = apcd;
             aparrayjson.push_back(apjson);

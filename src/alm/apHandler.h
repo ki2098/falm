@@ -13,11 +13,9 @@ struct APFrame {
     REAL3 *xyz; 
     INT3  *ijk; 
     int  *rank; 
-    int  *tid;
-    int  *bid;
     REAL *r; 
     REAL *attack; 
-    REAL *refa; 
+    REAL *chord; 
     REAL *twist; 
     REAL *cl; 
     REAL *cd; 
@@ -32,11 +30,11 @@ struct APFrame {
         xyz(nullptr),
         ijk(nullptr),
         rank(nullptr),
-        tid(nullptr),
-        bid(nullptr),
+        // turbineid(nullptr),
+        // bladeid(nullptr),
         r(nullptr),
         attack(nullptr),
-        refa(nullptr),
+        chord(nullptr),
         twist(nullptr),
         cl(nullptr),
         cd(nullptr),
@@ -60,11 +58,9 @@ struct APFrame {
             falmErrCheckMacro(falmMalloc((void**)&xyz      , sizeof(REAL3)*apcount));
             falmErrCheckMacro(falmMalloc((void**)&ijk      , sizeof(INT3) *apcount));
             falmErrCheckMacro(falmMalloc((void**)&rank     , sizeof(int) *apcount));
-            falmErrCheckMacro(falmMalloc((void**)&tid, sizeof(int)*apcount));
-            falmErrCheckMacro(falmMalloc((void**)&bid, sizeof(int)*apcount));
             falmErrCheckMacro(falmMalloc((void**)&r        , sizeof(REAL)*apcount));
             falmErrCheckMacro(falmMalloc((void**)&attack   , sizeof(REAL)*attackcount));
-            falmErrCheckMacro(falmMalloc((void**)&refa    , sizeof(REAL)*apcount));
+            falmErrCheckMacro(falmMalloc((void**)&chord    , sizeof(REAL)*apcount));
             falmErrCheckMacro(falmMalloc((void**)&twist    , sizeof(REAL)*apcount));
             falmErrCheckMacro(falmMalloc((void**)&cl       , sizeof(REAL)*apcount*attackcount));
             falmErrCheckMacro(falmMalloc((void**)&cd       , sizeof(REAL)*apcount*attackcount));
@@ -73,11 +69,9 @@ struct APFrame {
             falmErrCheckMacro(falmMallocDevice((void**)&xyz      , sizeof(REAL3)*apcount));
             falmErrCheckMacro(falmMallocDevice((void**)&ijk      , sizeof(INT3) *apcount));
             falmErrCheckMacro(falmMallocDevice((void**)&rank     , sizeof(int) *apcount));
-            falmErrCheckMacro(falmMallocDevice((void**)&tid, sizeof(int)*apcount));
-            falmErrCheckMacro(falmMallocDevice((void**)&bid, sizeof(int)*apcount));
             falmErrCheckMacro(falmMallocDevice((void**)&r        , sizeof(REAL)*apcount));
             falmErrCheckMacro(falmMallocDevice((void**)&attack   , sizeof(REAL)*attackcount));
-            falmErrCheckMacro(falmMallocDevice((void**)&refa    , sizeof(REAL)*apcount));
+            falmErrCheckMacro(falmMallocDevice((void**)&chord    , sizeof(REAL)*apcount));
             falmErrCheckMacro(falmMallocDevice((void**)&twist    , sizeof(REAL)*apcount));
             falmErrCheckMacro(falmMallocDevice((void**)&cl       , sizeof(REAL)*apcount*attackcount));
             falmErrCheckMacro(falmMallocDevice((void**)&cd       , sizeof(REAL)*apcount*attackcount));
@@ -90,11 +84,9 @@ struct APFrame {
             falmErrCheckMacro(falmFree(xyz));
             falmErrCheckMacro(falmFree(ijk));
             falmErrCheckMacro(falmFree(rank));
-            falmErrCheckMacro(falmFree(tid));
-            falmErrCheckMacro(falmFree(bid));
             falmErrCheckMacro(falmFree(r));
             falmErrCheckMacro(falmFree(attack));
-            falmErrCheckMacro(falmFree(refa));
+            falmErrCheckMacro(falmFree(chord));
             falmErrCheckMacro(falmFree(twist));
             falmErrCheckMacro(falmFree(cl));
             falmErrCheckMacro(falmFree(cd));
@@ -103,11 +95,9 @@ struct APFrame {
             falmErrCheckMacro(falmFreeDevice(xyz));
             falmErrCheckMacro(falmFreeDevice(ijk));
             falmErrCheckMacro(falmFreeDevice(rank));
-            falmErrCheckMacro(falmFreeDevice(tid));
-            falmErrCheckMacro(falmFreeDevice(bid));
             falmErrCheckMacro(falmFreeDevice(r));
             falmErrCheckMacro(falmFreeDevice(attack));
-            falmErrCheckMacro(falmFreeDevice(refa));
+            falmErrCheckMacro(falmFreeDevice(chord));
             falmErrCheckMacro(falmFreeDevice(twist));
             falmErrCheckMacro(falmFreeDevice(cl));
             falmErrCheckMacro(falmFreeDevice(cd));
@@ -116,8 +106,8 @@ struct APFrame {
     }
 
     // apphi and aptwist are in deg
-    __host__ __device__ void get_airfoil_params(size_t apid, REAL apphi, REAL &apa, REAL &aptwist, REAL &apcl, REAL &apcd) {
-        apa = refa[apid];
+    __host__ __device__ void get_airfoil_params(size_t apid, REAL apphi, REAL &apchord, REAL &aptwist, REAL &apcl, REAL &apcd) {
+        apchord = chord[apid];
         aptwist = twist[apid];
         REAL apattack = apphi - aptwist;
         if (apattack < attack[0]) {
@@ -172,30 +162,26 @@ struct APHandler {
         hdc = HDC::HstDev;
         for (size_t apid = 0; apid < apcount; apid ++) {
             auto apjson = aparrayjson[apid];
-            size_t __id = apjson["id"];
+            size_t __id = apjson["id"].get<size_t>();
             if (__id != apid) {
                 printf("AP ID ERROR: %lu != %lu\n", apid, __id);
             }
-            host.tid[apid] = apjson["turbineId"];
-            host.bid[apid] = apjson["bladeId"];
-            host.r[apid] = apjson["r"];
-            host.refa[apid] = apjson["a"];
-            host.twist[apid] = apjson["twist[deg]"];
+            host.r[apid] = apjson["r"].get<REAL>();
+            host.chord[apid] = apjson["chord"].get<REAL>();
+            host.twist[apid] = apjson["twist[deg]"].get<REAL>();
             auto cljson = apjson["Cl"];
             auto cdjson = apjson["Cd"];
             for (size_t akid = 0; akid < attackcount; akid ++) {
-                host.cl[id(apid, akid)] = cljson[akid];
-                host.cd[id(apid, akid)] = cdjson[akid];
+                host.cl[id(apid, akid)] = cljson[akid].get<REAL>();
+                host.cd[id(apid, akid)] = cdjson[akid].get<REAL>();
             }
         }
         for (size_t akid = 0; akid < attackcount; akid ++) {
-            host.attack[akid] = attackjson[akid];
+            host.attack[akid] = attackjson[akid].get<REAL>();
         }
 
-        falmErrCheckMacro(falmMemcpy(dev.bid, host.bid, sizeof(int)*apcount, MCP::Hst2Dev));
-        falmErrCheckMacro(falmMemcpy(dev.tid, host.tid, sizeof(int)*apcount, MCP::Hst2Dev));
         falmErrCheckMacro(falmMemcpy(dev.r, host.r, sizeof(REAL)*apcount, MCP::Hst2Dev));
-        falmErrCheckMacro(falmMemcpy(dev.refa, host.refa, sizeof(REAL)*apcount, MCP::Hst2Dev));
+        falmErrCheckMacro(falmMemcpy(dev.chord, host.chord, sizeof(REAL)*apcount, MCP::Hst2Dev));
         falmErrCheckMacro(falmMemcpy(dev.twist, host.twist, sizeof(REAL)*apcount, MCP::Hst2Dev));
         falmErrCheckMacro(falmMemcpy(dev.cl, host.cl, sizeof(REAL)*apcount*attackcount, MCP::Hst2Dev));
         falmErrCheckMacro(falmMemcpy(dev.cd, host.cd, sizeof(REAL)*apcount*attackcount, MCP::Hst2Dev));

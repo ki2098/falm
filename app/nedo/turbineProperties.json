@@ -1,6 +1,6 @@
 {
     "radius": 1.0,
-    "hubRadius": 0.07,
+    "hubRadius": 0.0714,
     "bladeNumber": 3,
     "tower": 0,
     "overhang": 0,
