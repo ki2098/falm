@@ -43,7 +43,7 @@
     "turbine":{
         "turbineProperties":"turbineProperties.json",
         "bladePointNumber":25,
-        "projectionWidth":0.05,
+        "projectionWidth":0.1,
         "turbineArray":[
             {
                 "baseLocation":[0, 0, 0],
