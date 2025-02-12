@@ -1,2 +1,2 @@
 vtk:
-	g++ 2vtk.cpp -fopenmp -I/home/q/workspace/vtk/include -I/home/q/workspace/vtk/include/vtk-9.3 -L/home/q/workspace/vtk/lib -lvtkIOXML-9.3 -lvtkIOXMLParser-9.3 -lvtkCommonExecutionModel-9.3 -lvtkCommonDataModel-9.3 -lvtkCommonTransforms-9.3 -lvtkCommonMath-9.3 -lvtkCommonCore-9.3 -lvtksys-9.3 -lvtkkissfft-9.3 -lvtkCommonColor-9.3  -o ../../bin/2vtk
+	g++ 2vtk.cpp -fopenmp -I/opt/vtk/9.4/include/vtk-9.4 -L/opt/vtk/9.4/lib -lvtkIOXML-9.4 -lvtkIOXMLParser-9.4 -lvtkCommonExecutionModel-9.4 -lvtkCommonDataModel-9.4 -lvtkCommonTransforms-9.4 -lvtkCommonMath-9.4 -lvtkCommonCore-9.4 -lvtksys-9.4 -lvtkkissfft-9.4 -lvtkCommonColor-9.4  -o ../../bin/2vtk
