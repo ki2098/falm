@@ -3,13 +3,13 @@
 #include <string.h>
 #include <time.h>
 #include <string>
-#include <vtk-9.3/vtkNew.h>
-#include <vtk-9.3/vtkStructuredGrid.h>
-#include <vtk-9.3/vtkRectilinearGrid.h>
-#include <vtk-9.3/vtkXMLRectilinearGridWriter.h>
-#include <vtk-9.3/vtkFloatArray.h>
-#include <vtk-9.3/vtkPointData.h>
-#include <vtk-9.3/vtkUnsignedIntArray.h>
+#include <vtkNew.h>
+#include <vtkStructuredGrid.h>
+#include <vtkRectilinearGrid.h>
+#include <vtkXMLRectilinearGridWriter.h>
+#include <vtkFloatArray.h>
+#include <vtkPointData.h>
+#include <vtkUnsignedIntArray.h>
 
 
 using namespace std;
