@@ -298,6 +298,7 @@ __global__ void kernel_MatColAbsMax(const MatrixFrame<REAL> *va, INT col, REAL *
         tmp = fabs(a(idx, col));
     }
     cache[tidx] = tmp;
+    // printf("%lf\n", tmp);
     __syncthreads();
 
     INT length = PRODUCT3(blockDim);
@@ -454,9 +455,10 @@ REAL FalmMVDevCall::MatColAbsMax(Matrix<REAL> &a, INT col, Region &pdm, const Re
     // falmErrCheckMacro(falmMallocDevice((void**)&partial_max_dev, sizeof(REAL) * n_blocks));
     request_reduction_buffer(n_blocks);
     size_t shared_size = n_threads * sizeof(REAL);
+    // printf("%d %d %d, %d %d %d, %d\n", block_dim.x, block_dim.y, block_dim.z, grid_dim.x, grid_dim.y, grid_dim.z, shared_size);
 
     kernel_MatColAbsMax<<<grid_dim, block_dim, shared_size>>>(a.devptr, col, reduction_buffer_device, pdm.shape, map.shape, map.offset);
-
+    // falmWaitStream();
     falmErrCheckMacro(falmMemcpy(reduction_buffer_host, reduction_buffer_device, sizeof(REAL) * n_blocks, MCP::Dev2Hst));
     REAL maximum = reduction_buffer_host[0];
     for (INT i = 1; i < n_blocks; i ++) {

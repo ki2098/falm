@@ -89,9 +89,10 @@ void make_poisson_coefficient_matrix() {
         fv.poi_a(idxcc, 5) = ab;
         fv.poi_a(idxcc, 6) = at;
         // printf("%e\n", jacob);
-        // if (fabs(ac) > maxdiag2) {
-        //     maxdiag2 = fabs(ac);
-        // }
+        if (fabs(ac) > maxdiag2) {
+            maxdiag2 = fabs(ac);
+        }
+        // printf("%lf %lf %lf %lf %lf %lf %lf\n", ac, aw, ae, as, an, ab, at);
     }}}
     fv.poi_a.sync(MCP::Hst2Dev);
     maxdiag = FalmMV::MaxDiag(fv.poi_a, falm.cpm, block);

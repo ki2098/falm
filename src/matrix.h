@@ -283,6 +283,7 @@ template<typename T> void Matrix<T>::sync(FLAG _mcptype) {
             hdctype |= HDC::Host;
         }
     }
+    // falmWaitStream();
 }
 
 template<typename T> void Matrix<T>::copy(Matrix<T> &src, FLAG _hdctype) {

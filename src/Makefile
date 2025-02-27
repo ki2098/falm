@@ -6,16 +6,16 @@ ifeq ($(platform),ito)
 	fomp = -fopenmp
 	fstl =
 else
-	nvmpicxx = /opt/nvidia/hpc_sdk/Linux_x86_64/2023/comm_libs/mpi/bin/mpic++
-	nvnvcxx = /opt/nvidia/hpc_sdk/Linux_x86_64/2023/compilers/bin/nvc++
-	nvnvcc = /opt/nvidia/hpc_sdk/Linux_x86_64/2023/cuda/bin/nvcc
+	nvmpicxx = mpic++
+	nvnvcxx = nvc++
+	nvnvcc = nvcc
 	c++ = g++
 	fomp = -fopenmp
 	fstl =
 endif
 
 cppstd = -std=c++11
-flag   = -O3 $(cppstd)
+flag   = -O1 $(cppstd)
 
 include $(falmdir)/src/rmcp/Makefile
 include $(falmdir)/src/alm/Makefile
