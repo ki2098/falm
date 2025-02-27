@@ -5,6 +5,7 @@ ifeq ($(platform),ito)
 	c++ = g++
 	fomp = -fopenmp
 	fstl =
+	fopt = -Ofast
 else
 	nvmpicxx = mpic++
 	nvnvcxx = nvc++
@@ -12,10 +13,11 @@ else
 	c++ = g++
 	fomp = -fopenmp
 	fstl =
+	fopt = -O3
 endif
 
 cppstd = -std=c++11
-flag   = -O1 $(cppstd)
+flag   = $(fopt) $(cppstd)
 
 include $(falmdir)/src/rmcp/Makefile
 include $(falmdir)/src/alm/Makefile
