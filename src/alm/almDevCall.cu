@@ -38,6 +38,26 @@ __host__ __device__ inline REAL trilinear_interpolation(
     return c0123*(1. - zd) + c4567*zd;
 }
 
+__global__ void kernel_UpdateTurbineAngles(
+    TurbineFrame *vturbines,
+    REAL t
+) {
+    TurbineFrame &turbines = *vturbines;
+    size_t thread_id = GLOBAL_THREAD_IDX();
+    if (thread_id < turbines.n_turbine) {
+        auto angle_type = int(turbines.angle_type[thread_id]);
+        auto motion = turbines.motion[thread_id];
+        REAL3 angle{{0,0,0}}, angular_velocity{{0,0,0}};
+        if (angle_type) {
+            angle[angle_type - 1] = motion[0]*sin(motion[1]*t + motion[2]);
+            angular_velocity[angle_type - 1] = motion[0]*motion[1]*cos(motion[1]*t + motion[2]);
+        }
+        turbines.angle[thread_id] = angle;
+        turbines.angular_velocity[thread_id] = angular_velocity;
+        // printf("turbine %d (%lf %lf %lf) (%lf %lf %lf)\n", thread_id, turbines.angle[thread_id][0], turbines.angle[thread_id][1], turbines.angle[thread_id][2], turbines.angular_velocity[thread_id][0], turbines.angular_velocity[thread_id][1], turbines.angular_velocity[thread_id][2]);
+    }
+}
+
 __global__ void kernel_UpdateAPX(
     MatrixFrame<REAL> *vx,
     MatrixFrame<REAL> *vy,
@@ -297,6 +317,11 @@ __global__ void kernel_DryDistribution(
         }
         phi(IDX(i,j,k,shape)) = cphi;
     }
+}
+
+void AlmDevCall::UpdateTurbineAngles(REAL t, size_t block_size) {
+    size_t block_number = (turbines.n_turbine + block_size - 1)/block_size;
+    kernel_UpdateTurbineAngles<<<block_number, block_size>>>(turbines.devptr, t);
 }
 
 void AlmDevCall::UpdateAPX(Matrix<REAL> &x, Matrix<REAL> &y, Matrix<REAL> &z, REAL t, size_t block_size) {

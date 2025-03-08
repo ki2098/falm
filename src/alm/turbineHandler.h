@@ -146,13 +146,27 @@ struct TurbineHandler {
             tmp = turbine_json["angle"];
             int angle_switch[] = {0, 0, 0};
             for (int i = 0; i < 3; i ++) {
+                // if (tmp[i].is_number()) {
+                //     host.angle[tid][i] = deg2rad(tmp[i]);
+                //     host.angular_velocity[tid][i] = 0;
+                //     if (tmp[i] != 0) {
+                //         angle_switch[i] = 1;
+                //     }
+                // } else {
+                //     angle_switch[i] = 1;
+                // }
                 if (tmp[i].is_number()) {
-                    host.angle[tid][i] = deg2rad(tmp[i]);
-                    host.angular_velocity[tid][i] = 0;
                     if (tmp[i] != 0) {
+                        host.motion[tid][0] = deg2rad(tmp[i]);
+                        host.motion[tid][1] = 0.;
+                        host.motion[tid][2] = 0.5*Pi;
                         angle_switch[i] = 1;
                     }
                 } else {
+                    auto motion = tmp[i];
+                    host.motion[tid][0] = deg2rad(motion["amplitude"]);
+                    host.motion[tid][1] = 2.*Pi/motion["period"].get<REAL>();
+                    host.motion[tid][2] = (Pi/180.)*motion["phase"].get<REAL>();
                     angle_switch[i] = 1;
                 }
             }
@@ -173,10 +187,11 @@ struct TurbineHandler {
         falmErrCheckMacro(falmMemcpy(dev.base, host.base, sizeof(REAL3)*n_turbine, MCP::Hst2Dev));
         falmErrCheckMacro(falmMemcpy(dev.base_velocity, host.base_velocity, sizeof(REAL3)*n_turbine, MCP::Hst2Dev));
         falmErrCheckMacro(falmMemcpy(dev.hub, host.hub, sizeof(REAL3)*n_turbine, MCP::Hst2Dev));
-        falmErrCheckMacro(falmMemcpy(dev.angle, host.angle, sizeof(REAL3)*n_turbine, MCP::Hst2Dev));
-        falmErrCheckMacro(falmMemcpy(dev.angular_velocity, host.angular_velocity, sizeof(REAL3)*n_turbine, MCP::Hst2Dev));
+        // falmErrCheckMacro(falmMemcpy(dev.angle, host.angle, sizeof(REAL3)*n_turbine, MCP::Hst2Dev));
+        // falmErrCheckMacro(falmMemcpy(dev.angular_velocity, host.angular_velocity, sizeof(REAL3)*n_turbine, MCP::Hst2Dev));
         falmErrCheckMacro(falmMemcpy(dev.angle_type, host.angle_type, sizeof(EulerAngle)*n_turbine, MCP::Hst2Dev));
         falmErrCheckMacro(falmMemcpy(dev.tip_rate, host.tip_rate, sizeof(REAL)*n_turbine, MCP::Hst2Dev));
+        falmErrCheckMacro(falmMemcpy(dev.motion, host.motion, sizeof(REAL3)*n_turbine, MCP::Hst2Dev));
 
         falmErrCheckMacro(falmMallocDevice((void**)&devptr, sizeof(TurbineFrame)));
         falmErrCheckMacro(falmMemcpy(devptr, &dev, sizeof(TurbineFrame), MCP::Hst2Dev));

@@ -71,6 +71,8 @@ public:
         // z_offset.release();
     }
 
+    void UpdateTurbineAngles(REAL t, size_t block_size = 32);
+
     void UpdateAPX(Matrix<REAL> &x, Matrix<REAL> &y, Matrix<REAL> &z, REAL t, size_t block_size=32);
 
     void CalcAPForce(Matrix<REAL> &x, Matrix<REAL> &y, Matrix<REAL> &z, Matrix<REAL> &uvw, REAL t, size_t block_size=32);

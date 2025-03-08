@@ -1,8 +1,8 @@
 {
     "radius": 1.0,
-    "hubRadius": 0.0,
+    "hubRadius": 0.07,
     "bladeNumber": 3,
-    "tower": 0,
+    "tower": 1.25,
     "overhang": 0,
     "bladeProperties": {
       "airfoils": [

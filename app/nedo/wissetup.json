@@ -9,7 +9,7 @@
             "start":20
         },
         "output":{
-            "start":0,
+            "start":120,
             "interval":20,
             "prefix":"data/alm_uvwp"
         }
@@ -29,7 +29,7 @@
             }
         },
         "cfd":{
-            "Re":2.9e5,
+            "Re":2.5e5,
             "advectionScheme":"Upwind3",
             "SGS":"Smagorinsky",
             "Cs":0.1
@@ -42,13 +42,17 @@
     },
     "turbine":{
         "turbineProperties":"turbineProperties.json",
-        "bladePointNumber":25,
+        "bladePointNumber":20,
         "projectionWidth":0.05,
         "turbineArray":[
             {
-                "baseLocation":[0, 0, 0],
-                "angle":[0, 0, 30],
-                "tipRate":4
+                "baseLocation":[0, 0, -1.25],
+                "angle":[0, {
+                    "amplitude":10,
+                    "period":13.32,
+                    "phase":0
+                }, 0],
+                "tipRate":8
             }
         ],
         "apFile":"ap.json"

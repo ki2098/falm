@@ -49,6 +49,7 @@ public:
     }
 
     void Alm(Matrix<REAL> &x, Matrix<REAL> &y, Matrix<REAL> &z, Matrix<REAL> &uvw, Matrix<REAL> &ff, REAL t, dim3 block_size={8,8,8}) {
+        AlmDevCall::UpdateTurbineAngles(t);
         AlmDevCall::UpdateAPX(x, y, z, t);
         AlmDevCall::CalcAPForce(x, y, z, uvw, t);
         falmMemcpy(aps.host.force, aps.dev.force, sizeof(REAL3)*aps.apcount, MCP::Dev2Hst);
@@ -79,13 +80,20 @@ public:
                         printf("\t\tCoordinate[%d] subject to %s\n", j, glue_path(workdir, turbines.turbine_arr[i]["baseLocation"][j]).c_str());
                     }
                 }
-                printf("\t\tAngle type %d\n", int(turbines.host.angle_type[i]));
-                printf("\t\tAngle (%lf %lf %lf)\n", rad2deg(turbines.host.angle[i][0]), rad2deg(turbines.host.angle[i][1]), rad2deg(turbines.host.angle[i][2]));
-                printf("\t\tAngular velocity (%lf %lf %lf)\n", rad2deg(turbines.host.angular_velocity[i][0]), rad2deg(turbines.host.angular_velocity[i][1]), rad2deg(turbines.host.angular_velocity[i][2]));
-                for (int j = 0; j < 3; j ++) {
-                    if (turbines.turbine_arr[i]["angle"][j].is_string()) {
-                        printf("\t\tAngle[%d] subject to %s\n", j, glue_path(workdir, turbines.turbine_arr[i]["angle"][j]).c_str());
-                    }
+                // printf("\t\tAngle type %d\n", int(turbines.host.angle_type[i]));
+                // printf("\t\tAngle (%lf %lf %lf)\n", rad2deg(turbines.host.angle[i][0]), rad2deg(turbines.host.angle[i][1]), rad2deg(turbines.host.angle[i][2]));
+                // printf("\t\tAngular velocity (%lf %lf %lf)\n", rad2deg(turbines.host.angular_velocity[i][0]), rad2deg(turbines.host.angular_velocity[i][1]), rad2deg(turbines.host.angular_velocity[i][2]));
+                // for (int j = 0; j < 3; j ++) {
+                //     if (turbines.turbine_arr[i]["angle"][j].is_string()) {
+                //         printf("\t\tAngle[%d] subject to %s\n", j, glue_path(workdir, turbines.turbine_arr[i]["angle"][j]).c_str());
+                //     }
+                // }
+                printf("\t\tAngle type %s\n", get_euler_angle_name(turbines.host.angle_type[i]).c_str());
+                auto motion = turbines.host.motion[i];
+                if (motion[1] == 0) {
+                    printf("\t\tAngle value %lf [deg]\n", rad2deg(motion[0]*sin(motion[2])));
+                } else {
+                    printf("\t\tAngle motion %lfsin(%lft + %lf) [rad]\n", motion[0], motion[1], motion[2]);
                 }
                 printf("\t\tRotation center (%lf %lf %lf)\n", turbines.host.hub[i][0], turbines.host.hub[i] [1], turbines.host.hub[i][2]);
                 printf("\t\tRotation speed %lf\n", turbines.host.tip_rate[i]);

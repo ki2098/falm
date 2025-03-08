@@ -2,6 +2,7 @@
 #define FALM_FALMATH_H
 
 #include <math.h>
+#include <string>
 #include "devdefine.h"
 
 namespace Falm {
@@ -30,6 +31,18 @@ __host__ __device__ static inline INT sign(T a) {
 }
 
 enum class EulerAngle {Empty, Roll, Pitch, Yaw};
+
+static std::string get_euler_angle_name(EulerAngle ea) {
+    if (ea == EulerAngle::Roll) {
+        return "Roll";
+    } else if (ea == EulerAngle::Pitch) {
+        return "Pitch";
+    } else if (ea == EulerAngle::Yaw) {
+        return "Yaw";
+    } else {
+        return "Not defined";
+    }
+}
 
 __host__ __device__ static inline REAL rad2deg(REAL rad) {
     return rad*180./Pi;
