@@ -10,9 +10,10 @@
 #include <vtkFloatArray.h>
 #include <vtkPointData.h>
 #include <vtkUnsignedIntArray.h>
-
+#include "../nlohmann/json.hpp"
 
 using namespace std;
+using json = nlohmann::json;
 
 size_t imax, jmax, kmax, nmax, gc, step, type;
 double tt, dummy;
@@ -205,10 +206,43 @@ int main(int argc, char **argv) {
     writer->SetCompressionLevel(1);
     writer->SetInputData(grid);
     prefix = string(argv[1]);
-    suffix = string(argv[2]);
-    if (argc == 4) {
-        is_tavg = true;
-    }
     convert_mesh();
-    convert_data();
+    
+    string idx_path = prefix + ".json";
+    ifstream idx_file(idx_path);
+    auto idx_json = json::parse(idx_file);
+
+    if (argc == 2) {
+        for (auto slice : idx_json["outputSteps"]) {
+            int step = slice["step"];
+            char buf[11] = {0};
+            sprintf(buf, "%010d", step);
+            suffix = string(buf);
+            is_tavg = false;
+            convert_data();
+
+            if (slice.contains("timeAvg")) {
+                is_tavg = true;
+                convert_data();
+            }
+        }
+    } else {
+        int step = atoi(argv[2]);
+        for (auto slice : idx_json["outputSteps"]) {
+            if (step == slice["step"].get<int>()) {
+                char buf[11] = {0};
+                sprintf(buf, "%010d", step);
+                suffix = string(buf);
+                is_tavg = false;
+                convert_data();
+
+                if (slice.contains("timeAvg")) {
+                    is_tavg = true;
+                    convert_data();
+                }
+            }
+        }
+    }
+
+    return 0;
 }

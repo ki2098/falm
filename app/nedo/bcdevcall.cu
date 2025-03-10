@@ -4,6 +4,7 @@
 
 using namespace Falm;
 
+/** inlet */
 __global__ void kernel_ubc_xminus(const MatrixFrame<REAL> *vu, INT3 shape, INT gc) {
     const MatrixFrame<REAL> &u = *vu;
     INT i, j, k;
@@ -20,6 +21,7 @@ __global__ void kernel_ubc_xminus(const MatrixFrame<REAL> *vu, INT3 shape, INT g
     }
 }
 
+/** outlet */
 __global__ void kernel_ubc_xplus(const MatrixFrame<REAL> *vu, const MatrixFrame<REAL> *vuprev, const MatrixFrame<REAL> *vx, REAL dt, INT3 shape, INT gc) {
     const MatrixFrame<REAL> &u = *vu, &uprev = *vuprev, &x = *vx;
     INT i, j, k;
@@ -40,6 +42,7 @@ __global__ void kernel_ubc_xplus(const MatrixFrame<REAL> *vu, const MatrixFrame<
     }
 }
 
+/** slip */
 __global__ void kernel_ubc_yminus(const MatrixFrame<REAL> *vu, INT3 shape, INT gc) {
     const MatrixFrame<REAL> &u = *vu;
     INT i, j, k;
@@ -57,6 +60,7 @@ __global__ void kernel_ubc_yminus(const MatrixFrame<REAL> *vu, INT3 shape, INT g
     }
 }
 
+/** slip */
 __global__ void kernel_ubc_yplus(const MatrixFrame<REAL> *vu, INT3 shape, INT gc) {
     const MatrixFrame<REAL> &u = *vu;
     INT i, j, k;
@@ -74,6 +78,7 @@ __global__ void kernel_ubc_yplus(const MatrixFrame<REAL> *vu, INT3 shape, INT gc
     }
 }
 
+/** wall */
 __global__ void kernel_ubc_zminus(const MatrixFrame<REAL> *vu, INT3 shape, INT gc) {
     const MatrixFrame<REAL> &u = *vu;
     INT i, j, k;
@@ -83,7 +88,7 @@ __global__ void kernel_ubc_zminus(const MatrixFrame<REAL> *vu, INT3 shape, INT g
         INT idxo1 = IDX(i,j,k  ,shape);
         INT idxo2 = IDX(i,j,k-1,shape);
         INT idxi1 = IDX(i,j,k+1,shape);
-        REAL3 ubc = {u(idxi1, 0), u(idxi1, 1), 0.0};
+        REAL3 ubc = {0.0, 0.0, 0.0};
         for (INT d = 0; d < 3; d ++) {
             u(idxo1, d) =     ubc[d];
             u(idxo2, d) = 2 * ubc[d] - u(idxi1, d);
@@ -91,6 +96,7 @@ __global__ void kernel_ubc_zminus(const MatrixFrame<REAL> *vu, INT3 shape, INT g
     }
 }
 
+/** slip */
 __global__ void kernel_ubc_zplus(const MatrixFrame<REAL> *vu, INT3 shape, INT gc) {
     const MatrixFrame<REAL> &u = *vu;
     INT i, j, k;
