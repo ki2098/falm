@@ -11,7 +11,7 @@
         "output":{
             "start":120,
             "interval":20,
-            "prefix":"data/alm_uvwp"
+            "prefix":"data/pitch"
         }
     },
     "inflow":{
