@@ -9,7 +9,7 @@
             "start":20
         },
         "output":{
-            "start":120,
+            "start":20,
             "interval":20,
             "prefix":"data/pitch"
         }
