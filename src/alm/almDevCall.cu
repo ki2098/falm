@@ -161,6 +161,7 @@ __global__ void kernel_CalcAPForce(
         const REAL apr = aps.r[ap_id];
         const REAL dr_per_ap = (turbines.radius - turbines.hub_radius)/n_ap_per_blade;
         if (aps.rank[ap_id] == rank) {
+            // printf("%lf\n", dr_per_ap);
             INT3 apijk = aps.ijk[ap_id];
             INT  i0 = apijk[0], i1 = apijk[0] + 1;
             INT  j0 = apijk[1], j1 = apijk[1] + 1;
