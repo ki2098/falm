@@ -3,7 +3,7 @@
         "time":{
             "start":0,
             "end":120,
-            "dt":5e-4
+            "dt":2e-4
         },
         "timeAvg":{
             "start":20
@@ -42,7 +42,7 @@
     },
     "turbine":{
         "turbineProperties":"turbineProperties.json",
-        "bladePointNumber":25,
+        "bladePointNumber":20,
         "projectionWidth":0.05,
         "turbineArray":[
             {
