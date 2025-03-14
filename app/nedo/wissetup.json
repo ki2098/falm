@@ -2,16 +2,16 @@
     "runtime":{
         "time":{
             "start":0,
-            "end":120,
+            "end":75,
             "dt":2e-4
         },
         "timeAvg":{
             "start":20
         },
         "output":{
-            "start":20,
-            "interval":20,
-            "prefix":"data/pitch"
+            "start":50,
+            "interval":1,
+            "prefix":"data/pitch3_tsr9"
         }
     },
     "inflow":{

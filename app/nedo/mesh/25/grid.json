@@ -1,30 +1,30 @@
 {
 	"Region": {
-		"Xmin": -5,
+		"Xmin": -10,
 		"Xmax": 20,
-		"Ymin": -7.5,
-		"Ymax": 7.5,
-		"Zmin": -7.5,
-		"Zmax": 7.5
+		"Ymin": -3.6,
+		"Ymax": 3.6,
+		"Zmin": 0,
+		"Zmax": 4
 	},
 	"x_axis": {
 		"SubRegion": 2,
 		"Equal": [
 			{
 				"Label": "Equal_x_01",
-				"Begin": 0,
+				"Begin": -5,
 				"End": 20,
-				"Division": 500
+				"Division": 625
 			}
 		],
 		"Stretch": [
 			{
 				"Label": "Stretch_x_01",
-				"Begin": -5,
-				"End": 0,
+				"Begin": -10,
+				"End": -5,
 				"Begin_width": 0.2,
 				"End_width": 0.04,
-				"Division": 60
+				"Division": 45
 			}
 		]
 	},
@@ -41,19 +41,19 @@
 		"Stretch": [
 			{
 				"Label": "Stretch_y_01",
-				"Begin": -7.5,
+				"Begin": -3.6,
 				"End": -2,
 				"Begin_width": 0.2,
 				"End_width": 0.04,
-				"Division": 50
+				"Division": 20
 			},
 			{
 				"Label": "Stretch_y_02",
 				"Begin": 2,
-				"End": 7.5,
+				"End": 3.6,
 				"Begin_width": 0.04,
 				"End_width": 0.2,
-				"Division":50
+				"Division": 20
 			}
 		]
 	},
@@ -64,28 +64,12 @@
 		],
 		"Stretch": [
 			{
-				"Label": "Stretch_z_01",
-				"Begin": -7.5,
-				"End": -2,
-				"Begin_width": 0.2,
-				"End_width": 0.04,
-				"Division": 50
-			},
-			{
 				"Label": "Stretch_z_02",
-				"Begin": -2,
-				"End": 2,
+				"Begin": 0,
+				"End": 4,
 				"Begin_width": 0.04,
 				"End_width": 0.04,
 				"Division": 100
-			},
-			{
-				"Label": "Stretch_z_03",
-				"Begin": 2,
-				"End": 7.5,
-				"Begin_width": 0.04,
-				"End_width": 0.2,
-				"Division": 50
 			}
 		]
 	}
