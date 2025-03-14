@@ -20,6 +20,7 @@ double tt, dummy;
 
 vtkNew<vtkRectilinearGrid> grid;
 vtkNew<vtkXMLRectilinearGridWriter> writer;
+vtkNew<vtkFloatArray> xvtk, yvtk, zvtk, uvtk, pvtk, qvtk;
 
 size_t id(size_t i, size_t j, size_t k, size_t n) {
     return n*imax*jmax*kmax + k*imax*jmax + j*imax + i;
@@ -58,27 +59,34 @@ void convert_mesh() {
 
     grid->SetDimensions(imax, jmax, kmax);
 
-    vtkNew<vtkFloatArray> xvtk;
     xvtk->SetNumberOfValues(imax);
     for (size_t i = 0; i < imax; i ++) {
         xvtk->SetValue(i, x[i]);
     }
     grid->SetXCoordinates(xvtk);
 
-    vtkNew<vtkFloatArray> yvtk;
     yvtk->SetNumberOfValues(jmax);
     for (size_t j = 0; j < jmax; j ++) {
         yvtk->SetValue(j, y[j]);
     }
     grid->SetYCoordinates(yvtk);
 
-    vtkNew<vtkFloatArray> zvtk;
     zvtk->SetNumberOfValues(kmax);
     for (size_t k = 0; k < kmax; k ++) {
         zvtk->SetValue(k, z[k]);
     }
     grid->SetZCoordinates(zvtk);
     cout << "read grid data from " << cvname << endl;
+
+    uvtk->SetNumberOfComponents(3);
+    uvtk->SetNumberOfTuples(imax*jmax*kmax);
+    uvtk->SetName("u");
+    pvtk->SetNumberOfComponents(1);
+    pvtk->SetNumberOfTuples(imax*jmax*kmax);
+    pvtk->SetName("p");
+    qvtk->SetNumberOfComponents(1);
+    qvtk->SetNumberOfTuples(imax*jmax*kmax);
+    qvtk->SetName("q");
 }
 
 void convert_data() {
@@ -96,44 +104,34 @@ void convert_data() {
     fread(&step, sizeof(size_t), 1, file);
     fread(&tt  , sizeof(double), 1, file);
     fread(&type, sizeof(size_t), 1, file);
-    double *data = (double*)malloc(sizeof(double)*imax*jmax*kmax*nmax);
+
+    double *data = new double[imax*jmax*kmax*nmax];
     fread(data, sizeof(double), imax*jmax*kmax*nmax, file);
+
     cout << "read uvwp data from " << fname << endl;
     fclose(file);
 
-    vtkNew<vtkFloatArray> uvtk;
-    uvtk->SetNumberOfComponents(3);
-    uvtk->SetNumberOfTuples(imax*jmax*kmax);
-    uvtk->SetName("u");
     for (size_t k = 0; k < kmax; k ++) {
     for (size_t j = 0; j < jmax; j ++) {
     for (size_t i = 0; i < imax; i ++) {
     for (size_t d = 0; d < 3; d ++) {
         uvtk->SetValue(vid(i,j,k,d,3), data[id(i,j,k,d)]);
     }}}}
-    grid->GetPointData()->AddArray(uvtk);
 
-    vtkNew<vtkFloatArray> pvtk;
-    pvtk->SetNumberOfComponents(1);
-    pvtk->SetNumberOfTuples(imax*jmax*kmax);
-    pvtk->SetName("p");
     for (size_t k = 0; k < kmax; k ++) {
     for (size_t j = 0; j < jmax; j ++) {
     for (size_t i = 0; i < imax; i ++) {
         pvtk->SetValue(vid(i,j,k,0,1), data[id(i,j,k,3)]);
     }}}
-    grid->GetPointData()->AddArray(pvtk);
 
-    writer->SetFileName((fname + "_uvwp.vtr").c_str());
-    writer->Write();
-    cout << "uvwp data output to " << (fname + "_uvwp.vtr") << endl;
+    
+    grid->GetPointData()->AddArray(pvtk);
+    grid->GetPointData()->AddArray(uvtk);
 
     if (!is_tavg) {
 
-    grid->GetPointData()->RemoveArray("u");
-    grid->GetPointData()->RemoveArray("p");
-
-    double *q = (double*)malloc(sizeof(double)*imax*jmax*kmax);
+    grid->GetPointData()->AddArray(qvtk);
+    double *q = new double[imax*jmax*kmax];
     memset(q, 0, sizeof(double)*imax*jmax*kmax);
 
     #pragma omp parallel for collapse(3)
@@ -184,22 +182,25 @@ void convert_data() {
     }}}
     cout << "complete calculating Q" << endl;
 
-    vtkNew<vtkFloatArray> qvtk;
-    qvtk->SetNumberOfComponents(1);
-    qvtk->SetNumberOfTuples(imax*jmax*kmax);
-    qvtk->SetName("q");
+    
     for (size_t k = 0; k < kmax; k ++) {
     for (size_t j = 0; j < jmax; j ++) {
     for (size_t i = 0; i < imax; i ++) {
         qvtk->SetValue(vid(i,j,k,0,1), q[id(i,j,k)]);
     }}}
-    grid->GetPointData()->AddArray(qvtk);
 
-    writer->SetFileName((fname + "_q.vtr").c_str());
-    writer->Write();
-    cout << "Q data output to " << (fname + "_q.vtr") << endl;
-
+    delete[] q;
     }
+
+    writer->SetFileName((fname + ".vtr").c_str());
+    writer->Write();
+    cout << "write data to " << fname + ".vtr" << endl;
+
+    while (grid->GetPointData()->GetNumberOfArrays() > 0) {
+        grid->GetPointData()->RemoveArray(0);
+    }
+
+    delete[] data;
 }
 
 int main(int argc, char **argv) {
