@@ -55,6 +55,7 @@
                 "tipRate":9
             }
         ],
-        "apFile":"ap.json"
+        "apFile":"ap.json",
+        "writePowerThrust":true
     }
 }
