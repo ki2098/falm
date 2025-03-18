@@ -240,7 +240,7 @@ __global__ void kernel_distributeForce(
         REAL cy = x(cid,1);
         REAL cz = x(cid,2);
         REAL ffx = 0, ffy = 0, ffz = 0;
-        REAL eta = 1./(cube(euler_eps)*cbrt(square(Pi)));
+        REAL eta = 1./(cubic(euler_eps)*cbrt(square(Pi)));
         for (int apid = 0; apid < apff.shape[0]; apid ++) {
             REAL ax = apx(apid, 0);
             REAL ay = apx(apid, 1);

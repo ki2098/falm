@@ -13,7 +13,7 @@ __host__ __device__ static inline REAL square(REAL a) {
     return a * a;
 }
 
-__host__ __device__ static inline REAL cube(REAL a) {
+__host__ __device__ static inline REAL cubic(REAL a) {
     return a * a * a;
 }
 

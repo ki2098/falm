@@ -19,7 +19,9 @@ struct APFrame {
     REAL *twist; 
     REAL *cl; 
     REAL *cd; 
-    REAL3 *force; 
+    REAL3 *force;
+    REAL *torque;
+    REAL *thrust;
 
     size_t apcount;
     size_t attackcount;
@@ -39,6 +41,8 @@ struct APFrame {
         cl(nullptr),
         cd(nullptr),
         force(nullptr),
+        torque(nullptr),
+        thrust(nullptr),
         apcount(0),
         attackcount(0),
         hdc(HDC::Empty)/* ,
@@ -65,6 +69,8 @@ struct APFrame {
             falmErrCheckMacro(falmMalloc((void**)&cl       , sizeof(REAL)*apcount*attackcount));
             falmErrCheckMacro(falmMalloc((void**)&cd       , sizeof(REAL)*apcount*attackcount));
             falmErrCheckMacro(falmMalloc((void**)&force    , sizeof(REAL3)*apcount));
+            falmErrCheckMacro(falmMalloc((void**)&torque   , sizeof(REAL)*apcount));
+            falmErrCheckMacro(falmMalloc((void**)&thrust   , sizeof(REAL)*apcount));
         } else if (hdc == HDC::Device) {
             falmErrCheckMacro(falmMallocDevice((void**)&xyz      , sizeof(REAL3)*apcount));
             falmErrCheckMacro(falmMallocDevice((void**)&ijk      , sizeof(INT3) *apcount));
@@ -76,6 +82,8 @@ struct APFrame {
             falmErrCheckMacro(falmMallocDevice((void**)&cl       , sizeof(REAL)*apcount*attackcount));
             falmErrCheckMacro(falmMallocDevice((void**)&cd       , sizeof(REAL)*apcount*attackcount));
             falmErrCheckMacro(falmMallocDevice((void**)&force    , sizeof(REAL3)*apcount));
+            falmErrCheckMacro(falmMallocDevice((void**)&torque   , sizeof(REAL)*apcount));
+            falmErrCheckMacro(falmMallocDevice((void**)&thrust   , sizeof(REAL)*apcount));
         }
     }
 
@@ -91,6 +99,8 @@ struct APFrame {
             falmErrCheckMacro(falmFree(cl));
             falmErrCheckMacro(falmFree(cd));
             falmErrCheckMacro(falmFree(force));
+            falmErrCheckMacro(falmFree(torque));
+            falmErrCheckMacro(falmFree(thrust));
         } else if (hdc == HDC::Device) {
             falmErrCheckMacro(falmFreeDevice(xyz));
             falmErrCheckMacro(falmFreeDevice(ijk));
@@ -102,6 +112,8 @@ struct APFrame {
             falmErrCheckMacro(falmFreeDevice(cl));
             falmErrCheckMacro(falmFreeDevice(cd));
             falmErrCheckMacro(falmFreeDevice(force));
+            falmErrCheckMacro(falmFreeDevice(torque));
+            falmErrCheckMacro(falmFreeDevice(thrust));
         }
     }
 

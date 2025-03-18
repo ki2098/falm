@@ -80,6 +80,8 @@ public:
     void DistributeAPForce(Matrix<REAL> &x, Matrix<REAL> &y, Matrix<REAL> &z, Matrix<REAL> &ff, REAL euler_eps, dim3 block_size={8,8,8});
 
     void DryDistribution(Matrix<REAL> &x, Matrix<REAL> &y, Matrix<REAL> &z, Matrix<REAL> &phi, REAL euler_eps, dim3 block_size={8,8,8});
+
+    void CalcTorqueAndThrust();
 };
 
 }

@@ -1,6 +1,7 @@
 #ifndef FALM_ALM_ALM_H
 #define FALM_ALM_ALM_H
 
+#include <string>
 #include "almDevCall.h"
 #include "../CPM.h"
 
@@ -11,11 +12,14 @@ namespace Alm {
 class AlmHandler : public AlmDevCall {
 public:
     json turbine_param, turbine_prop;
+    std::ofstream cpctOut;
+    std::string cpctPath;
 
     AlmHandler() : AlmDevCall() {}
 
-    void init(const std::string &workdir, const json &turbine_params, const CPM &cpm) {
+    void init(const std::string &workdir, const json &turbine_params, const CPM &cpm, std::string cpctPath) {
         this->workdir = workdir;
+        this->cpctPath = cpctPath;
         mpi_shape = cpm.shape;
         rank = cpm.rank;
 
@@ -42,10 +46,21 @@ public:
         aps.alloc(ap_path);
         AlmDevCall::init(workdir, turbine_param, ap_path, cpm);
         
+        if (turbine_param["writePowerThrust"].get<bool>() && rank == 0) {
+            cpctOut.open(cpctPath);
+            cpctOut << "t";
+            for (int tid = 0; tid < turbines.n_turbine; tid ++) {
+                cpctOut << ",P" << tid << ",T" << tid;
+            }
+            cpctOut << std::endl;
+        }
     }
 
     void finalize() {
         AlmDevCall::finalize();
+        if (cpctOut.is_open()) {
+            cpctOut.close();
+        }
     }
 
     void Alm(Matrix<REAL> &x, Matrix<REAL> &y, Matrix<REAL> &z, Matrix<REAL> &uvw, Matrix<REAL> &ff, REAL t, dim3 block_size={8,8,8}) {
@@ -56,6 +71,9 @@ public:
         CPM_AllReduce(aps.host.force, 3*aps.apcount, getMPIDtype<REAL>(), MPI_SUM, MPI_COMM_WORLD);
         falmMemcpy(aps.dev.force, aps.host.force, sizeof(REAL3)*aps.apcount, MCP::Hst2Dev);
         AlmDevCall::DistributeAPForce(x, y, z, ff, euler_eps, block_size);
+        AlmDevCall::CalcTorqueAndThrust();
+        CPM_AllReduce(turbines.host.torque, turbines.n_turbine, getMPIDtype<REAL>(), MPI_SUM, MPI_COMM_WORLD);
+        CPM_AllReduce(turbines.host.thrust, turbines.n_turbine, getMPIDtype<REAL>(), MPI_SUM, MPI_COMM_WORLD);
     }
 
     void DryDistribution(Matrix<REAL> &x, Matrix<REAL> &y, Matrix<REAL> &z, Matrix<REAL> &phi, dim3 block_size={8,8,8}) {
@@ -98,8 +116,25 @@ public:
                 printf("\t\tRotation center (%lf %lf %lf)\n", turbines.host.hub[i][0], turbines.host.hub[i] [1], turbines.host.hub[i][2]);
                 printf("\t\tRotation speed %lf\n", turbines.host.tip_rate[i]);
             }
+            if (cpctOut.is_open()) {
+                printf("\tPower and Thrust output to %s\n", cpctPath.c_str());
+            }
             printf("TURBINE INFO END\n");
         }
+    }
+
+    void writePowerThrust(REAL t, REAL U) {
+        if (!cpctOut.is_open()) {
+            return;
+        }
+
+        cpctOut << t;
+        for (int tid = 0; tid < turbines.n_turbine; tid ++) {
+            REAL P = turbines.host.torque[tid]*turbines.host.tip_rate[tid];
+            REAL T = turbines.host.thrust[tid];
+            cpctOut << "," << P << "," << T;
+        }
+        cpctOut << std::endl;
     }
 
 };

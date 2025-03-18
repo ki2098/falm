@@ -128,7 +128,7 @@ void init(int &argc, char **&argv) {
     // alm.init(falm.cpm, falm.params["turbine"], falm.workdir);
     // alm.print_info(falm.cpm.rank == TERMINAL_OUTPUT_RANK);
 
-    aalm.init(falm.workdir, falm.params["turbine"], falm.cpm);
+    aalm.init(falm.workdir, falm.params["turbine"], falm.cpm, falm.outputPrefix + "_PT.csv");
     for (int rank = 0; rank < falm.cpm.size; rank ++) {
         if (rank == falm.cpm.rank) {
             printf("rank %d\n", rank);
@@ -190,6 +190,7 @@ REAL main_loop(Alm::AlmHandler &alm, STREAM *s) {
 
     falm.TAvg();
     falm.outputUVWP();
+    aalm.writePowerThrust(falm.gettime(), falm.params["inflow"]["velocity"].get<REAL>());
 
     return divnorm;
 }

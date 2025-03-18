@@ -259,7 +259,7 @@ __global__ void kernel_APForceDistribute(
         REAL ffx = 0.;
         REAL ffy = 0.;
         REAL ffz = 0.;
-        REAL eta = 1./(cube(euler_eps)*cbrt(square(Pi)));
+        REAL eta = 1./(cubic(euler_eps)*cbrt(square(Pi)));
         for (int apid = 0; apid < apx.size; apid ++) {
             REAL ax = apx(apid, 0);
             REAL ay = apx(apid, 1);

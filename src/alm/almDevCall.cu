@@ -2,6 +2,8 @@
 #include "almDevCall.h"
 #include "../dev/devutil.cuh"
 #include "../falmath.h"
+#include <thrust/device_ptr.h>
+#include <thrust/reduce.h>
 
 namespace Falm {
 
@@ -238,10 +240,14 @@ __global__ void kernel_CalcAPForce(
             ft *= sign(tip);
             REAL3 ff_tt{{-fx, ft*sin(theta), -ft*cos(theta)}};
             aps.force[ap_id] = one_angle_frame_rotation(ff_tt, - angle, angle_type);
+            aps.torque[ap_id] = fabs(ft)*apr;
+            aps.thrust[ap_id] = fx;
         } else {
             aps.force[ap_id][0] = 0;
             aps.force[ap_id][1] = 0;
             aps.force[ap_id][2] = 0;
+            aps.torque[ap_id] = 0;
+            aps.thrust[ap_id] = 0;
         }
     }
 }
@@ -271,7 +277,7 @@ __global__ void kernel_DistributeAPForce(
         REAL ffx = 0.;
         REAL ffy = 0.;
         REAL ffz = 0.;
-        REAL eta = 1./cube(euler_eps*sqrt(Pi));
+        REAL eta = 1./cubic(euler_eps*sqrt(Pi));
         for (INT ap_id = 0; ap_id < aps.apcount; ap_id ++) {
             const REAL3 apxyz = aps.xyz[ap_id];
             REAL rr2 = square(cx - apxyz[0]) + square(cy - apxyz[1]) + square(cz - apxyz[2]);
@@ -310,7 +316,7 @@ __global__ void kernel_DryDistribution(
         REAL cy = y(j);
         REAL cz = z(k);
         REAL cphi = 0;
-        REAL eta = 1./cube(euler_eps*sqrt(Pi));
+        REAL eta = 1./cubic(euler_eps*sqrt(Pi));
         for (INT ap_id = 0; ap_id < aps.apcount; ap_id ++) {
             const REAL3 apxyz = aps.xyz[ap_id];
             REAL rr2 = square(cx - apxyz[0]) + square(cy - apxyz[1]) + square(cz - apxyz[2]);
@@ -351,6 +357,16 @@ void AlmDevCall::DryDistribution(Matrix<REAL> &x, Matrix<REAL> &y, Matrix<REAL> 
         (pdm_shape[2] + block_size.z - 1) / block_size.z
     );
     kernel_DryDistribution<<<block_number, block_size>>>(x.devptr, y.devptr, z.devptr, phi.devptr, aps.devptr, euler_eps, pdm_shape, gc);
+}
+
+void AlmDevCall::CalcTorqueAndThrust() {
+    int n_ap_per_turbine = n_ap_per_blade*turbines.n_blade;
+    for (int tid = 0; tid < turbines.n_turbine; tid ++) {
+        thrust::device_ptr<REAL> torque_ptr = thrust::device_pointer_cast(aps.dev.torque + n_ap_per_turbine*tid);
+        thrust::device_ptr<REAL> thrust_ptr = thrust::device_pointer_cast(aps.dev.thrust + n_ap_per_turbine*tid);
+        turbines.host.torque[tid] = thrust::reduce(torque_ptr, torque_ptr + n_ap_per_turbine);
+        turbines.host.thrust[tid] = thrust::reduce(thrust_ptr, thrust_ptr + n_ap_per_turbine);
+    }
 }
 
 }

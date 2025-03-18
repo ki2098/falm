@@ -19,6 +19,7 @@ struct TurbineFrame {
     EulerAngle *angle_type;
     REAL       *tip_rate;
     REAL       *torque;
+    REAL       *thrust;
     REAL3      *motion;
     REAL        radius;
     REAL        hub_radius;
@@ -34,6 +35,7 @@ struct TurbineFrame {
         angle_type(nullptr),
         tip_rate(nullptr),
         torque(nullptr),
+        thrust(nullptr),
         motion(nullptr),
         hdc(HDC::Empty)
     {}
@@ -57,6 +59,7 @@ struct TurbineFrame {
             falmErrCheckMacro(falmMalloc((void**)&angle_type, sizeof(EulerAngle)*n_turbine));
             falmErrCheckMacro(falmMalloc((void**)&tip_rate, sizeof(REAL)*n_turbine));
             falmErrCheckMacro(falmMalloc((void**)&torque, sizeof(REAL)*n_turbine));
+            falmErrCheckMacro(falmMalloc((void**)&thrust, sizeof(REAL)*n_turbine));
             falmErrCheckMacro(falmMalloc((void**)&motion, sizeof(REAL3)*n_turbine));
         } else if (hdc == HDC::Device) {
             falmErrCheckMacro(falmMallocDevice((void**)&base, sizeof(REAL3)*n_turbine));
@@ -67,6 +70,7 @@ struct TurbineFrame {
             falmErrCheckMacro(falmMallocDevice((void**)&angle_type, sizeof(EulerAngle)*n_turbine));
             falmErrCheckMacro(falmMallocDevice((void**)&tip_rate, sizeof(REAL)*n_turbine));
             falmErrCheckMacro(falmMallocDevice((void**)&torque, sizeof(REAL)*n_turbine));
+            falmErrCheckMacro(falmMallocDevice((void**)&thrust, sizeof(REAL)*n_turbine));
             falmErrCheckMacro(falmMallocDevice((void**)&motion, sizeof(REAL3)*n_turbine));
         }
     }
@@ -81,6 +85,7 @@ struct TurbineFrame {
             falmErrCheckMacro(falmFree(angle_type));
             falmErrCheckMacro(falmFree(tip_rate));
             falmErrCheckMacro(falmFree(torque));
+            falmErrCheckMacro(falmFree(thrust));
             falmErrCheckMacro(falmFree(motion));
         } else if (hdc == HDC::Device) {
             falmErrCheckMacro(falmFreeDevice(base));
@@ -91,6 +96,7 @@ struct TurbineFrame {
             falmErrCheckMacro(falmFreeDevice(angle_type));
             falmErrCheckMacro(falmFreeDevice(tip_rate));
             falmErrCheckMacro(falmFreeDevice(torque));
+            falmErrCheckMacro(falmFreeDevice(thrust));
             falmErrCheckMacro(falmFreeDevice(motion));
         }
         hdc = HDC::Empty;
