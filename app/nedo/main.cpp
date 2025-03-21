@@ -106,9 +106,17 @@ void init(int &argc, char **&argv) {
     falm.print_info(TERMINAL_OUTPUT_RANK);
     u_previous.alloc(falm.fv.u.shape[0], falm.fv.u.shape[1], HDC::Device, "previous velocity");
 
-    for (int i = 0; i < 6; i ++) cudaStreamCreate(&facestream[i]);
+    for (auto &stream : facestream) {
+        cudaStreamCreate(&stream);
+    }
     streams = facestream;
-    // streams = nullptr;
+
+    for (int i = 0; i < CPM::NFACE; i ++) {
+        if (facestream[i] == nullptr) {
+            printf("stream %d is not properly created\n", i);
+        }
+    }
+
     if (falm.cpm.rank == TERMINAL_OUTPUT_RANK) {
         printf("using streams %p\n", streams);
     }

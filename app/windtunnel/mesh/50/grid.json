@@ -1,0 +1,67 @@
+{
+	"Region": {
+		"Xmin": -10,
+		"Xmax": 20,
+		"Ymin": -3.6,
+		"Ymax": 3.6,
+		"Zmin": 0,
+		"Zmax": 3.454
+	},
+	"x_axis": {
+		"SubRegion": 1,
+		"Equal": [
+			{
+				"Label": "Equal_x_01",
+				"Begin": -10,
+				"End": 20,
+				"Division": 1500
+			}
+		],
+		"Stretch": []
+	},
+	"y_axis": {
+		"SubRegion": 3,
+		"Equal": [
+			{
+				"Label": "Equal_y_01",
+				"Begin": -2,
+				"End": 2,
+				"Division": 200
+			}
+		],
+		"Stretch": [
+			{
+				"Label": "Stretch_y_01",
+				"Begin": -3.6,
+				"End": -2,
+				"Begin_width": 0.2,
+				"End_width": 0.02,
+				"Division": 20
+			},
+			{
+				"Label": "Stretch_y_02",
+				"Begin": 2,
+				"End": 3.6,
+				"Begin_width": 0.02,
+				"End_width": 0.2,
+				"Division":20
+			}
+		]
+	},
+	"z_axis": {
+		"SubRegion": 1,
+		"Equal": [
+
+		],
+		"Stretch": [
+			{
+				"Label": "Stretch_z_02",
+				"Begin": 0,
+				"End": 3.454,
+				"Begin_width": 0.01727,
+				"End_width": 0.01727,
+				"Division": 200
+			}
+		]
+	}
+}

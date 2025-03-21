@@ -147,7 +147,7 @@ __host__ __device__ static REAL Upwind3rd(
     const REAL ALPHA = 1./24.;
 
     UDL = JUE*(- ue2 + 27*ue1 - 27*ucc + uw1)/24.;
-    UDR = JUW*(- ue1 + 27*ucc - 27*uw1 + uw2)/24;
+    UDR = JUW*(- ue1 + 27*ucc - 27*uw1 + uw2)/24.;
     UD4 = Uabs*(ue2 - 4*ue1 + 6*ucc - 4*uw1 + uw2)*ALPHA;
     adv += .5*(UDL + UDR)/jacobian + UD4;
 
