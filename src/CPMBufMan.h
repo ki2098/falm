@@ -61,6 +61,7 @@ public:
 
         int first_vacant = -1;
         for (int i = 0; i <= max_used_idx; i ++) {
+            // printf("Buffer case 1\n");
             if (buffer[i].active == false) {
                 if (first_vacant == -1) {
                     first_vacant = i;
@@ -77,6 +78,7 @@ public:
             }
         }
         if (first_vacant == -1) {
+            // printf("Buffer case 2\n");
             first_vacant = max_used_idx + 1;
             if (first_vacant >= NBUFFER) {
                 *buf_id = -1;
@@ -101,6 +103,7 @@ public:
             max_used_idx = first_vacant;
             return FalmErr::success;
         } else {
+            // printf("Buffer case 3\n");
             if(release(first_vacant)) {
                 *buf_id = -1;
                 return FalmErr::cpmBufReqErr;

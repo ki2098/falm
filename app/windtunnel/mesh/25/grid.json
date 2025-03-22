@@ -13,11 +13,20 @@
 			{
 				"Label": "Equal_x_01",
 				"Begin": -10,
-				"End": 20,
-				"Division": 750
+				"End": 15,
+				"Division": 625
 			}
 		],
-		"Stretch": []
+		"Stretch": [
+			{
+				"Label": "Stretch_x_01",
+				"Begin": 15,
+				"End": 20,
+				"Begin_width": 0.04,
+				"End_width": 0.25,
+				"Division": 50
+			}
+		]
 	},
 	"y_axis": {
 		"SubRegion": 3,
@@ -49,17 +58,25 @@
 		]
 	},
 	"z_axis": {
-		"SubRegion": 3,
+		"SubRegion": 2,
 		"Equal": [
 
 		],
 		"Stretch": [
 			{
-				"Label": "Stretch_z_02",
+				"Label": "Stretch_z_01",
 				"Begin": 0,
+				"End": 0.454,
+				"Begin_width": 0.01,
+				"End_width": 0.03,
+				"Division": 20
+			},
+			{
+				"Label": "Stretch_z_02",
+				"Begin": 0.454,
 				"End": 3.454,
-				"Begin_width": 0.03454,
-				"End_width": 0.03454,
+				"Begin_width": 0.03,
+				"End_width": 0.03,
 				"Division": 100
 			}
 		]

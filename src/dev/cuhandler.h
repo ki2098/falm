@@ -14,6 +14,7 @@ static inline int falmMalloc(void **ptr, size_t size) {
     if (*ptr == nullptr) {
         return FalmErr::mallocErr;
     }
+    // printf("falm malloc called\n");
     return FalmErr::success;
 }
 
@@ -29,10 +30,12 @@ static inline int falmMallocPinned(void **ptr, size_t size) {
     if (*ptr == nullptr) {
         return FalmErr::mallocErr;
     }
+    // printf("falm malloc pinned called\n");
     return FalmErr::success;
 }
 
 static inline int falmMallocDevice(void **ptr, size_t size) {
+    // printf("falm malloc device called\n");
     return FalmErr::cuErrMask * (int)cudaMalloc(ptr, size);
 }
 
@@ -54,6 +57,7 @@ static inline int falmMemsetDeviceAsync(void *ptr, int value, size_t size, STREA
 }
 
 static inline int falmFree(void *ptr) {
+    // printf("falm free called\n");
     free(ptr);
     return FalmErr::success;
 }
@@ -63,12 +67,14 @@ static inline int falmFree(void *ptr) {
 // }
 
 static inline int falmFreePinned(void *ptr) {
+    // printf("falm free pinned called\n");
     // return FalmErr::cuErrMask * (int)cudaFreeHost(ptr);
     free(ptr);
     return FalmErr::success;
 }
 
 static inline int falmFreeDevice(void *ptr) {
+    // printf("falm free device called\n");
     /* cudaError_t err =  */ 
     return FalmErr::cuErrMask * (int)cudaFree(ptr);
     // if (err != cudaSuccess) {

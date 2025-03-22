@@ -27,7 +27,7 @@ void FalmCFD::FSPseudoU(
     ucpm.IExchange6Face(&u.dev(0,0), 2 - margin, margin, 0, stream);
     vcpm.IExchange6Face(&u.dev(0,1), 2 - margin, margin, 1, stream);
     wcpm.IExchange6Face(&u.dev(0,2), 2 - margin, margin, 2, stream);
-     nutcpm.IExchange6Face(&nut.dev(0), 1, 0, 3, stream);
+    nutcpm.IExchange6Face(&nut.dev(0), 1, 0, 3, stream);
 
     INT3 inner_shape, inner_offset, boundary_shape[6], boundary_offset[6];
     cpm.set6Region(inner_shape, inner_offset, boundary_shape, boundary_offset, 2, Region(pdm.shape, cpm.gc));

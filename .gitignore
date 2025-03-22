@@ -5,6 +5,8 @@ data/
 *.log*
 *.pdfd
 *.png*
+*.jpeg*
+*.jpg*
 *.prof*
 *.csv*
 *.nvvp

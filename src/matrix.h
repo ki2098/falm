@@ -45,6 +45,7 @@ template<typename T> MatrixFrame<T>::MatrixFrame(INT3 _dom, INT _dim, FLAG _hdct
     hdctype(_hdctype),
     stencil(_stencil)
 {
+    // printf("matrix frame constructor called\n");
     if (hdctype == HDC::Host) {
         falmErrCheckMacro(falmMalloc((void**)&ptr, sizeof(T) * size));
         falmErrCheckMacro(falmMemset(ptr, 0, sizeof(T) * size));
@@ -60,6 +61,7 @@ template<typename T> MatrixFrame<T>::MatrixFrame(INT _row, INT _col, FLAG _hdcty
     hdctype(_hdctype),
     stencil(_stencil)
 {
+    // printf("matrix frame constructor called\n");
     if (hdctype == HDC::Host) {
         falmErrCheckMacro(falmMalloc((void**)&ptr, sizeof(T) * size));
         falmErrCheckMacro(falmMemset(ptr, 0, sizeof(T) * size));
@@ -70,6 +72,7 @@ template<typename T> MatrixFrame<T>::MatrixFrame(INT _row, INT _col, FLAG _hdcty
 }
 
 template<typename T> MatrixFrame<T>::~MatrixFrame() {
+    // printf("matrix frame destructor called\n");
     if (hdctype == HDC::Host) {
         falmErrCheckMacro(falmFree(ptr));
     } else if (hdctype == HDC::Device) {
@@ -80,6 +83,7 @@ template<typename T> MatrixFrame<T>::~MatrixFrame() {
 }
 
 template<typename T> void MatrixFrame<T>::alloc(INT3 _dom, INT _dim, FLAG _hdctype, StencilMatrix _stencil) {
+    // printf("matrix frame allocator called\n");
     assert(hdctype == HDC::Empty);
     shape   = INT2{PRODUCT3(_dom), _dim};
     size    = PRODUCT3(_dom) * _dim;
@@ -95,6 +99,7 @@ template<typename T> void MatrixFrame<T>::alloc(INT3 _dom, INT _dim, FLAG _hdcty
 }
 
 template<typename T> void MatrixFrame<T>::alloc(INT _row, INT _col, FLAG _hdctype, StencilMatrix _stencil) {
+    // printf("matrix frame allocator called\n");
     assert(hdctype == HDC::Empty);
     shape   = INT2{_row, _col};
     size    = _row * _col;
@@ -110,6 +115,7 @@ template<typename T> void MatrixFrame<T>::alloc(INT _row, INT _col, FLAG _hdctyp
 }
 
 template<typename T> void MatrixFrame<T>::release() {
+    // printf("matrix frame release called\n");
     if (hdctype == HDC::Host) {
         falmErrCheckMacro(falmFree(ptr));
     } else if (hdctype == HDC::Device) {
@@ -174,6 +180,7 @@ template<typename T> Matrix<T>::Matrix(INT3 _dom, INT _dim, FLAG _hdctype, const
     name(_name),
     stencil(_stencil)
 {
+    // printf("matrix constructor called\n");
     if (hdctype & HDC::Device) {
         falmErrCheckMacro(falmMallocDevice((void**)&devptr, sizeof(MatrixFrame<T>)));
         falmErrCheckMacro(falmMemcpy(devptr, &dev, sizeof(MatrixFrame<T>), MCP::Hst2Dev));
@@ -189,6 +196,7 @@ template<typename T> Matrix<T>::Matrix(INT _row, INT _col, FLAG _hdctype, const 
     name(_name),
     stencil(_stencil)
 {
+    // printf("matrix constructor called\n");
     if (hdctype & HDC::Device) {
         falmErrCheckMacro(falmMallocDevice((void**)&devptr, sizeof(MatrixFrame<T>)));
         falmErrCheckMacro(falmMemcpy(devptr, &dev, sizeof(MatrixFrame<T>), MCP::Hst2Dev));
@@ -196,6 +204,7 @@ template<typename T> Matrix<T>::Matrix(INT _row, INT _col, FLAG _hdctype, const 
 }
 
 template<typename T> Matrix<T>::~Matrix() {
+    // printf("matrix destructor called\n");
     // printf("desctuctor for matrix %s\n", name.c_str());
     if (hdctype & HDC::Device) {
         falmErrCheckMacro(falmFreeDevice(devptr));
@@ -203,6 +212,7 @@ template<typename T> Matrix<T>::~Matrix() {
 }
 
 template<typename T> void Matrix<T>::alloc(INT3 _dom, INT _dim, FLAG _hdctype, const std::string &_name, StencilMatrix _stencil) {
+    // printf("matrix allocator called\n");
     assert(hdctype == HDC::Empty);
     host.alloc(_dom, _dim, _hdctype & HDC::Host, _stencil);
     dev.alloc(_dom, _dim, _hdctype & HDC::Device, _stencil);
@@ -218,6 +228,7 @@ template<typename T> void Matrix<T>::alloc(INT3 _dom, INT _dim, FLAG _hdctype, c
 }
 
 template<typename T> void Matrix<T>::alloc(INT _row, INT _col, FLAG _hdctype, const std::string &_name, StencilMatrix _stencil) {
+    // printf("matrix destructor called\n");
     assert(hdctype == HDC::Empty);
     host.alloc(_row, _col, _hdctype & HDC::Host, _stencil);
     dev.alloc(_row, _col, _hdctype & HDC::Device, _stencil);
@@ -233,6 +244,7 @@ template<typename T> void Matrix<T>::alloc(INT _row, INT _col, FLAG _hdctype, co
 }
 
 template<typename T> void Matrix<T>::release(FLAG _hdctype) {
+    // printf("matrix release called\n");
     if (_hdctype & hdctype & HDC::Host) {
         // assert(hdctype & HDCType::Host);
         host.release();
@@ -248,6 +260,7 @@ template<typename T> void Matrix<T>::release(FLAG _hdctype) {
 }
 
 template<typename T> void Matrix<T>::release() {
+    // printf("matrix release called\n");
     if (hdctype & HDC::Host) {
         // assert(hdctype & HDCType::Host);
         host.release();
@@ -262,6 +275,7 @@ template<typename T> void Matrix<T>::release() {
 }
 
 template<typename T> void Matrix<T>::sync(FLAG _mcptype) {
+    // printf("matrix sync called\n");
     if (_mcptype == MCP::Hst2Dev) {
         assert(hdctype & HDC::Host);
         if (hdctype & HDC::Device) {
@@ -287,6 +301,7 @@ template<typename T> void Matrix<T>::sync(FLAG _mcptype) {
 }
 
 template<typename T> void Matrix<T>::copy(Matrix<T> &src, FLAG _hdctype) {
+    // printf("matrix copy called\n");
     if (_hdctype & hdctype & HDC::Host) {
         assert((src.hdctype & HDC::Host) && (size == src.size));
         falmErrCheckMacro(falmMemcpy(host.ptr, src.host.ptr, sizeof(T) * size, MCP::Hst2Hst));
@@ -298,6 +313,7 @@ template<typename T> void Matrix<T>::copy(Matrix<T> &src, FLAG _hdctype) {
 }
 
 template<typename T> void Matrix<T>::clear(FLAG _hdctype) {
+    // printf("matrix clear called\n");
     if (_hdctype & hdctype & HDC::Host) {
         // assert(hdctype & HDC::Host);
         // falmMemset(host.ptr, 0, sizeof(T) * size);
