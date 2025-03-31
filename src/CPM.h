@@ -23,9 +23,9 @@ void setVcdm(CPM &cpm, Vcdm::VCDM<T> &vcdm, Vcdm::double3 gRegion, Vcdm::double3
     vcdm.dfiMPI.size = cpm.size;
 
     vcdm.dfiProc = std::vector<Vcdm::VcdmRank>(cpm.size, Vcdm::VcdmRank());
-    for (INT k = 0; k < cpm.shape[2]; k ++) {
-    for (INT j = 0; j < cpm.shape[1]; j ++) {
-    for (INT i = 0; i < cpm.shape[0]; i ++) {
+    for (Int k = 0; k < cpm.shape[2]; k ++) {
+    for (Int j = 0; j < cpm.shape[1]; j ++) {
+    for (Int i = 0; i < cpm.shape[0]; i ++) {
         int rank = IDX(i, j, k, cpm.shape);
         Region &pdm = cpm.pdm_list[rank];
         Vcdm::VcdmRank &vproc = vcdm.dfiProc[rank];

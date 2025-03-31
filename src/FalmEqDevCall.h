@@ -24,32 +24,32 @@ namespace Falm {
 
 class FalmEqDevCall {
 public:
-    INT            maxit;
-    REAL             tol;
-    INT               it;
-    REAL             err;
-    REAL    relax_factor;
-    INT         pc_maxit;
-    REAL pc_relax_factor;
+    Int            maxit;
+    Real             tol;
+    Int               it;
+    Real             err;
+    Real    relax_factor;
+    Int         pc_maxit;
+    Real pc_relax_factor;
 
     class SolverType {
     public:
-        static const FLAG Empty     = 0;
-        static const FLAG Jacobi    = 1;
-        static const FLAG SOR       = 2;
-        static const FLAG PBiCGStab = 4;
+        static const Flag Empty     = 0;
+        static const Flag Jacobi    = 1;
+        static const Flag SOR       = 2;
+        static const Flag PBiCGStab = 4;
     };
 
-    FLAG    type;
-    FLAG pc_type;
+    Flag    type;
+    Flag pc_type;
 
     FalmEqDevCall() {}
-    FalmEqDevCall(FLAG _type, INT _maxit, REAL _tol, REAL _relax_factor, FLAG _pc_type = SolverType::Empty, INT _pc_maxit = 5, REAL _pc_relax_factor = 1.0) : 
+    FalmEqDevCall(Flag _type, Int _maxit, Real _tol, Real _relax_factor, Flag _pc_type = SolverType::Empty, Int _pc_maxit = 5, Real _pc_relax_factor = 1.0) : 
         type(_type), maxit(_maxit), tol(_tol), relax_factor(_relax_factor),
         pc_type(_pc_type), pc_maxit(_pc_maxit), pc_relax_factor(_pc_relax_factor) 
     {}
 
-    void init(FLAG _type, INT _maxit, REAL _tol, REAL _relax_factor, FLAG _pc_type = SolverType::Empty, INT _pc_maxit = 5, REAL _pc_relax_factor = 1.0) {
+    void init(Flag _type, Int _maxit, Real _tol, Real _relax_factor, Flag _pc_type = SolverType::Empty, Int _pc_maxit = 5, Real _pc_relax_factor = 1.0) {
         type = _type;
         maxit = _maxit;
         tol = _tol;
@@ -73,13 +73,13 @@ public:
     // }
 
 public:
-    static void Res(Matrix<REAL> &a, Matrix<REAL> &x, Matrix<REAL> &b, Matrix<REAL> &r, Region &pdm, const Region &map, dim3 block_dim, STREAM stream = (STREAM)0);
-    void PBiCGStab1(Matrix<REAL> &p, Matrix<REAL> &q, Matrix<REAL> &r, REAL beta, REAL omega, Region &pdm, const Region &map, dim3 block_dim);
-    void PBiCGStab2(Matrix<REAL> &s, Matrix<REAL> &q, Matrix<REAL> &r, REAL alpha, Region &pdm, const Region &map, dim3 block_dim);
-    void PBiCGStab3(Matrix<REAL> &x, Matrix<REAL> &pp, Matrix<REAL> &ss, REAL alpha, REAL omega, Region &pdm, const Region &map, dim3 block_dim);
-    void PBiCGStab4(Matrix<REAL> &r, Matrix<REAL> &s, Matrix<REAL> &t, REAL omega, Region &pdm, const Region &map, dim3 block_dim);
-    void JacobiSweep(Matrix<REAL> &a, Matrix<REAL> &x, Matrix<REAL> &xp, Matrix<REAL> &b, Region &pdm, const Region &map, dim3 block_dim, STREAM stream = (STREAM)0);
-    void SORSweep(Matrix<REAL> &a, Matrix<REAL> &x, Matrix<REAL> &b, REAL omega, INT color, Region &pdm, const Region &map, dim3 block_dim, STREAM stream = (STREAM)0);
+    static void Res(Matrix<Real> &a, Matrix<Real> &x, Matrix<Real> &b, Matrix<Real> &r, Region &pdm, const Region &map, dim3 block_dim, Stream stream = (Stream)0);
+    void PBiCGStab1(Matrix<Real> &p, Matrix<Real> &q, Matrix<Real> &r, Real beta, Real omega, Region &pdm, const Region &map, dim3 block_dim);
+    void PBiCGStab2(Matrix<Real> &s, Matrix<Real> &q, Matrix<Real> &r, Real alpha, Region &pdm, const Region &map, dim3 block_dim);
+    void PBiCGStab3(Matrix<Real> &x, Matrix<Real> &pp, Matrix<Real> &ss, Real alpha, Real omega, Region &pdm, const Region &map, dim3 block_dim);
+    void PBiCGStab4(Matrix<Real> &r, Matrix<Real> &s, Matrix<Real> &t, Real omega, Region &pdm, const Region &map, dim3 block_dim);
+    void JacobiSweep(Matrix<Real> &a, Matrix<Real> &x, Matrix<Real> &xp, Matrix<Real> &b, Region &pdm, const Region &map, dim3 block_dim, Stream stream = (Stream)0);
+    void SORSweep(Matrix<Real> &a, Matrix<Real> &x, Matrix<Real> &b, Real omega, Int color, Region &pdm, const Region &map, dim3 block_dim, Stream stream = (Stream)0);
     // void L1Dev_Struct3d7p_JacobiPC(Matrix<REAL> &a, Matrix<REAL> &x, Matrix<REAL> &b, CPMBase &cpm, dim3 block_dim);
     // void L1Dev_Struct3d7p_SORPC(Matrix<REAL> &a, Matrix<REAL> &x, Matrix<REAL> &b, CPMBase &cpm, dim3 block_dim);
     // void L1Dev_Struct3d7p_Precondition(Matrix<REAL> &a, Matrix<REAL> &x, Matrix<REAL> &b, CPMBase &cpm, dim3 block_dim) {

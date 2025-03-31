@@ -12,16 +12,16 @@
 #define THICK 1
 #define MARGIN 1
 
-Falm::STREAM faceStream[6];
+Falm::Stream faceStream[6];
 #define FACESTREAM faceStream
 
 using namespace Falm;
 
-void print_xy_slice(Matrix<REAL> &x, INT3 domain_shape, INT3 domain_offset) {
-    for (INT j = domain_shape[1] - 1; j >= 0; j --) {
+void print_xy_slice(Matrix<Real> &x, Int3 domain_shape, Int3 domain_offset) {
+    for (Int j = domain_shape[1] - 1; j >= 0; j --) {
         printf(" ");
-        for (INT i = 0; i < domain_shape[0]; i ++) {
-            REAL value = x(IDX(i, j, (Nz + Gdx2) / 2 - domain_offset[2], domain_shape));
+        for (Int i = 0; i < domain_shape[0]; i ++) {
+            Real value = x(IDX(i, j, (Nz + Gdx2) / 2 - domain_offset[2], domain_shape));
             if (value == 0) {
                 printf(".   ", value);
             } else {
@@ -33,11 +33,11 @@ void print_xy_slice(Matrix<REAL> &x, INT3 domain_shape, INT3 domain_offset) {
     printf("yx\n");
 }
 
-void print_xz_slice(Matrix<REAL> &x, INT3 domain_shape, INT3 domain_offset) {
-    for (INT k = domain_shape[2] - 1; k >= 0; k --) {
+void print_xz_slice(Matrix<Real> &x, Int3 domain_shape, Int3 domain_offset) {
+    for (Int k = domain_shape[2] - 1; k >= 0; k --) {
         printf(" ");
-        for (INT i = 0; i < domain_shape[0]; i ++) {
-            REAL value = x(IDX(i, (Ny + Gdx2) / 2 - domain_offset[1], k, domain_shape));
+        for (Int i = 0; i < domain_shape[0]; i ++) {
+            Real value = x(IDX(i, (Ny + Gdx2) / 2 - domain_offset[1], k, domain_shape));
             if (value == 0) {
                 printf(".   ", value);
             } else {
@@ -49,8 +49,8 @@ void print_xz_slice(Matrix<REAL> &x, INT3 domain_shape, INT3 domain_offset) {
     printf("zx\n");
 }
 
-INT dim_division(INT dim_size, INT mpi_size, INT mpi_rank) {
-    INT p_dim_size = dim_size / mpi_size;
+Int dim_division(Int dim_size, Int mpi_size, Int mpi_rank) {
+    Int p_dim_size = dim_size / mpi_size;
     if (mpi_rank < dim_size % mpi_size) {
         p_dim_size ++;
     }
@@ -61,14 +61,14 @@ int main(int argc, char **argv) {
     CPM_Init(&argc, &argv);
 
     Region global(
-        INT3{Nx + Gdx2, Ny + Gdx2, Nz + Gdx2},
-        INT3{0, 0, 0}
+        Int3{Nx + Gdx2, Ny + Gdx2, Nz + Gdx2},
+        Int3{0, 0, 0}
     );
 
     CPMBase cpm;
     CPM_GetRank(MPI_COMM_WORLD, cpm.rank);
     CPM_GetSize(MPI_COMM_WORLD, cpm.size);
-    cpm.shape = INT3{atoi(argv[1]), atoi(argv[2]), atoi(argv[3])};
+    cpm.shape = Int3{atoi(argv[1]), atoi(argv[2]), atoi(argv[3])};
     if (PRODUCT3(cpm.shape) != cpm.size) {
         printf("wrong group shape: %ux%ux%u != %d\n",cpm.shape[0], cpm.shape[1], cpm.shape[2], cpm.size);
         CPM_Finalize();
@@ -88,33 +88,33 @@ int main(int argc, char **argv) {
     printf("process %d running no device %d\n", cpm.rank, cpm.rank % gpu_count);
     CPM_Barrier(MPI_COMM_WORLD);
 
-    INT ox = 0, oy = 0, oz = 0;
-    for (INT i = 0; i < cpm.idx[0]; i ++) {
+    Int ox = 0, oy = 0, oz = 0;
+    for (Int i = 0; i < cpm.idx[0]; i ++) {
         ox += dim_division(Nx, cpm.shape[0], i);
     }
-    for (INT j = 0; j < cpm.idx[1]; j ++) {
+    for (Int j = 0; j < cpm.idx[1]; j ++) {
         oy += dim_division(Ny, cpm.shape[1], j);
     }
-    for (INT k = 0; k < cpm.idx[2]; k ++) {
+    for (Int k = 0; k < cpm.idx[2]; k ++) {
         oz += dim_division(Nz, cpm.shape[2], k);
     }
     Region process(
-        INT3{dim_division(Nx, cpm.shape[0], cpm.idx[0]) + Gdx2, dim_division(Ny, cpm.shape[1], cpm.idx[1]) + Gdx2, dim_division(Nz, cpm.shape[2], cpm.idx[2]) + Gdx2},
-        INT3{ox, oy, oz}
+        Int3{dim_division(Nx, cpm.shape[0], cpm.idx[0]) + Gdx2, dim_division(Ny, cpm.shape[1], cpm.idx[1]) + Gdx2, dim_division(Nz, cpm.shape[2], cpm.idx[2]) + Gdx2},
+        Int3{ox, oy, oz}
     );
     printf("%d(%u %u %u): (%u %u %u) (%u %u %u))\n", cpm.rank, cpm.idx[0], cpm.idx[1], cpm.idx[2], process.shape[0], process.shape[1], process.shape[2], process.offset[0], process.offset[1], process.offset[2]);
     fflush(stdout);
     CPM_Barrier(MPI_COMM_WORLD);
 
-    Matrix<REAL> x(process.shape, 1, HDC::Host, "x");
-    for (INT i = Gd; i < process.shape[0] - Gd; i ++) {
-        for (INT j = Gd; j < process.shape[1] - Gd; j ++) {
-            for (INT k = Gd; k < process.shape[2] - Gd; k ++) {
+    Matrix<Real> x(process.shape, 1, HDC::Host, "x");
+    for (Int i = Gd; i < process.shape[0] - Gd; i ++) {
+        for (Int j = Gd; j < process.shape[1] - Gd; j ++) {
+            for (Int k = Gd; k < process.shape[2] - Gd; k ++) {
                 x(IDX(i, j, k, process.shape)) = (i + j + k + SUM3(process.offset)) % 2 + cpm.rank * 10;
             }
         }
     }
-    for (INT i = 0; i < cpm.size; i ++) {
+    for (Int i = 0; i < cpm.size; i ++) {
         if (cpm.rank == i) {
             printf("%d(%u %u %u) printing...\n", cpm.rank, cpm.idx[0], cpm.idx[1], cpm.idx[2]);
             if (cpm.shape[1] == 1) 
@@ -128,11 +128,11 @@ int main(int argc, char **argv) {
     }
 
     cpm.use_cuda_aware_mpi = USE_CUDA_AWARE_MPI;
-    CPMComm<REAL> cpmop(cpm);
+    CPMComm<Real> cpmop(cpm);
     printf("cpmop %d: %d %u\n", cpm.rank, cpmop.mpi_dtype == MPI_DOUBLE, cpmop.buffer_hdctype);
     CPM_Barrier(MPI_COMM_WORLD);
-    INT thick = THICK;
-    INT margin = MARGIN;
+    Int thick = THICK;
+    Int margin = MARGIN;
     
     for (int fid = 0; fid < 6; fid ++) {
         cudaStreamCreate(&faceStream[fid]);
@@ -155,7 +155,7 @@ int main(int argc, char **argv) {
         // cpmop.CPML2dev_PostExchange6Face();
     }
     x.sync(MCP::Dev2Hst);
-    for (INT i = 0; i < cpm.size; i ++) {
+    for (Int i = 0; i < cpm.size; i ++) {
         if (cpm.rank == i) {
             printf("%d(%u %u %u) printing...\n", cpm.rank, cpm.idx[0], cpm.idx[1], cpm.idx[2]);
             if (cpm.shape[1] == 1) 
@@ -186,7 +186,7 @@ int main(int argc, char **argv) {
         cpmop.PostExchange6ColoredFace(FACESTREAM);
     }
     x.sync(MCP::Dev2Hst);
-    for (INT i = 0; i < cpm.size; i ++) {
+    for (Int i = 0; i < cpm.size; i ++) {
         if (cpm.rank == i) {
             printf("%d(%u %u %u) printing...\n", cpm.rank, cpm.idx[0], cpm.idx[1], cpm.idx[2]);
             if (cpm.shape[1] == 1) 
@@ -214,14 +214,14 @@ int main(int argc, char **argv) {
     CPM_Barrier(MPI_COMM_WORLD);
 
     x.alloc(process.shape, 1, HDC::Host);
-    for (INT i = Gd; i < process.shape[0] - Gd; i ++) {
-        for (INT j = Gd; j < process.shape[1] - Gd; j ++) {
-            for (INT k = Gd; k < process.shape[2] - Gd; k ++) {
+    for (Int i = Gd; i < process.shape[0] - Gd; i ++) {
+        for (Int j = Gd; j < process.shape[1] - Gd; j ++) {
+            for (Int k = Gd; k < process.shape[2] - Gd; k ++) {
                 x(IDX(i, j, k, process.shape)) = (i + j + k + SUM3(process.offset)) % 2 + cpm.rank * 100;
             }
         }
     }
-    for (INT i = 0; i < cpm.size; i ++) {
+    for (Int i = 0; i < cpm.size; i ++) {
         if (cpm.rank == i) {
             printf("%d(%u %u %u) printing...\n", cpm.rank, cpm.idx[0], cpm.idx[1], cpm.idx[2]);
             if (cpm.shape[1] == 1) 
@@ -249,7 +249,7 @@ int main(int argc, char **argv) {
         // cpmop.CPML2dev_PostExchange6Face();
     }
     x.sync(MCP::Dev2Hst);
-    for (INT i = 0; i < cpm.size; i ++) {
+    for (Int i = 0; i < cpm.size; i ++) {
         if (cpm.rank == i) {
             printf("%d(%u %u %u) printing...\n", cpm.rank, cpm.idx[0], cpm.idx[1], cpm.idx[2]);
             if (cpm.shape[1] == 1) 
@@ -280,7 +280,7 @@ int main(int argc, char **argv) {
         cpmop.PostExchange6ColoredFace(FACESTREAM);
     }
     x.sync(MCP::Dev2Hst);
-    for (INT i = 0; i < cpm.size; i ++) {
+    for (Int i = 0; i < cpm.size; i ++) {
         if (cpm.rank == i) {
             printf("%d(%u %u %u) printing...\n", cpm.rank, cpm.idx[0], cpm.idx[1], cpm.idx[2]);
             if (cpm.shape[1] == 1) 

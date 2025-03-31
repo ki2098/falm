@@ -3,12 +3,12 @@
 #include "bcdevcall.h"
 #include "../../src/falm.h"
 
-static void ubc(Falm::Matrix<Falm::REAL> &u, Falm::Matrix<Falm::REAL> &uprev, Falm::Matrix<Falm::REAL> &x, Falm::REAL u_inlet, Falm::REAL dt, Falm::CPM &cpm, Falm::STREAM *stream = nullptr) {
+static void ubc(Falm::Matrix<Falm::Real> &u, Falm::Matrix<Falm::Real> &uprev, Falm::Matrix<Falm::Real> &x, Falm::Real u_inlet, Falm::Real dt, Falm::CPM &cpm, Falm::Stream *stream = nullptr) {
     Falm::Region &pdm = cpm.pdm_list[cpm.rank];
-    Falm::INT &gc = cpm.gc;
-    for (Falm::INT fid = 0; fid < Falm::CPM::NFACE; fid ++) {
+    Falm::Int &gc = cpm.gc;
+    for (Falm::Int fid = 0; fid < Falm::CPM::NFACE; fid ++) {
         if (!cpm.validNeighbour(fid)) {
-            Falm::STREAM s = (stream)? stream[fid] : 0;
+            Falm::Stream s = (stream)? stream[fid] : 0;
             if (fid == Falm::CPM::XMINUS) {
                 ubc_xminus(u, u_inlet, pdm, gc, s);
             } else if (fid == Falm::CPM::XPLUS) {
@@ -25,7 +25,7 @@ static void ubc(Falm::Matrix<Falm::REAL> &u, Falm::Matrix<Falm::REAL> &uprev, Fa
         }
     }
     if (stream) {
-        for (Falm::INT fid = 0; fid < Falm::CPM::NFACE; fid ++) {
+        for (Falm::Int fid = 0; fid < Falm::CPM::NFACE; fid ++) {
             if (!cpm.validNeighbour(fid)) {
                 Falm::falmWaitStream(stream[fid]);
             }
@@ -35,12 +35,12 @@ static void ubc(Falm::Matrix<Falm::REAL> &u, Falm::Matrix<Falm::REAL> &uprev, Fa
     }
 }
 
-static void pbc(Falm::Matrix<Falm::REAL> &p, Falm::CPM &cpm, Falm::STREAM *stream = nullptr) {
+static void pbc(Falm::Matrix<Falm::Real> &p, Falm::CPM &cpm, Falm::Stream *stream = nullptr) {
     Falm::Region &pdm = cpm.pdm_list[cpm.rank];
-    Falm::INT &gc = cpm.gc;
-    for (Falm::INT fid = 0; fid < Falm::CPM::NFACE; fid ++) {
+    Falm::Int &gc = cpm.gc;
+    for (Falm::Int fid = 0; fid < Falm::CPM::NFACE; fid ++) {
         if (!cpm.validNeighbour(fid)) {
-            Falm::STREAM s = (stream)? stream[fid] : 0;
+            Falm::Stream s = (stream)? stream[fid] : 0;
             if (fid == Falm::CPM::XMINUS) {
                 pbc_xminus(p, pdm, gc, s);
             } else if (fid == Falm::CPM::XPLUS) {
@@ -57,7 +57,7 @@ static void pbc(Falm::Matrix<Falm::REAL> &p, Falm::CPM &cpm, Falm::STREAM *strea
         }
     }
     if (stream) {
-        for (Falm::INT fid = 0; fid < Falm::CPM::NFACE; fid ++) {
+        for (Falm::Int fid = 0; fid < Falm::CPM::NFACE; fid ++) {
             if (!cpm.validNeighbour(fid)) {
                 Falm::falmWaitStream(stream[fid]);
             }

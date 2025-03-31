@@ -8,9 +8,9 @@ namespace Falm {
 
 struct TurbineArray {
     int NTurbine, NBladePerTurbine, NAPPerBlade;
-    Matrix<REAL> x;
-    Matrix<REAL> rcxT, R;
-    Matrix<REAL> pitch, pitchRate, tipRate;
+    Matrix<Real> x;
+    Matrix<Real> rcxT, R;
+    Matrix<Real> pitch, pitchRate, tipRate;
 
     void init(int _NT, int _NBPT, int _NAPPB) {
         NTurbine = _NT;
@@ -36,12 +36,12 @@ struct TurbineArray {
 
 class APArray {
 public:
-    Matrix<REAL> apx, apr, apTh;
-    Matrix<REAL> apChord, apTwist;
-    Matrix<REAL> apf;
+    Matrix<Real> apx, apr, apTh;
+    Matrix<Real> apChord, apTwist;
+    Matrix<Real> apf;
     Matrix<int> turbineIdx;
     Matrix<int> aprank;
-    Matrix<INT> aplocal;
+    Matrix<Int> aplocal;
 
     void init(int n_turbines, int n_blades_per_turbine, int n_aps_per_blade) {
         int nap = n_turbines * n_blades_per_turbine * n_aps_per_blade;
@@ -74,22 +74,22 @@ public:
     }
 };
 
-__host__ __device__ static inline REAL3 pitch_only_velocity_abs2turbine(const REAL3 &u, const REAL3 &x, const REAL3 &x0, REAL pitch, REAL pitchRate) {
-    REAL S = sin(pitch), C = cos(pitch);
-    REAL U  =  u[0], V  =  u[1], W  =  u[2];
-    REAL X  =  x[0], Y  =  x[1], Z  =  x[2];
-    REAL X0 = x0[0], Y0 = x0[1], Z0 = x0[2];
-    REAL &O = pitchRate;
+__host__ __device__ static inline Real3 pitch_only_velocity_abs2turbine(const Real3 &u, const Real3 &x, const Real3 &x0, Real pitch, Real pitchRate) {
+    Real S = sin(pitch), C = cos(pitch);
+    Real U  =  u[0], V  =  u[1], W  =  u[2];
+    Real X  =  x[0], Y  =  x[1], Z  =  x[2];
+    Real X0 = x0[0], Y0 = x0[1], Z0 = x0[2];
+    Real &O = pitchRate;
     
-    REAL _u = O*(  X0*S + Z0*C - X*S - Z*C) + U*C - W*S;
-    REAL _v = V;
-    REAL _w = O*(- X0*C + Z0*C + X*C - Z*S) + U*S + W*C;
+    Real _u = O*(  X0*S + Z0*C - X*S - Z*C) + U*C - W*S;
+    Real _v = V;
+    Real _w = O*(- X0*C + Z0*C + X*C - Z*S) + U*S + W*C;
 
-    return REAL3{{_u, _v, _w}};
+    return Real3{{_u, _v, _w}};
 }
 
-__host__ __device__ static inline REAL3 pitch_only_vector_turbine2abs(const REAL3 &x, REAL pitch) {
-    return REAL3{{
+__host__ __device__ static inline Real3 pitch_only_vector_turbine2abs(const Real3 &x, Real pitch) {
+    return Real3{{
          x[0]*cos(pitch) + x[2]*sin(pitch),
          x[1],
         -x[0]*sin(pitch) + x[2]*cos(pitch)
@@ -98,8 +98,8 @@ __host__ __device__ static inline REAL3 pitch_only_vector_turbine2abs(const REAL
 
 class FalmAlmDevCall {
 public:
-    Matrix<INT> IOffset, JOffset, KOffset;
-    INT3 mpi_shape;
+    Matrix<Int> IOffset, JOffset, KOffset;
+    Int3 mpi_shape;
     APArray ap_array;
     TurbineArray turbine_array;
 public:
@@ -133,15 +133,15 @@ public:
         KOffset.release();
     }
 
-    void CalcAPForce(APArray &ap, const TurbineArray &turbine, const Matrix<REAL> &u, const Matrix<REAL> &x, const Matrix<REAL> &y, const Matrix<REAL> &z, const CPM &cpm);
+    void CalcAPForce(APArray &ap, const TurbineArray &turbine, const Matrix<Real> &u, const Matrix<Real> &x, const Matrix<Real> &y, const Matrix<Real> &z, const CPM &cpm);
 
 };
 
-__host__ __device__ static inline REAL cdfunc(REAL attack) {
+__host__ __device__ static inline Real cdfunc(Real attack) {
     
 }
 
-__host__ __device__ static inline REAL clfunc(REAL attack) {
+__host__ __device__ static inline Real clfunc(Real attack) {
     
 }
 

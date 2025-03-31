@@ -22,15 +22,15 @@ using namespace std;
 using namespace Falm;
 using namespace LidCavity2d2;
 
-Matrix<REAL> x, h, kx, g, ja;
-Matrix<REAL> u, ua, uu, uua, p, nut, ff, rhs, res, dvr, w;
-Matrix<REAL> poisson_a;
+Matrix<Real> x, h, kx, g, ja;
+Matrix<Real> u, ua, uu, uua, p, nut, ff, rhs, res, dvr, w;
+Matrix<Real> poisson_a;
 // Mapper pdm, global;
-REAL maxdiag;
+Real maxdiag;
 CPM cpm;
-STREAM facestream[6];
+Stream facestream[6];
 
-void field_output(INT i, int rank) {
+void field_output(Int i, int rank) {
     Region &pdm = cpm.pdm_list[cpm.rank];
     std::string filename = "data/cavity-rank" + std::to_string(rank) + ".csv" + std::to_string(i);
     FILE *file = fopen(filename.c_str(), "w");
@@ -38,10 +38,10 @@ void field_output(INT i, int rank) {
     x.sync(MCP::Dev2Hst);
     u.sync(MCP::Dev2Hst);
     p.sync(MCP::Dev2Hst);
-    for (INT k = 0; k < pdm.shape[2]; k ++) {
-        for (INT j = 0; j < pdm.shape[1]; j ++) {
-            for (INT i = 0; i < pdm.shape[0]; i ++) {
-                INT idx = IDX(i, j, k, pdm.shape);
+    for (Int k = 0; k < pdm.shape[2]; k ++) {
+        for (Int j = 0; j < pdm.shape[1]; j ++) {
+            for (Int i = 0; i < pdm.shape[0]; i ++) {
+                Int idx = IDX(i, j, k, pdm.shape);
                 fprintf(file, "%12.5e,%12.5e,%12.5e,%12.5e,%12.5e,%12.5e,%12.5e\n", x(idx, 0), x(idx, 1), x(idx, 2), u(idx, 0), u(idx, 1), u(idx, 2), p(idx));
             }
         }
@@ -49,13 +49,13 @@ void field_output(INT i, int rank) {
     fclose(file);
 }
 
-void plt3d_output(int step, int rank, REAL dt, Vcdm::VCDM<float> &vcdm) {
+void plt3d_output(int step, int rank, Real dt, Vcdm::VCDM<float> &vcdm) {
     Matrix<float> uvw(cpm.pdm_list[cpm.rank].shape, 4, HDC::Host, "uvw");
     u.sync(MCP::Dev2Hst);
     p.sync(MCP::Dev2Hst);
     // falmMemcpy(&uvw(0, 0), &u(0, 0), sizeof(REAL) * u.size, MCpType::Hst2Hst);
     // falmMemcpy(&uvwp(0, 3), &p(0)   , sizeof(REAL) * p.size, MCpType::Hst2Hst);
-    for (INT i = 0; i < u.shape[0]; i ++) {
+    for (Int i = 0; i < u.shape[0]; i ++) {
         uvw(i, 0) = u(i, 0);
         uvw(i, 1) = u(i, 1);
         uvw(i, 2) = u(i, 2);
@@ -106,7 +106,7 @@ void allocVars(Region &pdm) {
     dvr.alloc(pdm.shape, 1, HDC::Device);
 }
 
-REAL main_loop(FalmCFD &cfd, FalmEq &eqsolver, CPM &cpm, dim3 block_dim, STREAM *stream) {
+Real main_loop(FalmCFD &cfd, FalmEq &eqsolver, CPM &cpm, dim3 block_dim, Stream *stream) {
     cfd.FSPseudoU(u, u, uu, ua, nut, kx, g, ja, ff, cpm, block_dim, stream);
     cfd.UtoUU(ua, uua, kx, ja, cpm, block_dim, stream);
     forceFaceVelocityZero(uua, cpm);
@@ -130,7 +130,7 @@ REAL main_loop(FalmCFD &cfd, FalmEq &eqsolver, CPM &cpm, dim3 block_dim, STREAM 
 
 int main(int argc, char **argv) {
     // std::is_trivially_copyable<Matrix<REAL>> tcp;
-    printf("%d\n", std::is_trivially_copyable<Matrix<REAL>>::value);
+    printf("%d\n", std::is_trivially_copyable<Matrix<Real>>::value);
 
     CPM_Init(&argc, &argv);
     int mpi_rank, mpi_size;
@@ -225,7 +225,7 @@ int main(int argc, char **argv) {
 
     x.sync(MCP::Dev2Hst);
     Matrix<float> xyz(x.shape[0], x.shape[1], HDC::Host, "float x");
-    for (INT i = 0; i < x.size; i ++) {
+    for (Int i = 0; i < x.size; i ++) {
         xyz(i) = x(i);
     }
     vcdm.writeGridData(&xyz(0, 0), cpm.gc, cpm.rank, 0, Vcdm::IdxType::IJKN);
@@ -238,15 +238,15 @@ int main(int argc, char **argv) {
         fflush(stdout);
     }
 
-    REAL __t = 0;
-    INT  __it = 0;
-    const INT __IT = int(T / DT);
-    const INT __oIT = int(1.0/DT);
+    Real __t = 0;
+    Int  __it = 0;
+    const Int __IT = int(T / DT);
+    const Int __oIT = int(1.0/DT);
     
     plt3d_output(__it, cpm.rank, DT, vcdm);
     // field_output(__it, cpm.rank);
     while (__it < __IT) {
-        REAL dvr_norm = sqrt(main_loop(cfdsolver, eqsolver, cpm, dim3(8, 8, 1), facestream)) / ginner.size;
+        Real dvr_norm = sqrt(main_loop(cfdsolver, eqsolver, cpm, dim3(8, 8, 1), facestream)) / ginner.size;
         __t += DT;
         __it ++;
         if (cpm.rank == 0) {
@@ -257,8 +257,8 @@ int main(int argc, char **argv) {
             plt3d_output(__it, cpm.rank, DT, vcdm);
             // field_output(__it, cpm.rank);
             if (cpm.rank == 0) {
-                REAL probe_u;
-                falmMemcpy(&probe_u, &u.dev(IDX(2, 0, 0, cpm.pdm_list[cpm.rank].shape), 0), sizeof(REAL), MCP::Dev2Hst);
+                Real probe_u;
+                falmMemcpy(&probe_u, &u.dev(IDX(2, 0, 0, cpm.pdm_list[cpm.rank].shape), 0), sizeof(Real), MCP::Dev2Hst);
                 printf("\n%e\n", probe_u);
             }
         }

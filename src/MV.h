@@ -10,11 +10,11 @@ namespace Falm {
 
 class FalmMV : public FalmMVDevCall {
 public:
-static void MV(Matrix<REAL> &a, Matrix<REAL> &x, Matrix<REAL> &ax, CPM &cpm, dim3 block_dim, STREAM *stream = nullptr) {
+static void MV(Matrix<Real> &a, Matrix<Real> &x, Matrix<Real> &ax, CPM &cpm, dim3 block_dim, Stream *stream = nullptr) {
     Region &pdm = cpm.pdm_list[cpm.rank];
-    CPMComm<REAL> cpmop(&cpm);
+    CPMComm<Real> cpmop(&cpm);
     cpmop.IExchange6Face(x.dev.ptr, 1, 0, 0);
-    INT3 inner_shape, inner_offset, boundary_shape[6], boundary_offset[6];
+    Int3 inner_shape, inner_offset, boundary_shape[6], boundary_offset[6];
     cpm.set6Region(inner_shape, inner_offset, boundary_shape, boundary_offset, 1, Region(pdm.shape, cpm.gc));
     
     FalmMVDevCall::MV(a, x, ax, pdm, Region(inner_shape, inner_offset), block_dim);
@@ -22,7 +22,7 @@ static void MV(Matrix<REAL> &a, Matrix<REAL> &x, Matrix<REAL> &ax, CPM &cpm, dim
     cpmop.Wait6Face();
     cpmop.PostExchange6Face();
     
-    for (INT fid = 0; fid < 6; fid ++) {
+    for (Int fid = 0; fid < 6; fid ++) {
         if (cpm.neighbour[fid] >= 0) {
             dim3 __block(
                 (fid == CPM::XPLUS || fid == CPM::XMINUS)? 1U : 8U,
@@ -30,12 +30,12 @@ static void MV(Matrix<REAL> &a, Matrix<REAL> &x, Matrix<REAL> &ax, CPM &cpm, dim
                 (fid == CPM::ZPLUS || fid == CPM::ZMINUS)? 1U : 8U
             );
             // Mapper map(boundary_shape[fid], boundary_offset[fid]);
-            STREAM fstream = (stream)? stream[fid] : (STREAM)0;
+            Stream fstream = (stream)? stream[fid] : (Stream)0;
             FalmMVDevCall::MV(a, x, ax, pdm, Region(boundary_shape[fid], boundary_offset[fid]), __block, fstream);
         }
     }
     if (stream) {
-        for (INT fid = 0; fid < 6; fid ++) {
+        for (Int fid = 0; fid < 6; fid ++) {
             if (cpm.neighbour[fid] >= 0) {
                 falmWaitStream(stream[fid]);
             }
@@ -44,93 +44,93 @@ static void MV(Matrix<REAL> &a, Matrix<REAL> &x, Matrix<REAL> &ax, CPM &cpm, dim
     falmWaitStream();
 }
 
-static REAL DotProduct(Matrix<REAL> &a, Matrix<REAL> &b, CPM &cpm, dim3 block_dim) {
+static Real DotProduct(Matrix<Real> &a, Matrix<Real> &b, CPM &cpm, dim3 block_dim) {
     Region &pdm = cpm.pdm_list[cpm.rank];
     Region map(pdm.shape, cpm.gc);
-    REAL r = FalmMVDevCall::DotProduct(a, b, pdm, map, block_dim);
+    Real r = FalmMVDevCall::DotProduct(a, b, pdm, map, block_dim);
     if (cpm.size > 1) {
-        CPM_AllReduce(&r, 1, getMPIDtype<REAL>(), MPI_SUM, MPI_COMM_WORLD);
+        CPM_AllReduce(&r, 1, getMPIDtype<Real>(), MPI_SUM, MPI_COMM_WORLD);
     }
     return r;
 }
 
-static REAL EuclideanNormSq(Matrix<REAL> &a, CPM &cpm, dim3 block_dim) {
+static Real EuclideanNormSq(Matrix<Real> &a, CPM &cpm, dim3 block_dim) {
     Region &pdm = cpm.pdm_list[cpm.rank];
     Region map(pdm.shape, cpm.gc);
-    REAL r = FalmMVDevCall::EuclideanNormSq(a, pdm, map, block_dim);
+    Real r = FalmMVDevCall::EuclideanNormSq(a, pdm, map, block_dim);
     if (cpm.size > 1) {
-        CPM_AllReduce(&r, 1, getMPIDtype<REAL>(), MPI_SUM, MPI_COMM_WORLD);
+        CPM_AllReduce(&r, 1, getMPIDtype<Real>(), MPI_SUM, MPI_COMM_WORLD);
     }
     return r;
 }
 
-static REAL MaxDiag(Matrix<REAL> &a, CPM &cpm, dim3 block_dim) {
+static Real MaxDiag(Matrix<Real> &a, CPM &cpm, dim3 block_dim) {
     Region &pdm = cpm.pdm_list[cpm.rank];
     Region map(pdm.shape, cpm.gc);
-    REAL r = FalmMVDevCall::MatColAbsMax(a, 0, pdm, map, block_dim);
+    Real r = FalmMVDevCall::MatColAbsMax(a, 0, pdm, map, block_dim);
     // printf("%d %lf\n", cpm.rank, r);
     if (cpm.size > 1) {
-        CPM_AllReduce(&r, 1, getMPIDtype<REAL>(), MPI_MAX, MPI_COMM_WORLD);
+        CPM_AllReduce(&r, 1, getMPIDtype<Real>(), MPI_MAX, MPI_COMM_WORLD);
     }
     return r;
 }
 
-static REAL MatColMax(Matrix<REAL> &a, INT col, CPM &cpm, dim3 block_dim) {
+static Real MatColMax(Matrix<Real> &a, Int col, CPM &cpm, dim3 block_dim) {
     Region &pdm = cpm.pdm_list[cpm.rank];
     Region map(pdm.shape, cpm.gc);
-    REAL cmax = FalmMVDevCall::MatColMax(a, col, pdm, map, block_dim);
+    Real cmax = FalmMVDevCall::MatColMax(a, col, pdm, map, block_dim);
     if (cpm.size > 1) {
-        CPM_AllReduce(&cmax, 1, getMPIDtype<REAL>(), MPI_MAX, MPI_COMM_WORLD);
+        CPM_AllReduce(&cmax, 1, getMPIDtype<Real>(), MPI_MAX, MPI_COMM_WORLD);
     }
     return cmax;
 }
 
-static REAL MatColMin(Matrix<REAL> &a, INT col, CPM &cpm, dim3 block_dim) {
+static Real MatColMin(Matrix<Real> &a, Int col, CPM &cpm, dim3 block_dim) {
     Region &pdm = cpm.pdm_list[cpm.rank];
     Region map(pdm.shape, cpm.gc);
-    REAL cmin = FalmMVDevCall::MatColMin(a, col, pdm, map, block_dim);
+    Real cmin = FalmMVDevCall::MatColMin(a, col, pdm, map, block_dim);
     if (cpm.size > 1) {
-        CPM_AllReduce(&cmin, 1, getMPIDtype<REAL>(), MPI_MIN, MPI_COMM_WORLD);
+        CPM_AllReduce(&cmin, 1, getMPIDtype<Real>(), MPI_MIN, MPI_COMM_WORLD);
     }
     return cmin;
 }
 
-static REAL MatColAbsMax(Matrix<REAL> &a, INT col, CPM &cpm, dim3 block_dim) {
+static Real MatColAbsMax(Matrix<Real> &a, Int col, CPM &cpm, dim3 block_dim) {
     Region &pdm = cpm.pdm_list[cpm.rank];
     Region map(pdm.shape, cpm.gc);
-    REAL cmax = FalmMVDevCall::MatColAbsMax(a, col, pdm, map, block_dim);
+    Real cmax = FalmMVDevCall::MatColAbsMax(a, col, pdm, map, block_dim);
     if (cpm.size > 1) {
-        CPM_AllReduce(&cmax, 1, getMPIDtype<REAL>(), MPI_MAX, MPI_COMM_WORLD);
+        CPM_AllReduce(&cmax, 1, getMPIDtype<Real>(), MPI_MAX, MPI_COMM_WORLD);
     }
     return cmax;
 }
 
-static REAL MatColAbsMin(Matrix<REAL> &a, INT col, CPM &cpm, dim3 block_dim) {
+static Real MatColAbsMin(Matrix<Real> &a, Int col, CPM &cpm, dim3 block_dim) {
     Region &pdm = cpm.pdm_list[cpm.rank];
     Region map(pdm.shape, cpm.gc);
-    REAL cmin = FalmMVDevCall::MatColAbsMin(a, col, pdm, map, block_dim);
+    Real cmin = FalmMVDevCall::MatColAbsMin(a, col, pdm, map, block_dim);
     if (cpm.size > 1) {
-        CPM_AllReduce(&cmin, 1, getMPIDtype<REAL>(), MPI_MIN, MPI_COMM_WORLD);
+        CPM_AllReduce(&cmin, 1, getMPIDtype<Real>(), MPI_MIN, MPI_COMM_WORLD);
     }
     return cmin;
 }
 
-static REAL VecMax(Matrix<REAL> &a, CPM &cpm, dim3 block_dim) {
+static Real VecMax(Matrix<Real> &a, CPM &cpm, dim3 block_dim) {
     Region &pdm = cpm.pdm_list[cpm.rank];
     Region map(pdm.shape, cpm.gc);
-    REAL vmax = FalmMVDevCall::VecMax(a, pdm, map, block_dim);
+    Real vmax = FalmMVDevCall::VecMax(a, pdm, map, block_dim);
     if (cpm.size > 1) {
-        CPM_AllReduce(&vmax, 1, getMPIDtype<REAL>(), MPI_MAX, MPI_COMM_WORLD);
+        CPM_AllReduce(&vmax, 1, getMPIDtype<Real>(), MPI_MAX, MPI_COMM_WORLD);
     }
     return vmax;
 }
 
-static REAL VecMin(Matrix<REAL> &a, CPM &cpm, dim3 block_dim) {
+static Real VecMin(Matrix<Real> &a, CPM &cpm, dim3 block_dim) {
     Region &pdm = cpm.pdm_list[cpm.rank];
     Region map(pdm.shape, cpm.gc);
-    REAL vmax = FalmMVDevCall::VecMin(a, pdm, map, block_dim);
+    Real vmax = FalmMVDevCall::VecMin(a, pdm, map, block_dim);
     if (cpm.size > 1) {
-        CPM_AllReduce(&vmax, 1, getMPIDtype<REAL>(), MPI_MIN, MPI_COMM_WORLD);
+        CPM_AllReduce(&vmax, 1, getMPIDtype<Real>(), MPI_MIN, MPI_COMM_WORLD);
     }
     return vmax;
 }

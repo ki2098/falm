@@ -7,87 +7,87 @@
 namespace LidCavity2d2 {
 
 void dev_pressureBC_E(
-    Falm::Matrix<Falm::REAL> &p,
+    Falm::Matrix<Falm::Real> &p,
     Falm::Region             &pdm,
-    Falm::INT                 gc,
-    Falm::STREAM              stream = (Falm::STREAM)0
+    Falm::Int                 gc,
+    Falm::Stream              stream = (Falm::Stream)0
 );
 
 void dev_pressureBC_W(
-    Falm::Matrix<Falm::REAL> &p,
+    Falm::Matrix<Falm::Real> &p,
     Falm::Region             &pdm,
-    Falm::INT                 gc,
-    Falm::STREAM              stream = (Falm::STREAM)0
+    Falm::Int                 gc,
+    Falm::Stream              stream = (Falm::Stream)0
 );
 
 void dev_pressureBC_N(
-    Falm::Matrix<Falm::REAL> &p,
+    Falm::Matrix<Falm::Real> &p,
     Falm::Region             &pdm,
-    Falm::INT                 gc,
-    Falm::STREAM              stream = (Falm::STREAM)0
+    Falm::Int                 gc,
+    Falm::Stream              stream = (Falm::Stream)0
 );
 
 void dev_pressureBC_S(
-    Falm::Matrix<Falm::REAL> &p,
+    Falm::Matrix<Falm::Real> &p,
     Falm::Region             &pdm,
-    Falm::INT                 gc,
-    Falm::STREAM              stream = (Falm::STREAM)0
+    Falm::Int                 gc,
+    Falm::Stream              stream = (Falm::Stream)0
 );
 
 void dev_velocityBC_E(
-    Falm::Matrix<Falm::REAL> &u,
+    Falm::Matrix<Falm::Real> &u,
     Falm::Region             &pdm,
-    Falm::INT                 gc,
-    Falm::STREAM              stream
+    Falm::Int                 gc,
+    Falm::Stream              stream
 );
 
 void dev_velocityBC_W(
-    Falm::Matrix<Falm::REAL> &u,
+    Falm::Matrix<Falm::Real> &u,
     Falm::Region             &pdm,
-    Falm::INT                 gc,
-    Falm::STREAM              stream
+    Falm::Int                 gc,
+    Falm::Stream              stream
 );
 
 void dev_velocityBC_N(
-    Falm::Matrix<Falm::REAL> &u,
+    Falm::Matrix<Falm::Real> &u,
     Falm::Region             &pdm,
-    Falm::INT                 gc,
-    Falm::STREAM              stream
+    Falm::Int                 gc,
+    Falm::Stream              stream
 );
 
 void dev_velocityBC_S(
-    Falm::Matrix<Falm::REAL> &u,
+    Falm::Matrix<Falm::Real> &u,
     Falm::Region             &pdm,
-    Falm::INT                 gc,
-    Falm::STREAM              stream
+    Falm::Int                 gc,
+    Falm::Stream              stream
 );
 
 void dev_forceFaceVelocityZero_E(
-    Falm::Matrix<Falm::REAL> &uu,
+    Falm::Matrix<Falm::Real> &uu,
     Falm::Region             &pdm,
-    Falm::INT                 gc,
-    Falm::STREAM              stream
+    Falm::Int                 gc,
+    Falm::Stream              stream
 );
 
 void dev_forceFaceVelocityZero_W(
-    Falm::Matrix<Falm::REAL> &uu,
+    Falm::Matrix<Falm::Real> &uu,
     Falm::Region             &pdm,
-    Falm::INT                 gc,
-    Falm::STREAM              stream
+    Falm::Int                 gc,
+    Falm::Stream              stream
 );
 
 void dev_forceFaceVelocityZero_N(
-    Falm::Matrix<Falm::REAL> &uu,
+    Falm::Matrix<Falm::Real> &uu,
     Falm::Region             &pdm,
-    Falm::INT                 gc,
-    Falm::STREAM              stream
+    Falm::Int                 gc,
+    Falm::Stream              stream
 );
 
 void dev_forceFaceVelocityZero_S(
-    Falm::Matrix<Falm::REAL> &uu,
+    Falm::Matrix<Falm::Real> &uu,
     Falm::Region             &pdm,
-    Falm::INT                 gc,
-    Falm::STREAM              stream
+    Falm::Int                 gc,
+    Falm::Stream              stream
 );
 
 }

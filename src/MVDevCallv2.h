@@ -50,29 +50,29 @@ static void release() {
     }
 }
 
-static void MV(Matrix<REAL> &a, Matrix<REAL> &x, Matrix<REAL> &ax, Region &pdm, const Region &map, dim3 block_dim, STREAM stream = 0);
+static void MV(Matrix<Real> &a, Matrix<Real> &x, Matrix<Real> &ax, Region &pdm, const Region &map, dim3 block_dim, Stream stream = 0);
 
-static REAL DotProduct(Matrix<REAL> &a, Matrix<REAL> &b, Region &pdm, const Region &map, dim3 block_dim);
+static Real DotProduct(Matrix<Real> &a, Matrix<Real> &b, Region &pdm, const Region &map, dim3 block_dim);
 
-static REAL EuclideanNormSq(Matrix<REAL> &a, Region &pdm, const Region &map, dim3 block_dim);
+static Real EuclideanNormSq(Matrix<Real> &a, Region &pdm, const Region &map, dim3 block_dim);
 
 // REAL L0Dev_MaxDiag(Matrix<REAL> &a, Region &pdm, const Region &map, dim3 block_dim);
 
-static REAL MatColMax(Matrix<REAL> &a, INT col, Region &pdm, const Region &map, dim3 block_dim);
+static Real MatColMax(Matrix<Real> &a, Int col, Region &pdm, const Region &map, dim3 block_dim);
 
-static REAL MatColMin(Matrix<REAL> &a, INT col, Region &pdm, const Region &map, dim3 block_dim);
+static Real MatColMin(Matrix<Real> &a, Int col, Region &pdm, const Region &map, dim3 block_dim);
 
-static REAL MatColAbsMax(Matrix<REAL> &a, INT col, Region &pdm, const Region &map, dim3 block_dim);
+static Real MatColAbsMax(Matrix<Real> &a, Int col, Region &pdm, const Region &map, dim3 block_dim);
 
-static REAL MatColAbsMin(Matrix<REAL> &a, INT col, Region &pdm, const Region &map, dim3 block_dim);
+static Real MatColAbsMin(Matrix<Real> &a, Int col, Region &pdm, const Region &map, dim3 block_dim);
 
-static REAL VecMax(Matrix<REAL> &a, Region &pdm, const Region &map, dim3 block_dim);
+static Real VecMax(Matrix<Real> &a, Region &pdm, const Region &map, dim3 block_dim);
 
-static REAL VecMin(Matrix<REAL> &a, Region &pdm, const Region &map, dim3 block_dim);
+static Real VecMin(Matrix<Real> &a, Region &pdm, const Region &map, dim3 block_dim);
 
-static void ScaleMatrix(Matrix<REAL> &a, REAL scale, dim3 block_dim);
+static void ScaleMatrix(Matrix<Real> &a, Real scale, dim3 block_dim);
 
-static void MatrixAdd(Matrix<REAL> &a, Matrix<REAL> &b, dim3 block_dim);
+static void MatrixAdd(Matrix<Real> &a, Matrix<Real> &b, dim3 block_dim);
 
 };
 

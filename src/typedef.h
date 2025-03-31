@@ -11,21 +11,21 @@
 
 namespace Falm {
 
-typedef double         REAL;
-typedef unsigned       FLAG;
-typedef int             INT;
+typedef double         Real;
+typedef unsigned       Flag;
+typedef int             Int;
 
 
-typedef VECTOR<INT , 3>   INT3;
-typedef VECTOR<REAL, 3>  REAL3;
-typedef VECTOR<INT , 2>   INT2;
-typedef VECTOR<REAL, 2>  REAL2;
-typedef VECTOR<REAL, 6>  REAL6;
+typedef VECTOR<Int , 3>   Int3;
+typedef VECTOR<Real, 3>  Real3;
+typedef VECTOR<Int , 2>   Int2;
+typedef VECTOR<Real, 2>  Real2;
+typedef VECTOR<Real, 6>  Real6;
 
-typedef cudaStream_t STREAM;
+typedef cudaStream_t Stream;
 
-typedef nlohmann::json json;
-typedef nlohmann::ordered_json ordered_json;
+typedef nlohmann::json Json;
+typedef nlohmann::ordered_json OrderedJson;
 
 // typedef int           INT_T;
 // typedef char         CHAR_T;
@@ -38,7 +38,7 @@ struct FalmSnapshotInfo {
     bool tavg;
 };
 
-const INT GuideCell = 2;
+const Int GuideCell = 2;
 
 }
 

@@ -5,9 +5,9 @@ using namespace std;
 using namespace Falm;
 
 FalmCore falm;
-REAL maxdiag;
-STREAM facestream[6];
-STREAM *streams;
+Real maxdiag;
+Stream facestream[6];
+Stream *streams;
 
 dim3 block{8, 8, 1};
 
@@ -16,26 +16,26 @@ void make_poisson_coefficient_matrix() {
     Region &pdm = cpm.pdm_list[cpm.rank];
     Region &global = cpm.global;
     FalmBasicVar &fv = falm.fv;
-    INT gc = cpm.gc;
-    for (INT k = cpm.gc; k < pdm.shape[2] - cpm.gc; k ++) {
-    for (INT j = cpm.gc; j < pdm.shape[1] - cpm.gc; j ++) {
-    for (INT i = cpm.gc; i < pdm.shape[0] - cpm.gc; i ++) {
-        INT3 gijk = pdm.offset + INT3{{i, j, k}};
-        REAL ac, ae, aw, an, as;
+    Int gc = cpm.gc;
+    for (Int k = cpm.gc; k < pdm.shape[2] - cpm.gc; k ++) {
+    for (Int j = cpm.gc; j < pdm.shape[1] - cpm.gc; j ++) {
+    for (Int i = cpm.gc; i < pdm.shape[0] - cpm.gc; i ++) {
+        Int3 gijk = pdm.offset + Int3{{i, j, k}};
+        Real ac, ae, aw, an, as;
         ac = ae = aw = an = as = 0.0;
-        INT idxcc = IDX(i  , j  , k  , pdm.shape);
-        INT idxe1 = IDX(i+1, j  , k  , pdm.shape);
-        INT idxw1 = IDX(i-1, j  , k  , pdm.shape);
-        INT idxn1 = IDX(i  , j+1, k  , pdm.shape);
-        INT idxs1 = IDX(i  , j-1, k  , pdm.shape);
-        REAL gxcc  =  fv.g(idxcc, 0);
-        REAL gxe1  =  fv.g(idxe1, 0);
-        REAL gxw1  =  fv.g(idxw1, 0);
-        REAL gycc  =  fv.g(idxcc, 1);
-        REAL gyn1  =  fv.g(idxn1, 1);
-        REAL gys1  =  fv.g(idxs1, 1);
-        REAL jacob =  fv.ja(idxcc);
-        REAL coefficient;
+        Int idxcc = IDX(i  , j  , k  , pdm.shape);
+        Int idxe1 = IDX(i+1, j  , k  , pdm.shape);
+        Int idxw1 = IDX(i-1, j  , k  , pdm.shape);
+        Int idxn1 = IDX(i  , j+1, k  , pdm.shape);
+        Int idxs1 = IDX(i  , j-1, k  , pdm.shape);
+        Real gxcc  =  fv.g(idxcc, 0);
+        Real gxe1  =  fv.g(idxe1, 0);
+        Real gxw1  =  fv.g(idxw1, 0);
+        Real gycc  =  fv.g(idxcc, 1);
+        Real gyn1  =  fv.g(idxn1, 1);
+        Real gys1  =  fv.g(idxs1, 1);
+        Real jacob =  fv.ja(idxcc);
+        Real coefficient;
         coefficient = 0.5 * (gxcc + gxe1) / jacob;
         if (gijk[0] < global.shape[0] - gc - 1) {
             ac -= coefficient;
@@ -70,7 +70,7 @@ void make_poisson_coefficient_matrix() {
 void init(int &argc, char **&argv) {
     falm.env_init(argc, argv);
     falm.parse_settings("setup.json");
-    INT3 mpishape{{atoi(argv[1]), atoi(argv[2]), 1}};
+    Int3 mpishape{{atoi(argv[1]), atoi(argv[2]), 1}};
     falm.computation_init(mpishape, GuideCell);
     // falm.cpm.use_cuda_aware_mpi = true;
     falm.print_info();
@@ -90,26 +90,26 @@ void csv_output() {
     fv.u.sync(MCP::Dev2Hst);
     fv.p.sync(MCP::Dev2Hst);
     CPM &cpm = falm.cpm;
-    INT gc = cpm.gc;
-    INT3 shape = cpm.pdm_list[cpm.rank].shape;
+    Int gc = cpm.gc;
+    Int3 shape = cpm.pdm_list[cpm.rank].shape;
 
-    for (INT k = gc; k < shape[2] - gc; k ++) {
-    for (INT j = gc; j < shape[1] - gc; j ++) {
-    for (INT i = gc; i < shape[0] - gc; i ++) {
-        INT idx = IDX(i, j, k, shape);
-        REAL x = fv.xyz(idx, 0);
-        REAL y = fv.xyz(idx, 1);
-        REAL z = fv.xyz(idx, 2);
-        REAL u = fv.u(idx, 0);
-        REAL v = fv.u(idx, 1);
-        REAL w = fv.u(idx, 2);
-        REAL p = fv.p(idx);
+    for (Int k = gc; k < shape[2] - gc; k ++) {
+    for (Int j = gc; j < shape[1] - gc; j ++) {
+    for (Int i = gc; i < shape[0] - gc; i ++) {
+        Int idx = IDX(i, j, k, shape);
+        Real x = fv.xyz(idx, 0);
+        Real y = fv.xyz(idx, 1);
+        Real z = fv.xyz(idx, 2);
+        Real u = fv.u(idx, 0);
+        Real v = fv.u(idx, 1);
+        Real w = fv.u(idx, 2);
+        Real p = fv.p(idx);
         fprintf(csvfile, "%e,%e,%e,%e,%e,%e,%e\n", x, y, z, u, v, w, p);
     }}}
     fclose(csvfile);
 }
 
-REAL main_loop(STREAM *s) {
+Real main_loop(Stream *s) {
     FalmBasicVar &fv = falm.fv;
     FalmCFD &fcfd = falm.falmCfd;
     FalmEq &feq = falm.falmEq;
@@ -149,7 +149,7 @@ int main(int argc, char **argv) {
         printf("maxdiag = %e\n", maxdiag);
     }
     while (falm.it < falm.maxIt) {
-        REAL dvgn = sqrt(main_loop(streams) / PRODUCT3(falm.cpm.pdm_list[falm.cpm.rank].shape - INT(2 * falm.cpm.gc)));
+        Real dvgn = sqrt(main_loop(streams) / PRODUCT3(falm.cpm.pdm_list[falm.cpm.rank].shape - Int(2 * falm.cpm.gc)));
         falm.it ++;
         if (falm.cpm.rank == 0) {
             printf("\r%8d %12.5e, %12.5e, %3d, %12.5e", falm.it, falm.gettime(), dvgn, falm.falmEq.it, falm.falmEq.err);

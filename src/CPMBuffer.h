@@ -9,10 +9,10 @@ namespace Falm {
 
 class CPMBufferType {
 public:
-    static const FLAG Empty = 0;
-    static const FLAG In    = 1;
-    static const FLAG Out   = 2;
-    static const FLAG InOut = In | Out;
+    static const Flag Empty = 0;
+    static const Flag In    = 1;
+    static const Flag Out   = 2;
+    static const Flag InOut = In | Out;
 };
 
 typedef CPMBufferType BufType;
@@ -22,9 +22,9 @@ struct CPMBuffer {
     Region      map;
     int       count;
     size_t    width;
-    FLAG    buftype;
-    FLAG    hdctype;
-    INT       color;
+    Flag    buftype;
+    Flag    hdctype;
+    Int       color;
 
     CPMBuffer() : ptr(nullptr), count(0), buftype(BufType::Empty), hdctype(HDC::Empty) {}
     ~CPMBuffer() {
@@ -35,7 +35,7 @@ struct CPMBuffer {
         }
     }
 
-    void alloc(size_t _width, const Region &_map, FLAG _buftype, FLAG _hdctype) {
+    void alloc(size_t _width, const Region &_map, Flag _buftype, Flag _hdctype) {
         assert(hdctype == HDC::Empty);
         assert(buftype == BufType::Empty);
         width   = _width;
@@ -50,7 +50,7 @@ struct CPMBuffer {
         }
     }
 
-    void allocColored(size_t _width, const Region &_map, INT _color, FLAG _buftype, FLAG _hdctype, Region &_pdm) {
+    void allocColored(size_t _width, const Region &_map, Int _color, Flag _buftype, Flag _hdctype, Region &_pdm) {
         assert(hdctype == HDC::Empty);
         assert(buftype == BufType::Empty);
         width   = _width;
@@ -58,7 +58,7 @@ struct CPMBuffer {
         buftype = _buftype;
         hdctype = _hdctype;
         color   = _color;
-        INT refcolor = (SUM3(_pdm.offset) + SUM3(map.offset)) % 2;
+        Int refcolor = (SUM3(_pdm.offset) + SUM3(map.offset)) % 2;
         count = map.size / 2;
         if (map.size % 2 == 1 && refcolor == color) {
             count ++;
