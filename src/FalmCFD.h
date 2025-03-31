@@ -10,18 +10,18 @@ namespace Falm {
 
 class FalmCFD : public FalmCFDDevCall {
 public:
-    Matrix<Real> uc;
+    Matrix<REAL> uc;
 
     FalmCFD() {}
-    FalmCFD(Real _Re, Flag _AdvScheme, Flag _SGSModel = SGSType::Smagorinsky, Real _CSmagorinsky = 0.1) : 
+    FalmCFD(REAL _Re, FLAG _AdvScheme, FLAG _SGSModel = SGSType::Smagorinsky, REAL _CSmagorinsky = 0.1) : 
         FalmCFDDevCall(_Re, _AdvScheme, _SGSModel, _CSmagorinsky) 
     {}
 
-    void init(Real _Re, Flag _AdvScheme, Flag _SGSModel = SGSType::Smagorinsky, Real _CSmagorinsky = 0.1) {
+    void init(REAL _Re, FLAG _AdvScheme, FLAG _SGSModel = SGSType::Smagorinsky, REAL _CSmagorinsky = 0.1) {
         FalmCFDDevCall::init(_Re, _AdvScheme, _SGSModel, _CSmagorinsky);
     }
 
-    void alloc(Int3 shape) {
+    void alloc(INT3 shape) {
         uc.alloc(shape, 3, HDC::Device, "contra U at control volume centers");
     }
 
@@ -30,61 +30,61 @@ public:
     }
 
     void FSPseudoU(
-        Matrix<Real> &un,
-        Matrix<Real> &u,
-        Matrix<Real> &uu,
-        Matrix<Real> &ua,
-        Matrix<Real> &nut,
-        Matrix<Real> &kx,
-        Matrix<Real> &g,
-        Matrix<Real> &ja,
-        Matrix<Real> &ff,
-        Real dt,
+        Matrix<REAL> &un,
+        Matrix<REAL> &u,
+        Matrix<REAL> &uu,
+        Matrix<REAL> &ua,
+        Matrix<REAL> &nut,
+        Matrix<REAL> &kx,
+        Matrix<REAL> &g,
+        Matrix<REAL> &ja,
+        Matrix<REAL> &ff,
+        REAL dt,
         CPM      &cpm,
         dim3          block_dim,
-        Stream       *stream = nullptr,
-        Int           margin = 0
+        STREAM       *stream = nullptr,
+        INT           margin = 0
     );
 
     void UtoUU(
-        Matrix<Real> &u,
-        Matrix<Real> &uu,
-        Matrix<Real> &kx,
-        Matrix<Real> &ja,
+        Matrix<REAL> &u,
+        Matrix<REAL> &uu,
+        Matrix<REAL> &kx,
+        Matrix<REAL> &ja,
         CPM      &cpm,
         dim3          block_dim,
-        Stream       *stream = nullptr
+        STREAM       *stream = nullptr
     );
 
     void ProjectP(
-        Matrix<Real> &u,
-        Matrix<Real> &ua,
-        Matrix<Real> &uu,
-        Matrix<Real> &uua,
-        Matrix<Real> &p,
-        Matrix<Real> &kx,
-        Matrix<Real> &g,
-        Real dt,
+        Matrix<REAL> &u,
+        Matrix<REAL> &ua,
+        Matrix<REAL> &uu,
+        Matrix<REAL> &uua,
+        Matrix<REAL> &p,
+        Matrix<REAL> &kx,
+        Matrix<REAL> &g,
+        REAL dt,
         CPM      &cpm,
         dim3          block_dim,
-        Stream       *stream = nullptr
+        STREAM       *stream = nullptr
     );
 
     void SGS(
-        Matrix<Real> &u,
-        Matrix<Real> &nut,
-        Matrix<Real> &x,
-        Matrix<Real> &kx,
-        Matrix<Real> &ja,
+        Matrix<REAL> &u,
+        Matrix<REAL> &nut,
+        Matrix<REAL> &x,
+        Matrix<REAL> &kx,
+        Matrix<REAL> &ja,
         CPM      &cpm,
         dim3          block_dim,
-        Stream       *stream = nullptr
+        STREAM       *stream = nullptr
     );
 
     void Divergence(
-        Matrix<Real> &uu,
-        Matrix<Real> &dvr,
-        Matrix<Real> &ja,
+        Matrix<REAL> &uu,
+        Matrix<REAL> &dvr,
+        Matrix<REAL> &ja,
         CPM      &cpm,
         dim3          block_dim
     ) {
@@ -94,13 +94,13 @@ public:
     }
 
     void MACCalcPoissonRHS(
-        Matrix<Real> &uu,
-        Matrix<Real> &rhs,
-        Matrix<Real> &ja,
-        Real dt,
+        Matrix<REAL> &uu,
+        Matrix<REAL> &rhs,
+        Matrix<REAL> &ja,
+        REAL dt,
         CPM      &cpm,
         dim3          block_dim,
-        Real          maxdiag = 1.0
+        REAL          maxdiag = 1.0
     ) {
         Region &pdm = cpm.pdm_list[cpm.rank];
         Region map(pdm.shape, cpm.gc);
@@ -108,7 +108,7 @@ public:
         FalmMV::ScaleMatrix(rhs, 1.0 / (dt * maxdiag), block_dim);
     }
     
-    static Flag str2advscheme(std::string str) {
+    static FLAG str2advscheme(std::string str) {
         if (str == "Upwind1") {
             return AdvectionSchemeType::Upwind1;
         } else if (str == "Upwind3") {
@@ -124,7 +124,7 @@ public:
         }
     }
 
-    static Flag str2sgs(std::string str) {
+    static FLAG str2sgs(std::string str) {
         if (str == "Empty") {
             return SGSType::Empty;
         } else if (str == "Smagorinsky") {
@@ -136,7 +136,7 @@ public:
         }
     }
 
-    static std::string advscheme2str(Flag adv) {
+    static std::string advscheme2str(FLAG adv) {
         if (adv == AdvectionSchemeType::Upwind1) {
             return "Upwind1";
         } else if (adv == AdvectionSchemeType::Upwind3) {
@@ -152,7 +152,7 @@ public:
         }
     }
 
-    static std::string sgs2str(Flag sgs) {
+    static std::string sgs2str(FLAG sgs) {
         if (sgs == SGSType::Empty) {
             return "Empty";
         } else if (sgs == SGSType::Smagorinsky) {

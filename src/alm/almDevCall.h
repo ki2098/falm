@@ -19,19 +19,19 @@ class AlmDevCall {
 public:
     TurbineHandler turbines;
     APHandler aps;
-    Int3 mpi_shape;
+    INT3 mpi_shape;
     int rank;
     // Matrix<INT> x_offset, y_offset, z_offset;
-    Int3 pdm_shape;
-    Int3 pdm_offset;
-    Int gc;
+    INT3 pdm_shape;
+    INT3 pdm_offset;
+    INT gc;
     std::string workdir;
-    Real euler_eps;
-    Int n_ap_per_blade;
+    REAL euler_eps;
+    INT n_ap_per_blade;
 
     AlmDevCall() : turbines(), aps() {}
 
-    void init(const std::string &workdir, const Json &turbine_params, std::string ap_path, const CPM &cpm) {
+    void init(const std::string &workdir, const json &turbine_params, std::string ap_path, const CPM &cpm) {
         // this->workdir = workdir;
         // turbines.alloc(turbine_params);
         // std::string blade_path = turbine_params["bladeProperties"];
@@ -71,15 +71,15 @@ public:
         // z_offset.release();
     }
 
-    void UpdateTurbineAngles(Real t, size_t block_size = 32);
+    void UpdateTurbineAngles(REAL t, size_t block_size = 32);
 
-    void UpdateAPX(Matrix<Real> &x, Matrix<Real> &y, Matrix<Real> &z, Real t, size_t block_size=32);
+    void UpdateAPX(Matrix<REAL> &x, Matrix<REAL> &y, Matrix<REAL> &z, REAL t, size_t block_size=32);
 
-    void CalcAPForce(Matrix<Real> &x, Matrix<Real> &y, Matrix<Real> &z, Matrix<Real> &uvw, Real t, size_t block_size=32);
+    void CalcAPForce(Matrix<REAL> &x, Matrix<REAL> &y, Matrix<REAL> &z, Matrix<REAL> &uvw, REAL t, size_t block_size=32);
 
-    void DistributeAPForce(Matrix<Real> &x, Matrix<Real> &y, Matrix<Real> &z, Matrix<Real> &ff, Real euler_eps, dim3 block_size={8,8,8});
+    void DistributeAPForce(Matrix<REAL> &x, Matrix<REAL> &y, Matrix<REAL> &z, Matrix<REAL> &ff, REAL euler_eps, dim3 block_size={8,8,8});
 
-    void DryDistribution(Matrix<Real> &x, Matrix<Real> &y, Matrix<Real> &z, Matrix<Real> &phi, Real euler_eps, dim3 block_size={8,8,8});
+    void DryDistribution(Matrix<REAL> &x, Matrix<REAL> &y, Matrix<REAL> &z, Matrix<REAL> &phi, REAL euler_eps, dim3 block_size={8,8,8});
 
     void CalcTorqueAndThrust();
 };

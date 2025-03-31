@@ -6,12 +6,12 @@
 
 namespace LID3D {
 
-static void ubc(Falm::Matrix<Falm::Real> &u, Falm::CPM &cpm, Falm::Stream *stream = nullptr) {
+static void ubc(Falm::Matrix<Falm::REAL> &u, Falm::CPM &cpm, Falm::STREAM *stream = nullptr) {
     Falm::Region &pdm = cpm.pdm_list[cpm.rank];
-    Falm::Int &gc = cpm.gc;
-    for (Falm::Int fid = 0; fid < Falm::CPM::NFACE; fid ++) {
+    Falm::INT &gc = cpm.gc;
+    for (Falm::INT fid = 0; fid < Falm::CPM::NFACE; fid ++) {
         if (!cpm.validNeighbour(fid)) {
-            Falm::Stream s = (stream)? stream[fid] : 0;
+            Falm::STREAM s = (stream)? stream[fid] : 0;
             if (fid == Falm::CPM::XMINUS) {
                 ubc_xminus(u, pdm, gc, s);
             } else if (fid == Falm::CPM::XPLUS) {
@@ -28,7 +28,7 @@ static void ubc(Falm::Matrix<Falm::Real> &u, Falm::CPM &cpm, Falm::Stream *strea
         }
     }
     if (stream) {
-        for (Falm::Int fid = 0; fid < Falm::CPM::NFACE; fid ++) {
+        for (Falm::INT fid = 0; fid < Falm::CPM::NFACE; fid ++) {
             if (!cpm.validNeighbour(fid)) {
                 Falm::falmWaitStream(stream[fid]);
             }
@@ -38,12 +38,12 @@ static void ubc(Falm::Matrix<Falm::Real> &u, Falm::CPM &cpm, Falm::Stream *strea
     }
 }
 
-static void pbc(Falm::Matrix<Falm::Real> &p, Falm::CPM &cpm, Falm::Stream *stream = nullptr) {
+static void pbc(Falm::Matrix<Falm::REAL> &p, Falm::CPM &cpm, Falm::STREAM *stream = nullptr) {
     Falm::Region &pdm = cpm.pdm_list[cpm.rank];
-    Falm::Int &gc = cpm.gc;
-    for (Falm::Int fid = 0; fid < Falm::CPM::NFACE; fid ++) {
+    Falm::INT &gc = cpm.gc;
+    for (Falm::INT fid = 0; fid < Falm::CPM::NFACE; fid ++) {
         if (!cpm.validNeighbour(fid)) {
-            Falm::Stream s = (stream)? stream[fid] : 0;
+            Falm::STREAM s = (stream)? stream[fid] : 0;
             if (fid == Falm::CPM::XMINUS) {
                 pbc_xminus(p, pdm, gc, s);
             } else if (fid == Falm::CPM::XPLUS) {
@@ -60,7 +60,7 @@ static void pbc(Falm::Matrix<Falm::Real> &p, Falm::CPM &cpm, Falm::Stream *strea
         }
     }
     if (stream) {
-        for (Falm::Int fid = 0; fid < Falm::CPM::NFACE; fid ++) {
+        for (Falm::INT fid = 0; fid < Falm::CPM::NFACE; fid ++) {
             if (!cpm.validNeighbour(fid)) {
                 Falm::falmWaitStream(stream[fid]);
             }
@@ -70,12 +70,12 @@ static void pbc(Falm::Matrix<Falm::Real> &p, Falm::CPM &cpm, Falm::Stream *strea
     }
 }
 
-static void uubc(Falm::Matrix<Falm::Real> &uu, Falm::CPM &cpm, Falm::Stream *stream = nullptr) {
+static void uubc(Falm::Matrix<Falm::REAL> &uu, Falm::CPM &cpm, Falm::STREAM *stream = nullptr) {
     Falm::Region &pdm = cpm.pdm_list[cpm.rank];
-    Falm::Int &gc = cpm.gc;
-    for (Falm::Int fid = 0; fid < Falm::CPM::NFACE; fid ++) {
+    Falm::INT &gc = cpm.gc;
+    for (Falm::INT fid = 0; fid < Falm::CPM::NFACE; fid ++) {
         if (!cpm.validNeighbour(fid)) {
-            Falm::Stream s = (stream)? stream[fid] : 0;
+            Falm::STREAM s = (stream)? stream[fid] : 0;
             if (fid == Falm::CPM::XMINUS) {
                 uubc_xminus(uu, pdm, gc, s);
             } else if (fid == Falm::CPM::XPLUS) {
@@ -92,7 +92,7 @@ static void uubc(Falm::Matrix<Falm::Real> &uu, Falm::CPM &cpm, Falm::Stream *str
         }
     }
     if (stream) {
-        for (Falm::Int fid = 0; fid < Falm::CPM::NFACE; fid ++) {
+        for (Falm::INT fid = 0; fid < Falm::CPM::NFACE; fid ++) {
             if (!cpm.validNeighbour(fid)) {
                 Falm::falmWaitStream(stream[fid]);
             }

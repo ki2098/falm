@@ -15,7 +15,7 @@ public:
 
     RmcpAlm(const CPM &cpm) : RmcpAlmDevCall(cpm.pdm_list[cpm.rank]) {}
 
-    void init(const CPM &cpm, Json turbine_params, std::string workdir) {
+    void init(const CPM &cpm, json turbine_params, std::string workdir) {
         RmcpAlmDevCall::init(cpm.pdm_list[cpm.rank], turbine_params, workdir);
     }
 
@@ -23,40 +23,40 @@ public:
     //     RmcpAlmDevCall::r
     // }
 
-    void CalcTorque(Matrix<Real> &x, Matrix<Real> &ff, RmcpTurbineArray &wf, CPM &cpm, dim3 block_dim={8,8,8}) {
+    void CalcTorque(Matrix<REAL> &x, Matrix<REAL> &ff, RmcpTurbineArray &wf, CPM &cpm, dim3 block_dim={8,8,8}) {
         Region &pdm = cpm.pdm_list[cpm.rank];
         Region  map(pdm.shape, cpm.gc);
         RmcpAlmDevCall::CalcTorque(x, ff, wf, pdm, map, block_dim);
-        for (Int __ti = 0; __ti < wf.nTurbine; __ti ++) {
-            CPM_AllReduce(&wf.tptr[__ti].torque, 1, getMPIDtype<Real>(), MPI_SUM, MPI_COMM_WORLD);
+        for (INT __ti = 0; __ti < wf.nTurbine; __ti ++) {
+            CPM_AllReduce(&wf.tptr[__ti].torque, 1, getMPIDtype<REAL>(), MPI_SUM, MPI_COMM_WORLD);
         }
     }
 
-    void ALM(Matrix<Real> &u, Matrix<Real> &x, Matrix<Real> &ff, Real t, RmcpTurbineArray &wf, CPM &cpm, dim3 block_dim={8,8,8}) {
+    void ALM(Matrix<REAL> &u, Matrix<REAL> &x, Matrix<REAL> &ff, REAL t, RmcpTurbineArray &wf, CPM &cpm, dim3 block_dim={8,8,8}) {
         Region &pdm = cpm.pdm_list[cpm.rank];
         Region  map(pdm.shape, cpm.gc);
         RmcpAlmDevCall::ALM(u, x, ff, t, wf, pdm, map, block_dim);
     }
 
-    void ALM(Matrix<Real> &u, Matrix<Real> &x, Matrix<Real> &ff, Real t, CPM &cpm, dim3 block_dim={8,8,8}) {
+    void ALM(Matrix<REAL> &u, Matrix<REAL> &x, Matrix<REAL> &ff, REAL t, CPM &cpm, dim3 block_dim={8,8,8}) {
         Region &pdm = cpm.pdm_list[cpm.rank];
         Region  map(pdm.shape, cpm.gc);
         RmcpAlmDevCall::ALM(u, x, ff, t, pdm, map, block_dim);
     }
 
-    void ALM(BladeHandler &blades, Matrix<Real> &u, Matrix<Real> &x, Matrix<Real> &ff, Real t, RmcpTurbineArray &wf, CPM &cpm, dim3 block_dim={8,8,8}) {
+    void ALM(BladeHandler &blades, Matrix<REAL> &u, Matrix<REAL> &x, Matrix<REAL> &ff, REAL t, RmcpTurbineArray &wf, CPM &cpm, dim3 block_dim={8,8,8}) {
         Region &pdm = cpm.pdm_list[cpm.rank];
         Region  map(pdm.shape, cpm.gc);
         RmcpAlmDevCall::ALM(blades, u, x, ff, t, wf, pdm, map, block_dim);
     }
 
-    void SetALMFlag(Matrix<Real> &x, Real t, RmcpTurbineArray &wf, CPM &cpm, dim3 block_dim={8,8,8}) {
+    void SetALMFlag(Matrix<REAL> &x, REAL t, RmcpTurbineArray &wf, CPM &cpm, dim3 block_dim={8,8,8}) {
         Region &pdm = cpm.pdm_list[cpm.rank];
         Region  map(pdm.shape, cpm.gc);
         RmcpAlmDevCall::SetALMFlag(x, t, wf, pdm, map, block_dim);
     }
 
-    void SetALMFlag(Matrix<Real> &x, Real t, CPM &cpm, dim3 block_dim={8,8,8}) {
+    void SetALMFlag(Matrix<REAL> &x, REAL t, CPM &cpm, dim3 block_dim={8,8,8}) {
         Region &pdm = cpm.pdm_list[cpm.rank];
         Region  map(pdm.shape, cpm.gc);
         RmcpAlmDevCall::SetALMFlag(x, t, pdm, map, block_dim);

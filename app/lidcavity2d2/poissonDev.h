@@ -7,12 +7,12 @@
 namespace LidCavity2d2 {
 
 void dev_makePoissonMatrix(
-    Falm::Matrix<Falm::Real> &a,
-    Falm::Matrix<Falm::Real> &g,
-    Falm::Matrix<Falm::Real> &ja,
+    Falm::Matrix<Falm::REAL> &a,
+    Falm::Matrix<Falm::REAL> &g,
+    Falm::Matrix<Falm::REAL> &ja,
     Falm::Region             &global,
     Falm::Region             &pdm,
-    Falm::Int                 gc,
+    Falm::INT                 gc,
     dim3                      block_dim = dim3(8, 8, 1)
 );
 

@@ -11,14 +11,14 @@ namespace Falm {
 namespace Rmcp {
 
 struct BHFrame {
-    Real *r;
-    Real *attack;
-    Real *chord;
-    Real *twist;
-    Real *cl;
-    Real *cd;
-    Int rcount, acount;
-    Flag  hdc;
+    REAL *r;
+    REAL *attack;
+    REAL *chord;
+    REAL *twist;
+    REAL *cl;
+    REAL *cd;
+    INT rcount, acount;
+    FLAG  hdc;
 
     BHFrame() : 
         r(nullptr), 
@@ -32,32 +32,32 @@ struct BHFrame {
         hdc(HDC::Empty) 
     {}
 
-    __host__ __device__ Real &getcl(Int rid, Int aid) {
+    __host__ __device__ REAL &getcl(INT rid, INT aid) {
         return cl[rid*acount + aid];
     }
 
-    __host__ __device__ Real &getcd(Int rid, Int aid) {
+    __host__ __device__ REAL &getcd(INT rid, INT aid) {
         return cd[rid*acount + aid];
     }
 
-    void alloc(Int _rcount, Int _attackcount, Flag _hdc) {
+    void alloc(INT _rcount, INT _attackcount, FLAG _hdc) {
         rcount = _rcount;
         acount = _attackcount;
         hdc = _hdc;
         if (hdc == HDC::Host) {
-            falmErrCheckMacro(falmMalloc((void**)&r, sizeof(Real)*rcount));
-            falmErrCheckMacro(falmMalloc((void**)&attack, sizeof(Real)*acount));
-            falmErrCheckMacro(falmMalloc((void**)&chord, sizeof(Real)*rcount));
-            falmErrCheckMacro(falmMalloc((void**)&twist, sizeof(Real)*rcount));
-            falmErrCheckMacro(falmMalloc((void**)&cl, sizeof(Real)*rcount*acount));
-            falmErrCheckMacro(falmMalloc((void**)&cd, sizeof(Real)*rcount*acount));
+            falmErrCheckMacro(falmMalloc((void**)&r, sizeof(REAL)*rcount));
+            falmErrCheckMacro(falmMalloc((void**)&attack, sizeof(REAL)*acount));
+            falmErrCheckMacro(falmMalloc((void**)&chord, sizeof(REAL)*rcount));
+            falmErrCheckMacro(falmMalloc((void**)&twist, sizeof(REAL)*rcount));
+            falmErrCheckMacro(falmMalloc((void**)&cl, sizeof(REAL)*rcount*acount));
+            falmErrCheckMacro(falmMalloc((void**)&cd, sizeof(REAL)*rcount*acount));
         } else if (hdc == HDC::Device) {
-            falmErrCheckMacro(falmMallocDevice((void**)&r, sizeof(Real)*rcount));
-            falmErrCheckMacro(falmMallocDevice((void**)&attack, sizeof(Real)*acount));
-            falmErrCheckMacro(falmMallocDevice((void**)&chord, sizeof(Real)*rcount));
-            falmErrCheckMacro(falmMallocDevice((void**)&twist, sizeof(Real)*rcount));
-            falmErrCheckMacro(falmMallocDevice((void**)&cl, sizeof(Real)*rcount*acount));
-            falmErrCheckMacro(falmMallocDevice((void**)&cd, sizeof(Real)*rcount*acount));
+            falmErrCheckMacro(falmMallocDevice((void**)&r, sizeof(REAL)*rcount));
+            falmErrCheckMacro(falmMallocDevice((void**)&attack, sizeof(REAL)*acount));
+            falmErrCheckMacro(falmMallocDevice((void**)&chord, sizeof(REAL)*rcount));
+            falmErrCheckMacro(falmMallocDevice((void**)&twist, sizeof(REAL)*rcount));
+            falmErrCheckMacro(falmMallocDevice((void**)&cl, sizeof(REAL)*rcount*acount));
+            falmErrCheckMacro(falmMallocDevice((void**)&cd, sizeof(REAL)*rcount*acount));
         }
     }
 
@@ -80,13 +80,13 @@ struct BHFrame {
         hdc = HDC::Empty;
     }
 
-    __host__ __device__ Int find_position(Real *metric, Real x, Int size) {
+    __host__ __device__ INT find_position(REAL *metric, REAL x, INT size) {
         if (x < metric[0]) {
             return -1;
         } else if (x >= metric[size-1]) {
             return size-1;
         } else {
-            for (Int i = 0; i < size-1; i ++) {
+            for (INT i = 0; i < size-1; i ++) {
                 if (metric[i] <= x && metric[i+1] > x) {
                     return i;
                 }
@@ -95,23 +95,23 @@ struct BHFrame {
         }
     }
 
-    __host__ __device__ Real interpolate(Real *metric, Real *data, Real x, Int i, Int size) {
+    __host__ __device__ REAL interpolate(REAL *metric, REAL *data, REAL x, INT i, INT size) {
         if (i < 0) {
             return data[0];
         } else if (i >= size-1) {
             return data[size-1];
         } else {
-            Real p = (x - metric[i])/(metric[i+1] - metric[i]);
+            REAL p = (x - metric[i])/(metric[i+1] - metric[i]);
             return (1. - p)*data[i] + p*data[i+1];
         }
     }
 
-    __host__ __device__ void get_airfoil_params(Real _r, Real _phi, Real &_chord, Real &_twist, Real &_cl, Real &_cd) {
-        Int rid = find_position(r, _r, rcount);
+    __host__ __device__ void get_airfoil_params(REAL _r, REAL _phi, REAL &_chord, REAL &_twist, REAL &_cl, REAL &_cd) {
+        INT rid = find_position(r, _r, rcount);
         _chord = interpolate(r, chord, _r, rid, rcount);
         _twist = interpolate(r, twist, _r, rid, rcount);
-        Real _attack = _phi - _twist;
-        Int aid = find_position(attack, _attack, acount);
+        REAL _attack = _phi - _twist;
+        INT aid = find_position(attack, _attack, acount);
         if (rid < 0) {
             _cl = interpolate(attack, &getcl(0,0), _attack, aid, acount);
             _cd = interpolate(attack, &getcd(0,0), _attack, aid, acount);
@@ -119,11 +119,11 @@ struct BHFrame {
             _cl = interpolate(attack, &getcl(rcount-1,0), _attack, aid, acount);
             _cd = interpolate(attack, &getcd(rcount-1,0), _attack, aid, acount);
         } else {
-            Real p = (_r - r[rid])/(r[rid+1] - r[rid]);
-            Real cl0 = interpolate(attack, &getcl(rid  ,0), _attack, aid, acount);
-            Real cl1 = interpolate(attack, &getcl(rid+1,0), _attack, aid, acount);
-            Real cd0 = interpolate(attack, &getcd(rid  ,0), _attack, aid, acount);
-            Real cd1 = interpolate(attack, &getcd(rid+1,0), _attack, aid, acount);
+            REAL p = (_r - r[rid])/(r[rid+1] - r[rid]);
+            REAL cl0 = interpolate(attack, &getcl(rid  ,0), _attack, aid, acount);
+            REAL cl1 = interpolate(attack, &getcl(rid+1,0), _attack, aid, acount);
+            REAL cd0 = interpolate(attack, &getcd(rid  ,0), _attack, aid, acount);
+            REAL cd1 = interpolate(attack, &getcd(rid+1,0), _attack, aid, acount);
             _cl = (1. - p)*cl0 + p*cl1;
             _cd = (1. - p)*cd0 + p*cd1;
         }
@@ -132,17 +132,17 @@ struct BHFrame {
 
 struct BladeHandler {
     BHFrame host, dev, *devptr;
-    Int rcount, acount;
-    Flag hdc;
+    INT rcount, acount;
+    FLAG hdc;
     std::string property_file_path;
 
     BladeHandler() : host(), dev(), devptr(nullptr), rcount(0), acount(0), hdc(HDC::Empty) {}
 
-    Real &getcl(Int rid, Int aid) {
+    REAL &getcl(INT rid, INT aid) {
         return host.getcl(rid, aid);
     }
 
-    Real &getcd(Int rid, Int aid) {
+    REAL &getcd(INT rid, INT aid) {
         return host.getcd(rid, aid);
     }
 
@@ -153,9 +153,9 @@ struct BladeHandler {
         // printf("\tPath %s\n", bpfname.c_str());
         property_file_path = bpfname;
         std::ifstream ifs(bpfname);
-        Json bpjson = Json::parse(ifs);
-        Json aflist = bpjson["airfoils"];
-        Json atlist = bpjson["attacks"];
+        json bpjson = json::parse(ifs);
+        json aflist = bpjson["airfoils"];
+        json atlist = bpjson["attacks"];
         int _rcount = aflist.size();
         int _acount = atlist.size();
         host.alloc(_rcount, _acount, HDC::Host);
@@ -165,28 +165,28 @@ struct BladeHandler {
         hdc = HDC::HstDev;
         ifs.close();
 
-        for (Int i = 0; i < rcount; i ++) {
+        for (INT i = 0; i < rcount; i ++) {
             auto af = aflist[i];
-            host.r[i] = af["r/R"].get<Real>();
-            host.chord[i] = af["chord/R"].get<Real>();
-            host.twist[i] = af["twist[deg]"].get<Real>();
+            host.r[i] = af["r/R"].get<REAL>();
+            host.chord[i] = af["chord/R"].get<REAL>();
+            host.twist[i] = af["twist[deg]"].get<REAL>();
             auto cllist = af["Cl"];
             auto cdlist = af["Cd"];
-            for (Int j = 0; j < acount; j ++) {
-                getcl(i, j) = cllist[j].get<Real>();
-                getcd(i, j) = cdlist[j].get<Real>();
+            for (INT j = 0; j < acount; j ++) {
+                getcl(i, j) = cllist[j].get<REAL>();
+                getcd(i, j) = cdlist[j].get<REAL>();
             }
         }
-        for (Int j = 0; j < acount; j ++) {
-            host.attack[j] = atlist[j].get<Real>();
+        for (INT j = 0; j < acount; j ++) {
+            host.attack[j] = atlist[j].get<REAL>();
         }
 
-        falmErrCheckMacro(falmMemcpy(dev.r, host.r, sizeof(Real)*rcount, MCP::Hst2Dev));
-        falmErrCheckMacro(falmMemcpy(dev.attack, host.attack, sizeof(Real)*acount, MCP::Hst2Dev));
-        falmErrCheckMacro(falmMemcpy(dev.chord, host.chord, sizeof(Real)*rcount, MCP::Hst2Dev));
-        falmErrCheckMacro(falmMemcpy(dev.twist, host.twist, sizeof(Real)*rcount, MCP::Hst2Dev));
-        falmErrCheckMacro(falmMemcpy(dev.cl, host.cl, sizeof(Real)*rcount*acount, MCP::Hst2Dev));
-        falmErrCheckMacro(falmMemcpy(dev.cd, host.cd, sizeof(Real)*rcount*acount, MCP::Hst2Dev));
+        falmErrCheckMacro(falmMemcpy(dev.r, host.r, sizeof(REAL)*rcount, MCP::Hst2Dev));
+        falmErrCheckMacro(falmMemcpy(dev.attack, host.attack, sizeof(REAL)*acount, MCP::Hst2Dev));
+        falmErrCheckMacro(falmMemcpy(dev.chord, host.chord, sizeof(REAL)*rcount, MCP::Hst2Dev));
+        falmErrCheckMacro(falmMemcpy(dev.twist, host.twist, sizeof(REAL)*rcount, MCP::Hst2Dev));
+        falmErrCheckMacro(falmMemcpy(dev.cl, host.cl, sizeof(REAL)*rcount*acount, MCP::Hst2Dev));
+        falmErrCheckMacro(falmMemcpy(dev.cd, host.cd, sizeof(REAL)*rcount*acount, MCP::Hst2Dev));
 
         falmErrCheckMacro(falmMallocDevice((void**)&devptr, sizeof(BHFrame)));
         falmErrCheckMacro(falmMemcpy(devptr, &dev, sizeof(BHFrame), MCP::Hst2Dev));
@@ -199,7 +199,7 @@ struct BladeHandler {
         hdc = HDC::Empty;
     }
 
-    void get_airfoil_params(Real _r, Real _phi, Real &_chord, Real &_twist, Real &_cl, Real &_cd) {
+    void get_airfoil_params(REAL _r, REAL _phi, REAL &_chord, REAL &_twist, REAL &_cl, REAL &_cd) {
         host.get_airfoil_params(_r, _phi, _chord, _twist, _cl, _cd);
     }
 };

@@ -8,8 +8,8 @@ namespace Falm {
 
 class FalmMVDevCall {
 public:
-static Int reduction_buffer_size;
-static Real *reduction_buffer_host, *reduction_buffer_device;
+static INT reduction_buffer_size;
+static REAL *reduction_buffer_host, *reduction_buffer_device;
 
 static void init() {
     // reduction_buffer_size = 0;
@@ -17,15 +17,15 @@ static void init() {
     // reduction_buffer_host = nullptr;
 }
 
-static void request_reduction_buffer(Int bufsize) {
+static void request_reduction_buffer(INT bufsize) {
     if (reduction_buffer_size < bufsize) {
         printf("reduction buffer enlarged from %d to %d\n", reduction_buffer_size, bufsize);
         if (reduction_buffer_size != 0) {
             falmErrCheckMacro(falmFreePinned(reduction_buffer_host));
             falmErrCheckMacro(falmFreeDevice(reduction_buffer_device));
         }
-        falmErrCheckMacro(falmMallocPinned((void**)&reduction_buffer_host, bufsize * sizeof(Real)));
-        falmErrCheckMacro(falmMallocDevice((void**)&reduction_buffer_device, bufsize * sizeof(Real)));
+        falmErrCheckMacro(falmMallocPinned((void**)&reduction_buffer_host, bufsize * sizeof(REAL)));
+        falmErrCheckMacro(falmMallocDevice((void**)&reduction_buffer_device, bufsize * sizeof(REAL)));
         reduction_buffer_size = bufsize;
     }
 }
@@ -38,31 +38,31 @@ static void release() {
     reduction_buffer_size = 0;
 }
 
-static void MV(Matrix<Real> &a, Matrix<Real> &x, Matrix<Real> &ax, Region &pdm, const Region &map, dim3 block_dim, Stream stream = (Stream)0);
+static void MV(Matrix<REAL> &a, Matrix<REAL> &x, Matrix<REAL> &ax, Region &pdm, const Region &map, dim3 block_dim, STREAM stream = (STREAM)0);
 
-static Real DotProduct(Matrix<Real> &a, Matrix<Real> &b, Region &pdm, const Region &map, dim3 block_dim);
+static REAL DotProduct(Matrix<REAL> &a, Matrix<REAL> &b, Region &pdm, const Region &map, dim3 block_dim);
 
-static Real EuclideanNormSq(Matrix<Real> &a, Region &pdm, const Region &map, dim3 block_dim);
+static REAL EuclideanNormSq(Matrix<REAL> &a, Region &pdm, const Region &map, dim3 block_dim);
 
 // REAL L0Dev_MaxDiag(Matrix<REAL> &a, Region &pdm, const Region &map, dim3 block_dim);
 
-static Real MatColMax(Matrix<Real> &a, Int col, Region &pdm, const Region &map, dim3 block_dim);
+static REAL MatColMax(Matrix<REAL> &a, INT col, Region &pdm, const Region &map, dim3 block_dim);
 
-static Real MatColMin(Matrix<Real> &a, Int col, Region &pdm, const Region &map, dim3 block_dim);
+static REAL MatColMin(Matrix<REAL> &a, INT col, Region &pdm, const Region &map, dim3 block_dim);
 
-static Real MatColAbsMax(Matrix<Real> &a, Int col, Region &pdm, const Region &map, dim3 block_dim);
+static REAL MatColAbsMax(Matrix<REAL> &a, INT col, Region &pdm, const Region &map, dim3 block_dim);
 
-static Real MatColAbsMin(Matrix<Real> &a, Int col, Region &pdm, const Region &map, dim3 block_dim);
+static REAL MatColAbsMin(Matrix<REAL> &a, INT col, Region &pdm, const Region &map, dim3 block_dim);
 
-static Real VecMax(Matrix<Real> &a, Region &pdm, const Region &map, dim3 block_dim);
+static REAL VecMax(Matrix<REAL> &a, Region &pdm, const Region &map, dim3 block_dim);
 
-static Real VecMin(Matrix<Real> &a, Region &pdm, const Region &map, dim3 block_dim);
+static REAL VecMin(Matrix<REAL> &a, Region &pdm, const Region &map, dim3 block_dim);
 
-static void ScaleMatrix(Matrix<Real> &a, Real scale, dim3 block_dim);
+static void ScaleMatrix(Matrix<REAL> &a, REAL scale, dim3 block_dim);
 
-static void MatrixAdd(Matrix<Real> &a, Matrix<Real> &b, dim3 block_dim);
+static void MatrixAdd(Matrix<REAL> &a, Matrix<REAL> &b, dim3 block_dim);
 
-static void Vecaxby(Real a, Matrix<Real> &x, Real b, Matrix<Real> &y, Matrix<Real> &result, dim3 block_dim);
+static void Vecaxby(REAL a, Matrix<REAL> &x, REAL b, Matrix<REAL> &y, Matrix<REAL> &result, dim3 block_dim);
 
 // static inline REAL L1Dev_DotProduct(Matrix<REAL> &a, Matrix<REAL> &b, CPMBase &cpm, dim3 block_dim) {
 //     Region &pdm = cpm.pdm_list[cpm.rank];

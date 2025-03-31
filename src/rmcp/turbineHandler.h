@@ -11,18 +11,18 @@ namespace Falm {
 namespace Rmcp {
 
 struct TurbineFrame {
-    Real3      *base;
-    Real3      *base_velocity;
-    Real3      *hub;
-    Real3      *angle;
-    Real3      *angular_velocity;
+    REAL3      *base;
+    REAL3      *base_velocity;
+    REAL3      *hub;
+    REAL3      *angle;
+    REAL3      *angular_velocity;
     EulerAngle *angle_type;
-    Real       *tip_rate;
-    Real       *torque;
-    Real        radius;
-    Real        hub_radius;
+    REAL       *tip_rate;
+    REAL       *torque;
+    REAL        radius;
+    REAL        hub_radius;
     size_t      n_turbine, n_blade;
-    Flag        hdc;
+    FLAG        hdc;
 
     TurbineFrame() :
         base(nullptr),
@@ -40,30 +40,30 @@ struct TurbineFrame {
         return nid*n_turbine + tid;
     }
 
-    void alloc(size_t _tcount, size_t _bcount, Real _r, Real _hr, Flag _hdc) {
+    void alloc(size_t _tcount, size_t _bcount, REAL _r, REAL _hr, FLAG _hdc) {
         n_turbine = _tcount;
         n_blade = _bcount;
         radius = _r;
         hub_radius = _hr;
         hdc = _hdc;
         if (hdc == HDC::Host) {
-            falmErrCheckMacro(falmMalloc((void**)&base, sizeof(Real3)*n_turbine));
-            falmErrCheckMacro(falmMalloc((void**)&base_velocity, sizeof(Real3)*n_turbine));
-            falmErrCheckMacro(falmMalloc((void**)&hub, sizeof(Real3)*n_turbine));
-            falmErrCheckMacro(falmMalloc((void**)&angle, sizeof(Real3)*n_turbine));
-            falmErrCheckMacro(falmMalloc((void**)&angular_velocity, sizeof(Real3)*n_turbine));
+            falmErrCheckMacro(falmMalloc((void**)&base, sizeof(REAL3)*n_turbine));
+            falmErrCheckMacro(falmMalloc((void**)&base_velocity, sizeof(REAL3)*n_turbine));
+            falmErrCheckMacro(falmMalloc((void**)&hub, sizeof(REAL3)*n_turbine));
+            falmErrCheckMacro(falmMalloc((void**)&angle, sizeof(REAL3)*n_turbine));
+            falmErrCheckMacro(falmMalloc((void**)&angular_velocity, sizeof(REAL3)*n_turbine));
             falmErrCheckMacro(falmMalloc((void**)&angle_type, sizeof(EulerAngle)*n_turbine));
-            falmErrCheckMacro(falmMalloc((void**)&tip_rate, sizeof(Real)*n_turbine));
-            falmErrCheckMacro(falmMalloc((void**)&torque, sizeof(Real)*n_turbine));
+            falmErrCheckMacro(falmMalloc((void**)&tip_rate, sizeof(REAL)*n_turbine));
+            falmErrCheckMacro(falmMalloc((void**)&torque, sizeof(REAL)*n_turbine));
         } else if (hdc == HDC::Device) {
-            falmErrCheckMacro(falmMallocDevice((void**)&base, sizeof(Real3)*n_turbine));
-            falmErrCheckMacro(falmMallocDevice((void**)&base_velocity, sizeof(Real3)*n_turbine));
-            falmErrCheckMacro(falmMallocDevice((void**)&hub, sizeof(Real3)*n_turbine));
-            falmErrCheckMacro(falmMallocDevice((void**)&angle, sizeof(Real3)*n_turbine));
-            falmErrCheckMacro(falmMallocDevice((void**)&angular_velocity, sizeof(Real3)*n_turbine));
+            falmErrCheckMacro(falmMallocDevice((void**)&base, sizeof(REAL3)*n_turbine));
+            falmErrCheckMacro(falmMallocDevice((void**)&base_velocity, sizeof(REAL3)*n_turbine));
+            falmErrCheckMacro(falmMallocDevice((void**)&hub, sizeof(REAL3)*n_turbine));
+            falmErrCheckMacro(falmMallocDevice((void**)&angle, sizeof(REAL3)*n_turbine));
+            falmErrCheckMacro(falmMallocDevice((void**)&angular_velocity, sizeof(REAL3)*n_turbine));
             falmErrCheckMacro(falmMallocDevice((void**)&angle_type, sizeof(EulerAngle)*n_turbine));
-            falmErrCheckMacro(falmMallocDevice((void**)&tip_rate, sizeof(Real)*n_turbine));
-            falmErrCheckMacro(falmMallocDevice((void**)&torque, sizeof(Real)*n_turbine));
+            falmErrCheckMacro(falmMallocDevice((void**)&tip_rate, sizeof(REAL)*n_turbine));
+            falmErrCheckMacro(falmMallocDevice((void**)&torque, sizeof(REAL)*n_turbine));
         }
     }
 
@@ -94,10 +94,10 @@ struct TurbineFrame {
 struct TurbineHandler {
     TurbineFrame host, dev, *devptr;
     size_t       n_turbine, n_blade;
-    Real         radius;
-    Real         hub_radius;
-    Flag         hdc;
-    Json         turbine_param;
+    REAL         radius;
+    REAL         hub_radius;
+    FLAG         hdc;
+    json         turbine_param;
 
     TurbineHandler() :
         host(),
@@ -106,13 +106,13 @@ struct TurbineHandler {
         hdc(HDC::Empty)
     {}
 
-    void alloc(const Json &_turbine_param) {
+    void alloc(const json &_turbine_param) {
         turbine_param = _turbine_param;
-        radius = turbine_param["radius"].get<Real>();
+        radius = turbine_param["radius"].get<REAL>();
         n_blade = turbine_param["bladeNumber"].get<size_t>();
         auto turbine_array = turbine_param["turbineArray"];
         if (turbine_param.contains("hubRadius")) {
-            hub_radius = turbine_param["hubRadius"].get<Real>();
+            hub_radius = turbine_param["hubRadius"].get<REAL>();
         } else {
             hub_radius = 0;
         }
@@ -121,15 +121,15 @@ struct TurbineHandler {
         dev.alloc(n_turbine, n_blade, radius, hub_radius, HDC::Device);
         for (int tid = 0; tid < n_turbine; tid ++) {
             auto turbine_json = turbine_array[tid];
-            host.hub[tid][0] = - turbine_param["overhang"].get<Real>();
+            host.hub[tid][0] = - turbine_param["overhang"].get<REAL>();
             host.hub[tid][1] =   0;
-            host.hub[tid][2] =   turbine_param["tower"].get<Real>();
-            host.tip_rate[tid] = turbine_json["tipRate"].get<Real>();
+            host.hub[tid][2] =   turbine_param["tower"].get<REAL>();
+            host.tip_rate[tid] = turbine_json["tipRate"].get<REAL>();
             
             auto tmp = turbine_json["baseLocation"];
             for (int i = 0; i < 3; i ++) {
                 if (tmp[i].is_number()) {
-                    host.base[tid][i] = tmp[i].get<Real>();
+                    host.base[tid][i] = tmp[i].get<REAL>();
                     host.base_velocity[tid][i] = 0;
                 }
             }
@@ -138,9 +138,9 @@ struct TurbineHandler {
             int angle_switch[] = {0, 0, 0};
             for (int i = 0; i < 3; i ++) {
                 if (tmp[i].is_number()) {
-                    host.angle[tid][i] = deg2rad(tmp[i].get<Real>());
+                    host.angle[tid][i] = deg2rad(tmp[i].get<REAL>());
                     host.angular_velocity[tid][i] = 0;
-                    if (tmp[i].get<Real>() != 0) {
+                    if (tmp[i].get<REAL>() != 0) {
                         angle_switch[i] = 1;
                     }
                 } else {
@@ -161,13 +161,13 @@ struct TurbineHandler {
             }
         }
 
-        falmErrCheckMacro(falmMemcpy(dev.base, host.base, sizeof(Real3)*n_turbine, MCP::Hst2Dev));
-        falmErrCheckMacro(falmMemcpy(dev.base_velocity, host.base_velocity, sizeof(Real3)*n_turbine, MCP::Hst2Dev));
-        falmErrCheckMacro(falmMemcpy(dev.hub, host.hub, sizeof(Real3)*n_turbine, MCP::Hst2Dev));
-        falmErrCheckMacro(falmMemcpy(dev.angle, host.angle, sizeof(Real3)*n_turbine, MCP::Hst2Dev));
-        falmErrCheckMacro(falmMemcpy(dev.angular_velocity, host.angular_velocity, sizeof(Real3)*n_turbine, MCP::Hst2Dev));
+        falmErrCheckMacro(falmMemcpy(dev.base, host.base, sizeof(REAL3)*n_turbine, MCP::Hst2Dev));
+        falmErrCheckMacro(falmMemcpy(dev.base_velocity, host.base_velocity, sizeof(REAL3)*n_turbine, MCP::Hst2Dev));
+        falmErrCheckMacro(falmMemcpy(dev.hub, host.hub, sizeof(REAL3)*n_turbine, MCP::Hst2Dev));
+        falmErrCheckMacro(falmMemcpy(dev.angle, host.angle, sizeof(REAL3)*n_turbine, MCP::Hst2Dev));
+        falmErrCheckMacro(falmMemcpy(dev.angular_velocity, host.angular_velocity, sizeof(REAL3)*n_turbine, MCP::Hst2Dev));
         falmErrCheckMacro(falmMemcpy(dev.angle_type, host.angle_type, sizeof(EulerAngle)*n_turbine, MCP::Hst2Dev));
-        falmErrCheckMacro(falmMemcpy(dev.tip_rate, host.tip_rate, sizeof(Real)*n_turbine, MCP::Hst2Dev));
+        falmErrCheckMacro(falmMemcpy(dev.tip_rate, host.tip_rate, sizeof(REAL)*n_turbine, MCP::Hst2Dev));
 
         falmErrCheckMacro(falmMallocDevice((void**)&devptr, sizeof(TurbineFrame)));
         falmErrCheckMacro(falmMemcpy(devptr, &dev, sizeof(TurbineFrame), MCP::Hst2Dev));

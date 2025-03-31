@@ -15,7 +15,7 @@ class BladeHandler {
 public:
     static void buildAP(std::string inputfname, std::string outputfname, int apcount, int apperblade, int bladeperturbine, double radius) {
         std::ifstream ifs(inputfname);
-        auto bdjson = Json::parse(ifs);
+        auto bdjson = json::parse(ifs);
         auto aflist = bdjson["airfoils"];
         auto atlist = bdjson["attacks"];
 
@@ -43,7 +43,7 @@ public:
             attack[j] = atlist[j].get<double>();
         }
 
-        auto apjs = Json::array();
+        auto apjs = json::array();
         double dr = radius/apperblade;
         int apperturbine = apperblade*bladeperturbine;
         int imax = rr.size()-1;
@@ -81,16 +81,16 @@ public:
                     apcd[j] = (1. - p)*cd[i][j] + p*cd[i+1][j];
                 }
             }
-            Json apj;
+            json apj;
             apj["id"] = apid;
             apj["turbineId"] = aptid;
             apj["bladeId"] = apbid;
             apj["chord"] = apchord;
             apj["twist"] = aptwist;
             apj["r"] = apr;
-            auto apattack = Json::array();
+            auto apattack = json::array();
             for (int j = 0; j < attack.size(); j ++) {
-                Json tmp;
+                json tmp;
                 tmp["attack"] = attack[j];
                 tmp["Cl"] = apcl[j];
                 tmp["Cd"] = apcd[j];

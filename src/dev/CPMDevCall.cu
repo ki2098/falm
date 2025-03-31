@@ -4,63 +4,63 @@
 
 namespace Falm {
 
-__global__ void kernel_CPM_PackBuffer(Real *buffer, Int3 buf_shape, Int3 buf_offset, Real *src, Int3 src_shape) {
-    Int i, j, k;
+__global__ void kernel_CPM_PackBuffer(REAL *buffer, INT3 buf_shape, INT3 buf_offset, REAL *src, INT3 src_shape) {
+    INT i, j, k;
     GLOBAL_THREAD_IDX_3D(i, j, k);
     if (i < buf_shape[0] && j < buf_shape[1] && k < buf_shape[2]) {
-        Int buf_idx = IDX(i, j, k, buf_shape);
+        INT buf_idx = IDX(i, j, k, buf_shape);
         i += buf_offset[0];
         j += buf_offset[1];
         k += buf_offset[2];
-        Int src_idx = IDX(i, j, k, src_shape);
+        INT src_idx = IDX(i, j, k, src_shape);
         buffer[buf_idx] = src[src_idx];
     }
 }
 
-__global__ void kernel_CPM_PackColoredBuffer(Real *buffer, Int3 buf_shape, Int3 buf_offset, Int color, Real *src, Int3 src_shape, Int3 src_offset) {
-    Int i, j, k;
+__global__ void kernel_CPM_PackColoredBuffer(REAL *buffer, INT3 buf_shape, INT3 buf_offset, INT color, REAL *src, INT3 src_shape, INT3 src_offset) {
+    INT i, j, k;
     GLOBAL_THREAD_IDX_3D(i, j, k);
     if (i < buf_shape[0] && j < buf_shape[1] && k < buf_shape[2]) {
-        Int buf_idx = IDX(i, j, k, buf_shape);
+        INT buf_idx = IDX(i, j, k, buf_shape);
         i += buf_offset[0];
         j += buf_offset[1];
         k += buf_offset[2];
-        Int src_idx = IDX(i, j, k, src_shape);
+        INT src_idx = IDX(i, j, k, src_shape);
         if ((i + j + k + SUM3(src_offset)) % 2 == color) {
             buffer[buf_idx / 2] = src[src_idx];
         }
     }
 }
 
-__global__ void kernel_CPM_UnpackBuffer(Real *buffer, Int3 buf_shape, Int3 buf_offset, Real *dst, Int3 dst_shape) {
-    Int i, j, k;
+__global__ void kernel_CPM_UnpackBuffer(REAL *buffer, INT3 buf_shape, INT3 buf_offset, REAL *dst, INT3 dst_shape) {
+    INT i, j, k;
     GLOBAL_THREAD_IDX_3D(i, j, k);
     if (i < buf_shape[0] && j < buf_shape[1] && k < buf_shape[2]) {
-        Int buf_idx = IDX(i, j, k, buf_shape);
+        INT buf_idx = IDX(i, j, k, buf_shape);
         i += buf_offset[0];
         j += buf_offset[1];
         k += buf_offset[2];
-        Int dst_idx = IDX(i, j, k, dst_shape);
+        INT dst_idx = IDX(i, j, k, dst_shape);
         dst[dst_idx] = buffer[buf_idx];
     }
 }
 
-__global__ void kernel_CPM_UnpackColoredBuffer(Real *buffer, Int3 buf_shape, Int3 buf_offset, Int color , Real *dst, Int3 dst_shape, Int3 dst_offset) {
-    Int i, j, k;
+__global__ void kernel_CPM_UnpackColoredBuffer(REAL *buffer, INT3 buf_shape, INT3 buf_offset, INT color , REAL *dst, INT3 dst_shape, INT3 dst_offset) {
+    INT i, j, k;
     GLOBAL_THREAD_IDX_3D(i, j, k);
     if (i < buf_shape[0] && j < buf_shape[1] && k < buf_shape[2]) {
-        Int buf_idx = IDX(i, j, k, buf_shape);
+        INT buf_idx = IDX(i, j, k, buf_shape);
         i += buf_offset[0];
         j += buf_offset[1];
         k += buf_offset[2];
-        Int dst_idx = IDX(i, j, k, dst_shape);
+        INT dst_idx = IDX(i, j, k, dst_shape);
         if ((i + j + k + SUM3(dst_offset)) % 2 == color) {
             dst[dst_idx] = buffer[buf_idx / 2];
         }
     }
 }
 
-void CPMDevCall::PackBuffer(Real *buffer, Region &map, Real *src, Region &pdm, dim3 block_dim, Stream stream) {
+void CPMDevCall::PackBuffer(REAL *buffer, Region &map, REAL *src, Region &pdm, dim3 block_dim, STREAM stream) {
     dim3 grid_dim(
         (map.shape[0] + block_dim.x - 1) / block_dim.x,
         (map.shape[1] + block_dim.y - 1) / block_dim.y,
@@ -69,7 +69,7 @@ void CPMDevCall::PackBuffer(Real *buffer, Region &map, Real *src, Region &pdm, d
     kernel_CPM_PackBuffer<<<grid_dim, block_dim, 0, stream>>>(buffer, map.shape, map.offset, src, pdm.shape);
 }
 
-void CPMDevCall::PackColoredBuffer(Real *buffer, Region &map, Int color, Real *src, Region &pdm, dim3 block_dim, Stream stream) {
+void CPMDevCall::PackColoredBuffer(REAL *buffer, Region &map, INT color, REAL *src, Region &pdm, dim3 block_dim, STREAM stream) {
     dim3 grid_dim(
         (map.shape[0] + block_dim.x - 1) / block_dim.x,
         (map.shape[1] + block_dim.y - 1) / block_dim.y,
@@ -78,7 +78,7 @@ void CPMDevCall::PackColoredBuffer(Real *buffer, Region &map, Int color, Real *s
     kernel_CPM_PackColoredBuffer<<<grid_dim, block_dim, 0, stream>>>(buffer, map.shape, map.offset, color, src, pdm.shape, pdm.offset);
 }
 
-void CPMDevCall::UnpackBuffer(Real *buffer, Region &map, Real *dst, Region &pdm, dim3 block_dim, Stream stream) {
+void CPMDevCall::UnpackBuffer(REAL *buffer, Region &map, REAL *dst, Region &pdm, dim3 block_dim, STREAM stream) {
     dim3 grid_dim(
         (map.shape[0] + block_dim.x - 1) / block_dim.x,
         (map.shape[1] + block_dim.y - 1) / block_dim.y,
@@ -87,7 +87,7 @@ void CPMDevCall::UnpackBuffer(Real *buffer, Region &map, Real *dst, Region &pdm,
     kernel_CPM_UnpackBuffer<<<grid_dim, block_dim, 0, stream>>>(buffer, map.shape, map.offset, dst, pdm.shape);
 }
 
-void CPMDevCall::UnpackColoredBuffer(Real *buffer, Region &map, Int color, Real *dst, Region &pdm, dim3 block_dim, Stream stream) {
+void CPMDevCall::UnpackColoredBuffer(REAL *buffer, Region &map, INT color, REAL *dst, Region &pdm, dim3 block_dim, STREAM stream) {
     dim3 grid_dim(
         (map.shape[0] + block_dim.x - 1) / block_dim.x,
         (map.shape[1] + block_dim.y - 1) / block_dim.y,

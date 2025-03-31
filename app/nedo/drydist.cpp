@@ -20,9 +20,9 @@ void init(int &argc, char **&argv) {
     alm.init(falm.workdir, falm.params["turbine"], falm.cpm);
     alm.print_info(TERMINAL_OUTPUT_RANK);
 
-    Real u_inflow = falm.params["inflow"]["velocity"].get<Real>();
-    Matrix<Real> &u = falm.fv.u;
-    for (Int i = 0; i < u.shape[0]; i ++) {
+    REAL u_inflow = falm.params["inflow"]["velocity"].get<REAL>();
+    Matrix<REAL> &u = falm.fv.u;
+    for (INT i = 0; i < u.shape[0]; i ++) {
         u(i, 0) = u_inflow;
         u(i, 1) = u(i, 2) = 0.0;
     }
@@ -40,9 +40,9 @@ int main(int argc, char **argv) {
     FalmBasicVar &fv = falm.fv;
     FalmBaseMesh &mesh = falm.baseMesh;
     const Region &pdm = cpm.pdm_list[cpm.rank];
-    const Int3 &shape = pdm.shape;
+    const INT3 &shape = pdm.shape;
 
-    Matrix<Real> phi(shape, 1, HDC::HstDev);
+    Matrix<REAL> phi(shape, 1, HDC::HstDev);
 
     alm.Alm(mesh.x, mesh.y, mesh.z, fv.u, fv.ff, 0);
     alm.DryDistribution(mesh.x, mesh.y, mesh.z, phi);
@@ -52,13 +52,13 @@ int main(int argc, char **argv) {
 
     FILE *csv = fopen("data/drydist.csv", "w");
     fprintf(csv, "x,y,z,phi,f1,f2,f3\n");
-    for (Int k = 0; k < shape[2]; k ++) {
-    for (Int j = 0; j < shape[1]; j ++) {
-    for (Int i = 0; i < shape[0]; i ++) {
-        Int idx = IDX(i,j,k,shape);
-        Matrix<Real> &x = mesh.x;
-        Matrix<Real> &y = mesh.y;
-        Matrix<Real> &z = mesh.z;
+    for (INT k = 0; k < shape[2]; k ++) {
+    for (INT j = 0; j < shape[1]; j ++) {
+    for (INT i = 0; i < shape[0]; i ++) {
+        INT idx = IDX(i,j,k,shape);
+        Matrix<REAL> &x = mesh.x;
+        Matrix<REAL> &y = mesh.y;
+        Matrix<REAL> &z = mesh.z;
         fprintf(csv, "%lf,%lf,%lf,%lf,%lf,%lf,%lf\n", x(i), y(j), z(k), phi(idx), fv.ff(idx,0), fv.ff(idx,1), fv.ff(idx,2));
     }}}
     fclose(csv);

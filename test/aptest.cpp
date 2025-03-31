@@ -35,9 +35,9 @@ int main() {
 
     apHandler.release();
 
-    Falm::Real3 a, b;
+    Falm::REAL3 a, b;
     a = {{0.1, 0.2, 0.3}};
     b = {{0.5, 0.6, 0.7}};
-    Falm::Real3 c = a + b;
+    Falm::REAL3 c = a + b;
     printf("%lf %lf %lf\n", c[0], c[1], c[2]);
 }

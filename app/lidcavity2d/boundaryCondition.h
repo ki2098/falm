@@ -7,27 +7,27 @@
 namespace LidCavity2d {
 
 void pressureBC(
-    Falm::Matrix<Falm::Real> &p,
+    Falm::Matrix<Falm::REAL> &p,
     Falm::CPM            &cpm,
-    Falm::Stream             *streamptr = nullptr
+    Falm::STREAM             *streamptr = nullptr
 );
 
 void velocityBC(
-    Falm::Matrix<Falm::Real> &u,
+    Falm::Matrix<Falm::REAL> &u,
     Falm::CPM            &cpm,
-    Falm::Stream             *streamptr = nullptr
+    Falm::STREAM             *streamptr = nullptr
 );
 
 void forceFaceVelocityZero(
-    Falm::Matrix<Falm::Real> &uu,
+    Falm::Matrix<Falm::REAL> &uu,
     Falm::CPM            &cpm,
-    Falm::Stream             *streamptr = nullptr
+    Falm::STREAM             *streamptr = nullptr
 );
 
 void copyZ5(
-    Falm::Matrix<Falm::Real> &field,
+    Falm::Matrix<Falm::REAL> &field,
     Falm::CPM            &cpm,
-    Falm::Stream             *streamptr = nullptr
+    Falm::STREAM             *streamptr = nullptr
 );
 
 // static inline void forceZComponentZero(Falm::Matrix<Falm::REAL> &field, Falm::FLAG hdctype) {

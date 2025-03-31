@@ -42,11 +42,11 @@ namespace Falm {
 //     falmWaitStream();
 // }
 
-void FalmEq::Res(Matrix<Real> &a, Matrix<Real> &x, Matrix<Real> &b, Matrix<Real> &r, CPM &cpm, dim3 block_dim, Stream *stream) {
+void FalmEq::Res(Matrix<REAL> &a, Matrix<REAL> &x, Matrix<REAL> &b, Matrix<REAL> &r, CPM &cpm, dim3 block_dim, STREAM *stream) {
     Region &pdm = cpm.pdm_list[cpm.rank];
-    CPMComm<Real> cpmop(&cpm);
+    CPMComm<REAL> cpmop(&cpm);
     cpmop.IExchange6Face(x.dev.ptr, 1, 0, 0);
-    Int3 inner_shape, inner_offset, boundary_shape[6], boundary_offset[6];
+    INT3 inner_shape, inner_offset, boundary_shape[6], boundary_offset[6];
     cpm.set6Region(inner_shape, inner_offset, boundary_shape, boundary_offset, 1, Region(pdm.shape, cpm.gc));
 
     FalmEqDevCall::Res(a, x, b, r, pdm, Region(inner_shape, inner_offset), block_dim);
@@ -54,7 +54,7 @@ void FalmEq::Res(Matrix<Real> &a, Matrix<Real> &x, Matrix<Real> &b, Matrix<Real>
     cpmop.Wait6Face();
     cpmop.PostExchange6Face();
 
-    for (Int fid = 0; fid < 6; fid ++) {
+    for (INT fid = 0; fid < 6; fid ++) {
         if (cpm.neighbour[fid] >= 0) {
             dim3 __block(
                 (fid == CPM::XPLUS || fid == CPM::XMINUS)? 1U : 8U,
@@ -62,12 +62,12 @@ void FalmEq::Res(Matrix<Real> &a, Matrix<Real> &x, Matrix<Real> &b, Matrix<Real>
                 (fid == CPM::ZPLUS || fid == CPM::ZMINUS)? 1U : 8U
             );
             // Mapper map(boundary_shape[fid], boundary_offset[fid]);
-            Stream fstream = (stream)? stream[fid] : (Stream)0;
+            STREAM fstream = (stream)? stream[fid] : (STREAM)0;
             FalmEqDevCall::Res(a, x, b, r, pdm, Region(boundary_shape[fid], boundary_offset[fid]), __block, fstream);
         }
     }
     if (stream) {
-        for (Int fid = 0; fid < 6; fid ++) {
+        for (INT fid = 0; fid < 6; fid ++) {
             if (cpm.neighbour[fid] >= 0) {
                 falmWaitStream(stream[fid]);
             }
@@ -77,13 +77,13 @@ void FalmEq::Res(Matrix<Real> &a, Matrix<Real> &x, Matrix<Real> &b, Matrix<Real>
     falmWaitStream();
 }
 
-void FalmEq::Jacobi(Matrix<Real> &a, Matrix<Real> &x, Matrix<Real> &b, Matrix<Real> &r, CPM &cpm, dim3 block_dim, Stream *stream) {
+void FalmEq::Jacobi(Matrix<REAL> &a, Matrix<REAL> &x, Matrix<REAL> &b, Matrix<REAL> &r, CPM &cpm, dim3 block_dim, STREAM *stream) {
     Region &pdm = cpm.pdm_list[cpm.rank];
     Region &global = cpm.global;
     Region gmap(global.shape, cpm.gc);
     
-    CPMComm<Real> cpmop(&cpm);
-    Int3 inner_shape, inner_offset, boundary_shape[6], boundary_offset[6];
+    CPMComm<REAL> cpmop(&cpm);
+    INT3 inner_shape, inner_offset, boundary_shape[6], boundary_offset[6];
     cpm.set6Region(inner_shape, inner_offset, boundary_shape, boundary_offset, 1, Region(pdm.shape, cpm.gc));
 
     Region inner_map(inner_shape, inner_offset);
@@ -99,7 +99,7 @@ void FalmEq::Jacobi(Matrix<Real> &a, Matrix<Real> &x, Matrix<Real> &b, Matrix<Re
         cpmop.Wait6Face();
         cpmop.PostExchange6Face();
 
-        for (Int fid = 0; fid < 6; fid ++) {
+        for (INT fid = 0; fid < 6; fid ++) {
             if (cpm.neighbour[fid] >= 0) {
                 dim3 __block(
                     (fid == CPM::XPLUS || fid == CPM::XMINUS)? 1U : 8U,
@@ -107,12 +107,12 @@ void FalmEq::Jacobi(Matrix<Real> &a, Matrix<Real> &x, Matrix<Real> &b, Matrix<Re
                     (fid == CPM::ZPLUS || fid == CPM::ZMINUS)? 1U : 8U
                 );
                 // Mapper map(boundary_shape[fid], boundary_offset[fid]);
-                Stream fstream = (stream)? stream[fid] : (Stream)0;
+                STREAM fstream = (stream)? stream[fid] : (STREAM)0;
                 JacobiSweep(a, x, xp, b, pdm, Region(boundary_shape[fid], boundary_offset[fid]), __block, fstream);
             }
         }
         if (stream) {
-            for (Int fid = 0; fid < 6; fid ++) {
+            for (INT fid = 0; fid < 6; fid ++) {
                 if (cpm.neighbour[fid] >= 0) {
                     falmWaitStream(stream[fid]);
                 }
@@ -126,17 +126,17 @@ void FalmEq::Jacobi(Matrix<Real> &a, Matrix<Real> &x, Matrix<Real> &b, Matrix<Re
     } while (it < maxit && err > tol);
 }
 
-void FalmEq::JacobiPC(Matrix<Real> &a, Matrix<Real> &x, Matrix<Real> &b, CPM &cpm, dim3 block_dim, Stream *stream) {
+void FalmEq::JacobiPC(Matrix<REAL> &a, Matrix<REAL> &x, Matrix<REAL> &b, CPM &cpm, dim3 block_dim, STREAM *stream) {
     Region &pdm = cpm.pdm_list[cpm.rank];
-    Matrix<Real> xp(x.shape[0], x.shape[1], HDC::Device, "Jacobi" + x.name + "Previous");
+    Matrix<REAL> xp(x.shape[0], x.shape[1], HDC::Device, "Jacobi" + x.name + "Previous");
 
-    CPMComm<Real> cpmop(&cpm);
-    Int3 inner_shape, inner_offset, boundary_shape[6], boundary_offset[6];
+    CPMComm<REAL> cpmop(&cpm);
+    INT3 inner_shape, inner_offset, boundary_shape[6], boundary_offset[6];
     cpm.set6Region(inner_shape, inner_offset, boundary_shape, boundary_offset, 1, Region(pdm.shape, cpm.gc));
     
     Region inner_map(inner_shape, inner_offset);
         
-    Int __it = 0;
+    INT __it = 0;
     do {
         xp.copy(x, HDC::Device);
         cpmop.IExchange6Face(xp.dev.ptr, 1, 0, 0);
@@ -146,7 +146,7 @@ void FalmEq::JacobiPC(Matrix<Real> &a, Matrix<Real> &x, Matrix<Real> &b, CPM &cp
         cpmop.Wait6Face();
         cpmop.PostExchange6Face();
     
-        for (Int fid = 0; fid < 6; fid ++) {
+        for (INT fid = 0; fid < 6; fid ++) {
             if (cpm.neighbour[fid] >= 0) {
                 dim3 __block(
                     (fid == CPM::XPLUS || fid == CPM::XMINUS)? 1U : 8U,
@@ -154,12 +154,12 @@ void FalmEq::JacobiPC(Matrix<Real> &a, Matrix<Real> &x, Matrix<Real> &b, CPM &cp
                     (fid == CPM::ZPLUS || fid == CPM::ZMINUS)? 1U : 8U
                 );
                 // Mapper map(boundary_shape[fid], boundary_offset[fid]);
-                Stream fstream = (stream)? stream[fid] : (Stream)0;
+                STREAM fstream = (stream)? stream[fid] : (STREAM)0;
                 JacobiSweep(a, x, xp, b, pdm, Region(boundary_shape[fid], boundary_offset[fid]), __block, fstream);
             }
         }
         if (stream) {
-            for (Int fid = 0; fid < 6; fid ++) {
+            for (INT fid = 0; fid < 6; fid ++) {
                 if (cpm.neighbour[fid] >= 0) {
                     falmWaitStream(stream[fid]);
                 }
@@ -170,12 +170,12 @@ void FalmEq::JacobiPC(Matrix<Real> &a, Matrix<Real> &x, Matrix<Real> &b, CPM &cp
     } while (__it < pc_maxit);
 }
 
-void FalmEq::SOR(Matrix<Real> &a, Matrix<Real> &x, Matrix<Real> &b, Matrix<Real> &r, CPM &cpm, dim3 block_dim, Stream *stream) {
+void FalmEq::SOR(Matrix<REAL> &a, Matrix<REAL> &x, Matrix<REAL> &b, Matrix<REAL> &r, CPM &cpm, dim3 block_dim, STREAM *stream) {
     Region &pdm = cpm.pdm_list[cpm.rank];
     Region &global = cpm.global;
     Region  gmap(global.shape, cpm.gc);
-    CPMComm<Real> cpmop(&cpm);
-    Int3 inner_shape, inner_offset, boundary_shape[6], boundary_offset[6];
+    CPMComm<REAL> cpmop(&cpm);
+    INT3 inner_shape, inner_offset, boundary_shape[6], boundary_offset[6];
     cpm.set6Region(inner_shape, inner_offset, boundary_shape, boundary_offset, 1, Region(pdm.shape, cpm.gc));
 
     Region inner_map(inner_shape, inner_offset);
@@ -186,7 +186,7 @@ void FalmEq::SOR(Matrix<Real> &a, Matrix<Real> &x, Matrix<Real> &b, Matrix<Real>
         SORSweep(a, x, b, relax_factor, Color::Black, pdm, inner_map, block_dim);
         cpmop.Wait6Face();
         cpmop.PostExchange6ColoredFace();
-        for (Int fid = 0; fid < 6; fid ++) {
+        for (INT fid = 0; fid < 6; fid ++) {
             if (cpm.neighbour[fid] >= 0) {
                 dim3 __block(
                     (fid == CPM::XPLUS || fid == CPM::XMINUS)? 1U : 8U,
@@ -194,12 +194,12 @@ void FalmEq::SOR(Matrix<Real> &a, Matrix<Real> &x, Matrix<Real> &b, Matrix<Real>
                     (fid == CPM::ZPLUS || fid == CPM::ZMINUS)? 1U : 8U
                 );
                 // Mapper map(boundary_shape[fid], boundary_offset[fid]);
-                Stream fstream = (stream)? stream[fid] : (Stream)0;
+                STREAM fstream = (stream)? stream[fid] : (STREAM)0;
                 SORSweep(a, x, b, relax_factor, Color::Black, pdm, Region(boundary_shape[fid], boundary_offset[fid]), __block, fstream);
             }
         }
         if (stream) {
-            for (Int fid = 0; fid < 6; fid ++) {
+            for (INT fid = 0; fid < 6; fid ++) {
                 if (cpm.neighbour[fid] >= 0) {
                     falmWaitStream(stream[fid]);
                 }
@@ -212,7 +212,7 @@ void FalmEq::SOR(Matrix<Real> &a, Matrix<Real> &x, Matrix<Real> &b, Matrix<Real>
         SORSweep(a, x, b, relax_factor, Color::Red, pdm, inner_map, block_dim);
         cpmop.Wait6Face();
         cpmop.PostExchange6ColoredFace();
-        for (Int fid = 0; fid < 6; fid ++) {
+        for (INT fid = 0; fid < 6; fid ++) {
             if (cpm.neighbour[fid] >= 0) {
                 dim3 __block(
                     (fid == CPM::XPLUS || fid == CPM::XMINUS)? 1U : 8U,
@@ -220,12 +220,12 @@ void FalmEq::SOR(Matrix<Real> &a, Matrix<Real> &x, Matrix<Real> &b, Matrix<Real>
                     (fid == CPM::ZPLUS || fid == CPM::ZMINUS)? 1U : 8U
                 );
                 // Mapper map(boundary_shape[fid], boundary_offset[fid]);
-                Stream fstream = (stream)? stream[fid] : (Stream)0;
+                STREAM fstream = (stream)? stream[fid] : (STREAM)0;
                 SORSweep(a, x, b, relax_factor, Color::Red, pdm, Region(boundary_shape[fid], boundary_offset[fid]), __block, fstream);
             }
         }
         if (stream) {
-            for (Int fid = 0; fid < 6; fid ++) {
+            for (INT fid = 0; fid < 6; fid ++) {
                 if (cpm.neighbour[fid] >= 0) {
                     falmWaitStream(stream[fid]);
                 }
@@ -239,21 +239,21 @@ void FalmEq::SOR(Matrix<Real> &a, Matrix<Real> &x, Matrix<Real> &b, Matrix<Real>
     } while (it < maxit && err > tol);
 }
 
-void FalmEq::SORPC(Matrix<Real> &a, Matrix<Real> &x, Matrix<Real> &b, CPM &cpm, dim3 block_dim, Stream *stream) {
+void FalmEq::SORPC(Matrix<REAL> &a, Matrix<REAL> &x, Matrix<REAL> &b, CPM &cpm, dim3 block_dim, STREAM *stream) {
     Region &pdm = cpm.pdm_list[cpm.rank];
-    CPMComm<Real> cpmop(&cpm);
-    Int3 inner_shape, inner_offset, boundary_shape[6], boundary_offset[6];
+    CPMComm<REAL> cpmop(&cpm);
+    INT3 inner_shape, inner_offset, boundary_shape[6], boundary_offset[6];
     cpm.set6Region(inner_shape, inner_offset, boundary_shape, boundary_offset, 1, Region(pdm.shape, cpm.gc));
 
     Region inner_map(inner_shape, inner_offset);
 
-    Int __it = 0;
+    INT __it = 0;
     do {
         cpmop.IExchange6ColoredFace(x.dev.ptr, Color::Red, 1, 0, 0);
         SORSweep(a, x, b, pc_relax_factor, Color::Black, pdm, inner_map, block_dim);
         cpmop.Wait6Face();
         cpmop.PostExchange6ColoredFace();
-        for (Int fid = 0; fid < 6; fid ++) {
+        for (INT fid = 0; fid < 6; fid ++) {
             if (cpm.neighbour[fid] >= 0) {
                 dim3 __block(
                     (fid == CPM::XPLUS || fid == CPM::XMINUS)? 1U : 8U,
@@ -261,12 +261,12 @@ void FalmEq::SORPC(Matrix<Real> &a, Matrix<Real> &x, Matrix<Real> &b, CPM &cpm, 
                     (fid == CPM::ZPLUS || fid == CPM::ZMINUS)? 1U : 8U
                 );
                 // Mapper map(boundary_shape[fid], boundary_offset[fid]);
-                Stream fstream = (stream)? stream[fid] : (Stream)0;
+                STREAM fstream = (stream)? stream[fid] : (STREAM)0;
                 SORSweep(a, x, b, pc_relax_factor, Color::Black, pdm, Region(boundary_shape[fid], boundary_offset[fid]), __block, fstream);
             }
         }
         if (stream) {
-            for (Int fid = 0; fid < 6; fid ++) {
+            for (INT fid = 0; fid < 6; fid ++) {
                 if (cpm.neighbour[fid] >= 0) {
                     falmWaitStream(stream[fid]);
                 }
@@ -278,7 +278,7 @@ void FalmEq::SORPC(Matrix<Real> &a, Matrix<Real> &x, Matrix<Real> &b, CPM &cpm, 
         SORSweep(a, x, b, pc_relax_factor, Color::Red, pdm, inner_map, block_dim);
         cpmop.Wait6Face();
         cpmop.PostExchange6ColoredFace();
-        for (Int fid = 0; fid < 6; fid ++) {
+        for (INT fid = 0; fid < 6; fid ++) {
             if (cpm.neighbour[fid] >= 0) {
                 dim3 __block(
                     (fid == CPM::XPLUS || fid == CPM::XMINUS)? 1U : 8U,
@@ -286,12 +286,12 @@ void FalmEq::SORPC(Matrix<Real> &a, Matrix<Real> &x, Matrix<Real> &b, CPM &cpm, 
                     (fid == CPM::ZPLUS || fid == CPM::ZMINUS)? 1U : 8U
                 );
                 // Mapper map(boundary_shape[fid], boundary_offset[fid]);
-                Stream fstream = (stream)? stream[fid] : (Stream)0;
+                STREAM fstream = (stream)? stream[fid] : (STREAM)0;
                 SORSweep(a, x, b, pc_relax_factor, Color::Red, pdm, Region(boundary_shape[fid], boundary_offset[fid]), __block, fstream);
             }
         }
         if (stream) {
-            for (Int fid = 0; fid < 6; fid ++) {
+            for (INT fid = 0; fid < 6; fid ++) {
                 if (cpm.neighbour[fid] >= 0) {
                     falmWaitStream(stream[fid]);
                 }
@@ -302,7 +302,7 @@ void FalmEq::SORPC(Matrix<Real> &a, Matrix<Real> &x, Matrix<Real> &b, CPM &cpm, 
     } while (__it < pc_maxit);
 }
 
-void FalmEq::PBiCGStab(Matrix<Real> &a, Matrix<Real> &x, Matrix<Real> &b, Matrix<Real> &r, CPM &cpm, dim3 block_dim, Stream *stream) {
+void FalmEq::PBiCGStab(Matrix<REAL> &a, Matrix<REAL> &x, Matrix<REAL> &b, Matrix<REAL> &r, CPM &cpm, dim3 block_dim, STREAM *stream) {
     // pprofiler.startEvent("PBiCGStab");
     // printf("PBiCGStab run\n");
     // pprofiler.startEvent("PBiCGStab init");
@@ -318,7 +318,7 @@ void FalmEq::PBiCGStab(Matrix<Real> &a, Matrix<Real> &x, Matrix<Real> &b, Matrix
     // Matrix<REAL> pp(pdm.shape, 1, HDC::Device, "PBiCGStab pp");
     // Matrix<REAL> ss(pdm.shape, 1, HDC::Device, "PBiCGStab ss");
     // Matrix<REAL>  t(pdm.shape, 1, HDC::Device, "PBiCGStab  t");
-    Real rho, rrho, alpha, beta, omega;
+    REAL rho, rrho, alpha, beta, omega;
     // pprofiler.endEvent("PBiCGStab init");
 
     // size_t freebyte, totalbyte;

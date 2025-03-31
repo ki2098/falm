@@ -11,72 +11,72 @@ namespace Falm {
 namespace Rmcp {
 
 struct RmcpTurbine {
-    Real  torque = 0;
-    Real  cpower = 0;
-    Real3    pos = {{0, 0, 0}};
-    Real3 rotpos = {{0, 0, 0}};
-    Real       R = 1.0;
-    Real   width;
-    Real   thick;
-    Real     tip;
-    Real     hub;
-    Real    roll = 0.0;
-    Real   pitch = 0.0;
-    Real     yaw = 0.0;
-    VECTOR<Real, 6> chord_a;
-    VECTOR<Real, 6> angle_a;
+    REAL  torque = 0;
+    REAL  cpower = 0;
+    REAL3    pos = {{0, 0, 0}};
+    REAL3 rotpos = {{0, 0, 0}};
+    REAL       R = 1.0;
+    REAL   width;
+    REAL   thick;
+    REAL     tip;
+    REAL     hub;
+    REAL    roll = 0.0;
+    REAL   pitch = 0.0;
+    REAL     yaw = 0.0;
+    VECTOR<REAL, 6> chord_a;
+    VECTOR<REAL, 6> angle_a;
 
-    __host__ __device__ Real chord(Real r) {
-        Real r2 = r * r;
-        Real r3 = r * r2;
-        Real r4 = r * r3;
-        Real r5 = r * r4;
+    __host__ __device__ REAL chord(REAL r) {
+        REAL r2 = r * r;
+        REAL r3 = r * r2;
+        REAL r4 = r * r3;
+        REAL r5 = r * r4;
         return chord_a[0] + chord_a[1] * r + chord_a[2] * r2 + chord_a[3] * r3 + chord_a[4] * r4 + chord_a[5] * r5;
     }
 
-    __host__ __device__ Real angle(Real r) {
-        Real r2 = r * r;
-        Real r3 = r * r2;
-        Real r4 = r * r3;
-        Real r5 = r * r4;
+    __host__ __device__ REAL angle(REAL r) {
+        REAL r2 = r * r;
+        REAL r3 = r * r2;
+        REAL r4 = r * r3;
+        REAL r5 = r * r4;
         return angle_a[0] + angle_a[1] * r + angle_a[2] * r2 + angle_a[3] * r3 + angle_a[4] * r4 + angle_a[5] * r5;
     }
 
-    __host__ __device__ Real3 transform(const Real3 &vxyz) {
-        Real s1, s2, s3, c1, c2, c3;
+    __host__ __device__ REAL3 transform(const REAL3 &vxyz) {
+        REAL s1, s2, s3, c1, c2, c3;
         s1 = sin(roll);
         s2 = sin(pitch);
         s3 = sin(yaw);
         c1 = cos(roll);
         c2 = cos(pitch);
         c3 = cos(yaw);
-        Real x1 = vxyz[0], y1 = vxyz[1], z1 = vxyz[2];
-        Real x2 = (c2 * c3               ) * x1 + (c2 * s3               ) * y1 + (- s2   ) * z1;
-        Real y2 = (s1 * s2 * c3 - c1 * s3) * x1 + (s1 * s2 * s3 + c1 * c3) * y1 + (s1 * c2) * z1;
-        Real z2 = (c1 * s2 * c3 + s1 * s3) * x1 + (c1 * s2 * s3 - s1 * c3) * y1 + (c1 * c2) * z1;
+        REAL x1 = vxyz[0], y1 = vxyz[1], z1 = vxyz[2];
+        REAL x2 = (c2 * c3               ) * x1 + (c2 * s3               ) * y1 + (- s2   ) * z1;
+        REAL y2 = (s1 * s2 * c3 - c1 * s3) * x1 + (s1 * s2 * s3 + c1 * c3) * y1 + (s1 * c2) * z1;
+        REAL z2 = (c1 * s2 * c3 + s1 * s3) * x1 + (c1 * s2 * s3 - s1 * c3) * y1 + (c1 * c2) * z1;
         return {{x2, y2, z2}};
     }
 
-    __host__ __device__ Real3 invert_transform(const Real3 &vxyz2) {
-        Real s1, s2, s3, c1, c2, c3;
+    __host__ __device__ REAL3 invert_transform(const REAL3 &vxyz2) {
+        REAL s1, s2, s3, c1, c2, c3;
         s1 = sin(roll);
         s2 = sin(pitch);
         s3 = sin(yaw);
         c1 = cos(roll);
         c2 = cos(pitch);
         c3 = cos(yaw);
-        Real x2 = vxyz2[0], y2 = vxyz2[1], z2 = vxyz2[2];
-        Real x1 = (c2 * c3) * x2 + (s1 * s2 * c3 - c1 * s3) * y2 + (c1 * s2 * c3 + s1 * s3) * z2;
-        Real y1 = (c2 * s3) * x2 + (s1 * s2 * s3 + c1 * c3) * y2 + (c1 * s2 * s3 - s1 * c3) * z2;
-        Real z1 = (- s2   ) * x2 + (s1 * c2               ) * y2 + (c1 * c2               ) * z2;
+        REAL x2 = vxyz2[0], y2 = vxyz2[1], z2 = vxyz2[2];
+        REAL x1 = (c2 * c3) * x2 + (s1 * s2 * c3 - c1 * s3) * y2 + (c1 * s2 * c3 + s1 * s3) * z2;
+        REAL y1 = (c2 * s3) * x2 + (s1 * s2 * s3 + c1 * c3) * y2 + (c1 * s2 * s3 - s1 * c3) * z2;
+        REAL z1 = (- s2   ) * x2 + (s1 * c2               ) * y2 + (c1 * c2               ) * z2;
         return {{x1, y1, z1}};
     }
 
-    __host__ __device__ Real Cd(Real alpha) {
+    __host__ __device__ REAL Cd(REAL alpha) {
         return 0.02;
     }
     
-    __host__ __device__ Real Cl(Real alpha) {
+    __host__ __device__ REAL Cl(REAL alpha) {
         if (alpha > - 6 && alpha < 7) {
             return 0.39087 + 0.10278 * alpha;
         } else if (alpha > 7) {
@@ -90,20 +90,20 @@ struct RmcpTurbine {
 struct RmcpTurbineArray {
     RmcpTurbine *tptr;
     RmcpTurbine *tdevptr;
-    Flag     hdctype;
-    Int     nTurbine;
+    FLAG     hdctype;
+    INT     nTurbine;
 
     RmcpTurbineArray(const RmcpTurbineArray &_wf) = delete;
     RmcpTurbineArray &operator=(const RmcpTurbineArray &_wf) = delete;
 
-    RmcpTurbineArray(Int _n) {
+    RmcpTurbineArray(INT _n) {
         nTurbine = _n;
         hdctype  = HDC::Host;
         falmErrCheckMacro(falmMalloc((void**)&tptr, sizeof(RmcpTurbine) * nTurbine));
         tdevptr  = nullptr;
     }
 
-    void sync(Flag _mcptype) {
+    void sync(FLAG _mcptype) {
         if (_mcptype == MCP::Hst2Dev) {
             if (hdctype & HDC::Device) {
                 falmErrCheckMacro(falmMemcpy(tdevptr, tptr, sizeof(RmcpTurbine) * nTurbine, MCP::Hst2Dev));
@@ -123,7 +123,7 @@ struct RmcpTurbineArray {
         }
     }
 
-    void release(Flag _hdctype) {
+    void release(FLAG _hdctype) {
         if (_hdctype & HDC::Host) {
             falmErrCheckMacro(falmFree(tptr));
             hdctype &= ~(HDC::Host);
@@ -145,7 +145,7 @@ struct RmcpTurbineArray {
         }
     }
 
-    RmcpTurbine &operator[](Int i) {
+    RmcpTurbine &operator[](INT i) {
         return tptr[i];
     }
 };

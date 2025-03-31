@@ -8,14 +8,14 @@ namespace Falm {
 class APArray {
 public:
     int nap;
-    Matrix<Real> apx;
-    Matrix<Int>  api;
-    Matrix<Real> aptheta;
-    Matrix<Real> apr;
-    Matrix<Real> apchord;
-    Matrix<Real> aptwist;
-    Matrix<Real> apff;
-    Matrix<Real> apcdcl;
+    Matrix<REAL> apx;
+    Matrix<INT>  api;
+    Matrix<REAL> aptheta;
+    Matrix<REAL> apr;
+    Matrix<REAL> apchord;
+    Matrix<REAL> aptwist;
+    Matrix<REAL> apff;
+    Matrix<REAL> apcdcl;
     Matrix<int> aptid;
     Matrix<int> apbid;
     Matrix<int> aprank;

@@ -6,7 +6,7 @@
 using namespace Vcdm;
 
 int main() {
-    VCDM<Falm::Real> vcdm;
+    VCDM<Falm::REAL> vcdm;
 
     __VCDM __vcdm;
     std::string str = __vcdm.makefilename("pref");

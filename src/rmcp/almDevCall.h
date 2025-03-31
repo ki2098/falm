@@ -13,7 +13,7 @@ namespace Rmcp {
 
 class RmcpAlmDevCall {
 public:
-    Matrix<Int> alm_flag;
+    Matrix<INT> alm_flag;
     BladeHandler blades;
     TurbineHandler turbines;
 
@@ -21,7 +21,7 @@ public:
 
     RmcpAlmDevCall(const Region &pdm) : alm_flag(pdm.shape, 1, HDC::Device, "ALM flag") {}
 
-    void init(const Region &pdm, Json turbine_params, std::string workdir) {
+    void init(const Region &pdm, json turbine_params, std::string workdir) {
         alm_flag.alloc(pdm.shape, 1, HDC::Device, "ALM flag");
         std::string bppath = turbine_params["bladeProperties"];
         if (bppath[0] == '/') {
@@ -43,17 +43,17 @@ public:
         turbines.release();
     }
 
-    void ALM(Matrix<Real> &u, Matrix<Real> &x, Matrix<Real> &ff, Real t, RmcpTurbineArray &wf, const Region &pdm, const Region &map, dim3 block_dim={8,8,8});
+    void ALM(Matrix<REAL> &u, Matrix<REAL> &x, Matrix<REAL> &ff, REAL t, RmcpTurbineArray &wf, const Region &pdm, const Region &map, dim3 block_dim={8,8,8});
 
-    void ALM(BladeHandler &blades, Matrix<Real> &u, Matrix<Real> &x, Matrix<Real> &ff, Real t, RmcpTurbineArray &wf, const Region &pdm, const Region &map, dim3 block_dim={8,8,8});
+    void ALM(BladeHandler &blades, Matrix<REAL> &u, Matrix<REAL> &x, Matrix<REAL> &ff, REAL t, RmcpTurbineArray &wf, const Region &pdm, const Region &map, dim3 block_dim={8,8,8});
 
-    void SetALMFlag(Matrix<Real> &x, Real t, RmcpTurbineArray &wf, const Region &pdm, const Region &map, dim3 block_dim={8,8,8});
+    void SetALMFlag(Matrix<REAL> &x, REAL t, RmcpTurbineArray &wf, const Region &pdm, const Region &map, dim3 block_dim={8,8,8});
 
-    void CalcTorque(Matrix<Real> &x, Matrix<Real> &ff, RmcpTurbineArray &wf, const Region &pdm, const Region &map, dim3 block_dim={8,8,8});
+    void CalcTorque(Matrix<REAL> &x, Matrix<REAL> &ff, RmcpTurbineArray &wf, const Region &pdm, const Region &map, dim3 block_dim={8,8,8});
 
-    void SetALMFlag(Matrix<Real> &x, Real t, const Region &pdm, const Region &map, dim3 block_dim={8,8,8});
+    void SetALMFlag(Matrix<REAL> &x, REAL t, const Region &pdm, const Region &map, dim3 block_dim={8,8,8});
 
-    void ALM(Matrix<Real> &u, Matrix<Real> &x, Matrix<Real> &ff, Real t, const Region &pdm, const Region &map, dim3 block_dim={8,8,8});
+    void ALM(Matrix<REAL> &u, Matrix<REAL> &x, Matrix<REAL> &ff, REAL t, const Region &pdm, const Region &map, dim3 block_dim={8,8,8});
 
     // void CalcTorque(Matrix<REAL> &x, Matrix<REAL> &ff, const Region &pdm, const Region &map, dim3 block_dim={8,8,8});
 

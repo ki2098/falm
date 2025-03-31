@@ -13,8 +13,8 @@ public:
     int count = 0;
     size_t capacity = 0;
     size_t width = 0;
-    Int color;
-    Flag hdc;
+    INT color;
+    FLAG hdc;
 };
 
 class CpmBufMan {
@@ -23,7 +23,7 @@ public:
 public:
     int max_used_idx = -1;
     CpmBuffer buffer[NBUFFER];
-    Flag hdc;
+    FLAG hdc;
 
     CpmBuffer &get(int i) {
         return buffer[i];
@@ -129,8 +129,8 @@ public:
         }
     }
 
-    int request(size_t width, const Region &map, const Region &pdm, Int color, int *buf_id) {
-        Int refcolor = (SUM3(pdm.offset) + SUM3(map.offset)) % 2;
+    int request(size_t width, const Region &map, const Region &pdm, INT color, int *buf_id) {
+        INT refcolor = (SUM3(pdm.offset) + SUM3(map.offset)) % 2;
         int count = map.size / 2;
         if (map.size % 2 == 1 && refcolor == color) {
             count ++;

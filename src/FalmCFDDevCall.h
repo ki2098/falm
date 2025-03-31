@@ -9,31 +9,31 @@ namespace Falm {
 
 class AdvectionSchemeType {
 public:
-    static const Flag Upwind1 = 0;
-    static const Flag Upwind3 = 1;
-    static const Flag QUICK   = 2;
-    static const Flag UTOPIA  = 3;
-    static const Flag KK      = 4;
+    static const FLAG Upwind1 = 0;
+    static const FLAG Upwind3 = 1;
+    static const FLAG QUICK   = 2;
+    static const FLAG UTOPIA  = 3;
+    static const FLAG KK      = 4;
 };
 
 class SGSType {
 public:
-    static const Flag Empty       = 0;
-    static const Flag Smagorinsky = 1;
-    static const Flag CSM         = 2;
+    static const FLAG Empty       = 0;
+    static const FLAG Smagorinsky = 1;
+    static const FLAG CSM         = 2;
 };
 
 class FalmCFDDevCall {
 public:
-    Real Re;
-    Real ReI;
+    REAL Re;
+    REAL ReI;
     // REAL dt;
-    Flag AdvScheme;
-    Flag SGSModel;
-    Real CSmagorinsky;
+    FLAG AdvScheme;
+    FLAG SGSModel;
+    REAL CSmagorinsky;
 
     FalmCFDDevCall() {}
-    FalmCFDDevCall(Real _Re, Flag _AdvScheme, Flag _SGSModel = SGSType::Smagorinsky, Real _CSmagorinsky = 0.1):
+    FalmCFDDevCall(REAL _Re, FLAG _AdvScheme, FLAG _SGSModel = SGSType::Smagorinsky, REAL _CSmagorinsky = 0.1):
         Re(_Re),
         ReI(1.0 / _Re),
         AdvScheme(_AdvScheme),
@@ -41,7 +41,7 @@ public:
         CSmagorinsky(_CSmagorinsky) 
     {}
 
-    void init(Real _Re, Flag _AdvScheme, Flag _SGSModel = SGSType::Smagorinsky, Real _CSmagorinsky = 0.1) {
+    void init(REAL _Re, FLAG _AdvScheme, FLAG _SGSModel = SGSType::Smagorinsky, REAL _CSmagorinsky = 0.1) {
         Re = _Re;
         ReI = 1.0 / _Re;
         AdvScheme = _AdvScheme;
@@ -172,89 +172,89 @@ public:
 
 
     void FSPseudoU(
-        Matrix<Real> &un,
-        Matrix<Real> &u,
-        Matrix<Real> &uu,
-        Matrix<Real> &ua,
-        Matrix<Real> &nut,
-        Matrix<Real> &kx,
-        Matrix<Real> &g,
-        Matrix<Real> &ja,
-        Matrix<Real> &ff,
-        Real dt,
+        Matrix<REAL> &un,
+        Matrix<REAL> &u,
+        Matrix<REAL> &uu,
+        Matrix<REAL> &ua,
+        Matrix<REAL> &nut,
+        Matrix<REAL> &kx,
+        Matrix<REAL> &g,
+        Matrix<REAL> &ja,
+        Matrix<REAL> &ff,
+        REAL dt,
         Region       &pdm,
         const Region &map,
         dim3          block_dim,
-        Stream        stream = (Stream)0
+        STREAM        stream = (STREAM)0
     );
     void UtoCU(
-        Matrix<Real> &u,
-        Matrix<Real> &uc,
-        Matrix<Real> &kx,
-        Matrix<Real> &ja,
+        Matrix<REAL> &u,
+        Matrix<REAL> &uc,
+        Matrix<REAL> &kx,
+        Matrix<REAL> &ja,
         Region       &pdm,
         const Region &map,
         dim3          block_dim,
-        Stream        stream = (Stream)0
+        STREAM        stream = (STREAM)0
     );
     void InterpolateCU(
-        Matrix<Real> &uu,
-        Matrix<Real> &uc,
+        Matrix<REAL> &uu,
+        Matrix<REAL> &uc,
         Region       &pdm,
         const Region &map,
         dim3          block_dim,
-        Stream        stream = (Stream)0
+        STREAM        stream = (STREAM)0
     );
     void ProjectPGrid(
-        Matrix<Real> &u,
-        Matrix<Real> &ua,
-        Matrix<Real> &p,
-        Matrix<Real> &kx,
-        Real dt,
+        Matrix<REAL> &u,
+        Matrix<REAL> &ua,
+        Matrix<REAL> &p,
+        Matrix<REAL> &kx,
+        REAL dt,
         Region       &pdm,
         const Region &map,
         dim3          block_dim,
-        Stream        stream = (Stream)0
+        STREAM        stream = (STREAM)0
     );
     void ProjectPFace(
-        Matrix<Real> &uu,
-        Matrix<Real> &uua,
-        Matrix<Real> &p,
-        Matrix<Real> &g,
-        Real dt,
+        Matrix<REAL> &uu,
+        Matrix<REAL> &uua,
+        Matrix<REAL> &p,
+        Matrix<REAL> &g,
+        REAL dt,
         Region       &pdm,
         const Region &map,
         dim3          block_dim,
-        Stream        stream = (Stream)0
+        STREAM        stream = (STREAM)0
     );
     void SGS(
-        Matrix<Real> &u,
-        Matrix<Real> &nut,
-        Matrix<Real> &x,
-        Matrix<Real> &kx,
-        Matrix<Real> &ja,
+        Matrix<REAL> &u,
+        Matrix<REAL> &nut,
+        Matrix<REAL> &x,
+        Matrix<REAL> &kx,
+        Matrix<REAL> &ja,
         Region       &pdm,
         const Region &map,
         dim3          block_dim,
-        Stream        stream = (Stream)0
+        STREAM        stream = (STREAM)0
     );
     void Divergence(
-        Matrix<Real> &uu,
-        Matrix<Real> &div,
-        Matrix<Real> &ja,
+        Matrix<REAL> &uu,
+        Matrix<REAL> &div,
+        Matrix<REAL> &ja,
         Region       &pdm,
         const Region &map,
         dim3          block_dim,
-        Stream        stream = (Stream)0
+        STREAM        stream = (STREAM)0
     );
     void Vortcity(
-        Matrix<Real> &u,
-        Matrix<Real> &kx,
-        Matrix<Real> &vrt,
+        Matrix<REAL> &u,
+        Matrix<REAL> &kx,
+        Matrix<REAL> &vrt,
         Region       &pdm,
         const Region &map,
         dim3          block_dim,
-        Stream        stream = 0
+        STREAM        stream = 0
     );
 };
 

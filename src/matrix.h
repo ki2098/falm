@@ -12,23 +12,23 @@ enum class StencilMatrix {Empty, D3P7, D3P13, D2P5, D2P9, D1P3, D1P5};
 template<typename T>
 struct MatrixFrame {
     T                *ptr;
-    Int2            shape;
-    Int              size;
-    Flag          hdctype;
+    INT2            shape;
+    INT              size;
+    FLAG          hdctype;
     StencilMatrix stencil;
-    __host__ __device__ T &operator()(Int _idx) const {return ptr[_idx];}
-    __host__ __device__ T &operator()(Int _row, Int _col) const {return ptr[_row + _col * shape[0]];}
+    __host__ __device__ T &operator()(INT _idx) const {return ptr[_idx];}
+    __host__ __device__ T &operator()(INT _row, INT _col) const {return ptr[_row + _col * shape[0]];}
 
     MatrixFrame(const MatrixFrame<T> &_mat) = delete;
     MatrixFrame<T>& operator=(const MatrixFrame<T> &_mat) = delete;
 
-    MatrixFrame() : ptr(nullptr), shape(Int2{{0, 0}}), size(0), hdctype(HDC::Empty), stencil(StencilMatrix::Empty) {}
-    MatrixFrame(Int3 _dom, Int _dim, Flag _hdctype, StencilMatrix _stencil = StencilMatrix::Empty);
-    MatrixFrame(Int _row, Int _col, Flag _hdctype, StencilMatrix _stencil = StencilMatrix::Empty);
+    MatrixFrame() : ptr(nullptr), shape(INT2{{0, 0}}), size(0), hdctype(HDC::Empty), stencil(StencilMatrix::Empty) {}
+    MatrixFrame(INT3 _dom, INT _dim, FLAG _hdctype, StencilMatrix _stencil = StencilMatrix::Empty);
+    MatrixFrame(INT _row, INT _col, FLAG _hdctype, StencilMatrix _stencil = StencilMatrix::Empty);
     ~MatrixFrame();
 
-    void alloc(Int3 _dom, Int _dim, Flag _hdctype, StencilMatrix _stencil = StencilMatrix::Empty);
-    void alloc(Int _row, Int _col, Flag _hdctype, StencilMatrix _stencil = StencilMatrix::Empty);
+    void alloc(INT3 _dom, INT _dim, FLAG _hdctype, StencilMatrix _stencil = StencilMatrix::Empty);
+    void alloc(INT _row, INT _col, FLAG _hdctype, StencilMatrix _stencil = StencilMatrix::Empty);
     void release();
     void clear() {
         if (hdctype == HDC::Host) {
@@ -39,8 +39,8 @@ struct MatrixFrame {
     }
 };
 
-template<typename T> MatrixFrame<T>::MatrixFrame(Int3 _dom, Int _dim, Flag _hdctype, StencilMatrix _stencil) :
-    shape(Int2{PRODUCT3(_dom), _dim}),
+template<typename T> MatrixFrame<T>::MatrixFrame(INT3 _dom, INT _dim, FLAG _hdctype, StencilMatrix _stencil) :
+    shape(INT2{PRODUCT3(_dom), _dim}),
     size(PRODUCT3(_dom) * _dim),
     hdctype(_hdctype),
     stencil(_stencil)
@@ -55,8 +55,8 @@ template<typename T> MatrixFrame<T>::MatrixFrame(Int3 _dom, Int _dim, Flag _hdct
     }
 }
 
-template<typename T> MatrixFrame<T>::MatrixFrame(Int _row, Int _col, Flag _hdctype, StencilMatrix _stencil) :
-    shape(Int2{_row, _col}),
+template<typename T> MatrixFrame<T>::MatrixFrame(INT _row, INT _col, FLAG _hdctype, StencilMatrix _stencil) :
+    shape(INT2{_row, _col}),
     size(_row * _col),
     hdctype(_hdctype),
     stencil(_stencil)
@@ -82,10 +82,10 @@ template<typename T> MatrixFrame<T>::~MatrixFrame() {
     hdctype = HDC::Empty;
 }
 
-template<typename T> void MatrixFrame<T>::alloc(Int3 _dom, Int _dim, Flag _hdctype, StencilMatrix _stencil) {
+template<typename T> void MatrixFrame<T>::alloc(INT3 _dom, INT _dim, FLAG _hdctype, StencilMatrix _stencil) {
     // printf("matrix frame allocator called\n");
     assert(hdctype == HDC::Empty);
-    shape   = Int2{PRODUCT3(_dom), _dim};
+    shape   = INT2{PRODUCT3(_dom), _dim};
     size    = PRODUCT3(_dom) * _dim;
     hdctype = _hdctype;
     stencil = _stencil;
@@ -98,10 +98,10 @@ template<typename T> void MatrixFrame<T>::alloc(Int3 _dom, Int _dim, Flag _hdcty
     }
 }
 
-template<typename T> void MatrixFrame<T>::alloc(Int _row, Int _col, Flag _hdctype, StencilMatrix _stencil) {
+template<typename T> void MatrixFrame<T>::alloc(INT _row, INT _col, FLAG _hdctype, StencilMatrix _stencil) {
     // printf("matrix frame allocator called\n");
     assert(hdctype == HDC::Empty);
-    shape   = Int2{_row, _col};
+    shape   = INT2{_row, _col};
     size    = _row * _col;
     hdctype = _hdctype;
     stencil = _stencil;
@@ -133,48 +133,48 @@ struct Matrix {
     MatrixFrame<T>     dev;
     MatrixFrame<T> *devptr;
 
-    Int2             shape;
-    Int               size;
-    Flag           hdctype;
+    INT2             shape;
+    INT               size;
+    FLAG           hdctype;
     std::string       name;
     StencilMatrix    stencil;
 
-    __host__ __device__ T &operator()(Int _idx) const {return host(_idx);}
-    __host__ __device__ T &operator()(Int _row, Int _col) const {return host(_row, _col);}
+    __host__ __device__ T &operator()(INT _idx) const {return host(_idx);}
+    __host__ __device__ T &operator()(INT _row, INT _col) const {return host(_row, _col);}
 
     Matrix(const Matrix<T> &_mat) = delete;
     Matrix<T>& operator=(const Matrix<T> &_mat) = delete;
 
-    Matrix(std::string _name = "") : shape(Int2{{0, 0}}), size(0), hdctype(HDC::Empty), name(_name), devptr(nullptr), stencil(StencilMatrix::Empty) {}
-    Matrix(Int3 _dom, Int _dim, Flag _hdctype, const std::string &_name, StencilMatrix _stencil = StencilMatrix::Empty);
-    Matrix(Int _row, Int _col, Flag _hdctype, const std::string &_name, StencilMatrix _stencil = StencilMatrix::Empty);
-    Matrix(Int3 _dom, Int _dim, Flag _hdctype, StencilMatrix _stencil = StencilMatrix::Empty) : Matrix(_dom, _dim, _hdctype, "", _stencil) {}
-    Matrix(Int _row, Int _col, Flag _hdctype, StencilMatrix _stencil = StencilMatrix::Empty) : Matrix(_row, _col, _hdctype, "", _stencil) {}
+    Matrix(std::string _name = "") : shape(INT2{{0, 0}}), size(0), hdctype(HDC::Empty), name(_name), devptr(nullptr), stencil(StencilMatrix::Empty) {}
+    Matrix(INT3 _dom, INT _dim, FLAG _hdctype, const std::string &_name, StencilMatrix _stencil = StencilMatrix::Empty);
+    Matrix(INT _row, INT _col, FLAG _hdctype, const std::string &_name, StencilMatrix _stencil = StencilMatrix::Empty);
+    Matrix(INT3 _dom, INT _dim, FLAG _hdctype, StencilMatrix _stencil = StencilMatrix::Empty) : Matrix(_dom, _dim, _hdctype, "", _stencil) {}
+    Matrix(INT _row, INT _col, FLAG _hdctype, StencilMatrix _stencil = StencilMatrix::Empty) : Matrix(_row, _col, _hdctype, "", _stencil) {}
     
     ~Matrix();
 
-    void alloc(Int3 _dom, Int _dim, Flag _hdctype, const std::string &_name, StencilMatrix _stencil = StencilMatrix::Empty);
-    void alloc(Int _row, Int _col, Flag _hdctype, const std::string &_name, StencilMatrix _stencil = StencilMatrix::Empty);
-    void alloc(Int3 _dom, Int _dim, Flag _hdctype, StencilMatrix _stencil = StencilMatrix::Empty) {
+    void alloc(INT3 _dom, INT _dim, FLAG _hdctype, const std::string &_name, StencilMatrix _stencil = StencilMatrix::Empty);
+    void alloc(INT _row, INT _col, FLAG _hdctype, const std::string &_name, StencilMatrix _stencil = StencilMatrix::Empty);
+    void alloc(INT3 _dom, INT _dim, FLAG _hdctype, StencilMatrix _stencil = StencilMatrix::Empty) {
         alloc(_dom, _dim, _hdctype, name, _stencil);
     }
-    void alloc(Int _row, Int _col, Flag _hdctype, StencilMatrix _stencil = StencilMatrix::Empty) {
+    void alloc(INT _row, INT _col, FLAG _hdctype, StencilMatrix _stencil = StencilMatrix::Empty) {
         alloc(_row, _col, _hdctype, name, _stencil);
     }
-    void release(Flag _hdctype);
+    void release(FLAG _hdctype);
     void release();
-    void sync(Flag _mcptype);
+    void sync(FLAG _mcptype);
 
-    void copy(Matrix<T> &src, Flag _hdctype);
-    void clear(Flag _hdctype);
+    void copy(Matrix<T> &src, FLAG _hdctype);
+    void clear(FLAG _hdctype);
 
     const char *cname() {return name.c_str();}
 };
 
-template<typename T> Matrix<T>::Matrix(Int3 _dom, Int _dim, Flag _hdctype, const std::string &_name, StencilMatrix _stencil) :
+template<typename T> Matrix<T>::Matrix(INT3 _dom, INT _dim, FLAG _hdctype, const std::string &_name, StencilMatrix _stencil) :
     host(_dom, _dim, _hdctype & HDC::Host, _stencil),
     dev(_dom, _dim, _hdctype & HDC::Device, _stencil),
-    shape(Int2{PRODUCT3(_dom), _dim}),
+    shape(INT2{PRODUCT3(_dom), _dim}),
     size(PRODUCT3(_dom) * _dim),
     hdctype(_hdctype),
     name(_name),
@@ -187,10 +187,10 @@ template<typename T> Matrix<T>::Matrix(Int3 _dom, Int _dim, Flag _hdctype, const
     }
 }
 
-template<typename T> Matrix<T>::Matrix(Int _row, Int _col, Flag _hdctype, const std::string &_name, StencilMatrix _stencil) :
+template<typename T> Matrix<T>::Matrix(INT _row, INT _col, FLAG _hdctype, const std::string &_name, StencilMatrix _stencil) :
     host(_row, _col, _hdctype & HDC::Host, _stencil),
     dev(_row, _col, _hdctype & HDC::Device, _stencil),
-    shape(Int2{_row, _col}),
+    shape(INT2{_row, _col}),
     size(_row * _col),
     hdctype(_hdctype),
     name(_name),
@@ -211,12 +211,12 @@ template<typename T> Matrix<T>::~Matrix() {
     }
 }
 
-template<typename T> void Matrix<T>::alloc(Int3 _dom, Int _dim, Flag _hdctype, const std::string &_name, StencilMatrix _stencil) {
+template<typename T> void Matrix<T>::alloc(INT3 _dom, INT _dim, FLAG _hdctype, const std::string &_name, StencilMatrix _stencil) {
     // printf("matrix allocator called\n");
     assert(hdctype == HDC::Empty);
     host.alloc(_dom, _dim, _hdctype & HDC::Host, _stencil);
     dev.alloc(_dom, _dim, _hdctype & HDC::Device, _stencil);
-    shape   = Int2{PRODUCT3(_dom), _dim};
+    shape   = INT2{PRODUCT3(_dom), _dim};
     size    = PRODUCT3(_dom) * _dim;
     hdctype = _hdctype;
     name    = _name;
@@ -227,12 +227,12 @@ template<typename T> void Matrix<T>::alloc(Int3 _dom, Int _dim, Flag _hdctype, c
     }
 }
 
-template<typename T> void Matrix<T>::alloc(Int _row, Int _col, Flag _hdctype, const std::string &_name, StencilMatrix _stencil) {
+template<typename T> void Matrix<T>::alloc(INT _row, INT _col, FLAG _hdctype, const std::string &_name, StencilMatrix _stencil) {
     // printf("matrix destructor called\n");
     assert(hdctype == HDC::Empty);
     host.alloc(_row, _col, _hdctype & HDC::Host, _stencil);
     dev.alloc(_row, _col, _hdctype & HDC::Device, _stencil);
-    shape   = Int2{_row, _col};
+    shape   = INT2{_row, _col};
     size    = _row * _col;
     hdctype = _hdctype;
     name    = _name;
@@ -243,7 +243,7 @@ template<typename T> void Matrix<T>::alloc(Int _row, Int _col, Flag _hdctype, co
     }
 }
 
-template<typename T> void Matrix<T>::release(Flag _hdctype) {
+template<typename T> void Matrix<T>::release(FLAG _hdctype) {
     // printf("matrix release called\n");
     if (_hdctype & hdctype & HDC::Host) {
         // assert(hdctype & HDCType::Host);
@@ -274,7 +274,7 @@ template<typename T> void Matrix<T>::release() {
     hdctype = HDC::Empty;
 }
 
-template<typename T> void Matrix<T>::sync(Flag _mcptype) {
+template<typename T> void Matrix<T>::sync(FLAG _mcptype) {
     // printf("matrix sync called\n");
     if (_mcptype == MCP::Hst2Dev) {
         assert(hdctype & HDC::Host);
@@ -300,7 +300,7 @@ template<typename T> void Matrix<T>::sync(Flag _mcptype) {
     // falmWaitStream();
 }
 
-template<typename T> void Matrix<T>::copy(Matrix<T> &src, Flag _hdctype) {
+template<typename T> void Matrix<T>::copy(Matrix<T> &src, FLAG _hdctype) {
     // printf("matrix copy called\n");
     if (_hdctype & hdctype & HDC::Host) {
         assert((src.hdctype & HDC::Host) && (size == src.size));
@@ -312,7 +312,7 @@ template<typename T> void Matrix<T>::copy(Matrix<T> &src, Flag _hdctype) {
     }
 }
 
-template<typename T> void Matrix<T>::clear(Flag _hdctype) {
+template<typename T> void Matrix<T>::clear(FLAG _hdctype) {
     // printf("matrix clear called\n");
     if (_hdctype & hdctype & HDC::Host) {
         // assert(hdctype & HDC::Host);

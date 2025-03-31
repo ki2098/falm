@@ -4,8 +4,8 @@
 #include "../src/typedef.h"
 
 struct STRUCT {
-    Falm::Int3   size;
-    Falm::Real3 coord; 
+    Falm::INT3   size;
+    Falm::REAL3 coord; 
 };
 
 class Holder {

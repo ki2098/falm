@@ -11,13 +11,13 @@ namespace Alm {
 
 class AlmHandler : public AlmDevCall {
 public:
-    Json turbine_param, turbine_prop;
+    json turbine_param, turbine_prop;
     std::ofstream cpctOut;
     std::string cpctPath;
 
     AlmHandler() : AlmDevCall() {}
 
-    void init(const std::string &workdir, const Json &turbine_params, const CPM &cpm, std::string cpctPath) {
+    void init(const std::string &workdir, const json &turbine_params, const CPM &cpm, std::string cpctPath) {
         this->workdir = workdir;
         this->cpctPath = cpctPath;
         mpi_shape = cpm.shape;
@@ -34,7 +34,7 @@ public:
         ap_path = glue_path(workdir, ap_path);
 
         std::ifstream turbine_prop_file(turbine_prop_path);
-        turbine_prop = Json::parse(turbine_prop_file);
+        turbine_prop = json::parse(turbine_prop_file);
         turbine_prop_file.close();
 
         turbines.alloc(turbine_prop, turbine_param["turbineArray"]);
@@ -63,20 +63,20 @@ public:
         }
     }
 
-    void Alm(Matrix<Real> &x, Matrix<Real> &y, Matrix<Real> &z, Matrix<Real> &uvw, Matrix<Real> &ff, Real t, dim3 block_size={8,8,8}) {
+    void Alm(Matrix<REAL> &x, Matrix<REAL> &y, Matrix<REAL> &z, Matrix<REAL> &uvw, Matrix<REAL> &ff, REAL t, dim3 block_size={8,8,8}) {
         AlmDevCall::UpdateTurbineAngles(t);
         AlmDevCall::UpdateAPX(x, y, z, t);
         AlmDevCall::CalcAPForce(x, y, z, uvw, t);
-        falmMemcpy(aps.host.force, aps.dev.force, sizeof(Real3)*aps.apcount, MCP::Dev2Hst);
-        CPM_AllReduce(aps.host.force, 3*aps.apcount, getMPIDtype<Real>(), MPI_SUM, MPI_COMM_WORLD);
-        falmMemcpy(aps.dev.force, aps.host.force, sizeof(Real3)*aps.apcount, MCP::Hst2Dev);
+        falmMemcpy(aps.host.force, aps.dev.force, sizeof(REAL3)*aps.apcount, MCP::Dev2Hst);
+        CPM_AllReduce(aps.host.force, 3*aps.apcount, getMPIDtype<REAL>(), MPI_SUM, MPI_COMM_WORLD);
+        falmMemcpy(aps.dev.force, aps.host.force, sizeof(REAL3)*aps.apcount, MCP::Hst2Dev);
         AlmDevCall::DistributeAPForce(x, y, z, ff, euler_eps, block_size);
         AlmDevCall::CalcTorqueAndThrust();
-        CPM_AllReduce(turbines.host.torque, turbines.n_turbine, getMPIDtype<Real>(), MPI_SUM, MPI_COMM_WORLD);
-        CPM_AllReduce(turbines.host.thrust, turbines.n_turbine, getMPIDtype<Real>(), MPI_SUM, MPI_COMM_WORLD);
+        CPM_AllReduce(turbines.host.torque, turbines.n_turbine, getMPIDtype<REAL>(), MPI_SUM, MPI_COMM_WORLD);
+        CPM_AllReduce(turbines.host.thrust, turbines.n_turbine, getMPIDtype<REAL>(), MPI_SUM, MPI_COMM_WORLD);
     }
 
-    void DryDistribution(Matrix<Real> &x, Matrix<Real> &y, Matrix<Real> &z, Matrix<Real> &phi, dim3 block_size={8,8,8}) {
+    void DryDistribution(Matrix<REAL> &x, Matrix<REAL> &y, Matrix<REAL> &z, Matrix<REAL> &phi, dim3 block_size={8,8,8}) {
         AlmDevCall::DryDistribution(x, y, z, phi, euler_eps, block_size);
     }
 
@@ -123,15 +123,15 @@ public:
         }
     }
 
-    void writePowerThrust(Real t, Real U) {
+    void writePowerThrust(REAL t, REAL U) {
         if (!cpctOut.is_open()) {
             return;
         }
 
         cpctOut << t;
         for (int tid = 0; tid < turbines.n_turbine; tid ++) {
-            Real P = turbines.host.torque[tid]*turbines.host.tip_rate[tid];
-            Real T = turbines.host.thrust[tid];
+            REAL P = turbines.host.torque[tid]*turbines.host.tip_rate[tid];
+            REAL T = turbines.host.thrust[tid];
             cpctOut << "," << P << "," << T;
         }
         cpctOut << std::endl;

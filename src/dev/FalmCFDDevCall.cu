@@ -8,84 +8,84 @@
 namespace Falm {
 
 __global__ void kernel_Cartesian_CalcPseudoU(
-    const MatrixFrame<Real> *vun,
-    const MatrixFrame<Real> *vu,
-    const MatrixFrame<Real> *vuu,
-    const MatrixFrame<Real> *vua,
-    const MatrixFrame<Real> *vnut,
-    const MatrixFrame<Real> *vkx,
-    const MatrixFrame<Real> *vg,
-    const MatrixFrame<Real> *vja,
-    const MatrixFrame<Real> *vff,
-    Flag advtype,
-    Real               ReI,
-    Real               dt,
-    Int3              pdm_shape,
-    Int3              map_shap,
-    Int3              map_offset
+    const MatrixFrame<REAL> *vun,
+    const MatrixFrame<REAL> *vu,
+    const MatrixFrame<REAL> *vuu,
+    const MatrixFrame<REAL> *vua,
+    const MatrixFrame<REAL> *vnut,
+    const MatrixFrame<REAL> *vkx,
+    const MatrixFrame<REAL> *vg,
+    const MatrixFrame<REAL> *vja,
+    const MatrixFrame<REAL> *vff,
+    FLAG advtype,
+    REAL               ReI,
+    REAL               dt,
+    INT3              pdm_shape,
+    INT3              map_shap,
+    INT3              map_offset
 ) {
-    const MatrixFrame<Real> &un=*vun, &u=*vu, &uu=*vuu, &ua=*vua, &nut=*vnut, &kx=*vkx, &g=*vg, &ja=*vja, &ff=*vff;
-    Int i, j, k;
+    const MatrixFrame<REAL> &un=*vun, &u=*vu, &uu=*vuu, &ua=*vua, &nut=*vnut, &kx=*vkx, &g=*vg, &ja=*vja, &ff=*vff;
+    INT i, j, k;
     GLOBAL_THREAD_IDX_3D(i, j, k);
     if (i < map_shap[0] && j < map_shap[1] && k < map_shap[2]) {
         i += map_offset[0];
         j += map_offset[1];
         k += map_offset[2];
-        Int idxcc = IDX(i  , j  , k  , pdm_shape);
-        Int idxe1 = IDX(i+1, j  , k  , pdm_shape);
-        Int idxw1 = IDX(i-1, j  , k  , pdm_shape);
-        Int idxn1 = IDX(i  , j+1, k  , pdm_shape);
-        Int idxs1 = IDX(i  , j-1, k  , pdm_shape);
-        Int idxt1 = IDX(i  , j  , k+1, pdm_shape);
-        Int idxb1 = IDX(i  , j  , k-1, pdm_shape);
-        Int idxe2 = IDX(i+2, j  , k  , pdm_shape);
-        Int idxw2 = IDX(i-2, j  , k  , pdm_shape);
-        Int idxn2 = IDX(i  , j+2, k  , pdm_shape);
-        Int idxs2 = IDX(i  , j-2, k  , pdm_shape);
-        Int idxt2 = IDX(i  , j  , k+2, pdm_shape);
-        Int idxb2 = IDX(i  , j  , k-2, pdm_shape);
-        Int idxE  = idxcc;
-        Int idxW  = idxw1;
-        Int idxN  = idxcc;
-        Int idxS  = idxs1;
-        Int idxT  = idxcc;
-        Int idxB  = idxb1;
-        Real uc    = u(idxcc, 0);
-        Real vc    = u(idxcc, 1);
-        Real wc    = u(idxcc, 2);
-        Real Uabs  = fabs(uc * kx(idxcc, 0));
-        Real Vabs  = fabs(vc * kx(idxcc, 1));
-        Real Wabs  = fabs(wc * kx(idxcc, 2));
-        Real UE    = uu(idxE, 0);
-        Real UW    = uu(idxW, 0);
-        Real VN    = uu(idxN, 1);
-        Real VS    = uu(idxS, 1);
-        Real WT    = uu(idxT, 2);
-        Real WB    = uu(idxB, 2);
-        Real nutcc = nut(idxcc);
-        Real nute1 = nut(idxe1);
-        Real nutw1 = nut(idxw1);
-        Real nutn1 = nut(idxn1);
-        Real nuts1 = nut(idxs1);
-        Real nutt1 = nut(idxt1);
-        Real nutb1 = nut(idxb1);
-        Real gxcc  = g(idxcc, 0);
-        Real gxe1  = g(idxe1, 0);
-        Real gxw1  = g(idxw1, 0);
-        Real gycc  = g(idxcc, 1);
-        Real gyn1  = g(idxn1, 1);
-        Real gys1  = g(idxs1, 1);
-        Real gzcc  = g(idxcc, 2);
-        Real gzt1  = g(idxt1, 2);
-        Real gzb1  = g(idxb1, 2);
-        Real jacob = ja(idxcc);
+        INT idxcc = IDX(i  , j  , k  , pdm_shape);
+        INT idxe1 = IDX(i+1, j  , k  , pdm_shape);
+        INT idxw1 = IDX(i-1, j  , k  , pdm_shape);
+        INT idxn1 = IDX(i  , j+1, k  , pdm_shape);
+        INT idxs1 = IDX(i  , j-1, k  , pdm_shape);
+        INT idxt1 = IDX(i  , j  , k+1, pdm_shape);
+        INT idxb1 = IDX(i  , j  , k-1, pdm_shape);
+        INT idxe2 = IDX(i+2, j  , k  , pdm_shape);
+        INT idxw2 = IDX(i-2, j  , k  , pdm_shape);
+        INT idxn2 = IDX(i  , j+2, k  , pdm_shape);
+        INT idxs2 = IDX(i  , j-2, k  , pdm_shape);
+        INT idxt2 = IDX(i  , j  , k+2, pdm_shape);
+        INT idxb2 = IDX(i  , j  , k-2, pdm_shape);
+        INT idxE  = idxcc;
+        INT idxW  = idxw1;
+        INT idxN  = idxcc;
+        INT idxS  = idxs1;
+        INT idxT  = idxcc;
+        INT idxB  = idxb1;
+        REAL uc    = u(idxcc, 0);
+        REAL vc    = u(idxcc, 1);
+        REAL wc    = u(idxcc, 2);
+        REAL Uabs  = fabs(uc * kx(idxcc, 0));
+        REAL Vabs  = fabs(vc * kx(idxcc, 1));
+        REAL Wabs  = fabs(wc * kx(idxcc, 2));
+        REAL UE    = uu(idxE, 0);
+        REAL UW    = uu(idxW, 0);
+        REAL VN    = uu(idxN, 1);
+        REAL VS    = uu(idxS, 1);
+        REAL WT    = uu(idxT, 2);
+        REAL WB    = uu(idxB, 2);
+        REAL nutcc = nut(idxcc);
+        REAL nute1 = nut(idxe1);
+        REAL nutw1 = nut(idxw1);
+        REAL nutn1 = nut(idxn1);
+        REAL nuts1 = nut(idxs1);
+        REAL nutt1 = nut(idxt1);
+        REAL nutb1 = nut(idxb1);
+        REAL gxcc  = g(idxcc, 0);
+        REAL gxe1  = g(idxe1, 0);
+        REAL gxw1  = g(idxw1, 0);
+        REAL gycc  = g(idxcc, 1);
+        REAL gyn1  = g(idxn1, 1);
+        REAL gys1  = g(idxs1, 1);
+        REAL gzcc  = g(idxcc, 2);
+        REAL gzt1  = g(idxt1, 2);
+        REAL gzb1  = g(idxb1, 2);
+        REAL jacob = ja(idxcc);
 
-        Int d;
-        Real ucc;
-        Real ue1, ue2, uw1, uw2;
-        Real un1, un2, us1, us2;
-        Real ut1, ut2, ub1, ub2;
-        Real adv, vis;
+        INT d;
+        REAL ucc;
+        REAL ue1, ue2, uw1, uw2;
+        REAL un1, un2, us1, us2;
+        REAL ut1, ut2, ub1, ub2;
+        REAL adv, vis;
 
         d = 0;
         ucc = uc;
@@ -301,23 +301,23 @@ __global__ void kernel_Cartesian_CalcPseudoU(
 }
 
 __global__ void kernel_Cartesian_UtoCU (
-    const MatrixFrame<Real> *vu,
-    const MatrixFrame<Real> *vuc,
-    const MatrixFrame<Real> *vkx,
-    const MatrixFrame<Real> *vja,
-    Int3              pdm_shape,
-    Int3              map_shap,
-    Int3              map_offset
+    const MatrixFrame<REAL> *vu,
+    const MatrixFrame<REAL> *vuc,
+    const MatrixFrame<REAL> *vkx,
+    const MatrixFrame<REAL> *vja,
+    INT3              pdm_shape,
+    INT3              map_shap,
+    INT3              map_offset
 ) {
-    const MatrixFrame<Real> &u=*vu, &uc=*vuc, &kx=*vkx, &ja=*vja;
-    Int i, j, k;
+    const MatrixFrame<REAL> &u=*vu, &uc=*vuc, &kx=*vkx, &ja=*vja;
+    INT i, j, k;
     GLOBAL_THREAD_IDX_3D(i, j, k);
     if (i < map_shap[0] && j < map_shap[1] && k < map_shap[2]) {
         i += map_offset[0];
         j += map_offset[1];
         k += map_offset[2];
-        Int idx = IDX(i, j, k, pdm_shape);
-        Real jacob = ja(idx);
+        INT idx = IDX(i, j, k, pdm_shape);
+        REAL jacob = ja(idx);
         uc(idx, 0) = jacob * kx(idx, 0) * u(idx, 0);
         uc(idx, 1) = jacob * kx(idx, 1) * u(idx, 1);
         uc(idx, 2) = jacob * kx(idx, 2) * u(idx, 2);
@@ -325,23 +325,23 @@ __global__ void kernel_Cartesian_UtoCU (
 }
 
 __global__ void kernel_Cartesian_InterpolateCU(
-    const MatrixFrame<Real> *vuu,
-    const MatrixFrame<Real> *vuc,
-    Int3              pdm_shape,
-    Int3              map_shap,
-    Int3              map_offset
+    const MatrixFrame<REAL> *vuu,
+    const MatrixFrame<REAL> *vuc,
+    INT3              pdm_shape,
+    INT3              map_shap,
+    INT3              map_offset
 ) {
-    const MatrixFrame<Real> &uu=*vuu, &uc=*vuc;
-    Int i, j, k;
+    const MatrixFrame<REAL> &uu=*vuu, &uc=*vuc;
+    INT i, j, k;
     GLOBAL_THREAD_IDX_3D(i, j, k);
     if (i < map_shap[0] && j < map_shap[1] && k < map_shap[2]) {
         i += map_offset[0];
         j += map_offset[1];
         k += map_offset[2];
-        Int idxcc = IDX(i  , j  , k  , pdm_shape);
-        Int idxe1 = IDX(i+1, j  , k  , pdm_shape);
-        Int idxn1 = IDX(i  , j+1, k  , pdm_shape);
-        Int idxt1 = IDX(i  , j  , k+1, pdm_shape);
+        INT idxcc = IDX(i  , j  , k  , pdm_shape);
+        INT idxe1 = IDX(i+1, j  , k  , pdm_shape);
+        INT idxn1 = IDX(i  , j+1, k  , pdm_shape);
+        INT idxt1 = IDX(i  , j  , k+1, pdm_shape);
         uu(idxcc, 0) = 0.5 * (uc(idxcc, 0) + uc(idxe1, 0));
         uu(idxcc, 1) = 0.5 * (uc(idxcc, 1) + uc(idxn1, 1));
         uu(idxcc, 2) = 0.5 * (uc(idxcc, 2) + uc(idxt1, 2));
@@ -349,26 +349,26 @@ __global__ void kernel_Cartesian_InterpolateCU(
 }
 
 __global__ void kernel_Cartesian_ProjectPGrid(
-    const MatrixFrame<Real> *vu,
-    const MatrixFrame<Real> *vua,
-    const MatrixFrame<Real> *vp,
-    const MatrixFrame<Real> *vkx,
-    Real               dt,
-    Int3              pdm_shape,
-    Int3              map_shap,
-    Int3              map_offset
+    const MatrixFrame<REAL> *vu,
+    const MatrixFrame<REAL> *vua,
+    const MatrixFrame<REAL> *vp,
+    const MatrixFrame<REAL> *vkx,
+    REAL               dt,
+    INT3              pdm_shape,
+    INT3              map_shap,
+    INT3              map_offset
 ) {
-    const MatrixFrame<Real> &u=*vu, &ua=*vua, &p=*vp, &kx=*vkx;
-    Int i, j, k;
+    const MatrixFrame<REAL> &u=*vu, &ua=*vua, &p=*vp, &kx=*vkx;
+    INT i, j, k;
     GLOBAL_THREAD_IDX_3D(i, j, k);
     if (i < map_shap[0] && j < map_shap[1] && k < map_shap[2]) {
         i += map_offset[0];
         j += map_offset[1];
         k += map_offset[2];
-        Int idxcc = IDX(i, j, k, pdm_shape);
-        Real dpx = 0.5 * kx(idxcc, 0) * (p(IDX(i+1, j  , k  , pdm_shape)) - p(IDX(i-1, j  , k  , pdm_shape)));
-        Real dpy = 0.5 * kx(idxcc, 1) * (p(IDX(i  , j+1, k  , pdm_shape)) - p(IDX(i  , j-1, k  , pdm_shape)));
-        Real dpz = 0.5 * kx(idxcc, 2) * (p(IDX(i  , j  , k+1, pdm_shape)) - p(IDX(i  , j  , k-1, pdm_shape)));
+        INT idxcc = IDX(i, j, k, pdm_shape);
+        REAL dpx = 0.5 * kx(idxcc, 0) * (p(IDX(i+1, j  , k  , pdm_shape)) - p(IDX(i-1, j  , k  , pdm_shape)));
+        REAL dpy = 0.5 * kx(idxcc, 1) * (p(IDX(i  , j+1, k  , pdm_shape)) - p(IDX(i  , j-1, k  , pdm_shape)));
+        REAL dpz = 0.5 * kx(idxcc, 2) * (p(IDX(i  , j  , k+1, pdm_shape)) - p(IDX(i  , j  , k-1, pdm_shape)));
         u(idxcc, 0) = ua(idxcc, 0) - dt * dpx;
         u(idxcc, 1) = ua(idxcc, 1) - dt * dpy;
         u(idxcc, 2) = ua(idxcc, 2) - dt * dpz;
@@ -376,30 +376,30 @@ __global__ void kernel_Cartesian_ProjectPGrid(
 }
 
 __global__ void kernel_Cartesian_ProjectPFace(
-    const MatrixFrame<Real> *vuu,
-    const MatrixFrame<Real> *vuua,
-    const MatrixFrame<Real> *vp,
-    const MatrixFrame<Real> *vg,
-    Real               dt,
-    Int3              pdm_shape,
-    Int3              map_shap,
-    Int3              map_offset
+    const MatrixFrame<REAL> *vuu,
+    const MatrixFrame<REAL> *vuua,
+    const MatrixFrame<REAL> *vp,
+    const MatrixFrame<REAL> *vg,
+    REAL               dt,
+    INT3              pdm_shape,
+    INT3              map_shap,
+    INT3              map_offset
 ) {
-    const MatrixFrame<Real> &uu=*vuu, &uua=*vuua, &p=*vp, &g=*vg;
-    Int i, j, k;
+    const MatrixFrame<REAL> &uu=*vuu, &uua=*vuua, &p=*vp, &g=*vg;
+    INT i, j, k;
     GLOBAL_THREAD_IDX_3D(i, j, k);
     if (i < map_shap[0] && j < map_shap[1] && k < map_shap[2]) {
         i += map_offset[0];
         j += map_offset[1];
         k += map_offset[2];
-        Int idxcc = IDX(i  , j  , k  , pdm_shape);
-        Int idxe1 = IDX(i+1, j  , k  , pdm_shape);
-        Int idxn1 = IDX(i  , j+1, k  , pdm_shape);
-        Int idxt1 = IDX(i  , j  , k+1, pdm_shape);
-        Real pcc = p(idxcc);
-        Real dpx = 0.5 * (g(idxcc, 0) + g(idxe1, 0)) * (p(idxe1) - pcc);
-        Real dpy = 0.5 * (g(idxcc, 1) + g(idxn1, 1)) * (p(idxn1) - pcc);
-        Real dpz = 0.5 * (g(idxcc, 2) + g(idxt1, 2)) * (p(idxt1) - pcc);
+        INT idxcc = IDX(i  , j  , k  , pdm_shape);
+        INT idxe1 = IDX(i+1, j  , k  , pdm_shape);
+        INT idxn1 = IDX(i  , j+1, k  , pdm_shape);
+        INT idxt1 = IDX(i  , j  , k+1, pdm_shape);
+        REAL pcc = p(idxcc);
+        REAL dpx = 0.5 * (g(idxcc, 0) + g(idxe1, 0)) * (p(idxe1) - pcc);
+        REAL dpy = 0.5 * (g(idxcc, 1) + g(idxn1, 1)) * (p(idxn1) - pcc);
+        REAL dpz = 0.5 * (g(idxcc, 2) + g(idxt1, 2)) * (p(idxt1) - pcc);
         uu(idxcc, 0) = uua(idxcc, 0) - dt * dpx;
         uu(idxcc, 1) = uua(idxcc, 1) - dt * dpy;
         uu(idxcc, 2) = uua(idxcc, 2) - dt * dpz;
@@ -407,138 +407,138 @@ __global__ void kernel_Cartesian_ProjectPFace(
 }
 
 __global__ void kernel_Cartesian_Smagorinsky(
-    const MatrixFrame<Real> *vu,
-    const MatrixFrame<Real> *vnut,
-    const MatrixFrame<Real> *vx,
-    const MatrixFrame<Real> *vkx,
-    const MatrixFrame<Real> *vja,
-    Real               Cs,
-    Int3              pdm_shape,
-    Int3              map_shap,
-    Int3              map_offset            
+    const MatrixFrame<REAL> *vu,
+    const MatrixFrame<REAL> *vnut,
+    const MatrixFrame<REAL> *vx,
+    const MatrixFrame<REAL> *vkx,
+    const MatrixFrame<REAL> *vja,
+    REAL               Cs,
+    INT3              pdm_shape,
+    INT3              map_shap,
+    INT3              map_offset            
 ) {
-    const MatrixFrame<Real> &u=*vu, &nut=*vnut, &x=*vx, &kx=*vkx, &ja=*vja;
-    Int i, j, k;
+    const MatrixFrame<REAL> &u=*vu, &nut=*vnut, &x=*vx, &kx=*vkx, &ja=*vja;
+    INT i, j, k;
     GLOBAL_THREAD_IDX_3D(i, j, k);
     if (i < map_shap[0] && j < map_shap[1] && k < map_shap[2]) {
         i += map_offset[0];
         j += map_offset[1];
         k += map_offset[2];
-        Int idxcc = IDX(i  , j  , k  , pdm_shape);
-        Int idxe1 = IDX(i+1, j  , k  , pdm_shape);
-        Int idxw1 = IDX(i-1, j  , k  , pdm_shape);
-        Int idxn1 = IDX(i  , j+1, k  , pdm_shape);
-        Int idxs1 = IDX(i  , j-1, k  , pdm_shape);
-        Int idxt1 = IDX(i  , j  , k+1, pdm_shape);
-        Int idxb1 = IDX(i  , j  , k-1, pdm_shape);
-        Real kxx = kx(idxcc, 0);
-        Real kxy = kx(idxcc, 1);
-        Real kxz = kx(idxcc, 2);
-        Real ue1, uw1, un1, us1, ut1, ub1;
+        INT idxcc = IDX(i  , j  , k  , pdm_shape);
+        INT idxe1 = IDX(i+1, j  , k  , pdm_shape);
+        INT idxw1 = IDX(i-1, j  , k  , pdm_shape);
+        INT idxn1 = IDX(i  , j+1, k  , pdm_shape);
+        INT idxs1 = IDX(i  , j-1, k  , pdm_shape);
+        INT idxt1 = IDX(i  , j  , k+1, pdm_shape);
+        INT idxb1 = IDX(i  , j  , k-1, pdm_shape);
+        REAL kxx = kx(idxcc, 0);
+        REAL kxy = kx(idxcc, 1);
+        REAL kxz = kx(idxcc, 2);
+        REAL ue1, uw1, un1, us1, ut1, ub1;
         ue1 = u(idxe1, 0);
         uw1 = u(idxw1, 0);
         un1 = u(idxn1, 0);
         us1 = u(idxs1, 0);
         ut1 = u(idxt1, 0);
         ub1 = u(idxb1, 0);
-        Real dux = 0.5 * kxx * (ue1 - uw1);
-        Real duy = 0.5 * kxy * (un1 - us1);
-        Real duz = 0.5 * kxz * (ut1 - ub1);
+        REAL dux = 0.5 * kxx * (ue1 - uw1);
+        REAL duy = 0.5 * kxy * (un1 - us1);
+        REAL duz = 0.5 * kxz * (ut1 - ub1);
         ue1 = u(idxe1, 1);
         uw1 = u(idxw1, 1);
         un1 = u(idxn1, 1);
         us1 = u(idxs1, 1);
         ut1 = u(idxt1, 1);
         ub1 = u(idxb1, 1);
-        Real dvx = 0.5 * kxx * (ue1 - uw1);
-        Real dvy = 0.5 * kxy * (un1 - us1);
-        Real dvz = 0.5 * kxz * (ut1 - ub1);
+        REAL dvx = 0.5 * kxx * (ue1 - uw1);
+        REAL dvy = 0.5 * kxy * (un1 - us1);
+        REAL dvz = 0.5 * kxz * (ut1 - ub1);
         ue1 = u(idxe1, 2);
         uw1 = u(idxw1, 2);
         un1 = u(idxn1, 2);
         us1 = u(idxs1, 2);
         ut1 = u(idxt1, 2);
         ub1 = u(idxb1, 2);
-        Real dwx = 0.5 * kxx * (ue1 - uw1);
-        Real dwy = 0.5 * kxy * (un1 - us1);
-        Real dwz = 0.5 * kxz * (ut1 - ub1);
-        Real d1 = 2 * SQ(dux);
-        Real d2 = 2 * SQ(dvy);
-        Real d3 = 2 * SQ(dwz);
-        Real d4 = SQ(duy + dvx);
-        Real d5 = SQ(dvz + dwy);
-        Real d6 = SQ(duz + dwx);
-        Real Du = sqrt(d1 + d2 + d3 + d4 + d5 + d6);
-        Real De = cbrt(ja(idxcc));
-        Real lc = Cs * De;
+        REAL dwx = 0.5 * kxx * (ue1 - uw1);
+        REAL dwy = 0.5 * kxy * (un1 - us1);
+        REAL dwz = 0.5 * kxz * (ut1 - ub1);
+        REAL d1 = 2 * SQ(dux);
+        REAL d2 = 2 * SQ(dvy);
+        REAL d3 = 2 * SQ(dwz);
+        REAL d4 = SQ(duy + dvx);
+        REAL d5 = SQ(dvz + dwy);
+        REAL d6 = SQ(duz + dwx);
+        REAL Du = sqrt(d1 + d2 + d3 + d4 + d5 + d6);
+        REAL De = cbrt(ja(idxcc));
+        REAL lc = Cs * De;
         nut(idxcc) = SQ(lc) * Du;
     }
 }
 
 __global__ void kernel_Cartesian_CSM(
-    const MatrixFrame<Real> *vu,
-    const MatrixFrame<Real> *vnut,
-    const MatrixFrame<Real> *vx,
-    const MatrixFrame<Real> *vkx,
-    const MatrixFrame<Real> *vja,
-    Int3              pdm_shape,
-    Int3              map_shap,
-    Int3              map_offset   
+    const MatrixFrame<REAL> *vu,
+    const MatrixFrame<REAL> *vnut,
+    const MatrixFrame<REAL> *vx,
+    const MatrixFrame<REAL> *vkx,
+    const MatrixFrame<REAL> *vja,
+    INT3              pdm_shape,
+    INT3              map_shap,
+    INT3              map_offset   
 ) {
-    const MatrixFrame<Real> &u=*vu, &nut=*vnut, &x=*vx, &kx=*vkx, &ja=*vja;
-    Int i, j, k;
+    const MatrixFrame<REAL> &u=*vu, &nut=*vnut, &x=*vx, &kx=*vkx, &ja=*vja;
+    INT i, j, k;
     GLOBAL_THREAD_IDX_3D(i, j, k);
     if (i < map_shap[0] && j < map_shap[1] && k < map_shap[2]) {
         i += map_offset[0];
         j += map_offset[1];
         k += map_offset[2];
-        Int idxcc = IDX(i  , j  , k  , pdm_shape);
-        Int idxe1 = IDX(i+1, j  , k  , pdm_shape);
-        Int idxw1 = IDX(i-1, j  , k  , pdm_shape);
-        Int idxn1 = IDX(i  , j+1, k  , pdm_shape);
-        Int idxs1 = IDX(i  , j-1, k  , pdm_shape);
-        Int idxt1 = IDX(i  , j  , k+1, pdm_shape);
-        Int idxb1 = IDX(i  , j  , k-1, pdm_shape);
-        Real kxx = kx(idxcc, 0);
-        Real kxy = kx(idxcc, 1);
-        Real kxz = kx(idxcc, 2);
-        Real ue1, uw1, un1, us1, ut1, ub1;
+        INT idxcc = IDX(i  , j  , k  , pdm_shape);
+        INT idxe1 = IDX(i+1, j  , k  , pdm_shape);
+        INT idxw1 = IDX(i-1, j  , k  , pdm_shape);
+        INT idxn1 = IDX(i  , j+1, k  , pdm_shape);
+        INT idxs1 = IDX(i  , j-1, k  , pdm_shape);
+        INT idxt1 = IDX(i  , j  , k+1, pdm_shape);
+        INT idxb1 = IDX(i  , j  , k-1, pdm_shape);
+        REAL kxx = kx(idxcc, 0);
+        REAL kxy = kx(idxcc, 1);
+        REAL kxz = kx(idxcc, 2);
+        REAL ue1, uw1, un1, us1, ut1, ub1;
         ue1 = u(idxe1, 0);
         uw1 = u(idxw1, 0);
         un1 = u(idxn1, 0);
         us1 = u(idxs1, 0);
         ut1 = u(idxt1, 0);
         ub1 = u(idxb1, 0);
-        Real dux = 0.5 * kxx * (ue1 - uw1);
-        Real duy = 0.5 * kxy * (un1 - us1);
-        Real duz = 0.5 * kxz * (ut1 - ub1);
+        REAL dux = 0.5 * kxx * (ue1 - uw1);
+        REAL duy = 0.5 * kxy * (un1 - us1);
+        REAL duz = 0.5 * kxz * (ut1 - ub1);
         ue1 = u(idxe1, 1);
         uw1 = u(idxw1, 1);
         un1 = u(idxn1, 1);
         us1 = u(idxs1, 1);
         ut1 = u(idxt1, 1);
         ub1 = u(idxb1, 1);
-        Real dvx = 0.5 * kxx * (ue1 - uw1);
-        Real dvy = 0.5 * kxy * (un1 - us1);
-        Real dvz = 0.5 * kxz * (ut1 - ub1);
+        REAL dvx = 0.5 * kxx * (ue1 - uw1);
+        REAL dvy = 0.5 * kxy * (un1 - us1);
+        REAL dvz = 0.5 * kxz * (ut1 - ub1);
         ue1 = u(idxe1, 2);
         uw1 = u(idxw1, 2);
         un1 = u(idxn1, 2);
         us1 = u(idxs1, 2);
         ut1 = u(idxt1, 2);
         ub1 = u(idxb1, 2);
-        Real dwx = 0.5 * kxx * (ue1 - uw1);
-        Real dwy = 0.5 * kxy * (un1 - us1);
-        Real dwz = 0.5 * kxz * (ut1 - ub1);
-        Real d1 = 2 * SQ(dux);
-        Real d2 = 2 * SQ(dvy);
-        Real d3 = 2 * SQ(dwz);
-        Real d4 = SQ(duy + dvx);
-        Real d5 = SQ(dvz + dwy);
-        Real d6 = SQ(duz + dwx);
-        Real Du = sqrt(d1 + d2 + d3 + d4 + d5 + d6);
-        Real De = cbrt(ja(idxcc));
-        Real e, q;
+        REAL dwx = 0.5 * kxx * (ue1 - uw1);
+        REAL dwy = 0.5 * kxy * (un1 - us1);
+        REAL dwz = 0.5 * kxz * (ut1 - ub1);
+        REAL d1 = 2 * SQ(dux);
+        REAL d2 = 2 * SQ(dvy);
+        REAL d3 = 2 * SQ(dwz);
+        REAL d4 = SQ(duy + dvx);
+        REAL d5 = SQ(dvz + dwy);
+        REAL d6 = SQ(duz + dwx);
+        REAL Du = sqrt(d1 + d2 + d3 + d4 + d5 + d6);
+        REAL De = cbrt(ja(idxcc));
+        REAL e, q;
         e  = SQ(dux) + SQ(duy) + SQ(duz);
         e += SQ(dvx) + SQ(dvy) + SQ(dvz);
         e += SQ(dwx) + SQ(dwy) + SQ(dwz);
@@ -547,64 +547,64 @@ __global__ void kernel_Cartesian_CSM(
         q += dvx * duy + dvy * dvy + dvz * dwy;
         q += dwx * duz + dwy * dvz + dwz * dwz;
         q *= - 0.5;
-        Real  fcs = (q + copysign(1e-9, q)) / (e + copysign(1e-9, e));
-        Real afcs = fabs(fcs);
-        Real CCsm = sqrt(CB(fcs)) * (1 - fcs) / 22.0;
+        REAL  fcs = (q + copysign(1e-9, q)) / (e + copysign(1e-9, e));
+        REAL afcs = fabs(fcs);
+        REAL CCsm = sqrt(CB(fcs)) * (1 - fcs) / 22.0;
         nut(idxcc) = CCsm * SQ(De) * Du;
     }
 }
 
 __global__ void kernel_Cartesian_Divergence(
-    const MatrixFrame<Real> *vuu,
-    const MatrixFrame<Real> *vdiv,
-    const MatrixFrame<Real> *vja,
-    Int3              pdm_shap,
-    Int3              map_shap,
-    Int3              map_offset
+    const MatrixFrame<REAL> *vuu,
+    const MatrixFrame<REAL> *vdiv,
+    const MatrixFrame<REAL> *vja,
+    INT3              pdm_shap,
+    INT3              map_shap,
+    INT3              map_offset
 ) {
-    const MatrixFrame<Real> &uu=*vuu, &div=*vdiv, &ja=*vja;
-    Int i, j, k;
+    const MatrixFrame<REAL> &uu=*vuu, &div=*vdiv, &ja=*vja;
+    INT i, j, k;
     GLOBAL_THREAD_IDX_3D(i, j, k);
     if (i < map_shap[0] && j < map_shap[1] && k < map_shap[2]) {
         i += map_offset[0];
         j += map_offset[1];
         k += map_offset[2];
-        Int idxc = IDX(i, j, k, pdm_shap);
-        Real UE = uu(idxc                    , 0);
-        Real UW = uu(IDX(i-1, j, k, pdm_shap), 0);
-        Real VN = uu(idxc                    , 1);
-        Real VS = uu(IDX(i, j-1, k, pdm_shap), 1);
-        Real WT = uu(idxc                    , 2);
-        Real WB = uu(IDX(i, j, k-1, pdm_shap), 2);
+        INT idxc = IDX(i, j, k, pdm_shap);
+        REAL UE = uu(idxc                    , 0);
+        REAL UW = uu(IDX(i-1, j, k, pdm_shap), 0);
+        REAL VN = uu(idxc                    , 1);
+        REAL VS = uu(IDX(i, j-1, k, pdm_shap), 1);
+        REAL WT = uu(idxc                    , 2);
+        REAL WB = uu(IDX(i, j, k-1, pdm_shap), 2);
         div(idxc) = (UE - UW + VN - VS + WT - WB) / ja(idxc);
     }
 }
 
 __global__ void kernel_Vortcity(
-    const MatrixFrame<Real> *vu,
-    const MatrixFrame<Real> *vkx,
-    const MatrixFrame<Real> *vvrt,
-    Int3              pdm_shap,
-    Int3              map_shap,
-    Int3              map_offset
+    const MatrixFrame<REAL> *vu,
+    const MatrixFrame<REAL> *vkx,
+    const MatrixFrame<REAL> *vvrt,
+    INT3              pdm_shap,
+    INT3              map_shap,
+    INT3              map_offset
 ) {
-    const MatrixFrame<Real> &u = *vu, &kx = *vkx, &vrt = *vvrt;
-    Int i, j, k;
+    const MatrixFrame<REAL> &u = *vu, &kx = *vkx, &vrt = *vvrt;
+    INT i, j, k;
     GLOBAL_THREAD_IDX_3D(i, j, k);
     if (i < map_shap[0] && j < map_shap[1] && k < map_shap[2]) {
         i += map_offset[0];
         j += map_offset[1];
         k += map_offset[2];
-        Int idxc = IDX(i, j, k, pdm_shap);
-        Real kxx = kx(idxc, 0);
-        Real kxy = kx(idxc, 1);
-        Real kxz = kx(idxc, 2);
-        Real dvdx = 0.5 * kxx * (u(IDX(i+1,j,k,pdm_shap),1) - u(IDX(i-1,j,k,pdm_shap),1));
-        Real dwdx = 0.5 * kxx * (u(IDX(i+1,j,k,pdm_shap),2) - u(IDX(i-1,j,k,pdm_shap),2));
-        Real dudy = 0.5 * kxy * (u(IDX(i,j+1,k,pdm_shap),0) - u(IDX(i,j-1,k,pdm_shap),0));
-        Real dwdy = 0.5 * kxy * (u(IDX(i,j+1,k,pdm_shap),2) - u(IDX(i,j-1,k,pdm_shap),2));
-        Real dudz = 0.5 * kxz * (u(IDX(i,j,k+1,pdm_shap),0) - u(IDX(i,j,k-1,pdm_shap),0));
-        Real dvdz = 0.5 * kxz * (u(IDX(i,j,k+1,pdm_shap),1) - u(IDX(i,j,k-1,pdm_shap),1));
+        INT idxc = IDX(i, j, k, pdm_shap);
+        REAL kxx = kx(idxc, 0);
+        REAL kxy = kx(idxc, 1);
+        REAL kxz = kx(idxc, 2);
+        REAL dvdx = 0.5 * kxx * (u(IDX(i+1,j,k,pdm_shap),1) - u(IDX(i-1,j,k,pdm_shap),1));
+        REAL dwdx = 0.5 * kxx * (u(IDX(i+1,j,k,pdm_shap),2) - u(IDX(i-1,j,k,pdm_shap),2));
+        REAL dudy = 0.5 * kxy * (u(IDX(i,j+1,k,pdm_shap),0) - u(IDX(i,j-1,k,pdm_shap),0));
+        REAL dwdy = 0.5 * kxy * (u(IDX(i,j+1,k,pdm_shap),2) - u(IDX(i,j-1,k,pdm_shap),2));
+        REAL dudz = 0.5 * kxz * (u(IDX(i,j,k+1,pdm_shap),0) - u(IDX(i,j,k-1,pdm_shap),0));
+        REAL dvdz = 0.5 * kxz * (u(IDX(i,j,k+1,pdm_shap),1) - u(IDX(i,j,k-1,pdm_shap),1));
         vrt(idxc, 0) = dwdy - dvdz;
         vrt(idxc, 1) = dudz - dwdx;
         vrt(idxc, 2) = dvdx - dudy;
@@ -612,20 +612,20 @@ __global__ void kernel_Vortcity(
 }
 
 void FalmCFDDevCall::FSPseudoU(
-    Matrix<Real> &un,
-    Matrix<Real> &u,
-    Matrix<Real> &uu,
-    Matrix<Real> &ua,
-    Matrix<Real> &nut,
-    Matrix<Real> &kx,
-    Matrix<Real> &g,
-    Matrix<Real> &ja,
-    Matrix<Real> &ff,
-    Real dt,
+    Matrix<REAL> &un,
+    Matrix<REAL> &u,
+    Matrix<REAL> &uu,
+    Matrix<REAL> &ua,
+    Matrix<REAL> &nut,
+    Matrix<REAL> &kx,
+    Matrix<REAL> &g,
+    Matrix<REAL> &ja,
+    Matrix<REAL> &ff,
+    REAL dt,
     Region       &pdm,
     const Region &map,
     dim3          block_dim,
-    Stream        stream
+    STREAM        stream
 ) {
     dim3 grid_dim(
         (map.shape[0] + block_dim.x - 1) / block_dim.x,
@@ -652,14 +652,14 @@ void FalmCFDDevCall::FSPseudoU(
 }
 
 void FalmCFDDevCall::UtoCU(
-    Matrix<Real> &u,
-    Matrix<Real> &uc,
-    Matrix<Real> &kx,
-    Matrix<Real> &ja,
+    Matrix<REAL> &u,
+    Matrix<REAL> &uc,
+    Matrix<REAL> &kx,
+    Matrix<REAL> &ja,
     Region       &pdm,
     const Region &map,
     dim3          block_dim,
-    Stream        stream
+    STREAM        stream
 ) {
     dim3 grid_dim(
         (map.shape[0] + block_dim.x - 1) / block_dim.x,
@@ -678,12 +678,12 @@ void FalmCFDDevCall::UtoCU(
 }
 
 void FalmCFDDevCall::InterpolateCU(
-    Matrix<Real> &uu,
-    Matrix<Real> &uc,
+    Matrix<REAL> &uu,
+    Matrix<REAL> &uc,
     Region       &pdm,
     const Region &map,
     dim3          block_dim,
-    Stream        stream
+    STREAM        stream
 ) {
     dim3 grid_dim(
         (map.shape[0] + block_dim.x - 1) / block_dim.x,
@@ -700,15 +700,15 @@ void FalmCFDDevCall::InterpolateCU(
 }
 
 void FalmCFDDevCall::ProjectPGrid(
-    Matrix<Real> &u,
-    Matrix<Real> &ua,
-    Matrix<Real> &p,
-    Matrix<Real> &kx,
-    Real dt,
+    Matrix<REAL> &u,
+    Matrix<REAL> &ua,
+    Matrix<REAL> &p,
+    Matrix<REAL> &kx,
+    REAL dt,
     Region       &pdm,
     const Region &map,
     dim3          block_dim,
-    Stream        stream
+    STREAM        stream
 ) {
     dim3 grid_dim(
         (map.shape[0] + block_dim.x - 1) / block_dim.x,
@@ -728,15 +728,15 @@ void FalmCFDDevCall::ProjectPGrid(
 }
 
 void FalmCFDDevCall::ProjectPFace(
-    Matrix<Real> &uu,
-    Matrix<Real> &uua,
-    Matrix<Real> &p,
-    Matrix<Real> &g,
-    Real dt,
+    Matrix<REAL> &uu,
+    Matrix<REAL> &uua,
+    Matrix<REAL> &p,
+    Matrix<REAL> &g,
+    REAL dt,
     Region       &pdm,
     const Region &map,
     dim3          block_dim,
-    Stream        stream
+    STREAM        stream
 ) {
     dim3 grid_dim(
         (map.shape[0] + block_dim.x - 1) / block_dim.x,
@@ -756,15 +756,15 @@ void FalmCFDDevCall::ProjectPFace(
 }
 
 void FalmCFDDevCall::SGS(
-    Matrix<Real> &u,
-    Matrix<Real> &nut,
-    Matrix<Real> &x,
-    Matrix<Real> &kx,
-    Matrix<Real> &ja,
+    Matrix<REAL> &u,
+    Matrix<REAL> &nut,
+    Matrix<REAL> &x,
+    Matrix<REAL> &kx,
+    Matrix<REAL> &ja,
     Region       &pdm,
     const Region &map,
     dim3          block_dim,
-    Stream        stream
+    STREAM        stream
 ) {
     dim3 grid_dim(
         (map.shape[0] + block_dim.x - 1) / block_dim.x,
@@ -798,13 +798,13 @@ void FalmCFDDevCall::SGS(
 }
 
 void FalmCFDDevCall::Divergence(
-    Matrix<Real> &uu,
-    Matrix<Real> &div,
-    Matrix<Real> &ja,
+    Matrix<REAL> &uu,
+    Matrix<REAL> &div,
+    Matrix<REAL> &ja,
     Region       &pdm,
     const Region &map,
     dim3          block_dim,
-    Stream        stream
+    STREAM        stream
 ) {
     dim3 grid_dim(
         (map.shape[0] + block_dim.x - 1) / block_dim.x,
@@ -822,13 +822,13 @@ void FalmCFDDevCall::Divergence(
 }
 
 void FalmCFDDevCall::Vortcity(
-    Matrix<Real> &u,
-    Matrix<Real> &kx,
-    Matrix<Real> &vrt,
+    Matrix<REAL> &u,
+    Matrix<REAL> &kx,
+    Matrix<REAL> &vrt,
     Region       &pdm,
     const Region &map,
     dim3          block_dim,
-    Stream        stream
+    STREAM        stream
 ) {
     dim3 grid_dim(
         (map.shape[0] + block_dim.x - 1) / block_dim.x,

@@ -6,9 +6,9 @@
 namespace Falm {
 
 struct FalmBaseMesh {
-    Matrix<Real> x, y, z, hx, hy, hz;
+    Matrix<REAL> x, y, z, hx, hy, hz;
 
-    void alloc(Int imax, Int jmax, Int kmax, Flag hdctype) {
+    void alloc(INT imax, INT jmax, INT kmax, FLAG hdctype) {
         x.alloc(imax, 1, hdctype);
         y.alloc(jmax, 1, hdctype);
         z.alloc(kmax, 1, hdctype);
@@ -17,7 +17,7 @@ struct FalmBaseMesh {
         hz.alloc(kmax, 1, hdctype);
     }
 
-    void sync(Flag mcptype) {
+    void sync(FLAG mcptype) {
         x.sync(mcptype);
         y.sync(mcptype);
         z.sync(mcptype);

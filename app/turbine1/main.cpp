@@ -9,24 +9,24 @@
 using namespace Falm;
 
 const dim3 block(8, 8, 8);
-Real3 Lxyz;
-Int3  Nxyz;
-Real3 origin;
+REAL3 Lxyz;
+INT3  Nxyz;
+REAL3 origin;
 
-Real endtime;
-Real dt;
-Real write_interval;
+REAL endtime;
+REAL dt;
+REAL write_interval;
 
-Matrix<Real> gx, gy, gz, ghx, ghy, ghz;
-Matrix<Real> x, h, kx, g, ja;
-Matrix<Real> u, uprev, uu, ua, uua, p, nut, ff ,rhs, res, dvr, vrt;
-Matrix<Real> poisson_a;
-Real maxdiag;
+Matrix<REAL> gx, gy, gz, ghx, ghy, ghz;
+Matrix<REAL> x, h, kx, g, ja;
+Matrix<REAL> u, uprev, uu, ua, uua, p, nut, ff ,rhs, res, dvr, vrt;
+Matrix<REAL> poisson_a;
+REAL maxdiag;
 CPM cpm;
 Vcdm::VCDM<float> vcdm, pvcdm;
-Stream facestream[CPM::NFACE];
+STREAM facestream[CPM::NFACE];
 std::string gridpath;
-Stream *streams;
+STREAM *streams;
 
 FalmEq eqparam;
 
@@ -111,8 +111,8 @@ void read_param() {
 }
 
 void read_grid() {
-    const Int3 &shape = cpm.pdm_list[cpm.rank].shape;
-    const Int3 &gshape = cpm.global.shape;
+    const INT3 &shape = cpm.pdm_list[cpm.rank].shape;
+    const INT3 &gshape = cpm.global.shape;
     std::ifstream xfile(gridpath + "/x.txt");
     std::ifstream yfile(gridpath + "/y.txt");
     std::ifstream zfile(gridpath + "/z.txt");
@@ -169,11 +169,11 @@ void read_grid() {
     ghz(0         ) = 2 * ghz(1         ) - ghz(2         );
     ghz(gshape[2]-1) = 2 * ghz(gshape[2]-2) - ghz(gshape[2]-3);
 
-    const Int3 &offset = cpm.pdm_list[cpm.rank].offset;
-    for (Int k = 0; k < shape[2]; k ++) {
-    for (Int j = 0; j < shape[1]; j ++) {
-    for (Int i = 0; i < shape[0]; i ++) {
-        Real idx = IDX(i, j, k, shape);
+    const INT3 &offset = cpm.pdm_list[cpm.rank].offset;
+    for (INT k = 0; k < shape[2]; k ++) {
+    for (INT j = 0; j < shape[1]; j ++) {
+    for (INT i = 0; i < shape[0]; i ++) {
+        REAL idx = IDX(i, j, k, shape);
         x(idx, 0) = gx(i + offset[0]);
         x(idx, 1) = gy(j + offset[1]);
         x(idx, 2) = gz(k + offset[2]);
@@ -254,18 +254,18 @@ void data_output(int step, int rank, double dt) {
     vcdm.writeFileData(&uf(0), cpm.gc, uf.shape[1], cpm.rank, step, step * dt, Vcdm::IdxType::IJKN);
     pvcdm.writeFileData(&pf(0), cpm.gc, pf.shape[1], cpm.rank, step, step * dt, Vcdm::IdxType::IJK);
 
-    Real3 umax = {{
+    REAL3 umax = {{
         FalmMV::MatColMax(u, 0, cpm, block),
         FalmMV::MatColMax(u, 1, cpm, block),
         FalmMV::MatColMax(u, 2, cpm, block)
     }};
-    Real3 umin = {{
+    REAL3 umin = {{
         FalmMV::MatColMin(u, 0, cpm, block),
         FalmMV::MatColMin(u, 1, cpm, block),
         FalmMV::MatColMin(u, 2, cpm, block)
     }};
-    Real uvecmax = FalmMV::VecMax(u, cpm, block);
-    Real uvecmin = FalmMV::VecMin(u, cpm, block);
+    REAL uvecmax = FalmMV::VecMax(u, cpm, block);
+    REAL uvecmin = FalmMV::VecMin(u, cpm, block);
     Vcdm::VcdmSlice slice;
     slice.step = step;
     slice.time = step * dt;
@@ -277,14 +277,14 @@ void data_output(int step, int rank, double dt) {
     slice.varMax = {umax[0], umax[1], umax[2]};
     slice.varMin = {umin[0], umin[1], umin[2]};
     vcdm.timeSlice.push_back(slice);
-    Real pmax = FalmMV::MatColMax(p, 0, cpm, block);
-    Real pmin = FalmMV::MatColMin(p, 0, cpm, block);
+    REAL pmax = FalmMV::MatColMax(p, 0, cpm, block);
+    REAL pmin = FalmMV::MatColMin(p, 0, cpm, block);
     slice.varMax = {pmax};
     slice.varMin = {pmin};
     pvcdm.timeSlice.push_back(slice);
 }
 
-Real main_loop(FalmCFD &cfd, FalmEq &eq, RmcpAlm &alm, RmcpTurbineArray &turbineArray, Int step, Real dt, Stream *s) {
+REAL main_loop(FalmCFD &cfd, FalmEq &eq, RmcpAlm &alm, RmcpTurbineArray &turbineArray, INT step, REAL dt, STREAM *s) {
     uprev.copy(u, HDC::Device);
     alm.SetALMFlag(x, dt * step, turbineArray, cpm, block);
     alm.ALM(u, x, ff, dt * step, turbineArray, cpm, block);
@@ -319,7 +319,7 @@ int main(int argc, char **argv) {
     CPM_GetRank(MPI_COMM_WORLD, mpi_rank);
     CPM_GetSize(MPI_COMM_WORLD, mpi_size);
     read_param();
-    cpm.initPartition(Nxyz - Int3{{1,1,1}}, GuideCell, mpi_rank, mpi_size, {{mpi_size, 1, 1}});
+    cpm.initPartition(Nxyz - INT3{{1,1,1}}, GuideCell, mpi_rank, mpi_size, {{mpi_size, 1, 1}});
     int ngpu;
     cudaGetDeviceCount(&ngpu);
     cudaSetDevice(cpm.rank % ngpu);
@@ -387,7 +387,7 @@ int main(int argc, char **argv) {
     res.alloc(pdm.shape, 1, HDC::Device);
     dvr.alloc(pdm.shape, 1, HDC::Device);
     vrt.alloc(pdm.shape, 3, HDC::Device);
-    for (Int id = 0; id < u.shape[0]; id ++) {
+    for (INT id = 0; id < u.shape[0]; id ++) {
         u(id, 0) = 1.0;
         u(id, 1) = u(id, 2) = 0.0;
     }
@@ -400,11 +400,11 @@ int main(int argc, char **argv) {
     ja.alloc(pdm.shape, 1, HDC::Host);
     g.alloc(pdm.shape, 3, HDC::Host);
     read_grid();
-    for (Int k = 0; k < pdm.shape[2]; k ++) {
-    for (Int j = 0; j < pdm.shape[1]; j ++) {
-    for (Int i = 0; i < pdm.shape[0]; i ++) {
-        Int idx = IDX(i, j, k, pdm.shape);
-        Real3 pitch;
+    for (INT k = 0; k < pdm.shape[2]; k ++) {
+    for (INT j = 0; j < pdm.shape[1]; j ++) {
+    for (INT i = 0; i < pdm.shape[0]; i ++) {
+        INT idx = IDX(i, j, k, pdm.shape);
+        REAL3 pitch;
         // pitch[0] = Lxyz[0] / Nxyz[0];
         // pitch[1] = Lxyz[1] / Nxyz[1];
         // pitch[2] = Lxyz[2] / Nxyz[2];
@@ -417,8 +417,8 @@ int main(int argc, char **argv) {
         pitch[0] = h(idx, 0);
         pitch[1] = h(idx, 1);
         pitch[2] = h(idx, 2);
-        const Real volume = pitch[0] * pitch[1] * pitch[2];
-        const Real3 dkdx  = {{1.0/pitch[0], 1.0/pitch[1], 1.0/pitch[2]}};
+        const REAL volume = pitch[0] * pitch[1] * pitch[2];
+        const REAL3 dkdx  = {{1.0/pitch[0], 1.0/pitch[1], 1.0/pitch[2]}};
         g(idx, 0) = volume * (dkdx[0] * dkdx[0]);
         g(idx, 1) = volume * (dkdx[1] * dkdx[1]);
         g(idx, 2) = volume * (dkdx[2] * dkdx[2]);
@@ -440,30 +440,30 @@ int main(int argc, char **argv) {
     xyz.release(HDC::Host);
 
     poisson_a.alloc(pdm.shape, 7, HDC::Host, "poisson matrix", StencilMatrix::D3P7);
-    for (Int k = cpm.gc; k < pdm.shape[2] - cpm.gc; k ++) {
-    for (Int j = cpm.gc; j < pdm.shape[1] - cpm.gc; j ++) {
-    for (Int i = cpm.gc; i < pdm.shape[0] - cpm.gc; i ++) {
-        Int3 gijk = Int3{{i, j, k}} + pdm.offset;
-        Real ac, ae, aw, an, as, at, ab;
+    for (INT k = cpm.gc; k < pdm.shape[2] - cpm.gc; k ++) {
+    for (INT j = cpm.gc; j < pdm.shape[1] - cpm.gc; j ++) {
+    for (INT i = cpm.gc; i < pdm.shape[0] - cpm.gc; i ++) {
+        INT3 gijk = INT3{{i, j, k}} + pdm.offset;
+        REAL ac, ae, aw, an, as, at, ab;
         ac = ae = aw = an = as = at = ab = 0.0;
-        Int idxcc = IDX(i  , j  , k  , pdm.shape);
-        Int idxe1 = IDX(i+1, j  , k  , pdm.shape);
-        Int idxw1 = IDX(i-1, j  , k  , pdm.shape);
-        Int idxn1 = IDX(i  , j+1, k  , pdm.shape);
-        Int idxs1 = IDX(i  , j-1, k  , pdm.shape);
-        Int idxt1 = IDX(i  , j  , k+1, pdm.shape);
-        Int idxb1 = IDX(i  , j  , k-1, pdm.shape);
-        Real gxcc  =  g(idxcc, 0);
-        Real gxe1  =  g(idxe1, 0);
-        Real gxw1  =  g(idxw1, 0);
-        Real gycc  =  g(idxcc, 1);
-        Real gyn1  =  g(idxn1, 1);
-        Real gys1  =  g(idxs1, 1);
-        Real gzcc  =  g(idxcc, 2);
-        Real gzt1  =  g(idxt1, 2);
-        Real gzb1  =  g(idxb1, 2);
-        Real jacob = ja(idxcc);
-        Real coefficient;
+        INT idxcc = IDX(i  , j  , k  , pdm.shape);
+        INT idxe1 = IDX(i+1, j  , k  , pdm.shape);
+        INT idxw1 = IDX(i-1, j  , k  , pdm.shape);
+        INT idxn1 = IDX(i  , j+1, k  , pdm.shape);
+        INT idxs1 = IDX(i  , j-1, k  , pdm.shape);
+        INT idxt1 = IDX(i  , j  , k+1, pdm.shape);
+        INT idxb1 = IDX(i  , j  , k-1, pdm.shape);
+        REAL gxcc  =  g(idxcc, 0);
+        REAL gxe1  =  g(idxe1, 0);
+        REAL gxw1  =  g(idxw1, 0);
+        REAL gycc  =  g(idxcc, 1);
+        REAL gyn1  =  g(idxn1, 1);
+        REAL gys1  =  g(idxs1, 1);
+        REAL gzcc  =  g(idxcc, 2);
+        REAL gzt1  =  g(idxt1, 2);
+        REAL gzb1  =  g(idxb1, 2);
+        REAL jacob = ja(idxcc);
+        REAL coefficient;
         coefficient = 0.5 * (gxcc + gxe1) / jacob;
         if (gijk[0] < global.shape[0] - cpm.gc) {
             ac -= coefficient;
@@ -551,10 +551,10 @@ int main(int argc, char **argv) {
         printf("output every %e undimensional time\n", write_interval);
         fflush(stdout);
     }
-    Real __t = 0;
-    Int  __it = 0;
-    const Int __IT = int(endtime / dt);
-    const Int __oIT = int(write_interval / dt);
+    REAL __t = 0;
+    INT  __it = 0;
+    const INT __IT = int(endtime / dt);
+    const INT __oIT = int(write_interval / dt);
     data_output(__it, cpm.rank, dt);
     if (cpm.rank == 0) {
         printf("time advance start\n");
@@ -568,7 +568,7 @@ int main(int argc, char **argv) {
     cfdsolver.UtoUU(u, uu, kx, ja, cpm, block, streams);
     cfdsolver.SGS(u, nut, x, kx, ja, cpm, block, streams);
     while (__it < __IT) {
-        Real dvr_norm = sqrt(main_loop(cfdsolver, eqsolver, alm, turbineArray, __it, dt, streams)) / ginner.size;
+        REAL dvr_norm = sqrt(main_loop(cfdsolver, eqsolver, alm, turbineArray, __it, dt, streams)) / ginner.size;
         __t += dt;
         __it ++;
         // size_t freebyte, totalbyte;
@@ -602,7 +602,7 @@ int main(int argc, char **argv) {
     }
 
 End:
-    for (Int fid = 0; fid < CPM::NFACE; fid ++) {
+    for (INT fid = 0; fid < CPM::NFACE; fid ++) {
         cudaStreamDestroy(facestream[fid]);
     }
     CPM_Finalize();

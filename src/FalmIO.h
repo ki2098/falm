@@ -16,27 +16,27 @@ namespace Falm {
 class FalmIO {
 public:
 
-static void writeSetupFile(std::string fpath, Json params) {
+static void writeSetupFile(std::string fpath, json params) {
     std::ofstream jfile(fpath);
     jfile << params.dump(2);
     jfile.close();
 }
 
 static void writeIndexFile(std::string fpath, CPM &cpm, const std::vector<FalmSnapshotInfo> &itlist) {
-    Json idxjson;
-    Int gimax, gjmax, gkmax, gc;
+    json idxjson;
+    INT gimax, gjmax, gkmax, gc;
     gimax = cpm.global.shape[0];
     gjmax = cpm.global.shape[1];
     gkmax = cpm.global.shape[2];
     gc = cpm.gc;
     idxjson["global"] = {gimax-2*gc, gjmax-2*gc, gkmax-2*gc};
     idxjson["guidePoint"] = gc;
-    Json jranks = Json::array();
+    json jranks = json::array();
     for (int i = 0; i < cpm.size; i ++) {
-        Json tmp;
+        json tmp;
         tmp["rank"] = i;
-        Int3 &shape = cpm.pdm_list[i].shape;
-        Int3 &offset = cpm.pdm_list[i].offset;
+        INT3 &shape = cpm.pdm_list[i].shape;
+        INT3 &offset = cpm.pdm_list[i].offset;
         tmp["voxel"] = {shape[0]-2*gc, shape[1]-2*gc, shape[2]-2*gc};
         tmp["offset"] = {offset[0], offset[1], offset[2]};
         jranks.push_back(tmp);
@@ -44,7 +44,7 @@ static void writeIndexFile(std::string fpath, CPM &cpm, const std::vector<FalmSn
     idxjson["ranks"] = jranks;
     // idxjson["outputSteps"] = {};
     for (auto snapshot : itlist) {
-        Json spt;
+        json spt;
         spt["time"] = snapshot.time;
         spt["step"] = snapshot.step;
         if (snapshot.tavg) {
@@ -52,9 +52,9 @@ static void writeIndexFile(std::string fpath, CPM &cpm, const std::vector<FalmSn
         }
         idxjson["outputSteps"].push_back(spt);
     }
-    if (typeid(Real) == typeid(float)) {
+    if (typeid(REAL) == typeid(float)) {
         idxjson["dateType"] = "float32";
-    } else if (typeid(Real) == typeid(double)) {
+    } else if (typeid(REAL) == typeid(double)) {
         idxjson["dataType"] = "float64";
     } else {
         idxjson["dataType"] = "undefined";
@@ -66,7 +66,7 @@ static void writeIndexFile(std::string fpath, CPM &cpm, const std::vector<FalmSn
     jfile.close();
 }
 
-static void writeVectorFile(std::string fpath, CPM &cpm, Matrix<Real> &v, size_t step, double time) {
+static void writeVectorFile(std::string fpath, CPM &cpm, Matrix<REAL> &v, size_t step, double time) {
     Region &pdm = cpm.pdm_list[cpm.rank];
     size_t imax, jmax, kmax;
     imax = pdm.shape[0];
@@ -75,7 +75,7 @@ static void writeVectorFile(std::string fpath, CPM &cpm, Matrix<Real> &v, size_t
     size_t N = v.shape[1];
 
     std::ofstream vfile(fpath, std::ios::binary | std::ios::out);
-    size_t dsize = sizeof(Real);
+    size_t dsize = sizeof(REAL);
     size_t gc = cpm.gc;
     vfile.write((char*)&imax, sizeof(size_t));
     vfile.write((char*)&jmax, sizeof(size_t));
@@ -91,12 +91,12 @@ static void writeVectorFile(std::string fpath, CPM &cpm, Matrix<Real> &v, size_t
     for (size_t j = 0; j < jmax; j ++) {
     for (size_t i = 0; i < imax; i ++) {
         size_t idx = IDX(i, j, k, shape);
-        vfile.write((char*)&v(idx, n), sizeof(Real));
+        vfile.write((char*)&v(idx, n), sizeof(REAL));
     }}}}
     vfile.close();
 }
 
-static void readControlVolumeFile(std::string srcpath, FalmBaseMesh &mesh, Int3 &idmax, Int &gc) {
+static void readControlVolumeFile(std::string srcpath, FalmBaseMesh &mesh, INT3 &idmax, INT &gc) {
     std::ifstream cvfs(srcpath);
     cvfs >> idmax[0] >> idmax[1] >> idmax[2] >> gc;
     mesh.alloc(idmax[0], idmax[1], idmax[2], HDC::HstDev);
@@ -115,7 +115,7 @@ static void readControlVolumeFile(std::string srcpath, FalmBaseMesh &mesh, Int3 
     cvfs.close();
 }
 
-static void writeControlVolumeFile(std::string path, FalmBaseMesh &mesh, Int3 &idmax, Int gc) {
+static void writeControlVolumeFile(std::string path, FalmBaseMesh &mesh, INT3 &idmax, INT gc) {
     FILE *cvfile = fopen(path.c_str(), "w");
     if (cvfile) {
         fprintf(cvfile, "%d %d %d %d\n", idmax[0], idmax[1], idmax[2], gc);
