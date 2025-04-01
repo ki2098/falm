@@ -7,15 +7,15 @@
 namespace LidCavity2d2 {
 
 void setCoord(
-    Falm::REAL                side_lenth,
-    Falm::INT                 side_n_cell,
+    Falm::Real                side_lenth,
+    Falm::Int                 side_n_cell,
     Falm::Region             &pdm,
-    Falm::INT                 gc,
-    Falm::Matrix<Falm::REAL> &x,
-    Falm::Matrix<Falm::REAL> &h,
-    Falm::Matrix<Falm::REAL> &kx,
-    Falm::Matrix<Falm::REAL> &g,
-    Falm::Matrix<Falm::REAL> &ja,
+    Falm::Int                 gc,
+    Falm::Matrix<Falm::Real> &x,
+    Falm::Matrix<Falm::Real> &h,
+    Falm::Matrix<Falm::Real> &kx,
+    Falm::Matrix<Falm::Real> &g,
+    Falm::Matrix<Falm::Real> &ja,
     dim3                      block_dim = dim3{8, 8, 1}
 );
 

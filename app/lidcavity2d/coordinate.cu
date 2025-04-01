@@ -8,24 +8,24 @@ using namespace Falm;
 namespace LidCavity2d {
 
 __global__ void kernel_setCoord(
-    REAL               side_lenth,
-    INT                side_n_cell,
-    INT3              pdm_shape,
-    INT gc,
-    const MatrixFrame<REAL> *vx,
-    const MatrixFrame<REAL> *vh,
-    const MatrixFrame<REAL> *vkx,
-    const MatrixFrame<REAL> *vg,
-    const MatrixFrame<REAL> *vja
+    Real               side_lenth,
+    Int                side_n_cell,
+    Int3              pdm_shape,
+    Int gc,
+    const MatrixFrame<Real> *vx,
+    const MatrixFrame<Real> *vh,
+    const MatrixFrame<Real> *vkx,
+    const MatrixFrame<Real> *vg,
+    const MatrixFrame<Real> *vja
 ) {
-    const MatrixFrame<REAL> &x=*vx, &h=*vh, &kx=*vkx, &g=*vg, &ja=*vja;
-    INT i, j, k;
+    const MatrixFrame<Real> &x=*vx, &h=*vh, &kx=*vkx, &g=*vg, &ja=*vja;
+    Int i, j, k;
     GLOBAL_THREAD_IDX_3D(i, j, k);
     if (i < pdm_shape[0] && j < pdm_shape[1] && k < pdm_shape[2]) {
-        INT idx = IDX(i, j, k, pdm_shape);
-        REAL pitch = side_lenth / side_n_cell;
-        REAL dkdx = 1.0 / pitch;
-        REAL vol = pitch * pitch * pitch;
+        Int idx = IDX(i, j, k, pdm_shape);
+        Real pitch = side_lenth / side_n_cell;
+        Real dkdx = 1.0 / pitch;
+        Real vol = pitch * pitch * pitch;
         x(idx, 0) = (i - gc + 0.5) * pitch;
         x(idx, 1) = (j - gc + 0.5) * pitch;
         x(idx, 2) = (k - gc      ) * pitch;
@@ -37,14 +37,14 @@ __global__ void kernel_setCoord(
 }
 
 void setCoord(
-    REAL          side_lenth,
-    INT           side_n_cell,
+    Real          side_lenth,
+    Int           side_n_cell,
     CPM      &cpm,
-    Matrix<REAL> &x,
-    Matrix<REAL> &h,
-    Matrix<REAL> &kx,
-    Matrix<REAL> &g,
-    Matrix<REAL> &ja,
+    Matrix<Real> &x,
+    Matrix<Real> &h,
+    Matrix<Real> &kx,
+    Matrix<Real> &g,
+    Matrix<Real> &ja,
     dim3          block_dim
 ) {
     Region &pdm = cpm.pdm_list[cpm.rank];

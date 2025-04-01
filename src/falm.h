@@ -14,13 +14,13 @@
 namespace Falm {
 
 struct FalmBasicVar {
-    Matrix<REAL> xyz, kx, g, ja; // Non-uniform structured cartesian mesh variables
-    Matrix<REAL> u, uu, uc, p, nut; // basic physical fields
-    Matrix<REAL> poi_a, poi_rhs, poi_res; // variables for pressure poisson equation
-    Matrix<REAL> ff; // actuator model force
-    Matrix<REAL> divergence; // velocity divergence
-    Matrix<REAL> utavg, ptavg; // time-averaged variables
-    Matrix<REAL> uvwp; // output buffer
+    Matrix<Real> xyz, kx, g, ja; // Non-uniform structured cartesian mesh variables
+    Matrix<Real> u, uu, uc, p, nut; // basic physical fields
+    Matrix<Real> poi_a, poi_rhs, poi_res; // variables for pressure poisson equation
+    Matrix<Real> ff; // actuator model force
+    Matrix<Real> divergence; // velocity divergence
+    Matrix<Real> utavg, ptavg; // time-averaged variables
+    Matrix<Real> uvwp; // output buffer
 
     void release_all() {
         xyz.release();
@@ -51,7 +51,7 @@ struct FalmMeshInfo {
 
 class FalmCore {
 public:
-    json               params;
+    Json               params;
     FalmCFD           falmCfd;
     FalmEq             falmEq;
     FalmMeshInfo falmMeshInfo;
@@ -60,16 +60,16 @@ public:
     FalmBaseMesh    gBaseMesh;
     FalmBaseMesh     baseMesh;
     
-    INT it;
-    REAL dt;
-    REAL startTime;
-    INT  maxIt;
-    INT  timeAvgStartIt;
-    INT  timeAvgEndIt;
-    INT  timeAvgCount = 0;
-    INT  outputStartIt;
-    INT  outputEndIt;
-    INT  outputIntervalIt;
+    Int it;
+    Real dt;
+    Real startTime;
+    Int  maxIt;
+    Int  timeAvgStartIt;
+    Int  timeAvgEndIt;
+    Int  timeAvgCount = 0;
+    Int  outputStartIt;
+    Int  outputEndIt;
+    Int  outputIntervalIt;
     std::string     workdir;
     std::string outputPrefix;
     std::string    setupFile;
@@ -78,7 +78,7 @@ public:
     int ngpu;
     int gpuid;
 
-    REAL gettime() {return dt * it;}
+    Real gettime() {return dt * it;}
 
     bool is_time_averaging() {
         return (it >= timeAvgStartIt && it <= timeAvgEndIt);
@@ -165,7 +165,7 @@ public:
             if (params.contains("inflow")) {
                 printf("Inflow Params\n");
                 printf("\tProfile %s\n", params["inflow"]["type"].get<std::string>().c_str());
-                printf("\tVelocity %e\n", params["inflow"]["velocity"].get<REAL>());
+                printf("\tVelocity %e\n", params["inflow"]["velocity"].get<Real>());
             }
             printf("SETUP INFO END\n");
         }
@@ -177,7 +177,7 @@ public:
 
         if (cpm.rank == output_rank) {
             printf("MPI INFO START\n");
-            INT gc = cpm.gc;
+            Int gc = cpm.gc;
             printf("\tGlobal voxel (%d %d %d)\n", cpm.global.shape[0], cpm.global.shape[1], cpm.global.shape[2]);
             printf("\tGlobal inner voxel (%d %d %d)\n", cpm.global.shape[0] - 2*gc, cpm.global.shape[1] - 2*gc, cpm.global.shape[2] - 2*gc);
             printf("\tGuide voxel length %d\n", cpm.gc);
@@ -219,7 +219,7 @@ public:
         // free(ngh);
     }
 
-    INT parse_settings(std::string setup_file_path) {
+    Int parse_settings(std::string setup_file_path) {
         int cutat = setup_file_path.find_last_of('/');
         if (cutat == std::string::npos) {
             workdir = ".";
@@ -235,26 +235,26 @@ public:
         if (!setupfile) {
             return FalmErr::setUpFileErr;
         }
-        params = json::parse(setupfile);
+        params = Json::parse(setupfile);
 
     {
         auto runprm = params["runtime"];
         startTime = runprm["time"]["start"];
         dt = runprm["time"]["dt"];
-        maxIt = INT((runprm["time"]["end"].get<REAL>() - startTime) / dt);
+        maxIt = Int((runprm["time"]["end"].get<Real>() - startTime) / dt);
         if (runprm.contains("timeAvg")) {
             if (runprm["timeAvg"].contains("start")) {
-                REAL tavgstart = runprm["timeAvg"]["start"];
+                Real tavgstart = runprm["timeAvg"]["start"];
                 if (tavgstart < startTime) {
                     tavgstart = startTime;
                 }
-                timeAvgStartIt = INT((tavgstart - startTime) / dt);
+                timeAvgStartIt = Int((tavgstart - startTime) / dt);
             } else {
                 timeAvgStartIt = 0;
             }
             if (runprm["timeAvg"].contains("end")) {
-                REAL tavgend = runprm["timeAvg"]["end"];
-                timeAvgEndIt = INT((tavgend - startTime) / dt);
+                Real tavgend = runprm["timeAvg"]["end"];
+                timeAvgEndIt = Int((tavgend - startTime) / dt);
             } else {
                 timeAvgEndIt = maxIt;
             }
@@ -264,21 +264,21 @@ public:
         }
         if (runprm.contains("output")) {
             if (runprm["output"].contains("start")) {
-                REAL ostart = runprm["output"]["start"];
+                Real ostart = runprm["output"]["start"];
                 if (ostart < startTime) {
                     ostart = startTime;
                 }
-                outputStartIt = INT((ostart - startTime) / dt);
+                outputStartIt = Int((ostart - startTime) / dt);
             } else {
                 outputStartIt = 0;
             }
             if (runprm["output"].contains("end")) {
-                REAL oend = runprm["output"]["end"];
-                outputEndIt = INT((oend - startTime) / dt);
+                Real oend = runprm["output"]["end"];
+                outputEndIt = Int((oend - startTime) / dt);
             } else {
                 outputEndIt = maxIt;
             }
-            outputIntervalIt = INT(runprm["output"]["interval"].get<REAL>() / dt);
+            outputIntervalIt = Int(runprm["output"]["interval"].get<Real>() / dt);
             outputPrefix = runprm["output"]["prefix"];
         } else {
             outputStartIt = 0;
@@ -339,20 +339,20 @@ public:
         return FalmErr::success;
     }
 
-    void computation_init(const INT3 &division, int gc) {
+    void computation_init(const Int3 &division, int gc) {
         if (falmMeshInfo.convert && cpm.rank == 0) {
             Mesher::build_mesh(falmMeshInfo.cvCenter, wpath(falmMeshInfo.convertSrc), wpath(falmMeshInfo.cvFile), gc);
         }
         CPM_Barrier(MPI_COMM_WORLD);
-        INT3 idmax;
-        INT _gc;
+        Int3 idmax;
+        Int _gc;
         FalmIO::readControlVolumeFile(wpath(falmMeshInfo.cvFile), gBaseMesh, idmax, _gc);
         gBaseMesh.sync(MCP::Hst2Dev);
 
         assert(_gc == gc);
         cpm.initPartition(idmax, gc, division);
-        INT3 &shape  = cpm.pdm_list[cpm.rank].shape;
-        INT3 &offset = cpm.pdm_list[cpm.rank].offset;
+        Int3 &shape  = cpm.pdm_list[cpm.rank].shape;
+        Int3 &offset = cpm.pdm_list[cpm.rank].offset;
         if (cpm.rank == 0 && outputEndIt >= outputStartIt) {
             FalmIO::writeIndexFile(wpath(outputPrefix + ".json"), cpm, timeSlices);
             FalmIO::writeControlVolumeFile(wpath(outputPrefix + ".cv"), gBaseMesh, idmax, gc);
@@ -366,33 +366,33 @@ public:
         printf("(%d %d %d) (%d %d %d)\n", shape[0], shape[1], shape[2], offset[0], offset[1], offset[1]);
 
         baseMesh.alloc(shape[0], shape[1], shape[2], HDC::HstDev);
-        for (INT i = 0; i < shape[0]; i ++) {
+        for (Int i = 0; i < shape[0]; i ++) {
             baseMesh.x(i) = gBaseMesh.x(i + offset[0]);
             baseMesh.hx(i) = gBaseMesh.hx(i + offset[0]);
         }
-        for (INT j = 0; j < shape[1]; j ++) {
+        for (Int j = 0; j < shape[1]; j ++) {
             baseMesh.y(j) = gBaseMesh.y(j + offset[1]);
             baseMesh.hy(j) = gBaseMesh.hy(j + offset[1]);
         }
-        for (INT k = 0; k < shape[2]; k ++) {
+        for (Int k = 0; k < shape[2]; k ++) {
             baseMesh.z(k) = gBaseMesh.z(k + offset[2]);
             baseMesh.hz(k) = gBaseMesh.hz(k + offset[2]);
         }
         baseMesh.sync(MCP::Hst2Dev);
 
-        for (INT k = 0; k < shape[2]; k ++) {
-        for (INT j = 0; j < shape[1]; j ++) {
-        for (INT i = 0; i < shape[0]; i ++) {
-            INT idx = IDX(i, j, k, shape);
+        for (Int k = 0; k < shape[2]; k ++) {
+        for (Int j = 0; j < shape[1]; j ++) {
+        for (Int i = 0; i < shape[0]; i ++) {
+            Int idx = IDX(i, j, k, shape);
             fv.xyz(idx, 0) = gBaseMesh.x(i + offset[0]);
             fv.xyz(idx, 1) = gBaseMesh.y(j + offset[1]);
             fv.xyz(idx, 2) = gBaseMesh.z(k + offset[2]);
-            REAL3 pitch;
+            Real3 pitch;
             pitch[0] = gBaseMesh.hx(i + offset[0]);
             pitch[1] = gBaseMesh.hy(j + offset[1]);
             pitch[2] = gBaseMesh.hz(k + offset[2]);
-            REAL volume = PRODUCT3(pitch);
-            REAL3 dkdx = REAL(1) / pitch;
+            Real volume = PRODUCT3(pitch);
+            Real3 dkdx = Real(1) / pitch;
             fv.ja(idx) = volume;
             // printf("%d %d %d %e %e %e\n", i + offset[0], j + offset[1], k + offset[2], gBaseMesh.hx(i + offset[0]), gBaseMesh.hy(j + offset[1]), gBaseMesh.hz(k + offset[2]));
             fv.g(idx, 0) = volume*dkdx[0]*dkdx[0];
@@ -436,8 +436,8 @@ public:
             // FalmMV::MatrixAdd(fv.ptavg, fv.p, block);
             // timeAvgCount ++;
             timeAvgCount = it - timeAvgStartIt + 1;
-            REAL b = 1./timeAvgCount;
-            REAL a = 1. - b;
+            Real b = 1./timeAvgCount;
+            Real a = 1. - b;
             FalmMV::Vecaxby(a, fv.utavg, b, fv.u, fv.utavg, block);
             FalmMV::Vecaxby(a, fv.ptavg, b, fv.p, fv.ptavg, block);
         }
@@ -448,10 +448,10 @@ public:
             return;
         }
         
-        INT3 shape = cpm.pdm_list[cpm.rank].shape;
+        Int3 shape = cpm.pdm_list[cpm.rank].shape;
         // Matrix<REAL> uvwp(shape, 4, HDC::Host, "output uvwp");
-        falmMemcpy(&fv.uvwp(0, 0), &fv.u.dev(0), sizeof(REAL) * fv.uvwp.shape[0] * 3, MCP::Dev2Hst);
-        falmMemcpy(&fv.uvwp(0, 3), &fv.p.dev(0), sizeof(REAL) * fv.uvwp.shape[0]    , MCP::Dev2Hst);
+        falmMemcpy(&fv.uvwp(0, 0), &fv.u.dev(0), sizeof(Real) * fv.uvwp.shape[0] * 3, MCP::Dev2Hst);
+        falmMemcpy(&fv.uvwp(0, 3), &fv.p.dev(0), sizeof(Real) * fv.uvwp.shape[0]    , MCP::Dev2Hst);
         size_t len = outputPrefix.size() + 32;
         // char *tmp = (char*)malloc(sizeof(char) * len);
         std::vector<char> tmp(len);
@@ -461,8 +461,8 @@ public:
         // free(tmp);
         FalmSnapshotInfo snapshot = {it, gettime(), false};
         if (is_time_averaging()) {
-            falmMemcpy(&fv.uvwp.dev(0, 0), &fv.utavg.dev(0), sizeof(REAL) * fv.uvwp.shape[0] * 3, MCP::Dev2Dev);
-            falmMemcpy(&fv.uvwp.dev(0, 3), &fv.ptavg.dev(0), sizeof(REAL) * fv.uvwp.shape[0]    , MCP::Dev2Dev);
+            falmMemcpy(&fv.uvwp.dev(0, 0), &fv.utavg.dev(0), sizeof(Real) * fv.uvwp.shape[0] * 3, MCP::Dev2Dev);
+            falmMemcpy(&fv.uvwp.dev(0, 3), &fv.ptavg.dev(0), sizeof(Real) * fv.uvwp.shape[0]    , MCP::Dev2Dev);
             // FalmMV::ScaleMatrix(fv.uvwp, 1.0 / timeAvgCount, block);
             fv.uvwp.sync(MCP::Dev2Hst);
             std::string tAvgPrefix = outputPrefix + "_tavg";

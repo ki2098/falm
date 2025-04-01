@@ -73,7 +73,7 @@ namespace Falm {
 // };
 
 template<typename T, size_t N>
-struct VECTOR {
+struct Vector {
     T _m_vector[N];
 
     __host__ __device__ T &operator[](size_t i) {return _m_vector[i];}
@@ -81,111 +81,111 @@ struct VECTOR {
 
     // @ vector
 
-    __host__ __device__ VECTOR operator-() const {
-        VECTOR vv;
+    __host__ __device__ Vector operator-() const {
+        Vector vv;
         for (size_t i = 0; i < N; i ++) vv[i] = - _m_vector[i];
         return vv;
     }
 
     // vector @ vector
 
-    __host__ __device__ VECTOR operator+(const VECTOR &v) const {
-        VECTOR vv;
+    __host__ __device__ Vector operator+(const Vector &v) const {
+        Vector vv;
         for (size_t i = 0; i < N; i ++) vv[i] = _m_vector[i] + v[i];
         return vv;
     }
 
-    __host__ __device__ VECTOR operator-(const VECTOR &v) const {
-        VECTOR vv;
+    __host__ __device__ Vector operator-(const Vector &v) const {
+        Vector vv;
         for (size_t i = 0; i < N; i ++) vv[i] = _m_vector[i] - v[i];
         return vv;
     }
 
-    __host__ __device__ VECTOR operator*(const VECTOR &v) const {
-        VECTOR vv;
+    __host__ __device__ Vector operator*(const Vector &v) const {
+        Vector vv;
         for (size_t i = 0; i < N; i ++) vv[i] = _m_vector[i] * v[i];
         return vv;
     }
 
-    __host__ __device__ VECTOR operator/(const VECTOR &v) const {
-        VECTOR vv;
+    __host__ __device__ Vector operator/(const Vector &v) const {
+        Vector vv;
         for (size_t i = 0; i < N; i ++) vv[i] = _m_vector[i] / v[i];
         return vv;
     }
 
     // vector @= vector
 
-    __host__ __device__ VECTOR &operator+=(const VECTOR &v) {
+    __host__ __device__ Vector &operator+=(const Vector &v) {
         for (size_t i = 0; i < N; i ++)  _m_vector[i] += v[i];
         return *this;
     }
 
-    __host__ __device__ VECTOR &operator-=(const VECTOR &v) {
+    __host__ __device__ Vector &operator-=(const Vector &v) {
         for (size_t i = 0; i < N; i ++)  _m_vector[i] -= v[i];
         return *this;
     }
 
-    __host__ __device__ VECTOR &operator*=(const VECTOR &v) {
+    __host__ __device__ Vector &operator*=(const Vector &v) {
         for (size_t i = 0; i < N; i ++)  _m_vector[i] *= v[i];
         return *this;
     }
 
-    __host__ __device__ VECTOR &operator/=(const VECTOR &v) {
+    __host__ __device__ Vector &operator/=(const Vector &v) {
         for (size_t i = 0; i < N; i ++)  _m_vector[i] /= v[i];
         return *this;
     }
 
     // vector @ scalar
 
-    __host__ __device__ VECTOR operator+(const T &s) const {
-        VECTOR vv;
+    __host__ __device__ Vector operator+(const T &s) const {
+        Vector vv;
         for (size_t i = 0; i < N; i ++) vv[i] = _m_vector[i] + s;
         return vv;
     }
 
-    __host__ __device__ VECTOR operator-(const T &s) const {
-        VECTOR vv;
+    __host__ __device__ Vector operator-(const T &s) const {
+        Vector vv;
         for (size_t i = 0; i < N; i ++) vv[i] = _m_vector[i] - s;
         return vv;
     }
 
-    __host__ __device__ VECTOR operator*(const T &s) const {
-        VECTOR vv;
+    __host__ __device__ Vector operator*(const T &s) const {
+        Vector vv;
         for (size_t i = 0; i < N; i ++) vv[i] = _m_vector[i] * s;
         return vv;
     }
 
-    __host__ __device__ VECTOR operator/(const T &s) const {
-        VECTOR vv;
+    __host__ __device__ Vector operator/(const T &s) const {
+        Vector vv;
         for (size_t i = 0; i < N; i ++) vv[i] = _m_vector[i] / s;
         return vv;
     }
 
     // vector @= scalar
 
-    __host__ __device__ VECTOR &operator+=(const T &s) {
+    __host__ __device__ Vector &operator+=(const T &s) {
         for (size_t i = 0; i < N; i ++)  _m_vector[i] += s;
         return *this;
     }
 
-    __host__ __device__ VECTOR &operator-=(const T &s) {
+    __host__ __device__ Vector &operator-=(const T &s) {
         for (size_t i = 0; i < N; i ++)  _m_vector[i] -= s;
         return *this;
     }
 
-    __host__ __device__ VECTOR &operator*=(const T &s) {
+    __host__ __device__ Vector &operator*=(const T &s) {
         for (size_t i = 0; i < N; i ++)  _m_vector[i] *= s;
         return *this;
     }
 
-    __host__ __device__ VECTOR &operator/=(const T &s) {
+    __host__ __device__ Vector &operator/=(const T &s) {
         for (size_t i = 0; i < N; i ++)  _m_vector[i] /= s;
         return *this;
     }
 
     // vector ? vector
 
-    __host__ __device__ bool operator==(const VECTOR &v) const {
+    __host__ __device__ bool operator==(const Vector &v) const {
         for (size_t i = 0; i < N; i ++) {
             if (_m_vector[i] != v[i]) {
                 return false;
@@ -194,7 +194,7 @@ struct VECTOR {
         return true;
     }
 
-    __host__ __device__ bool operator!=(const VECTOR &v) const {
+    __host__ __device__ bool operator!=(const Vector &v) const {
         for (size_t i = 0; i < N; i ++) {
             if (_m_vector[i] != v[i]) {
                 return true;
@@ -232,29 +232,29 @@ struct VECTOR {
 // scalar @ vector
 
 template<typename T, size_t N>
-__host__ __device__ VECTOR<T, N> operator+(const T &s, const VECTOR<T, N> &v) {
-    VECTOR<T, N> vv;
+__host__ __device__ Vector<T, N> operator+(const T &s, const Vector<T, N> &v) {
+    Vector<T, N> vv;
     for (size_t i = 0; i < N; i ++) vv[i] = s + v[i];
     return vv;
 }
 
 template<typename T, size_t N>
-__host__ __device__ VECTOR<T, N> operator-(const T &s, const VECTOR<T, N> &v) {
-    VECTOR<T, N> vv;
+__host__ __device__ Vector<T, N> operator-(const T &s, const Vector<T, N> &v) {
+    Vector<T, N> vv;
     for (size_t i = 0; i < N; i ++) vv[i] = s - v[i];
     return vv;
 }
 
 template<typename T, size_t N>
-__host__ __device__ VECTOR<T, N> operator*(const T &s, const VECTOR<T, N> &v) {
-    VECTOR<T, N> vv;
+__host__ __device__ Vector<T, N> operator*(const T &s, const Vector<T, N> &v) {
+    Vector<T, N> vv;
     for (size_t i = 0; i < N; i ++) vv[i] = s * v[i];
     return vv;
 }
 
 template<typename T, size_t N>
-__host__ __device__ VECTOR<T, N> operator/(const T &s, const VECTOR<T, N> &v) {
-    VECTOR<T, N> vv;
+__host__ __device__ Vector<T, N> operator/(const T &s, const Vector<T, N> &v) {
+    Vector<T, N> vv;
     for (size_t i = 0; i < N; i ++) vv[i] = s / v[i];
     return vv;
 }
@@ -262,7 +262,7 @@ __host__ __device__ VECTOR<T, N> operator/(const T &s, const VECTOR<T, N> &v) {
 // scalar ? vector
 
 template<typename T, size_t N>
-__host__ __device__ bool operator==(const T &s, const VECTOR<T, N> &v) {
+__host__ __device__ bool operator==(const T &s, const Vector<T, N> &v) {
     for (size_t i = 0; i < N; i ++) {
         if (s != v[i]) return false;
     }
@@ -270,7 +270,7 @@ __host__ __device__ bool operator==(const T &s, const VECTOR<T, N> &v) {
 }
 
 template<typename T, size_t N>
-__host__ __device__ bool operator!=(const T &s, const VECTOR<T, N> &v) {
+__host__ __device__ bool operator!=(const T &s, const Vector<T, N> &v) {
     for (size_t i = 0; i < N; i ++) {
         if (s != v[i]) return true;
     }

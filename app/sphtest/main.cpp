@@ -23,7 +23,7 @@ int main(int argc, char **argv) {
     std::ifstream yfile(gridpath + "/y.txt");
     std::ifstream zfile(gridpath + "/z.txt");
 
-    INT3 nxyz;
+    Int3 nxyz;
     std::string line;
     std::getline(xfile, line);
     nxyz[0] = std::stoi(line);
@@ -71,14 +71,14 @@ int main(int argc, char **argv) {
     dvcdm.dfiFinfo.varList = {"u", "v", "w"};
     u.alloc(cpm.pdm_list[cpm.rank].shape, 3, HDC::Host, "uvw");
 
-    INT3 shape = cpm.pdm_list[cpm.rank].shape;
+    Int3 shape = cpm.pdm_list[cpm.rank].shape;
     for (int i = 0; i < shape[0]; i ++) {
     for (int j = 0; j < shape[1]; j ++) {
     for (int k = 0; k < shape[2]; k ++) {
-        INT idx = IDX(i, j, k, shape);
-        REAL _x = gx[0](i) * 2 * Pi;
-        REAL _y = gx[1](j) * 2 * Pi;
-        REAL _z = gx[2](k) * 2 * Pi;
+        Int idx = IDX(i, j, k, shape);
+        Real _x = gx[0](i) * 2 * Pi;
+        Real _y = gx[1](j) * 2 * Pi;
+        Real _z = gx[2](k) * 2 * Pi;
         u(idx, 0) = cos(_x) * sin(_y) * sin(_z);
         u(idx, 1) = sin(_x) * cos(_y) * sin(_z);
         u(idx, 2) = sin(_x) * sin(_y) * cos(_z);

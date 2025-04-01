@@ -4,10 +4,10 @@
 
 using namespace Falm;
 
-Matrix<REAL> *mat;
+Matrix<Real> *mat;
 
 int main() {
-    mat = (Matrix<REAL>*)malloc(sizeof(Matrix<REAL>)*10);
+    mat = (Matrix<Real>*)malloc(sizeof(Matrix<Real>)*10);
     for (int i = 0; i < 10; i ++) {
         mat[i].alloc(i, i, HDC::HstDev);
     }

@@ -8,12 +8,12 @@ namespace Falm {
 class TurbineArray {
 public:
     int nt, nbpt, nappb;
-    Matrix<REAL> foundx;
-    Matrix<REAL> hubx;
-    Matrix<REAL> pitch;
-    Matrix<REAL> pitchrate;
-    Matrix<REAL> tiprate;
-    REAL r;
+    Matrix<Real> foundx;
+    Matrix<Real> hubx;
+    Matrix<Real> pitch;
+    Matrix<Real> pitchrate;
+    Matrix<Real> tiprate;
+    Real r;
 
 public:
     void init(int _nt, int _nbpt, int _nappb) {

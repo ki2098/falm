@@ -7,25 +7,25 @@ namespace Falm {
 
 class MCP {
 public:
-    static const FLAG Empty   = 0;
-    static const FLAG Hst2Hst = 1;
-    static const FLAG Hst2Dev = 2;
-    static const FLAG Dev2Hst = 4;
-    static const FLAG Dev2Dev = 8;
+    static const Flag Empty   = 0;
+    static const Flag Hst2Hst = 1;
+    static const Flag Hst2Dev = 2;
+    static const Flag Dev2Hst = 4;
+    static const Flag Dev2Dev = 8;
 };
 
 class HDC {
 public:
-    static const FLAG Empty  = 0;
-    static const FLAG Host   = 1;
-    static const FLAG Device = 2;
-    static const FLAG HstDev = Host | Device;
+    static const Flag Empty  = 0;
+    static const Flag Host   = 1;
+    static const Flag Device = 2;
+    static const Flag HstDev = Host | Device;
 };
 
 class Color {
 public:
-    static const INT Black = 0;
-    static const INT Red   = 1;
+    static const Int Black = 0;
+    static const Int Red   = 1;
 };
 
 }

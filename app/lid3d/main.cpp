@@ -11,43 +11,43 @@ Cprof::cprof_Profiler profiler;
 #define TERMINAL_OUTPUT_RANK 1
 
 FalmCore falm;
-REAL maxdiag;
-Matrix<REAL> u_previous;
+Real maxdiag;
+Matrix<Real> u_previous;
 
 dim3 block{8, 8, 8};
 
-STREAM facestream[CPM::NFACE];
-STREAM *streams;
+Stream facestream[CPM::NFACE];
+Stream *streams;
 
 void make_poisson_coefficient_matrix() {
     CPM &cpm = falm.cpm;
     Region &pdm = cpm.pdm_list[cpm.rank];
     Region &global = cpm.global;
     FalmBasicVar &fv = falm.fv;
-    for (INT k = cpm.gc; k < pdm.shape[2] - cpm.gc; k ++) {
-    for (INT j = cpm.gc; j < pdm.shape[1] - cpm.gc; j ++) {
-    for (INT i = cpm.gc; i < pdm.shape[0] - cpm.gc; i ++) {
-        INT3 gijk = pdm.offset + INT3{{i, j, k}};
-        REAL ac, ae, aw, an, as, at, ab;
+    for (Int k = cpm.gc; k < pdm.shape[2] - cpm.gc; k ++) {
+    for (Int j = cpm.gc; j < pdm.shape[1] - cpm.gc; j ++) {
+    for (Int i = cpm.gc; i < pdm.shape[0] - cpm.gc; i ++) {
+        Int3 gijk = pdm.offset + Int3{{i, j, k}};
+        Real ac, ae, aw, an, as, at, ab;
         ac = ae = aw = an = as = at = ab = 0.0;
-        INT idxcc = IDX(i  , j  , k  , pdm.shape);
-        INT idxe1 = IDX(i+1, j  , k  , pdm.shape);
-        INT idxw1 = IDX(i-1, j  , k  , pdm.shape);
-        INT idxn1 = IDX(i  , j+1, k  , pdm.shape);
-        INT idxs1 = IDX(i  , j-1, k  , pdm.shape);
-        INT idxt1 = IDX(i  , j  , k+1, pdm.shape);
-        INT idxb1 = IDX(i  , j  , k-1, pdm.shape);
-        REAL gxcc  =  fv.g(idxcc, 0);
-        REAL gxe1  =  fv.g(idxe1, 0);
-        REAL gxw1  =  fv.g(idxw1, 0);
-        REAL gycc  =  fv.g(idxcc, 1);
-        REAL gyn1  =  fv.g(idxn1, 1);
-        REAL gys1  =  fv.g(idxs1, 1);
-        REAL gzcc  =  fv.g(idxcc, 2);
-        REAL gzt1  =  fv.g(idxt1, 2);
-        REAL gzb1  =  fv.g(idxb1, 2);
-        REAL jacob = fv.ja(idxcc);
-        REAL coefficient;
+        Int idxcc = IDX(i  , j  , k  , pdm.shape);
+        Int idxe1 = IDX(i+1, j  , k  , pdm.shape);
+        Int idxw1 = IDX(i-1, j  , k  , pdm.shape);
+        Int idxn1 = IDX(i  , j+1, k  , pdm.shape);
+        Int idxs1 = IDX(i  , j-1, k  , pdm.shape);
+        Int idxt1 = IDX(i  , j  , k+1, pdm.shape);
+        Int idxb1 = IDX(i  , j  , k-1, pdm.shape);
+        Real gxcc  =  fv.g(idxcc, 0);
+        Real gxe1  =  fv.g(idxe1, 0);
+        Real gxw1  =  fv.g(idxw1, 0);
+        Real gycc  =  fv.g(idxcc, 1);
+        Real gyn1  =  fv.g(idxn1, 1);
+        Real gys1  =  fv.g(idxs1, 1);
+        Real gzcc  =  fv.g(idxcc, 2);
+        Real gzt1  =  fv.g(idxt1, 2);
+        Real gzb1  =  fv.g(idxb1, 2);
+        Real jacob = fv.ja(idxcc);
+        Real coefficient;
         coefficient = 0.5 * (gxcc + gxe1) / jacob;
         if (gijk[0] < global.shape[0] - cpm.gc - 1) {
             ac -= coefficient;
@@ -105,9 +105,9 @@ void init(int &argc, char **&argv) {
         printf("using streams %p\n", streams);
     }
 
-    REAL u_inflow = falm.params["inflow"]["velocity"].get<REAL>();
-    Matrix<REAL> &u = falm.fv.u;
-    for (INT i = 0; i < u.shape[0]; i ++) {
+    Real u_inflow = falm.params["inflow"]["velocity"].get<Real>();
+    Matrix<Real> &u = falm.fv.u;
+    for (Int i = 0; i < u.shape[0]; i ++) {
         u(i, 0) = u_inflow;
         u(i, 1) = u(i, 2) = 0.0;
     }
@@ -119,7 +119,7 @@ void init(int &argc, char **&argv) {
     make_poisson_coefficient_matrix();
 }
 
-REAL main_loop(RmcpAlm &alm, RmcpTurbineArray &turbineArray, STREAM *s) {
+Real main_loop(RmcpAlm &alm, RmcpTurbineArray &turbineArray, Stream *s) {
     FalmBasicVar &fv = falm.fv;
     u_previous.copy(fv.u, HDC::Device);
     // profiler.startEvent("ALM");
@@ -165,7 +165,7 @@ REAL main_loop(RmcpAlm &alm, RmcpTurbineArray &turbineArray, STREAM *s) {
 
     profiler.startEvent("||div(U)||");
     fcfd.Divergence(fv.uu, fv.divergence, fv.ja, falm.cpm, block);
-    REAL divnorm = FalmMV::EuclideanNormSq(fv.divergence, falm.cpm, block);
+    Real divnorm = FalmMV::EuclideanNormSq(fv.divergence, falm.cpm, block);
     profiler.endEvent("||div(U)||");
 
     falm.TAvg();

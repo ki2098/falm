@@ -5,21 +5,21 @@
 
 namespace Falm {
 
-__host__ __device__ static inline REAL UpwindFlux1st(REAL ul, REAL ur, REAL UF) {
+__host__ __device__ static inline Real UpwindFlux1st(Real ul, Real ur, Real UF) {
     return 0.5 * (UF * (ur + ul) - fabs(UF) * (ur - ul));
 }
 
-__host__ __device__ static REAL Upwind1st(
-    REAL ucc,
-    REAL ue1, REAL uw1,
-    REAL un1, REAL us1,
-    REAL ut1, REAL ub1,
-    REAL JUE, REAL JUW,
-    REAL JVN, REAL JVS,
-    REAL JWT, REAL JWB,
-    REAL jacobian
+__host__ __device__ static Real Upwind1st(
+    Real ucc,
+    Real ue1, Real uw1,
+    Real un1, Real us1,
+    Real ut1, Real ub1,
+    Real JUE, Real JUW,
+    Real JVN, Real JVS,
+    Real JWT, Real JWB,
+    Real jacobian
 ) {
-    REAL adv = 0.0;
+    Real adv = 0.0;
     adv += UpwindFlux1st(ucc, ue1, JUE);
     adv -= UpwindFlux1st(uw1, ucc, JUW);
     adv += UpwindFlux1st(ucc, un1, JVN);
@@ -30,17 +30,17 @@ __host__ __device__ static REAL Upwind1st(
     return adv;
 } 
 
-__host__ __device__ static REAL QUICK(
-    REAL ucc,
-    REAL ue1, REAL ue2, REAL uw1, REAL uw2,
-    REAL un1, REAL un2, REAL us1, REAL us2,
-    REAL ut1, REAL ut2, REAL ub1, REAL ub2,
-    REAL JUE, REAL JUW,
-    REAL JVN, REAL JVS,
-    REAL JWT, REAL JWB,
-    REAL jacobian
+__host__ __device__ static Real QUICK(
+    Real ucc,
+    Real ue1, Real ue2, Real uw1, Real uw2,
+    Real un1, Real un2, Real us1, Real us2,
+    Real ut1, Real ut2, Real ub1, Real ub2,
+    Real JUE, Real JUW,
+    Real JVN, Real JVS,
+    Real JWT, Real JWB,
+    Real jacobian
 ) {
-    REAL adv = 0.;
+    Real adv = 0.;
 
     adv += JUE*(- ue2 + 9*ue1 + 9*ucc - uw1);
     adv += fabs(JUE)*(ue2 - 3*ue1 + 3*ucc - uw1);
@@ -65,20 +65,20 @@ __host__ __device__ static REAL QUICK(
     return adv;
 }
 
-__host__ __device__ static REAL KK(
-    REAL ucc,
-    REAL ue1, REAL ue2, REAL uw1, REAL uw2,
-    REAL un1, REAL un2, REAL us1, REAL us2,
-    REAL ut1, REAL ut2, REAL ub1, REAL ub2,
-    REAL Uabs, REAL Vabs, REAL Wabs,
-    REAL JUE, REAL JUW,
-    REAL JVN, REAL JVS,
-    REAL JWT, REAL JWB,
-    REAL jacobian
+__host__ __device__ static Real KK(
+    Real ucc,
+    Real ue1, Real ue2, Real uw1, Real uw2,
+    Real un1, Real un2, Real us1, Real us2,
+    Real ut1, Real ut2, Real ub1, Real ub2,
+    Real Uabs, Real Vabs, Real Wabs,
+    Real JUE, Real JUW,
+    Real JVN, Real JVS,
+    Real JWT, Real JWB,
+    Real jacobian
 ) {
-    REAL adv = 0.0;
-    REAL UDL, UDR, UD4;
-    const REAL ALPHA = 1./4.;
+    Real adv = 0.0;
+    Real UDL, UDR, UD4;
+    const Real ALPHA = 1./4.;
 
     UDL = JUE*(- ue2 + 27*ue1 - 27*ucc + uw1)/24.;
     UDR = JUW*(- ue1 + 27*ucc - 27*uw1 + uw2)/24;
@@ -98,20 +98,20 @@ __host__ __device__ static REAL KK(
     return adv;
 }
 
-__host__ __device__ static REAL UTOPIA(
-    REAL ucc,
-    REAL ue1, REAL ue2, REAL uw1, REAL uw2,
-    REAL un1, REAL un2, REAL us1, REAL us2,
-    REAL ut1, REAL ut2, REAL ub1, REAL ub2,
-    REAL Uabs, REAL Vabs, REAL Wabs,
-    REAL JUE, REAL JUW,
-    REAL JVN, REAL JVS,
-    REAL JWT, REAL JWB,
-    REAL jacobian
+__host__ __device__ static Real UTOPIA(
+    Real ucc,
+    Real ue1, Real ue2, Real uw1, Real uw2,
+    Real un1, Real un2, Real us1, Real us2,
+    Real ut1, Real ut2, Real ub1, Real ub2,
+    Real Uabs, Real Vabs, Real Wabs,
+    Real JUE, Real JUW,
+    Real JVN, Real JVS,
+    Real JWT, Real JWB,
+    Real jacobian
 ) {
-    REAL adv = 0.0;
-    REAL UDL, UDR, UD4;
-    const REAL ALPHA = 1./12.;
+    Real adv = 0.0;
+    Real UDL, UDR, UD4;
+    const Real ALPHA = 1./12.;
 
     UDL = JUE*(- ue2 + 27*ue1 - 27*ucc + uw1)/24.;
     UDR = JUW*(- ue1 + 27*ucc - 27*uw1 + uw2)/24;
@@ -131,20 +131,20 @@ __host__ __device__ static REAL UTOPIA(
     return adv;
 }
 
-__host__ __device__ static REAL Upwind3rd(
-    REAL ucc,
-    REAL ue1, REAL ue2, REAL uw1, REAL uw2,
-    REAL un1, REAL un2, REAL us1, REAL us2,
-    REAL ut1, REAL ut2, REAL ub1, REAL ub2,
-    REAL Uabs, REAL Vabs, REAL Wabs,
-    REAL JUE, REAL JUW,
-    REAL JVN, REAL JVS,
-    REAL JWT, REAL JWB,
-    REAL jacobian
+__host__ __device__ static Real Upwind3rd(
+    Real ucc,
+    Real ue1, Real ue2, Real uw1, Real uw2,
+    Real un1, Real un2, Real us1, Real us2,
+    Real ut1, Real ut2, Real ub1, Real ub2,
+    Real Uabs, Real Vabs, Real Wabs,
+    Real JUE, Real JUW,
+    Real JVN, Real JVS,
+    Real JWT, Real JWB,
+    Real jacobian
 ) {
-    REAL adv = 0.0;
-    REAL UDL, UDR, UD4;
-    const REAL ALPHA = 1./24.;
+    Real adv = 0.0;
+    Real UDL, UDR, UD4;
+    const Real ALPHA = 1./24.;
 
     UDL = JUE*(- ue2 + 27*ue1 - 27*ucc + uw1)/24.;
     UDR = JUW*(- ue1 + 27*ucc - 27*uw1 + uw2)/24.;
@@ -164,22 +164,22 @@ __host__ __device__ static REAL Upwind3rd(
     return adv;
 }
 
-__host__ __device__ static REAL Diffusion(
-    REAL ReI,
-    REAL ucc,
-    REAL ue1, REAL uw1,
-    REAL un1, REAL us1,
-    REAL ut1, REAL ub1,
-    REAL nutcc,
-    REAL nute1, REAL nutw1,
-    REAL nutn1, REAL nuts1,
-    REAL nutt1, REAL nutb1,
-    REAL gxcc, REAL gxe1, REAL gxw1,
-    REAL gycc, REAL gyn1, REAL gys1,
-    REAL gzcc, REAL gzt1, REAL gzb1,
-    REAL jacobian
+__host__ __device__ static Real Diffusion(
+    Real ReI,
+    Real ucc,
+    Real ue1, Real uw1,
+    Real un1, Real us1,
+    Real ut1, Real ub1,
+    Real nutcc,
+    Real nute1, Real nutw1,
+    Real nutn1, Real nuts1,
+    Real nutt1, Real nutb1,
+    Real gxcc, Real gxe1, Real gxw1,
+    Real gycc, Real gyn1, Real gys1,
+    Real gzcc, Real gzt1, Real gzb1,
+    Real jacobian
 ) {
-    REAL vis = 0.0;
+    Real vis = 0.0;
     vis += (gxcc + gxe1) * (ReI + 0.5 * (nutcc + nute1)) * (ue1 - ucc);
     vis -= (gxcc + gxw1) * (ReI + 0.5 * (nutcc + nutw1)) * (ucc - uw1);
     vis += (gycc + gyn1) * (ReI + 0.5 * (nutcc + nutn1)) * (un1 - ucc);

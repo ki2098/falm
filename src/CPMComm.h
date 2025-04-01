@@ -103,7 +103,7 @@ public:
     MPI_Datatype      mpi_dtype;
     T              *origin_ptr;
     Region        origin_domain;
-    FLAG         buffer_hdctype;
+    Flag         buffer_hdctype;
     void             *packerptr[6];
     
 
@@ -121,7 +121,7 @@ public:
     }
 
     void Wait6Face() {
-        for (INT i = 0; i < 6; i ++) {
+        for (Int i = 0; i < 6; i ++) {
             if (base->neighbour[i] >= 0) {
                 CPM_Waitall(2, &mpi_req[i * 2], &mpi_stat[i * 2]);
             }
@@ -132,26 +132,26 @@ public:
     // void CPML2Dev_IExchange6ColoredFace(T *data, Mapper &pdm, INT color, INT thick, int grp_tag);
     // void CPML2Dev_PostExchange6Face();
     // void CPML2Dev_PostExchange6ColoredFace();
-    void IExchange6Face(T *data, INT thick, INT margin, int grp_tag, STREAM *stream = nullptr);
-    void IExchange6ColoredFace(T *data, INT color, INT thick, INT margin, int grp_tag, STREAM *stream = nullptr);
-    void PostExchange6Face(STREAM *stream = nullptr);
-    void PostExchange6ColoredFace(STREAM *stream = nullptr);
+    void IExchange6Face(T *data, Int thick, Int margin, int grp_tag, Stream *stream = nullptr);
+    void IExchange6ColoredFace(T *data, Int color, Int thick, Int margin, int grp_tag, Stream *stream = nullptr);
+    void PostExchange6Face(Stream *stream = nullptr);
+    void PostExchange6ColoredFace(Stream *stream = nullptr);
 
 protected:
-    void makeBufferMaps(INT thick, INT margin) {
+    void makeBufferMaps(Int thick, Int margin) {
         Region &pdm = base->pdm_list[base->rank];
-        for (INT fid = 0; fid < 6; fid ++) {
+        for (Int fid = 0; fid < 6; fid ++) {
             // printf("%d\n", base->gc);
             if (base->neighbour[fid] >= 0) {
-                INT gc = base->gc;
-                INT gcx2 = 2 * gc;
-                INT __s = fid*2, __r = fid*2+1;
-                INT3 buffer_shape {
+                Int gc = base->gc;
+                Int gcx2 = 2 * gc;
+                Int __s = fid*2, __r = fid*2+1;
+                Int3 buffer_shape {
                     (fid == CPM::XPLUS || fid == CPM::XMINUS)? thick : pdm.shape[0] - gcx2,
                     (fid == CPM::YPLUS || fid == CPM::YMINUS)? thick : pdm.shape[1] - gcx2,
                     (fid == CPM::ZPLUS || fid == CPM::ZMINUS)? thick : pdm.shape[2] - gcx2
                 };
-                INT3 sendbuffer_offset, recvbuffer_offset;
+                Int3 sendbuffer_offset, recvbuffer_offset;
                 if (fid == CPM::XPLUS) {
                     sendbuffer_offset = {{pdm.shape[0] - gc - thick - margin, gc, gc}};
                     recvbuffer_offset = {{pdm.shape[0] - gc         + margin, gc, gc}};
@@ -179,15 +179,15 @@ protected:
 
 };
 
-template<typename T> void CPMComm<T>::IExchange6Face(T *data, INT thick, INT margin, int grp_tag, STREAM *stream) {
+template<typename T> void CPMComm<T>::IExchange6Face(T *data, Int thick, Int margin, int grp_tag, Stream *stream) {
     Region &pdm   = base->pdm_list[base->rank];
     CpmBufMan &bufman = base->bufman;
     origin_ptr    = data;
     origin_domain = pdm;
     makeBufferMaps(thick, margin);
-    for (INT fid = 0; fid < 6; fid ++) {
+    for (Int fid = 0; fid < 6; fid ++) {
         if (base->validNeighbour(fid)) {
-            INT sid = fid*2, rid = fid*2+1;
+            Int sid = fid*2, rid = fid*2+1;
             // CPMBuffer &sbuf = buffer[fid * 2], &rbuf = buffer[fid * 2 + 1];
             // sbuf.alloc(sizeof(T), sbuf.map, BufType::Out, buffer_hdctype);
             // rbuf.alloc(sizeof(T), rbuf.map, BufType::In , buffer_hdctype);
@@ -200,7 +200,7 @@ template<typename T> void CPMComm<T>::IExchange6Face(T *data, INT thick, INT mar
                 (fid == CPM::YPLUS || fid == CPM::YMINUS)? 1U : 8U,
                 (fid == CPM::ZPLUS || fid == CPM::ZMINUS)? 1U : 8U
             );
-            STREAM fstream = (stream)? stream[fid] : (STREAM)0;
+            Stream fstream = (stream)? stream[fid] : (Stream)0;
             if (buffer_hdctype == HDC::Host) {
                 // falmErrCheckMacro(falmMallocDevice((void**)&packerptr[fid], sizeof(T) * sbuf.count));
                 CPMDevCall::PackBuffer((T*)sbuf.packer, sbuf.map, data, pdm, block_dim, fstream);
@@ -213,7 +213,7 @@ template<typename T> void CPMComm<T>::IExchange6Face(T *data, INT thick, INT mar
     if (!stream) {
         falmWaitStream(0);
     }
-    for (INT fid = 0; fid < 6; fid ++) {
+    for (Int fid = 0; fid < 6; fid ++) {
         if (base->validNeighbour(fid)) {
             if (stream) {
                 falmWaitStream(stream[fid]);
@@ -225,25 +225,25 @@ template<typename T> void CPMComm<T>::IExchange6Face(T *data, INT thick, INT mar
             // if (buffer_hdctype == HDC::Host) {
             //     falmErrCheckMacro(falmFreeDevice(packerptr[fid]));
             // }
-            INT sid = fid*2, rid = fid*2+1;
+            Int sid = fid*2, rid = fid*2+1;
             CPM_ISend(bufman.get(bufferId[sid]), mpi_dtype, base->neighbour[fid], base->neighbour[fid]+grp_tag*12, MPI_COMM_WORLD, &mpi_req[sid]);
             CPM_IRecv(bufman.get(bufferId[rid]), mpi_dtype, base->neighbour[fid], base->rank          +grp_tag*12, MPI_COMM_WORLD, &mpi_req[rid]);
         }
     }
 }
 
-template<typename T> void CPMComm<T>::IExchange6ColoredFace(T *data, INT color, INT thick, INT margin, int grp_tag, STREAM *stream) {
+template<typename T> void CPMComm<T>::IExchange6ColoredFace(T *data, Int color, Int thick, Int margin, int grp_tag, Stream *stream) {
     Region &pdm = base->pdm_list[base->rank];
     CpmBufMan &bufman = base->bufman;
     origin_ptr    = data;
     origin_domain = pdm;
     makeBufferMaps(thick, margin);
-    for (INT fid = 0; fid < 6; fid ++) {
+    for (Int fid = 0; fid < 6; fid ++) {
         if (base->validNeighbour(fid)) {
             // CPMBuffer &sbuf = buffer[fid * 2], &rbuf = buffer[fid * 2 + 1];
             // sbuf.allocColored(sizeof(T), sbuf.map, color, BufType::Out, buffer_hdctype, pdm);
             // rbuf.allocColored(sizeof(T), rbuf.map, color, BufType::In , buffer_hdctype, pdm);
-            INT sid = fid*2, rid = fid*2+1;
+            Int sid = fid*2, rid = fid*2+1;
             bufman.request(sizeof(T), bufmap[sid], pdm, color, &bufferId[sid]);
             bufman.request(sizeof(T), bufmap[rid], pdm, color, &bufferId[rid]);
             CpmBuffer &sbuf = bufman.get(bufferId[sid]);
@@ -253,7 +253,7 @@ template<typename T> void CPMComm<T>::IExchange6ColoredFace(T *data, INT color, 
                 (fid == CPM::YPLUS || fid == CPM::YMINUS)? 1U : 8U,
                 (fid == CPM::ZPLUS || fid == CPM::ZMINUS)? 1U : 8U
             );
-            STREAM fstream = (stream)? stream[fid] : (STREAM)0;
+            Stream fstream = (stream)? stream[fid] : (Stream)0;
             if (buffer_hdctype == HDC::Host) {
                 // falmErrCheckMacro(falmMallocDevice((void**)&packerptr[fid], sizeof(T) * sbuf.count));
                 CPMDevCall::PackColoredBuffer((T*)sbuf.packer, sbuf.map, color, data, pdm, block_dim, fstream);
@@ -266,7 +266,7 @@ template<typename T> void CPMComm<T>::IExchange6ColoredFace(T *data, INT color, 
     if (!stream) {
         falmWaitStream(0);
     }
-    for (INT fid = 0; fid < 6; fid ++) {
+    for (Int fid = 0; fid < 6; fid ++) {
         if (base->validNeighbour(fid)) {
             if (stream) {
                 falmWaitStream(stream[fid]);
@@ -278,15 +278,15 @@ template<typename T> void CPMComm<T>::IExchange6ColoredFace(T *data, INT color, 
             // if (buffer_hdctype == HDC::Host) {
             //     falmErrCheckMacro(falmFreeDevice(packerptr[fid]));
             // }
-            INT sid = fid*2, rid = fid*2+1;
+            Int sid = fid*2, rid = fid*2+1;
             CPM_ISend(bufman.get(bufferId[sid]), mpi_dtype, base->neighbour[fid], base->neighbour[fid]+grp_tag*12, MPI_COMM_WORLD, &mpi_req[sid]);
             CPM_IRecv(bufman.get(bufferId[rid]), mpi_dtype, base->neighbour[fid], base->rank          +grp_tag*12, MPI_COMM_WORLD, &mpi_req[rid]);
         }
     }
 }
 
-template<typename T> void CPMComm<T>::PostExchange6Face(STREAM *stream) {
-    for (INT fid = 0; fid < 6; fid ++) {
+template<typename T> void CPMComm<T>::PostExchange6Face(Stream *stream) {
+    for (Int fid = 0; fid < 6; fid ++) {
         if (base->validNeighbour(fid)) {
             dim3 block_dim(
                 (fid == CPM::XPLUS || fid == CPM::XMINUS)? 1U : 8U,
@@ -294,7 +294,7 @@ template<typename T> void CPMComm<T>::PostExchange6Face(STREAM *stream) {
                 (fid == CPM::ZPLUS || fid == CPM::ZMINUS)? 1U : 8U
             );
             CpmBuffer &rbuf = base->bufman.get(bufferId[fid*2+1]);
-            STREAM fstream = (stream)? stream[fid] : (STREAM)0;
+            Stream fstream = (stream)? stream[fid] : (Stream)0;
             if (buffer_hdctype == HDC::Host) {
                 // falmErrCheckMacro(falmMallocDevice((void**)&packerptr[fid], sizeof(T) * rbuf.count));
                 falmErrCheckMacro(falmMemcpyAsync(rbuf.packer, rbuf.ptr, sizeof(T) * rbuf.count, MCP::Hst2Dev, fstream));
@@ -307,7 +307,7 @@ template<typename T> void CPMComm<T>::PostExchange6Face(STREAM *stream) {
     if (!stream) {
         falmWaitStream(0);
     }
-    for (INT fid = 0; fid < 6; fid ++) {
+    for (Int fid = 0; fid < 6; fid ++) {
         if (base->validNeighbour(fid)) {
             if (stream) {
                 falmWaitStream(stream[fid]);
@@ -324,8 +324,8 @@ template<typename T> void CPMComm<T>::PostExchange6Face(STREAM *stream) {
     }
 }
 
-template<typename T> void CPMComm<T>::PostExchange6ColoredFace(STREAM *stream) {
-    for (INT fid = 0; fid < 6; fid ++) {
+template<typename T> void CPMComm<T>::PostExchange6ColoredFace(Stream *stream) {
+    for (Int fid = 0; fid < 6; fid ++) {
         if (base->validNeighbour(fid)) {
             dim3 block_dim(
                 (fid == CPM::XPLUS || fid == CPM::XMINUS)? 1U : 8U,
@@ -333,7 +333,7 @@ template<typename T> void CPMComm<T>::PostExchange6ColoredFace(STREAM *stream) {
                 (fid == CPM::ZPLUS || fid == CPM::ZMINUS)? 1U : 8U
             );
             CpmBuffer &rbuf = base->bufman.get(bufferId[fid*2+1]);
-            STREAM fstream = (stream)? stream[fid] : (STREAM)0;
+            Stream fstream = (stream)? stream[fid] : (Stream)0;
             if (buffer_hdctype == HDC::Host) {
                 // falmErrCheckMacro(falmMallocDevice((void**)&packerptr[fid], sizeof(T) * rbuf.count));
                 falmErrCheckMacro(falmMemcpyAsync(rbuf.packer, rbuf.ptr, sizeof(T) * rbuf.count, MCP::Hst2Dev, fstream));
@@ -346,7 +346,7 @@ template<typename T> void CPMComm<T>::PostExchange6ColoredFace(STREAM *stream) {
     if (!stream) {
         falmWaitStream(0);
     }
-    for (INT fid = 0; fid < 6; fid ++) {
+    for (Int fid = 0; fid < 6; fid ++) {
         if (base->validNeighbour(fid)) {
             if (stream) {
                 falmWaitStream(stream[fid]);

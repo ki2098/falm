@@ -52,7 +52,7 @@ static inline int falmMemsetDevice(void *ptr, int value, size_t size) {
     return FalmErr::cuErrMask * (int)cudaMemset(ptr, value, size);
 }
 
-static inline int falmMemsetDeviceAsync(void *ptr, int value, size_t size, STREAM stream = (STREAM)0) {
+static inline int falmMemsetDeviceAsync(void *ptr, int value, size_t size, Stream stream = (Stream)0) {
     return FalmErr::cuErrMask * (int)cudaMemsetAsync(ptr, value, size, stream);
 }
 
@@ -86,7 +86,7 @@ static inline int falmFreeDevice(void *ptr) {
 //     cudaFreeAsync(ptr, stream);
 // }
 
-static int falmMemcpy(void *dst, void *src, size_t size, FLAG mcptype) {
+static int falmMemcpy(void *dst, void *src, size_t size, Flag mcptype) {
     if (mcptype == MCP::Hst2Hst) {
         memcpy(dst, src, size);
         return FalmErr::success;
@@ -100,7 +100,7 @@ static int falmMemcpy(void *dst, void *src, size_t size, FLAG mcptype) {
     return FalmErr::success;
 }
 
-static int falmMemcpyAsync(void *dst, void *src, size_t size, FLAG mcptype, STREAM stream = (STREAM)0) {
+static int falmMemcpyAsync(void *dst, void *src, size_t size, Flag mcptype, Stream stream = (Stream)0) {
     if (mcptype == MCP::Hst2Hst) {
         return FalmErr::cuErrMask * (int)cudaMemcpyAsync(dst, src, size, cudaMemcpyHostToHost, stream);
     } else if (mcptype == MCP::Hst2Dev) {
@@ -113,7 +113,7 @@ static int falmMemcpyAsync(void *dst, void *src, size_t size, FLAG mcptype, STRE
     return FalmErr::success;
 }
 
-static inline int falmWaitStream(STREAM stream = (STREAM)0) {
+static inline int falmWaitStream(Stream stream = (Stream)0) {
     return FalmErr::cuErrMask * (int)cudaStreamSynchronize(stream);
 }
 

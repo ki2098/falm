@@ -21,15 +21,15 @@ using namespace std;
 using namespace Falm;
 using namespace LidCavity2d;
 
-Matrix<REAL> x, h, kx, g, ja;
-Matrix<REAL> u, ua, uc, uu, uua, p, nut, ff, rhs, res, diver, w;
-Matrix<REAL> poisson_a;
-REAL maxdiag;
+Matrix<Real> x, h, kx, g, ja;
+Matrix<Real> u, ua, uc, uu, uua, p, nut, ff, rhs, res, diver, w;
+Matrix<Real> poisson_a;
+Real maxdiag;
 CPM cpm;
 
-void output(INT i) {
+void output(Int i) {
     Region &pdm = cpm.pdm_list[cpm.rank];
-    INT    &gc  = cpm.gc;
+    Int    &gc  = cpm.gc;
     std::string filename = "data/lid2d.csv." + std::to_string(i);
     FILE *file = fopen(filename.c_str(), "w");
     fprintf(file, "x,y,z,u,v,w,p\n");
@@ -38,10 +38,10 @@ void output(INT i) {
     p.sync(MCP::Dev2Hst);
     uu.sync(MCP::Dev2Hst);
     uua.sync(MCP::Dev2Hst);
-    for (INT k = gc - 1; k < pdm.shape[2] - gc + 1; k ++) {
-        for (INT j = gc - 1; j < pdm.shape[1] - gc + 1; j ++) {
-            for (INT i = gc - 1; i < pdm.shape[0] - gc + 1; i ++) {
-                INT idx = IDX(i, j, k, pdm.shape);
+    for (Int k = gc - 1; k < pdm.shape[2] - gc + 1; k ++) {
+        for (Int j = gc - 1; j < pdm.shape[1] - gc + 1; j ++) {
+            for (Int i = gc - 1; i < pdm.shape[0] - gc + 1; i ++) {
+                Int idx = IDX(i, j, k, pdm.shape);
                 fprintf(file, "%12.5e,%12.5e,%12.5e,%12.5e,%12.5e,%12.5e,%12.5e\n", x(idx, 0), x(idx, 1), x(idx, 2), u(idx, 0), u(idx, 1), u(idx, 2), p(idx));
             }
         }
@@ -66,9 +66,9 @@ void allocVars(Region &pdm) {
 
 void main_loop(FalmCFD &cfdsolver, FalmEq &eqsolver, dim3 block_dim = dim3{8, 8, 1}) {
     Region &pdm = cpm.pdm_list[cpm.rank];
-    INT    &gc  = cpm.gc;
+    Int    &gc  = cpm.gc;
     Region  map(pdm.shape, gc);
-    Matrix<REAL> un(u.shape[0], u.shape[1], HDC::Device, "un");
+    Matrix<Real> un(u.shape[0], u.shape[1], HDC::Device, "un");
     un.copy(u, HDC::Device);
 
     FalmCFD rk2fs1(cfdsolver.Re, cfdsolver.dt * 0.5, cfdsolver.AdvScheme, cfdsolver.SGSModel, cfdsolver.CSmagorinsky);
@@ -140,7 +140,7 @@ void main_loop(FalmCFD &cfdsolver, FalmEq &eqsolver, dim3 block_dim = dim3{8, 8,
 int main() {
     cpm.initPartition({N, N, 1}, GuideCell);
     Region &pdm = cpm.pdm_list[cpm.rank];
-    INT    &gc  = cpm.gc;
+    Int    &gc  = cpm.gc;
     Region  map(pdm.shape, gc);
     setCoord(L, N, cpm, x, h, kx, g, ja);
     printf("%d %d %d\n", pdm.shape[0], pdm.shape[1], pdm.shape[2]);
@@ -151,7 +151,7 @@ int main() {
 
     printf("%lf\n", maxdiag);
 
-    Matrix<REAL> &a = poisson_a;
+    Matrix<Real> &a = poisson_a;
 
     // a.sync(MCpType::Dev2Hst);
     // for (INT i = gc; i < pdm.shape[0] - gc; i ++) {
@@ -170,33 +170,33 @@ int main() {
     FILE *probe = fopen("data/probe.csv", "w");
     fprintf(probe, "t,TKE,u,v\n");
 
-    REAL __t = 0;
-    INT  __it = 0;
-    const INT __IT = int(T / DT);
-    const REAL output_interval = 1.0;
+    Real __t = 0;
+    Int  __it = 0;
+    const Int __IT = int(T / DT);
+    const Real output_interval = 1.0;
     allocVars(pdm);
     velocityBC(u, cpm);
     pressureBC(p, cpm);
     Region inner(pdm.shape, gc);
-    output(__it / INT(output_interval / DT));
+    output(__it / Int(output_interval / DT));
     while (__it < __IT) {
         main_loop(cfdsolver, eqsolver);
-        REAL tke = sqrt(FalmMVDevCall::EuclideanNormSq(u,  pdm, map, dim3(8, 8, 1))) / inner.size;
+        Real tke = sqrt(FalmMVDevCall::EuclideanNormSq(u,  pdm, map, dim3(8, 8, 1))) / inner.size;
         __t += DT;
         __it ++;
-        REAL divernorm = sqrt(FalmMVDevCall::EuclideanNormSq(diver,  pdm, map, dim3(8, 8, 1))) / inner.size;
+        Real divernorm = sqrt(FalmMVDevCall::EuclideanNormSq(diver,  pdm, map, dim3(8, 8, 1))) / inner.size;
 
-        REAL probeu, probev;
-        INT probeidx = IDX(monitor_i + gc, monitor_j + gc, gc, pdm.shape);
-        falmMemcpy(&probeu, &u.dev(probeidx, 0), sizeof(REAL), MCP::Dev2Hst);
-        falmMemcpy(&probev, &u.dev(probeidx, 1), sizeof(REAL), MCP::Dev2Hst);
+        Real probeu, probev;
+        Int probeidx = IDX(monitor_i + gc, monitor_j + gc, gc, pdm.shape);
+        falmMemcpy(&probeu, &u.dev(probeidx, 0), sizeof(Real), MCP::Dev2Hst);
+        falmMemcpy(&probev, &u.dev(probeidx, 1), sizeof(Real), MCP::Dev2Hst);
 
         printf("\r%8d %12.5e, %12.5e, %3d, %12.5e, %12.5e, %12.5e, %12.5e", __it, __t, divernorm, eqsolver.it, eqsolver.err, tke, probeu, probev);
 
         fprintf(probe, "%12.5e,%12.10e,%12.10e,%12.10e\n", __t, tke, probeu, probev);
         fflush(stdout);
-        if (__it % INT(output_interval / DT) == 0) {
-            output(__it / INT(output_interval / DT));
+        if (__it % Int(output_interval / DT) == 0) {
+            output(__it / Int(output_interval / DT));
         }
     }
     printf("\n");

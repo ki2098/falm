@@ -11,29 +11,29 @@ namespace Falm {
 
 class CPM {
 public:
-    static const INT XMINUS = 0;
-    static const INT XPLUS  = 1;
-    static const INT YMINUS = 2;
-    static const INT YPLUS  = 3;
-    static const INT ZMINUS = 4;
-    static const INT ZPLUS  = 5;
-    static const INT NFACE  = 6;
+    static const Int XMINUS = 0;
+    static const Int XPLUS  = 1;
+    static const Int YMINUS = 2;
+    static const Int YPLUS  = 3;
+    static const Int ZMINUS = 4;
+    static const Int ZPLUS  = 5;
+    static const Int NFACE  = 6;
 
 public:
     CpmBufMan bufman;
     int neighbour[6];
-    INT3   shape;
-    INT3     idx;
+    Int3   shape;
+    Int3     idx;
     int      rank;
     int      size;
     bool use_cuda_aware_mpi = false;
-    INT        gc;
+    Int        gc;
     Region global;
     std::vector<Region> pdm_list;
-    std::vector<INT> pdshape[3], pdoffset[3];
+    std::vector<Int> pdshape[3], pdoffset[3];
     // STREAM *stream;
 
-    void initPartition(INT3 gShape, INT guideCell, INT3 mpi_shape) {
+    void initPartition(Int3 gShape, Int guideCell, Int3 mpi_shape) {
         assert(size == PRODUCT3(mpi_shape));
 
         shape  = mpi_shape;
@@ -41,17 +41,17 @@ public:
         initNeighbour();
 
         gc     = guideCell;
-        INT gcgc = gc*2;
+        Int gcgc = gc*2;
         global = Region(
             gShape,
-            INT3{{0, 0, 0}}
+            Int3{{0, 0, 0}}
         );
         for (int d = 0; d < 3; d ++) {
-            pdshape[d] = std::vector<INT>(shape[d]);
-            pdoffset[d] = std::vector<INT>(shape[d]);
+            pdshape[d] = std::vector<Int>(shape[d]);
+            pdoffset[d] = std::vector<Int>(shape[d]);
         }
         for (int i = 0; i < shape[0]; i ++) {
-            INT ox = 0;
+            Int ox = 0;
             for (int __x = 0; __x < i; __x ++) {
                 ox += dim_division(gShape[0] - gcgc, shape[0], __x);
             }
@@ -59,7 +59,7 @@ public:
             pdshape[0][i] = dim_division(gShape[0] - gcgc, shape[0], i) + gcgc;
         }
         for (int j = 0; j < shape[1]; j ++) {
-            INT oy = 0;
+            Int oy = 0;
             for (int __y = 0; __y < j; __y ++) {
                 oy += dim_division(gShape[1] - gcgc, shape[1], __y);
             }
@@ -67,7 +67,7 @@ public:
             pdshape[1][j] = dim_division(gShape[1] - gcgc, shape[1], j) + gcgc;
         }
         for (int k = 0; k < shape[2]; k ++) {
-            INT oz = 0;
+            Int oz = 0;
             for (int __z = 0; __z < k; __z ++) {
                 oz += dim_division(gShape[2] - gcgc, shape[2], __z);
             }
@@ -80,8 +80,8 @@ public:
         for (int j = 0; j < shape[1]; j ++) {
         for (int i = 0; i < shape[0]; i ++) {
             pdm_list[IDX(i,j,k,shape)] = Region(
-                INT3{{pdshape[0][i], pdshape[1][j], pdshape[2][k]}},
-                INT3{{pdoffset[0][i], pdoffset[1][j], pdoffset[2][k]}}
+                Int3{{pdshape[0][i], pdshape[1][j], pdshape[2][k]}},
+                Int3{{pdoffset[0][i], pdoffset[1][j], pdoffset[2][k]}}
             );
         }}}
 
@@ -111,7 +111,7 @@ public:
 
     }
 
-    void set6Region(INT3 &inner_shape, INT3 &inner_offset, INT3 *boundary_shape, INT3 *boundary_offset, INT thick, const Region &map) const {
+    void set6Region(Int3 &inner_shape, Int3 &inner_offset, Int3 *boundary_shape, Int3 *boundary_offset, Int thick, const Region &map) const {
         inner_shape = map.shape;
         inner_offset = map.offset;
         if (neighbour[XPLUS] >= 0) {
@@ -154,13 +154,13 @@ public:
     //     setNonDefaultRegions(inner_shape, inner_offset, boundary_shape, boundary_offset, thick, __map);
     // }
 
-    bool validNeighbour(INT fid) {
+    bool validNeighbour(Int fid) {
         return (neighbour[fid] >= 0);
     }
 
 protected:
-    INT dim_division(INT dim_size, INT n_division, INT id) {
-        INT p_dim_size = dim_size / n_division;
+    Int dim_division(Int dim_size, Int n_division, Int id) {
+        Int p_dim_size = dim_size / n_division;
         if (id < dim_size % n_division) {
             p_dim_size ++;
         }
@@ -169,7 +169,7 @@ protected:
 
     void initNeighbour() {
         int __rank = rank;
-        INT i, j, k;
+        Int i, j, k;
         k = __rank / (shape[0] * shape[1]);
         __rank = __rank % (shape[0] * shape[1]);
         j = __rank / shape[0];
